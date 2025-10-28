@@ -17,6 +17,8 @@ interface MapViewProps {
   visitedPOIs: string[];
   gameEnded?: boolean;
   onPOIClick?: (poi: POI) => void;
+  locationPickerMode?: boolean;
+  onLocationPicked?: (location: { lat: number; lng: number }) => void;
 }
 
 const POI_ICONS = {
@@ -92,7 +94,9 @@ export function MapView({
   secretShelterId,
   visitedPOIs,
   gameEnded,
-  onPOIClick
+  onPOIClick,
+  locationPickerMode,
+  onLocationPicked
 }: MapViewProps) {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
@@ -145,6 +149,32 @@ export function MapView({
       }
     };
   }, [playerLocation.lng, playerLocation.lat]);
+
+  // Handle location picker mode
+  useEffect(() => {
+    if (!map.current) return;
+
+    const handleMapClick = (e: mapboxgl.MapMouseEvent) => {
+      if (locationPickerMode && onLocationPicked) {
+        const { lng, lat } = e.lngLat;
+        onLocationPicked({ lat, lng });
+      }
+    };
+
+    if (locationPickerMode) {
+      map.current.getCanvas().style.cursor = 'crosshair';
+      map.current.on('click', handleMapClick);
+    } else {
+      map.current.getCanvas().style.cursor = '';
+    }
+
+    return () => {
+      if (map.current) {
+        map.current.off('click', handleMapClick);
+        map.current.getCanvas().style.cursor = '';
+      }
+    };
+  }, [locationPickerMode, onLocationPicked]);
 
   // Temporarily disable POI markers and player markers for debugging
 

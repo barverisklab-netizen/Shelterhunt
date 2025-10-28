@@ -44,7 +44,7 @@ export function GameScreen({
   const [gameEnded, setGameEnded] = useState(false);
   const [gameResult, setGameResult] = useState<'win' | 'lose' | null>(null);
   const [hasGuessed, setHasGuessed] = useState(false);
-  const [locationSelectorOpen, setLocationSelectorOpen] = useState(false);
+  const [locationPickerMode, setLocationPickerMode] = useState(false);
 
   // Check if player is near a POI (simplified for demo)
   const checkNearbyPOI = () => {
@@ -169,6 +169,13 @@ export function GameScreen({
           visitedPOIs={visitedPOIs}
           gameEnded={gameEnded}
           onPOIClick={simulateMove}
+          locationPickerMode={locationPickerMode}
+          onLocationPicked={(location) => {
+            if (onLocationChange) {
+              onLocationChange(location);
+            }
+            setLocationPickerMode(false);
+          }}
         />
 
         {/* Floating Action Buttons */}
@@ -202,13 +209,15 @@ export function GameScreen({
 
           {/* Mock Location Selector Button */}
           <motion.button
-            onClick={() => setLocationSelectorOpen(true)}
-            className="glass-strong rounded-2xl p-4 shadow-glow hover:scale-105 transition-transform"
+            onClick={() => setLocationPickerMode(!locationPickerMode)}
+            className={`glass-strong rounded-2xl p-4 shadow-glow hover:scale-105 transition-transform ${
+              locationPickerMode ? 'border-2 border-cyan-400' : ''
+            }`}
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
-            title="Change Mock Location"
+            title={locationPickerMode ? "Cancel location selection" : "Pick location on map"}
           >
-            <Navigation className="w-6 h-6 text-cyan-400" />
+            <Navigation className={`w-6 h-6 ${locationPickerMode ? 'text-cyan-300' : 'text-cyan-400'}`} />
           </motion.button>
         </div>
 
@@ -314,64 +323,19 @@ export function GameScreen({
         )}
       </AnimatePresence>
 
-      {/* Mock Location Selector Modal */}
+      {/* Location Picker Mode Indicator */}
       <AnimatePresence>
-        {locationSelectorOpen && (
+        {locationPickerMode && (
           <motion.div
-            className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={() => setLocationSelectorOpen(false)}
+            className="fixed top-24 left-1/2 -translate-x-1/2 z-40 glass-card rounded-2xl px-6 py-3 pointer-events-none"
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
           >
-            <motion.div
-              className="rounded-2xl p-6 max-w-md w-full mx-4 max-h-[80vh] overflow-y-auto"
-              style={{ backgroundColor: 'rgba(17, 24, 39, 0.9)', backdropFilter: 'blur(10px)' }}
-              initial={{ scale: 0.9, y: 20 }}
-              animate={{ scale: 1, y: 0 }}
-              exit={{ scale: 0.9, y: 20 }}
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-xl font-bold text-white flex items-center gap-2">
-                  <Navigation className="w-5 h-5" />
-                  Mock Location
-                </h3>
-                <button
-                  onClick={() => setLocationSelectorOpen(false)}
-                  className="text-white/60 hover:text-white transition-colors"
-                >
-                  ✕
-                </button>
-              </div>
-              <p className="text-white/70 text-sm mb-4">Select a location to simulate being there:</p>
-              <div className="space-y-2">
-                {pois.map((poi) => (
-                  <button
-                    key={poi.id}
-                    onClick={() => {
-                      if (onLocationChange) {
-                        onLocationChange({ lat: poi.lat, lng: poi.lng });
-                      }
-                      setLocationSelectorOpen(false);
-                    }}
-                    className="w-full glass-card rounded-xl p-4 text-left hover:bg-white/10 transition-all group"
-                  >
-                    <div className="flex items-start gap-3">
-                      <div className="text-2xl">{poi.type === 'shelter' ? '🏠' : '📍'}</div>
-                      <div className="flex-1">
-                        <div className="font-semibold text-white group-hover:text-cyan-300 transition-colors">
-                          {poi.name}
-                        </div>
-                        <div className="text-xs text-white/60 mt-1">
-                          {poi.type === 'shelter' ? 'Emergency Shelter' : 'Point of Interest'}
-                        </div>
-                      </div>
-                    </div>
-                  </button>
-                ))}
-              </div>
-            </motion.div>
+            <div className="flex items-center gap-2 text-white">
+              <Navigation className="w-5 h-5 text-cyan-400" />
+              <span className="font-semibold">Click anywhere on the map to set your location</span>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
