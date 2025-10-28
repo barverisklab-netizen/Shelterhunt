@@ -74,8 +74,20 @@ export const kotoLayers: KotoLayer[] = [
         "icon-size": 0.6,
         "text-font": ["Roboto Bold"],
         "text-size": 10,
-        "icon-image": "circle-15",
-        "text-field": ["get", "Landmark name (EN)"],
+        "icon-image": [
+          "match",
+          ["get", "Category"],
+          "AED",
+          "ihi_aed",
+          ""
+        ],
+        "text-field": [
+          "match",
+          ["get", "Category"],
+          "AED",
+          ["get", "Landmark name (EN)"],
+          ""
+        ],
         "text-anchor": "top",
         "text-offset": [0, 1.5],
         "icon-allow-overlap": true
@@ -156,13 +168,25 @@ export const kotoLayers: KotoLayer[] = [
         "text-halo-color": "#ffffff",
         "text-halo-width": 1.2
       },
-      filter: ["==", "Category", "Bridge"],
+      filter: ["===", "Category", "Bridge"],
       layout: {
         "icon-size": 0.6,
         "text-font": ["Roboto Bold"],
         "text-size": 10,
-        "icon-image": "circle-15",
-        "text-field": ["get", "Landmark name (EN)"],
+        "icon-image": [
+          "match",
+          ["get", "Category"],
+          "Bridge",
+          "ihi_bridges",
+          ""
+        ],
+        "text-field": [
+          "match",
+          ["get", "Category"],
+          "Bridge",
+          ["get", "Landmark name (EN)"],
+          ""
+        ],
         "text-anchor": "top",
         "text-offset": [0, 1.5],
         "icon-allow-overlap": true
@@ -202,13 +226,25 @@ export const kotoLayers: KotoLayer[] = [
         "text-halo-color": "#ffffff",
         "text-halo-width": 1.2
       },
-      filter: ["==", "Category", "Shrine/Temple"],
+      filter: ["===", "Category", "Shrine/Temple"],
       layout: {
         "icon-size": 0.6,
         "text-font": ["Roboto Bold"],
         "text-size": 10,
-        "icon-image": "circle-15",
-        "text-field": ["get", "Landmark name (EN)"],
+        "icon-image": [
+          "match",
+          ["get", "Category"],
+          "Shrine/Temple",
+          "ihi_shrinetemples",
+          ""
+        ],
+        "text-field": [
+          "match",
+          ["get", "Category"],
+          "Shrine/Temple",
+          ["get", "Landmark name (EN)"],
+          ""
+        ],
         "text-anchor": "top",
         "text-offset": [0, 1.5],
         "icon-allow-overlap": true
@@ -248,13 +284,25 @@ export const kotoLayers: KotoLayer[] = [
         "text-halo-color": "#ffffff",
         "text-halo-width": 1.2
       },
-      filter: ["==", "Category", "Community Center"],
+      filter: ["===", "Category", "Community Center"],
       layout: {
         "icon-size": 0.6,
         "text-font": ["Roboto Bold"],
         "text-size": 10,
-        "icon-image": "circle-15",
-        "text-field": ["get", "Landmark name (EN)"],
+        "icon-image": [
+          "match",
+          ["get", "Category"],
+          "Community Center",
+          "ihi_communitycenter",
+          ""
+        ],
+        "text-field": [
+          "match",
+          ["get", "Category"],
+          "Community Center",
+          ["get", "Landmark name (EN)"],
+          ""
+        ],
         "text-anchor": "top",
         "text-offset": [0, 1.5],
         "icon-allow-overlap": true
@@ -294,13 +342,25 @@ export const kotoLayers: KotoLayer[] = [
         "text-halo-color": "#ffffff",
         "text-halo-width": 1.2
       },
-      filter: ["==", "Category", "Flood Gate"],
+      filter: ["===", "Category", "Flood Gate"],
       layout: {
         "icon-size": 0.6,
         "text-font": ["Roboto Bold"],
         "text-size": 10,
-        "icon-image": "circle-15",
-        "text-field": ["get", "Landmark name (EN)"],
+        "icon-image": [
+          "match",
+          ["get", "Category"],
+          "Flood Gate",
+          "ihi_floodgates",
+          ""
+        ],
+        "text-field": [
+          "match",
+          ["get", "Category"],
+          "Flood Gate",
+          ["get", "Landmark name (EN)"],
+          ""
+        ],
         "text-anchor": "top",
         "text-offset": [0, 1.5],
         "icon-allow-overlap": true
@@ -340,13 +400,25 @@ export const kotoLayers: KotoLayer[] = [
         "text-halo-color": "#ffffff",
         "text-halo-width": 1.2
       },
-      filter: ["==", "Category", "Train Station"],
+      filter: ["===", "Category", "Train Station"],
       layout: {
         "icon-size": 0.6,
         "text-font": ["Roboto Bold"],
         "text-size": 10,
-        "icon-image": "circle-15",
-        "text-field": ["get", "Landmark name (EN)"],
+        "icon-image": [
+          "match",
+          ["get", "Category"],
+          "Train Station",
+          "ihi_train",
+          ""
+        ],
+        "text-field": [
+          "match",
+          ["get", "Category"],
+          "Train Station",
+          ["get", "Landmark name (EN)"],
+          ""
+        ],
         "text-anchor": "top",
         "text-offset": [0, 1.5],
         "icon-allow-overlap": true

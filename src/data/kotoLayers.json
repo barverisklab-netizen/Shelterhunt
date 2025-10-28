@@ -7,7 +7,7 @@
       "category": "emergency",
       "enabled": false,
       "sourceLayer": "ihi_evacuation_support_facili-7iemgu",
-      "tilesetId": "mapbox://your-username.664hckgt",
+      "tilesetId": "mapbox://mitfluxmap.664hckgt",
       "type": "symbol",
       "filter": ["==", "Category", "AED"],
       "layout": {
@@ -35,7 +35,7 @@
       "category": "infrastructure",
       "enabled": false,
       "sourceLayer": "ihi_city_landmarks-3au3oa",
-      "tilesetId": "mapbox://your-username.6nnqpx91",
+      "tilesetId": "mapbox://mitfluxmap.6nnqpx91",
       "type": "symbol",
       "filter": ["==", "Category", "Bridge"],
       "layout": {
@@ -63,7 +63,7 @@
       "category": "cultural",
       "enabled": false,
       "sourceLayer": "ihi_city_landmarks-3au3oa",
-      "tilesetId": "mapbox://your-username.6nnqpx91",
+      "tilesetId": "mapbox://mitfluxmap.6nnqpx91",
       "type": "symbol",
       "filter": ["==", "Category", "Shrine/Temple"],
       "layout": {
@@ -91,7 +91,7 @@
       "category": "hazard",
       "enabled": true,
       "sourceLayer": "ihi_clipped_flood_depth2",
-      "tilesetId": "mapbox://your-username.7iw3usti",
+      "tilesetId": "mapbox://mitfluxmap.7iw3usti",
       "type": "fill",
       "layout": {},
       "paint": {
@@ -99,12 +99,18 @@
           "interpolate",
           ["linear"],
           ["get", "flood_depth"],
-          1, "hsl(60, 98%, 90%)",
-          2, "hsl(37, 98%, 85%)",
-          4, "hsl(31, 100%, 65%)",
-          6, "#f98f48",
-          8, "#fb8783",
-          10, "#fc0303"
+          1,
+          "hsl(60, 98%, 90%)",
+          2,
+          "hsl(37, 98%, 85%)",
+          4,
+          "hsl(31, 100%, 65%)",
+          6,
+          "#f98f48",
+          8,
+          "#fb8783",
+          10,
+          "#fc0303"
         ],
         "fill-opacity": 0.6
       },
@@ -117,7 +123,7 @@
       "category": "emergency",
       "enabled": false,
       "sourceLayer": "ihi_evacuation_support_facili-7iemgu",
-      "tilesetId": "mapbox://your-username.664hckgt",
+      "tilesetId": "mapbox://mitfluxmap.664hckgt",
       "type": "symbol",
       "filter": ["==", "Category", "Community Center"],
       "layout": {
@@ -145,7 +151,7 @@
       "category": "infrastructure",
       "enabled": false,
       "sourceLayer": "ihi_city_landmarks-3au3oa",
-      "tilesetId": "mapbox://your-username.6nnqpx91",
+      "tilesetId": "mapbox://mitfluxmap.6nnqpx91",
       "type": "symbol",
       "filter": ["==", "Category", "Flood Gate"],
       "layout": {
@@ -173,7 +179,7 @@
       "category": "infrastructure",
       "enabled": false,
       "sourceLayer": "ihi_city_landmarks-3au3oa",
-      "tilesetId": "mapbox://your-username.6nnqpx91",
+      "tilesetId": "mapbox://mitfluxmap.6nnqpx91",
       "type": "symbol",
       "filter": ["==", "Category", "Train Station"],
       "layout": {
