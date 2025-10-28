@@ -279,17 +279,17 @@ export function MapView({
         )}
       </AnimatePresence>
 
-      {/* Map Legend - Minimizable */}
+      {/* Map Legend - Minimizable - Koto, Tokyo */}
       <AnimatePresence>
         {showLayerControl ? (
           <motion.div
-            className="absolute bottom-20 left-4 glass-card rounded-xl p-3 space-y-2 z-10"
+            className="absolute bottom-20 left-4 glass-card rounded-xl p-3 space-y-2 z-10 max-h-[60vh] overflow-y-auto"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 20 }}
           >
             <div className="flex items-center justify-between mb-2">
-              <span className="text-white/90 text-sm font-semibold">Legend</span>
+              <span className="text-white/90 text-sm font-semibold">Koto, Tokyo Layers</span>
               <button
                 onClick={() => setShowLayerControl(false)}
                 className="text-white/60 hover:text-white/90 transition-colors"
@@ -301,13 +301,56 @@ export function MapView({
               <div className="w-3 h-3 rounded-full bg-blue-400" />
               <span>Your Location</span>
             </div>
+            <div className="border-t border-white/10 my-2"></div>
+            <div className="text-xs text-white/70 font-semibold mb-1">Flood Zones</div>
             <div className="flex items-center gap-2 text-xs text-white/90">
-              <div className="w-3 h-3 rounded-full bg-red-500/50" />
-              <span>High Risk Flood</span>
+              <div className="w-3 h-3 bg-[#fc0303]" />
+              <span>8-10m+ depth</span>
             </div>
             <div className="flex items-center gap-2 text-xs text-white/90">
-              <div className="w-3 h-3 rounded-full bg-orange-500/50" />
-              <span>Medium Risk</span>
+              <div className="w-3 h-3 bg-[#fb8783]" />
+              <span>6-8m depth</span>
+            </div>
+            <div className="flex items-center gap-2 text-xs text-white/90">
+              <div className="w-3 h-3 bg-[#f98f48]" />
+              <span>4-6m depth</span>
+            </div>
+            <div className="flex items-center gap-2 text-xs text-white/90">
+              <div className="w-3 h-3 bg-[hsl(31,100%,65%)]" />
+              <span>2-4m depth</span>
+            </div>
+            <div className="border-t border-white/10 my-2"></div>
+            <div className="text-xs text-white/70 font-semibold mb-1">Infrastructure</div>
+            <div className="flex items-center gap-2 text-xs text-white/90">
+              <div className="w-3 h-3 rounded-full bg-cyan-400" />
+              <span>Train Stations</span>
+            </div>
+            <div className="flex items-center gap-2 text-xs text-white/90">
+              <div className="w-3 h-3 rounded-full bg-blue-400" />
+              <span>Bridges</span>
+            </div>
+            <div className="flex items-center gap-2 text-xs text-white/90">
+              <div className="w-3 h-3 rounded-full bg-indigo-400" />
+              <span>Flood Gates</span>
+            </div>
+            <div className="border-t border-white/10 my-2"></div>
+            <div className="text-xs text-white/70 font-semibold mb-1">Emergency</div>
+            <div className="flex items-center gap-2 text-xs text-white/90">
+              <div className="w-3 h-3 rounded-full bg-red-400" />
+              <span>AED Locations</span>
+            </div>
+            <div className="flex items-center gap-2 text-xs text-white/90">
+              <div className="w-3 h-3 rounded-full bg-orange-400" />
+              <span>Community Centers</span>
+            </div>
+            <div className="border-t border-white/10 my-2"></div>
+            <div className="text-xs text-white/70 font-semibold mb-1">Cultural</div>
+            <div className="flex items-center gap-2 text-xs text-white/90">
+              <div className="w-3 h-3 rounded-full bg-purple-400" />
+              <span>Shrines/Temples</span>
+            </div>
+            <div className="text-xs text-white/60 mt-3 italic">
+              Note: Actual layer data requires Mapbox tileset configuration
             </div>
           </motion.div>
         ) : (

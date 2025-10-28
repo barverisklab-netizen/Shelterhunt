@@ -19,13 +19,13 @@ export interface CityContext {
   questionCategories: QuestionCategory[];
 }
 
-export const bostonCityContext: CityContext = {
-  cityName: "Boston",
+export const kotoTokyoCityContext: CityContext = {
+  cityName: "Koto, Tokyo",
   mapConfig: {
     basemapUrl: "mapbox://styles/mapbox/dark-v11",
     startLocation: {
-      lat: 42.370,
-      lng: -71.033
+      lat: 35.6731,
+      lng: 139.8171
     },
     minZoom: 12,
     maxZoom: 18
@@ -57,3 +57,6 @@ export const bostonCityContext: CityContext = {
     }
   ]
 };
+
+// Export as default city context
+export const defaultCityContext = kotoTokyoCityContext;

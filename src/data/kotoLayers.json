@@ -1,0 +1,198 @@
+{
+  "layers": [
+    {
+      "id": "aed-locations",
+      "label": "AED Locations",
+      "description": "Evacuation support facility with AED",
+      "category": "emergency",
+      "enabled": false,
+      "sourceLayer": "ihi_evacuation_support_facili-7iemgu",
+      "tilesetId": "mapbox://your-username.664hckgt",
+      "type": "symbol",
+      "filter": ["==", "Category", "AED"],
+      "layout": {
+        "icon-image": "circle-15",
+        "icon-size": 0.8,
+        "text-field": ["get", "Landmark name (EN)"],
+        "text-font": ["Roboto Bold"],
+        "text-size": 10,
+        "text-anchor": "top",
+        "text-offset": [0, 1.5],
+        "icon-allow-overlap": true
+      },
+      "paint": {
+        "text-color": "#000000",
+        "text-halo-color": "#ffffff",
+        "text-halo-width": 1.2,
+        "text-halo-blur": 0.5
+      },
+      "queryTemplate": "Name: <b>{{Landmark name (EN)}}</b> | {{Landmark name (JP)}}<br>Category: <b>{{Category}}</b><br>Address: <b>{{Address}}</b>"
+    },
+    {
+      "id": "bridges",
+      "label": "Bridges",
+      "description": "City bridge landmark",
+      "category": "infrastructure",
+      "enabled": false,
+      "sourceLayer": "ihi_city_landmarks-3au3oa",
+      "tilesetId": "mapbox://your-username.6nnqpx91",
+      "type": "symbol",
+      "filter": ["==", "Category", "Bridge"],
+      "layout": {
+        "icon-image": "circle-15",
+        "icon-size": 0.8,
+        "text-field": ["get", "Landmark name (EN)"],
+        "text-font": ["Roboto Bold"],
+        "text-size": 10,
+        "text-anchor": "top",
+        "text-offset": [0, 1.5],
+        "icon-allow-overlap": true
+      },
+      "paint": {
+        "text-color": "#000000",
+        "text-halo-color": "#ffffff",
+        "text-halo-width": 1.2,
+        "text-halo-blur": 0.5
+      },
+      "queryTemplate": "Name: <b>{{Landmark name (EN)}}</b> | {{Landmark name (JP)}}<br>Category: <b>{{Category}}</b><br>Address: <b>{{Address}}</b>"
+    },
+    {
+      "id": "shrines-temples",
+      "label": "Shrines/Temples",
+      "description": "Religious or cultural landmark",
+      "category": "cultural",
+      "enabled": false,
+      "sourceLayer": "ihi_city_landmarks-3au3oa",
+      "tilesetId": "mapbox://your-username.6nnqpx91",
+      "type": "symbol",
+      "filter": ["==", "Category", "Shrine/Temple"],
+      "layout": {
+        "icon-image": "circle-15",
+        "icon-size": 0.8,
+        "text-field": ["get", "Landmark name (EN)"],
+        "text-font": ["Roboto Bold"],
+        "text-size": 10,
+        "text-anchor": "top",
+        "text-offset": [0, 1.5],
+        "icon-allow-overlap": true
+      },
+      "paint": {
+        "text-color": "#000000",
+        "text-halo-color": "#ffffff",
+        "text-halo-width": 1.2,
+        "text-halo-blur": 0.5
+      },
+      "queryTemplate": "Name: <b>{{Landmark name (EN)}}</b> | {{Landmark name (JP)}}<br>Category: <b>{{Category}}</b><br>Address: <b>{{Address}}</b>"
+    },
+    {
+      "id": "flood-depth",
+      "label": "Flood Depth",
+      "description": "Flood depth zones from hazard modeling",
+      "category": "hazard",
+      "enabled": true,
+      "sourceLayer": "ihi_clipped_flood_depth2",
+      "tilesetId": "mapbox://your-username.7iw3usti",
+      "type": "fill",
+      "layout": {},
+      "paint": {
+        "fill-color": [
+          "interpolate",
+          ["linear"],
+          ["get", "flood_depth"],
+          1, "hsl(60, 98%, 90%)",
+          2, "hsl(37, 98%, 85%)",
+          4, "hsl(31, 100%, 65%)",
+          6, "#f98f48",
+          8, "#fb8783",
+          10, "#fc0303"
+        ],
+        "fill-opacity": 0.6
+      },
+      "queryTemplate": "Flood Depth: <b>{{depth_text}}</b><br>Flood Rank: <b>{{flood_rank}}</b>"
+    },
+    {
+      "id": "community-centers",
+      "label": "Community Centers",
+      "description": "Designated community center facility",
+      "category": "emergency",
+      "enabled": false,
+      "sourceLayer": "ihi_evacuation_support_facili-7iemgu",
+      "tilesetId": "mapbox://your-username.664hckgt",
+      "type": "symbol",
+      "filter": ["==", "Category", "Community Center"],
+      "layout": {
+        "icon-image": "circle-15",
+        "icon-size": 0.8,
+        "text-field": ["get", "Landmark name (EN)"],
+        "text-font": ["Roboto Bold"],
+        "text-size": 10,
+        "text-anchor": "top",
+        "text-offset": [0, 1.5],
+        "icon-allow-overlap": true
+      },
+      "paint": {
+        "text-color": "#000000",
+        "text-halo-color": "#ffffff",
+        "text-halo-width": 1.2,
+        "text-halo-blur": 0.5
+      },
+      "queryTemplate": "Name: <b>{{Landmark name (EN)}}</b> | {{Landmark name (JP)}}<br>Category: <b>{{Category}}</b><br>Address: <b>{{Address}}</b>"
+    },
+    {
+      "id": "flood-gates",
+      "label": "Flood Gates",
+      "description": "City flood gate landmark",
+      "category": "infrastructure",
+      "enabled": false,
+      "sourceLayer": "ihi_city_landmarks-3au3oa",
+      "tilesetId": "mapbox://your-username.6nnqpx91",
+      "type": "symbol",
+      "filter": ["==", "Category", "Flood Gate"],
+      "layout": {
+        "icon-image": "circle-15",
+        "icon-size": 0.8,
+        "text-field": ["get", "Landmark name (EN)"],
+        "text-font": ["Roboto Bold"],
+        "text-size": 10,
+        "text-anchor": "top",
+        "text-offset": [0, 1.5],
+        "icon-allow-overlap": true
+      },
+      "paint": {
+        "text-color": "#000000",
+        "text-halo-color": "#ffffff",
+        "text-halo-width": 1.2,
+        "text-halo-blur": 0.5
+      },
+      "queryTemplate": "Name: <b>{{Landmark name (EN)}}</b> | {{Landmark name (JP)}}<br>Category: <b>{{Category}}</b><br>Address: <b>{{Address}}</b>"
+    },
+    {
+      "id": "train-stations",
+      "label": "Train Stations",
+      "description": "City rail or metro station",
+      "category": "infrastructure",
+      "enabled": false,
+      "sourceLayer": "ihi_city_landmarks-3au3oa",
+      "tilesetId": "mapbox://your-username.6nnqpx91",
+      "type": "symbol",
+      "filter": ["==", "Category", "Train Station"],
+      "layout": {
+        "icon-image": "circle-15",
+        "icon-size": 0.8,
+        "text-field": ["get", "Landmark name (EN)"],
+        "text-font": ["Roboto Bold"],
+        "text-size": 10,
+        "text-anchor": "top",
+        "text-offset": [0, 1.5],
+        "icon-allow-overlap": true
+      },
+      "paint": {
+        "text-color": "#000000",
+        "text-halo-color": "#ffffff",
+        "text-halo-width": 1.2,
+        "text-halo-blur": 0.5
+      },
+      "queryTemplate": "Name: <b>{{Landmark name (EN)}}</b> | {{Landmark name (JP)}}<br>Category: <b>{{Category}}</b><br>Address: <b>{{Address}}</b>"
+    }
+  ]
+}

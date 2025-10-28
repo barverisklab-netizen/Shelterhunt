@@ -41,17 +41,18 @@ export interface Clue {
   timestamp: number;
 }
 
+// Koto, Tokyo POIs
 export const mockPOIs: POI[] = [
-  { id: 'poi1', name: 'Central Fire Station', lat: 42.370, lng: -71.033, type: 'fire_station', surgeRank: 1 },
-  { id: 'poi2', name: 'City Hospital', lat: 42.368, lng: -71.035, type: 'hospital', surgeRank: 2 },
-  { id: 'poi3', name: 'Riverside Park', lat: 42.372, lng: -71.030, type: 'park', surgeRank: 3 },
-  { id: 'poi4', name: 'Downtown Library', lat: 42.371, lng: -71.032, type: 'library', surgeRank: 2, capacity: 150 },
-  { id: 'poi5', name: 'Lincoln Elementary', lat: 42.369, lng: -71.034, type: 'school', surgeRank: 1, capacity: 200 },
-  { id: 'poi6', name: 'Community Center Shelter', lat: 42.373, lng: -71.029, type: 'shelter', surgeRank: 2, capacity: 120, nearbyParks: 3 },
-  { id: 'poi7', name: 'Memorial Park', lat: 42.367, lng: -71.031, type: 'park', surgeRank: 2 },
-  { id: 'poi8', name: 'Northside Fire Station', lat: 42.374, lng: -71.028, type: 'fire_station', surgeRank: 3 },
-  { id: 'poi9', name: 'Harbor View Shelter', lat: 42.366, lng: -71.036, type: 'shelter', surgeRank: 4, capacity: 80, nearbyParks: 1 },
-  { id: 'poi10', name: 'Greenfield Park', lat: 42.375, lng: -71.027, type: 'park', surgeRank: 1 },
+  { id: 'poi1', name: 'Koto Fire Station', lat: 35.6731, lng: 139.8171, type: 'fire_station', surgeRank: 1 },
+  { id: 'poi2', name: 'Koto Hospital', lat: 35.6750, lng: 139.8150, type: 'hospital', surgeRank: 2 },
+  { id: 'poi3', name: 'Kiba Park', lat: 35.6711, lng: 139.8191, type: 'park', surgeRank: 3 },
+  { id: 'poi4', name: 'Koto Library', lat: 35.6740, lng: 139.8160, type: 'library', surgeRank: 2, capacity: 150 },
+  { id: 'poi5', name: 'Koto Elementary School', lat: 35.6720, lng: 139.8180, type: 'school', surgeRank: 1, capacity: 200 },
+  { id: 'poi6', name: 'Ariake Community Center', lat: 35.6700, lng: 139.8200, type: 'shelter', surgeRank: 2, capacity: 120, nearbyParks: 3 },
+  { id: 'poi7', name: 'Yume-no-Shima Park', lat: 35.6690, lng: 139.8140, type: 'park', surgeRank: 2 },
+  { id: 'poi8', name: 'Toyosu Fire Station', lat: 35.6780, lng: 139.8120, type: 'fire_station', surgeRank: 3 },
+  { id: 'poi9', name: 'Shinonome Shelter', lat: 35.6680, lng: 139.8220, type: 'shelter', surgeRank: 4, capacity: 80, nearbyParks: 1 },
+  { id: 'poi10', name: 'Wakasu Park', lat: 35.6800, lng: 139.8100, type: 'park', surgeRank: 1 },
 ];
 
 export const mockQuestions: Question[] = [
@@ -147,4 +148,4 @@ export const mockPlayers: Player[] = [
   { id: 'p4', name: 'Morgan Sky', team: 'blue', avatar: '💎', ready: true },
 ];
 
-export const SECRET_SHELTER_ID = 'poi6'; // Community Center Shelter
+export const SECRET_SHELTER_ID = 'poi6'; // Ariake Community Center // Community Center Shelter
