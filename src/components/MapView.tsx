@@ -5,8 +5,8 @@ import { POI } from '../data/mockData';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 
-// Set your Mapbox access token here
-mapboxgl.accessToken = 'pk.eyJ1IjoiZXhhbXBsZSIsImEiOiJZOUR1cl9VIn0.EH5JnIHj5vAqroV5IMSmcw'; // Replace with your actual token
+// Set Mapbox access token from environment variable
+mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_TOKEN || '';
 
 interface MapViewProps {
   pois: POI[];
