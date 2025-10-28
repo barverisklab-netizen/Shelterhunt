@@ -120,7 +120,7 @@ export function GameScreen({
   const canGuess = nearbyPOI?.type === 'shelter' && !hasGuessed;
 
   return (
-    <div className="min-h-screen flex flex-col bg-gray-900">
+    <div className="fixed inset-0 flex flex-col bg-gray-900">
       {/* Top Bar */}
       <motion.div
         className={`glass-strong p-4 border-b border-white/20 ${
@@ -155,7 +155,7 @@ export function GameScreen({
       </motion.div>
 
       {/* Map Container */}
-      <div className="flex-1 relative z-0" style={{ minHeight: '600px' }}>
+      <div className="flex-1 relative z-0">
         <MapView
           pois={pois}
           playerLocation={playerLocation}
