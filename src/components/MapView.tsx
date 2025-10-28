@@ -523,7 +523,7 @@ function LayerToggle({
         className="w-4 h-4 rounded accent-cyan-400"
       />
       {icon}
-      <span className="text-sm text-white/80">{label}</span>
+      <span className="text-sm text-white">{label}</span>
     </label>
   );
 }
