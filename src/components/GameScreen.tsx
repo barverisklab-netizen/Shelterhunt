@@ -155,7 +155,7 @@ export function GameScreen({
       </motion.div>
 
       {/* Map Container */}
-      <div className="flex-1 relative">
+      <div className="flex-1 relative z-0" style={{ minHeight: '600px' }}>
         <MapView
           pois={pois}
           playerLocation={playerLocation}

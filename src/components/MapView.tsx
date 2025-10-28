@@ -115,82 +115,28 @@ export function MapView({
     if (!mapContainer.current || map.current) return;
 
     console.log('Initializing Mapbox map...');
+    console.log('Container element:', mapContainer.current);
+    console.log('Container dimensions:', {
+      width: mapContainer.current.offsetWidth,
+      height: mapContainer.current.offsetHeight
+    });
     
     try {
       map.current = new mapboxgl.Map({
         container: mapContainer.current,
         style: 'mapbox://styles/mapbox/dark-v11',
         center: [playerLocation.lng, playerLocation.lat],
-        zoom: 14,
-        pitch: 0,
-        bearing: 0
+        zoom: 14
       });
+      
+      map.current.on('load', () => {
+        console.log('Mapbox map loaded successfully!');
+      });
+      
       console.log('Mapbox map created successfully');
     } catch (error) {
       console.error('Error initializing Mapbox:', error);
     }
-
-    map.current.on('load', () => {
-      if (!map.current) return;
-
-      // Add flood zones layer
-      map.current.addSource('flood-zones', {
-        type: 'geojson',
-        data: floodZonesGeoJSON
-      });
-
-      map.current.addLayer({
-        id: 'flood-zones-fill',
-        type: 'fill',
-        source: 'flood-zones',
-        paint: {
-          'fill-color': [
-            'match',
-            ['get', 'level'],
-            'high', '#ef4444',
-            'medium', '#f59e0b',
-            'low', '#eab308',
-            '#666666'
-          ],
-          'fill-opacity': 0.3
-        }
-      });
-
-      map.current.addLayer({
-        id: 'flood-zones-outline',
-        type: 'line',
-        source: 'flood-zones',
-        paint: {
-          'line-color': [
-            'match',
-            ['get', 'level'],
-            'high', '#dc2626',
-            'medium', '#d97706',
-            'low', '#ca8a04',
-            '#555555'
-          ],
-          'line-width': 2,
-          'line-opacity': 0.8
-        }
-      });
-
-      // Add labels for flood zones
-      map.current.addLayer({
-        id: 'flood-zones-labels',
-        type: 'symbol',
-        source: 'flood-zones',
-        layout: {
-          'text-field': ['get', 'name'],
-          'text-size': 12,
-          'text-font': ['Open Sans Bold', 'Arial Unicode MS Bold']
-        },
-        paint: {
-          'text-color': '#ffffff',
-          'text-halo-color': '#000000',
-          'text-halo-width': 1
-        }
-      });
-    });
 
     return () => {
       if (map.current) {
@@ -198,200 +144,17 @@ export function MapView({
         map.current = null;
       }
     };
-  }, []);
+  }, [playerLocation.lng, playerLocation.lat]);
 
-  // Update POI markers
-  useEffect(() => {
-    if (!map.current) return;
-
-    // Remove old markers
-    Object.values(markers.current).forEach(marker => marker.remove());
-    markers.current = {};
-
-    // Add new markers
-    pois.forEach((poi) => {
-      const isVisited = visitedPOIs.includes(poi.id);
-      const isSecret = poi.id === secretShelterId && gameEnded;
-      const shouldShow = 
-        (poi.type === 'shelter' && layersVisible.shelters) ||
-        (poi.type === 'school' && layersVisible.schools) ||
-        (poi.type === 'fire_station' && layersVisible.fireStations) ||
-        (poi.type === 'hospital' && layersVisible.hospitals) ||
-        (poi.type === 'park' && layersVisible.parks) ||
-        (poi.type === 'library' && layersVisible.libraries);
-
-      if (!shouldShow) return;
-
-      const el = document.createElement('div');
-      el.className = 'poi-marker';
-      el.style.width = '48px';
-      el.style.height = '48px';
-      el.style.cursor = 'pointer';
-      el.innerHTML = `
-        <div style="
-          position: relative;
-          width: 100%;
-          height: 100%;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-        ">
-          ${isVisited ? `
-            <div style="
-              position: absolute;
-              inset: 0;
-              border-radius: 50%;
-              background: rgba(34, 211, 238, 0.3);
-              filter: blur(8px);
-              animation: pulse 2s infinite;
-            "></div>
-          ` : ''}
-          ${isSecret ? `
-            <div style="
-              position: absolute;
-              inset: 0;
-              border-radius: 50%;
-              background: rgba(74, 222, 128, 0.5);
-              filter: blur(12px);
-              animation: pulse 1.5s infinite;
-            "></div>
-          ` : ''}
-          <div style="
-            position: relative;
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(20px);
-            border-radius: 50%;
-            padding: 12px;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            ${isSecret ? 'box-shadow: 0 0 20px rgba(74, 222, 128, 0.5);' : 'box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);'}
-          ">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="${POI_COLORS[poi.type]}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              ${getIconSVG(poi.type)}
-            </svg>
-          </div>
-        </div>
-      `;
-
-      el.addEventListener('click', () => {
-        onPOIClick?.(poi);
-      });
-
-      const marker = new mapboxgl.Marker({ element: el, anchor: 'center' })
-        .setLngLat([poi.lng, poi.lat])
-        .addTo(map.current!);
-
-      // Add popup
-      const popup = new mapboxgl.Popup({ offset: 25, className: 'poi-popup' })
-        .setHTML(`
-          <div style="
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(20px);
-            border-radius: 12px;
-            padding: 12px;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            color: white;
-          ">
-            <strong>${poi.name}</strong>
-            ${isSecret ? '<br/><span style="color: #4ade80;">★ SECRET SHELTER</span>' : ''}
-          </div>
-        `);
-
-      marker.setPopup(popup);
-      markers.current[poi.id] = marker;
-    });
-  }, [pois, visitedPOIs, gameEnded, secretShelterId, onPOIClick, layersVisible]);
-
-  // Update player marker
-  useEffect(() => {
-    if (!map.current) return;
-
-    if (playerMarker.current) {
-      playerMarker.current.setLngLat([playerLocation.lng, playerLocation.lat]);
-    } else {
-      const el = document.createElement('div');
-      el.style.width = '40px';
-      el.style.height = '40px';
-      el.innerHTML = `
-        <div style="
-          position: relative;
-          width: 100%;
-          height: 100%;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-        ">
-          <div style="
-            position: absolute;
-            inset: 0;
-            border-radius: 50%;
-            background: rgba(96, 165, 250, 0.5);
-            filter: blur(16px);
-            animation: pulse 2s infinite;
-          "></div>
-          <div style="
-            position: relative;
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(20px);
-            border-radius: 50%;
-            padding: 8px;
-            border: 2px solid #60a5fa;
-          ">
-            <div style="
-              width: 12px;
-              height: 12px;
-              border-radius: 50%;
-              background: #60a5fa;
-            "></div>
-          </div>
-          <div style="
-            position: absolute;
-            inset: 0;
-            border-radius: 50%;
-            border: 2px solid rgba(96, 165, 250, 0.3);
-            animation: ripple 2s infinite;
-          "></div>
-        </div>
-      `;
-
-      playerMarker.current = new mapboxgl.Marker({ element: el, anchor: 'center' })
-        .setLngLat([playerLocation.lng, playerLocation.lat])
-        .addTo(map.current);
-    }
-
-    // Pan map to player location
-    map.current.panTo([playerLocation.lng, playerLocation.lat]);
-  }, [playerLocation]);
-
-  // Toggle layer visibility
-  useEffect(() => {
-    if (!map.current) return;
-
-    if (map.current.getLayer('flood-zones-fill')) {
-      map.current.setLayoutProperty(
-        'flood-zones-fill',
-        'visibility',
-        layersVisible.floods ? 'visible' : 'none'
-      );
-      map.current.setLayoutProperty(
-        'flood-zones-outline',
-        'visibility',
-        layersVisible.floods ? 'visible' : 'none'
-      );
-      map.current.setLayoutProperty(
-        'flood-zones-labels',
-        'visibility',
-        layersVisible.floods ? 'visible' : 'none'
-      );
-    }
-  }, [layersVisible.floods]);
+  // Temporarily disable POI markers and player markers for debugging
 
   const toggleLayer = (layer: keyof typeof layersVisible) => {
     setLayersVisible(prev => ({ ...prev, [layer]: !prev[layer] }));
   };
 
   return (
-    <div className="relative w-full h-full min-h-[500px]">
-      <div ref={mapContainer} className="absolute inset-0 rounded-2xl overflow-hidden" />
+    <div className="relative w-full h-full min-h-[500px] z-0">
+      <div ref={mapContainer} className="absolute inset-0 rounded-2xl overflow-hidden z-0" style={{ width: '100%', height: '100%' }} />
 
       {/* Add CSS animations */}
       <style>{`

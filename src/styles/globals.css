@@ -175,3 +175,14 @@
 ::-webkit-scrollbar-thumb:hover {
   background: rgba(255, 255, 255, 0.3);
 }
+
+/* Mapbox GL CSS fixes */
+.mapboxgl-canvas-container {
+  height: 100% !important;
+  width: 100% !important;
+}
+
+.mapboxgl-canvas {
+  height: 100% !important;
+  width: 100% !important;
+}
