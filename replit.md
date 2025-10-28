@@ -41,7 +41,10 @@ Secret Shelter is an interactive location-based deduction game where players rac
 │   ├── data/
 │   │   ├── mockData.ts           # Game data (POIs, questions, etc.)
 │   │   ├── cityContext.ts        # City-specific configuration
-│   │   └── cityContext.json      # City context JSON structure
+│   │   ├── cityContext.json      # City context JSON structure
+│   │   └── kotoLayers.json       # Koto layer configuration (reference)
+│   ├── types/
+│   │   └── kotoLayers.ts         # Koto layer type definitions and data
 │   ├── styles/
 │   │   └── globals.css           # Global styles and Tailwind config
 │   ├── App.tsx                   # Main app component
@@ -101,13 +104,70 @@ The application uses Mapbox GL JS for interactive mapping with a dark basemap st
 **Map Configuration**:
 - Map style, starting location, and zoom levels are defined in `src/data/cityContext.ts`
 - Current basemap: `mapbox://styles/mapbox/dark-v11`
-- Starting location: Boston (42.370, -71.033)
+- Starting location: Koto, Tokyo (35.6731°N, 139.8171°E)
 - Zoom range: 12-18
 
 **Note**: The free tier includes 50,000 map loads/month - perfect for testing.
 
+## Configuring Koto Layers
+
+The application is set up to display Koto, Tokyo-specific layers, but requires Mapbox tileset configuration to show actual data.
+
+### What's Already Implemented:
+- ✅ Layer definitions with styles, filters, and click handlers
+- ✅ Toggle functionality in the MapView component
+- ✅ Click-to-query popups showing feature information
+- ✅ Legend showing all available layers
+
+### What You Need to Do:
+
+1. **Upload Vector Tiles to Mapbox Studio**:
+   - Go to https://studio.mapbox.com/
+   - Upload your vector tile data for each layer (GeoJSON, MBTiles, etc.)
+   - Note the tileset ID for each upload (e.g., `your-username.abc123xyz`)
+
+2. **Update Tileset IDs**:
+   - Open `src/components/MapView.tsx`
+   - Find line 226: `url: 'mapbox://YOUR_MAPBOX_USERNAME.${layer.sourceData.layerId}'`
+   - Replace `YOUR_MAPBOX_USERNAME` with your actual Mapbox username
+   - The `layerId` values in `src/types/kotoLayers.ts` should match your tileset IDs
+
+3. **Required Tilesets**:
+   - `664hckgt`: AED Locations & Community Centers (source layer: `ihi_evacuation_support_facili-7iemgu`)
+   - `6nnqpx91`: Bridges, Shrines/Temples, Flood Gates, Train Stations (source layer: `ihi_city_landmarks-3au3oa`)
+   - `7iw3usti`: Flood Depth data (source layer: `ihi_clipped_flood_depth2`)
+
+4. **Test the Layers**:
+   - After configuring, the layers will automatically load when the map initializes
+   - Use the layer toggles to show/hide layers
+   - Click on features to see popup information
+
 ## Recent Changes
-- **October 28, 2025 (Latest Update)**: 
+- **October 28, 2025 (Latest Update - Koto, Tokyo Integration)**: 
+  - ✅ **Changed location from Boston to Koto, Tokyo, Japan**
+    - Map center: 35.6731°N, 139.8171°E
+    - Updated all POIs to Koto-specific locations (Koto Fire Station, Ariake Community Center, etc.)
+    - Secret shelter: Ariake Community Center
+  
+  - ✅ **Integrated Koto, Tokyo Mapbox Layers**
+    - Created layer type definitions in `src/types/kotoLayers.ts`
+    - Implemented 7 Koto-specific layers:
+      - **Flood Depth**: Color-coded flood risk zones (1m to 10m+ depth)
+      - **AED Locations**: Evacuation support facilities with AED
+      - **Bridges**: City bridge landmarks
+      - **Shrines/Temples**: Religious and cultural landmarks
+      - **Community Centers**: Designated community facilities
+      - **Flood Gates**: City flood control infrastructure
+      - **Train Stations**: Rail and metro stations
+    - Added click-to-query functionality (shows feature info in popups)
+    - Layers are toggleable via MapView component
+    - Updated legend to show all Koto layers organized by category
+    
+  - ⚠️ **Note**: Layers require Mapbox tileset configuration to display data
+    - Tilesets need to be uploaded to Mapbox Studio
+    - See "Configuring Koto Layers" section below for instructions
+
+- **October 28, 2025 (Earlier Updates)**: 
   - ✅ Fixed map rendering issue (container height was 0px, now properly sized)
   - ✅ Implemented full-screen map display with no rounded corners
   - ✅ Added game title "Secret Shelter" to top bar

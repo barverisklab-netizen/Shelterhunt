@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { MapPin, Home, Flame, Hospital, Trees, Library, School, Layers } from 'lucide-react';
 import { POI } from '../data/mockData';
+import { kotoLayers } from '../types/kotoLayers';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 
@@ -113,6 +114,15 @@ export function MapView({
     libraries: true
   });
   const [showLayerControl, setShowLayerControl] = useState(false);
+  
+  // Koto layer visibility state
+  const [kotoLayersVisible, setKotoLayersVisible] = useState<Record<string, boolean>>(() => {
+    const initialState: Record<string, boolean> = {};
+    kotoLayers.forEach(layer => {
+      initialState[layer.label] = layer.metadata.loadOnInit;
+    });
+    return initialState;
+  });
 
   // Initialize map
   useEffect(() => {
@@ -135,6 +145,9 @@ export function MapView({
       
       map.current.on('load', () => {
         console.log('Mapbox map loaded successfully!');
+        
+        // Add Koto layer sources and layers
+        addKotoLayers();
       });
       
       console.log('Mapbox map created successfully');
@@ -180,6 +193,118 @@ export function MapView({
 
   const toggleLayer = (layer: keyof typeof layersVisible) => {
     setLayersVisible(prev => ({ ...prev, [layer]: !prev[layer] }));
+  };
+  
+  // Add Koto layers to the map
+  const addKotoLayers = () => {
+    if (!map.current) return;
+    
+    try {
+      // NOTE: These layers require Mapbox vector tilesets to be configured in Mapbox Studio
+      // The tileset IDs below are placeholders and need to be replaced with actual tileset IDs
+      // To use these layers:
+      // 1. Upload your vector tile data to Mapbox Studio (https://studio.mapbox.com/)
+      // 2. Note the tileset IDs for each dataset
+      // 3. Update the sourceData.layerId in kotoLayers.ts with your actual tileset IDs
+      
+      // Track unique sources to avoid duplicates
+      const addedSources = new Set<string>();
+      
+      kotoLayers.forEach(layer => {
+        const sourceId = `koto-source-${layer.sourceData.layerId}`;
+        const layerId = `koto-layer-${layer.id}`;
+        
+        // Add source if not already added
+        if (!addedSources.has(sourceId) && !map.current!.getSource(sourceId)) {
+          // WARNING: This tileset URL is a placeholder
+          // Replace 'YOUR_MAPBOX_USERNAME' and the tileset ID with your actual values
+          map.current!.addSource(sourceId, {
+            type: 'vector',
+            url: `mapbox://YOUR_MAPBOX_USERNAME.${layer.sourceData.layerId}`
+          });
+          addedSources.add(sourceId);
+          console.log(`Added source: ${sourceId}`);
+        }
+        
+        // Add layer if not already added
+        if (!map.current!.getLayer(layerId)) {
+          const layerConfig: any = {
+            id: layerId,
+            type: layer.layerType,
+            source: sourceId,
+            'source-layer': layer.sourceData.layerName,
+            layout: {
+              ...layer.style.layout,
+              visibility: layer.metadata.loadOnInit ? 'visible' : 'none'
+            },
+            paint: layer.style.paint
+          };
+          
+          // Add filter if exists
+          if (layer.style.filter) {
+            layerConfig.filter = layer.style.filter;
+          }
+          
+          map.current!.addLayer(layerConfig);
+          console.log(`Added layer: ${layerId}`);
+          
+          // Add click handler for this layer
+          map.current!.on('click', layerId, (e) => {
+            if (e.features && e.features[0]) {
+              const feature = e.features[0];
+              const props = feature.properties || {};
+              
+              // Format HTML using the query template
+              let html = layer.metadata.query.template;
+              Object.keys(props).forEach(key => {
+                html = html.replace(new RegExp(`{{${key}}}`, 'g'), props[key] || 'N/A');
+              });
+              
+              new mapboxgl.Popup()
+                .setLngLat(e.lngLat)
+                .setHTML(html)
+                .addTo(map.current!);
+            }
+          });
+          
+          // Change cursor on hover
+          map.current!.on('mouseenter', layerId, () => {
+            if (map.current) map.current.getCanvas().style.cursor = 'pointer';
+          });
+          map.current!.on('mouseleave', layerId, () => {
+            if (map.current) map.current.getCanvas().style.cursor = '';
+          });
+        }
+      });
+      
+      console.log('Koto layers initialized (Note: tilesets need to be configured in Mapbox Studio)');
+    } catch (error) {
+      console.warn('Could not add Koto layers - tilesets may not be configured:', error);
+    }
+  };
+  
+  // Toggle Koto layer visibility
+  const toggleKotoLayer = (label: string) => {
+    if (!map.current) return;
+    
+    const layer = kotoLayers.find(l => l.label === label);
+    if (!layer) return;
+    
+    const layerId = `koto-layer-${layer.id}`;
+    const newVisibility = !kotoLayersVisible[label];
+    
+    if (map.current.getLayer(layerId)) {
+      map.current.setLayoutProperty(
+        layerId,
+        'visibility',
+        newVisibility ? 'visible' : 'none'
+      );
+      
+      setKotoLayersVisible(prev => ({
+        ...prev,
+        [label]: newVisibility
+      }));
+    }
   };
 
   return (
