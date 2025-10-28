@@ -3,13 +3,14 @@ import { motion, AnimatePresence } from 'motion/react';
 import { MapPin, Home, Flame, Hospital, Trees, Library, School, Layers, Heart, Building2, Cable, Train } from 'lucide-react';
 import { POI } from '../data/mockData';
 import { kotoLayers } from '../types/kotoLayers';
+import { MAPBOX_CONFIG, getTilesetUrl } from '../config/mapbox';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 
-// Set Mapbox access token from environment variable
-const token = import.meta.env.VITE_MAPBOX_TOKEN as string;
-console.log('Mapbox token loaded:', token ? 'Yes' : 'No', token?.substring(0, 10) + '...');
-mapboxgl.accessToken = token;
+// Set Mapbox access token from config
+mapboxgl.accessToken = MAPBOX_CONFIG.accessToken;
+console.log('Mapbox token loaded:', MAPBOX_CONFIG.accessToken ? 'Yes' : 'No', MAPBOX_CONFIG.accessToken?.substring(0, 10) + '...');
+console.log('Mapbox username configured:', MAPBOX_CONFIG.username);
 
 // Helper function to get icons for Koto layers
 const getKotoLayerIcon = (label: string): React.ReactNode => {
@@ -238,14 +239,13 @@ export function MapView({
         
         // Add source if not already added
         if (!addedSources.has(sourceId) && !map.current!.getSource(sourceId)) {
-          // WARNING: This tileset URL is a placeholder
-          // Replace 'YOUR_MAPBOX_USERNAME' and the tileset ID with your actual values
+          const tilesetUrl = getTilesetUrl(layer.sourceData.layerId);
           map.current!.addSource(sourceId, {
             type: 'vector',
-            url: `mapbox://YOUR_MAPBOX_USERNAME.${layer.sourceData.layerId}`
+            url: tilesetUrl
           });
           addedSources.add(sourceId);
-          console.log(`Added source: ${sourceId}`);
+          console.log(`Added source: ${sourceId} with URL: ${tilesetUrl}`);
         }
         
         // Add layer if not already added

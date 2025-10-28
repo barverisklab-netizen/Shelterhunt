@@ -38,6 +38,8 @@ Secret Shelter is an interactive location-based deduction game where players rac
 │   │   ├── QuestionDrawer.tsx    # Question interface
 │   │   ├── TriviaModal.tsx       # Trivia questions
 │   │   └── HelpModal.tsx         # Game instructions
+│   ├── config/
+│   │   └── mapbox.ts             # Mapbox configuration (username, tilesets)
 │   ├── data/
 │   │   ├── mockData.ts           # Game data (POIs, questions, etc.)
 │   │   ├── cityContext.ts        # City-specific configuration
@@ -121,25 +123,30 @@ The application is set up to display Koto, Tokyo-specific layers, but requires M
 
 ### What You Need to Do:
 
-1. **Upload Vector Tiles to Mapbox Studio**:
+1. **Get Your Mapbox Username**:
    - Go to https://studio.mapbox.com/
+   - Your username is in the URL and tileset names
+   - Example: if you see `studio.mapbox.com/tilesets/johndoe.abc123`, your username is `johndoe`
+
+2. **Update Mapbox Configuration**:
+   - Open `src/config/mapbox.ts`
+   - Find line 9: `username: 'YOUR_MAPBOX_USERNAME'`
+   - Replace `'YOUR_MAPBOX_USERNAME'` with your actual Mapbox username (keep the quotes)
+   - Example: `username: 'johndoe'`
+
+3. **Upload Vector Tiles to Mapbox Studio** (if not already done):
+   - Go to https://studio.mapbox.com/tilesets/
    - Upload your vector tile data for each layer (GeoJSON, MBTiles, etc.)
-   - Note the tileset ID for each upload (e.g., `your-username.abc123xyz`)
-
-2. **Update Tileset IDs**:
-   - Open `src/components/MapView.tsx`
-   - Find line 226: `url: 'mapbox://YOUR_MAPBOX_USERNAME.${layer.sourceData.layerId}'`
-   - Replace `YOUR_MAPBOX_USERNAME` with your actual Mapbox username
-   - The `layerId` values in `src/types/kotoLayers.ts` should match your tileset IDs
-
-3. **Required Tilesets**:
-   - `664hckgt`: AED Locations & Community Centers (source layer: `ihi_evacuation_support_facili-7iemgu`)
-   - `6nnqpx91`: Bridges, Shrines/Temples, Flood Gates, Train Stations (source layer: `ihi_city_landmarks-3au3oa`)
-   - `7iw3usti`: Flood Depth data (source layer: `ihi_clipped_flood_depth2`)
+   - Make sure the tileset IDs match these values:
+     - `664hckgt`: AED Locations & Community Centers (source layer: `ihi_evacuation_support_facili-7iemgu`)
+     - `6nnqpx91`: Bridges, Shrines/Temples, Flood Gates, Train Stations (source layer: `ihi_city_landmarks-3au3oa`)
+     - `7iw3usti`: Flood Depth data (source layer: `ihi_clipped_flood_depth2`)
 
 4. **Test the Layers**:
-   - After configuring, the layers will automatically load when the map initializes
-   - Use the layer toggles to show/hide layers
+   - Save the file and the app will reload
+   - Check the browser console for confirmation: "Mapbox username configured: [your-username]"
+   - The 404 errors should disappear
+   - Use the layer toggle button (top-left) to show/hide layers
    - Click on features to see popup information
 
 ## Recent Changes
