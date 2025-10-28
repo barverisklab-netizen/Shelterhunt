@@ -325,7 +325,8 @@ export function GameScreen({
             onClick={() => setLocationSelectorOpen(false)}
           >
             <motion.div
-              className="glass-card rounded-2xl p-6 max-w-md w-full mx-4 max-h-[80vh] overflow-y-auto"
+              className="rounded-2xl p-6 max-w-md w-full mx-4 max-h-[80vh] overflow-y-auto"
+              style={{ backgroundColor: 'rgba(17, 24, 39, 0.9)', backdropFilter: 'blur(10px)' }}
               initial={{ scale: 0.9, y: 20 }}
               animate={{ scale: 1, y: 0 }}
               exit={{ scale: 0.9, y: 20 }}
