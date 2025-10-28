@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from 'motion/react';
-import { Clock, Lightbulb, MapPin, Home, Trophy, Frown } from 'lucide-react';
+import { Clock, Lightbulb, MapPin, Home, Trophy, Frown, Navigation } from 'lucide-react';
 import { Button } from './ui/button';
 import { MapView } from './MapView';
 import { QuestionDrawer } from './QuestionDrawer';
@@ -18,6 +18,7 @@ interface GameScreenProps {
   secretShelterId: string;
   onGuessSubmit: (poiId: string) => void;
   onEndGame: () => void;
+  onLocationChange?: (location: { lat: number; lng: number }) => void;
 }
 
 export function GameScreen({
@@ -29,7 +30,8 @@ export function GameScreen({
   timeRemaining,
   secretShelterId,
   onGuessSubmit,
-  onEndGame
+  onEndGame,
+  onLocationChange
 }: GameScreenProps) {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [cluesOpen, setCluesOpen] = useState(false);
@@ -42,6 +44,7 @@ export function GameScreen({
   const [gameEnded, setGameEnded] = useState(false);
   const [gameResult, setGameResult] = useState<'win' | 'lose' | null>(null);
   const [hasGuessed, setHasGuessed] = useState(false);
+  const [locationSelectorOpen, setLocationSelectorOpen] = useState(false);
 
   // Check if player is near a POI (simplified for demo)
   const checkNearbyPOI = () => {
@@ -196,6 +199,17 @@ export function GameScreen({
               <Home className="w-6 h-6 text-green-400" />
             </motion.button>
           )}
+
+          {/* Mock Location Selector Button */}
+          <motion.button
+            onClick={() => setLocationSelectorOpen(true)}
+            className="glass-strong rounded-2xl p-4 shadow-glow hover:scale-105 transition-transform"
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            title="Change Mock Location"
+          >
+            <Navigation className="w-6 h-6 text-cyan-400" />
+          </motion.button>
         </div>
 
         {/* Location Status */}
@@ -297,6 +311,67 @@ export function GameScreen({
               </motion.div>
             </div>
           </>
+        )}
+      </AnimatePresence>
+
+      {/* Mock Location Selector Modal */}
+      <AnimatePresence>
+        {locationSelectorOpen && (
+          <motion.div
+            className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setLocationSelectorOpen(false)}
+          >
+            <motion.div
+              className="glass-card rounded-2xl p-6 max-w-md w-full mx-4 max-h-[80vh] overflow-y-auto"
+              initial={{ scale: 0.9, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.9, y: 20 }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-xl font-bold text-white flex items-center gap-2">
+                  <Navigation className="w-5 h-5" />
+                  Mock Location
+                </h3>
+                <button
+                  onClick={() => setLocationSelectorOpen(false)}
+                  className="text-white/60 hover:text-white transition-colors"
+                >
+                  ✕
+                </button>
+              </div>
+              <p className="text-white/70 text-sm mb-4">Select a location to simulate being there:</p>
+              <div className="space-y-2">
+                {pois.map((poi) => (
+                  <button
+                    key={poi.id}
+                    onClick={() => {
+                      if (onLocationChange) {
+                        onLocationChange({ lat: poi.lat, lng: poi.lng });
+                      }
+                      setLocationSelectorOpen(false);
+                    }}
+                    className="w-full glass-card rounded-xl p-4 text-left hover:bg-white/10 transition-all group"
+                  >
+                    <div className="flex items-start gap-3">
+                      <div className="text-2xl">{poi.type === 'shelter' ? '🏠' : '📍'}</div>
+                      <div className="flex-1">
+                        <div className="font-semibold text-white group-hover:text-cyan-300 transition-colors">
+                          {poi.name}
+                        </div>
+                        <div className="text-xs text-white/60 mt-1">
+                          {poi.type === 'shelter' ? 'Emergency Shelter' : 'Point of Interest'}
+                        </div>
+                      </div>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </motion.div>
+          </motion.div>
         )}
       </AnimatePresence>
     </div>

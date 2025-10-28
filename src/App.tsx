@@ -153,6 +153,7 @@ export default function App() {
             secretShelterId={SECRET_SHELTER_ID}
             onGuessSubmit={handleGuessSubmit}
             onEndGame={handleEndGame}
+            onLocationChange={setPlayerLocation}
           />
         )}
       </div>
