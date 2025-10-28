@@ -6,7 +6,9 @@ import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 
 // Set Mapbox access token from environment variable
-mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_TOKEN || '';
+const token = import.meta.env.VITE_MAPBOX_TOKEN as string;
+console.log('Mapbox token loaded:', token ? 'Yes' : 'No', token?.substring(0, 10) + '...');
+mapboxgl.accessToken = token;
 
 interface MapViewProps {
   pois: POI[];
@@ -112,14 +114,21 @@ export function MapView({
   useEffect(() => {
     if (!mapContainer.current || map.current) return;
 
-    map.current = new mapboxgl.Map({
-      container: mapContainer.current,
-      style: 'mapbox://styles/mapbox/dark-v11',
-      center: [playerLocation.lng, playerLocation.lat],
-      zoom: 14,
-      pitch: 0,
-      bearing: 0
-    });
+    console.log('Initializing Mapbox map...');
+    
+    try {
+      map.current = new mapboxgl.Map({
+        container: mapContainer.current,
+        style: 'mapbox://styles/mapbox/dark-v11',
+        center: [playerLocation.lng, playerLocation.lat],
+        zoom: 14,
+        pitch: 0,
+        bearing: 0
+      });
+      console.log('Mapbox map created successfully');
+    } catch (error) {
+      console.error('Error initializing Mapbox:', error);
+    }
 
     map.current.on('load', () => {
       if (!map.current) return;
@@ -381,8 +390,8 @@ export function MapView({
   };
 
   return (
-    <div className="relative w-full h-full">
-      <div ref={mapContainer} className="w-full h-full rounded-2xl overflow-hidden" />
+    <div className="relative w-full h-full min-h-[500px]">
+      <div ref={mapContainer} className="absolute inset-0 rounded-2xl overflow-hidden" />
 
       {/* Add CSS animations */}
       <style>{`
