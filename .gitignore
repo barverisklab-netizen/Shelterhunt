@@ -10,8 +10,7 @@ dist/
 build/
 *.local
 
-# Environment variables
-.env
+# Environment variables (keep .env for Replit)
 .env.local
 .env.production.local
 .env.development.local
