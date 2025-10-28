@@ -102,9 +102,12 @@ See `src/MAPBOX_SETUP.md` for detailed instructions.
 ## Recent Changes
 - **October 28, 2025**: Initial Replit setup
   - Configured Vite for Replit environment (port 5000, host 0.0.0.0)
-  - Set up development workflow
+  - Added `allowedHosts: true` to Vite config for Replit's dynamic proxy hostnames
+  - Set up development workflow on port 5000
+  - Configured deployment for autoscale with build and preview commands
   - Verified application functionality
   - Created .gitignore for Node.js project
+  - Created comprehensive replit.md documentation
 
 ## User Preferences
 None configured yet.
