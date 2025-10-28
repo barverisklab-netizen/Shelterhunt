@@ -6,6 +6,7 @@ import { QuestionDrawer } from './QuestionDrawer';
 import { CluesPanel } from './CluesPanel';
 import { TriviaModal } from './TriviaModal';
 import { POI, Question, TriviaQuestion, Clue } from '../data/mockData';
+import { bostonCityContext } from '../data/cityContext';
 import { useState } from 'react';
 
 interface GameScreenProps {
@@ -249,6 +250,7 @@ export function GameScreen({
       {/* Question Drawer */}
       <QuestionDrawer
         questions={questions}
+        availableCategories={bostonCityContext.questionCategories}
         isOpen={drawerOpen}
         onToggle={() => setDrawerOpen(!drawerOpen)}
         onAskQuestion={handleAskQuestion}

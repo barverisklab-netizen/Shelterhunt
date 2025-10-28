@@ -13,6 +13,7 @@ import {
   SECRET_SHELTER_ID,
   Player
 } from './data/mockData';
+import { bostonCityContext } from './data/cityContext';
 
 type GameState = 'onboarding' | 'waiting' | 'playing' | 'ended';
 
@@ -24,7 +25,10 @@ export default function App() {
   const [currentUserId] = useState('p1'); // Simulated user
   const [timeRemaining, setTimeRemaining] = useState(1800); // 30 minutes
   const [showHelp, setShowHelp] = useState(false);
-  const [playerLocation, setPlayerLocation] = useState({ lat: 42.370, lng: -71.033 });
+  const [playerLocation, setPlayerLocation] = useState({
+    lat: bostonCityContext.mapConfig.startLocation.lat,
+    lng: bostonCityContext.mapConfig.startLocation.lng
+  });
 
   // Timer countdown
   useEffect(() => {

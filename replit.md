@@ -39,7 +39,9 @@ Secret Shelter is an interactive location-based deduction game where players rac
 │   │   ├── TriviaModal.tsx       # Trivia questions
 │   │   └── HelpModal.tsx         # Game instructions
 │   ├── data/
-│   │   └── mockData.ts           # Game data (POIs, questions, etc.)
+│   │   ├── mockData.ts           # Game data (POIs, questions, etc.)
+│   │   ├── cityContext.ts        # City-specific configuration
+│   │   └── cityContext.json      # City context JSON structure
 │   ├── styles/
 │   │   └── globals.css           # Global styles and Tailwind config
 │   ├── App.tsx                   # Main app component
@@ -89,23 +91,45 @@ npm run build
 Output directory: `build/`
 
 ## Mapbox Configuration
-The application uses Mapbox GL JS for interactive mapping. To use your own Mapbox token:
+The application uses Mapbox GL JS for interactive mapping with a dark basemap style.
 
-1. Sign up at https://account.mapbox.com/
-2. Get your access token from https://account.mapbox.com/access-tokens/
-3. Update the token in `src/components/MapView.tsx` (line 9)
+**Token Setup**:
+- The Mapbox token is stored in Replit Secrets as `MAPBOX_TOKEN`
+- Accessed in code via `import.meta.env.VITE_MAPBOX_TOKEN`
+- Environment variables must be prefixed with `VITE_` to be accessible in the browser
+
+**Map Configuration**:
+- Map style, starting location, and zoom levels are defined in `src/data/cityContext.ts`
+- Current basemap: `mapbox://styles/mapbox/dark-v11`
+- Starting location: Boston (42.370, -71.033)
+- Zoom range: 12-18
 
 **Note**: The free tier includes 50,000 map loads/month - perfect for testing.
 
-See `src/MAPBOX_SETUP.md` for detailed instructions.
-
 ## Recent Changes
+- **October 28, 2025 (Latest Update)**: 
+  - ✅ Fixed map rendering issue (container height was 0px, now properly sized)
+  - ✅ Implemented full-screen map display with no rounded corners
+  - ✅ Added game title "Secret Shelter" to top bar
+  - ✅ Made legend minimizable and positioned above bottom bar
+  - ✅ Added exit button to return to main menu
+  - ✅ **Reworked "Ask a Question" feature**:
+    - Created city context system (`src/data/cityContext.ts`)
+    - Questions now organized by categories (Location Details, Facility Type, Nearby Amenities, Capacity & Resources)
+    - Categories are defined in city context JSON and can be customized per city
+    - User selects a category first, then sees questions within that category
+    - Map configuration (basemap URL, start location, zoom levels) now loaded from city context
+  - ✅ Added mock location selector:
+    - Click navigation button to enter location picker mode
+    - Click anywhere on map to teleport player to that location
+    - Useful for testing without physically moving
+
 - **October 28, 2025**: Initial Replit setup
   - Configured Vite for Replit environment (port 5000, host 0.0.0.0)
   - Added `allowedHosts: true` to Vite config for Replit's dynamic proxy hostnames
   - Set up development workflow on port 5000
   - Configured deployment for autoscale with build and preview commands
-  - Verified application functionality
+  - Integrated Mapbox GL JS with dark-v11 style using MAPBOX_TOKEN secret
   - Created .gitignore for Node.js project
   - Created comprehensive replit.md documentation
 
@@ -121,8 +145,39 @@ All dependencies are managed via npm and defined in `package.json`. Key librarie
 - Tailwind CSS for styling
 - Sonner for notifications
 
+## City Context System
+The game uses a city context configuration to customize the experience for different cities:
+
+### Configuration Structure (`src/data/cityContext.ts`)
+```typescript
+{
+  cityName: string;
+  mapConfig: {
+    basemapUrl: string;        // Mapbox style URL
+    startLocation: { lat, lng };
+    minZoom: number;
+    maxZoom: number;
+  };
+  questionCategories: [
+    {
+      id: string;              // Category ID (location, facility, nearby, capacity)
+      name: string;            // Display name
+      description: string;     // Category description
+      icon: string;            // Icon name (MapPin, Home, Radar, Users)
+    }
+  ]
+}
+```
+
+### Adding a New City
+1. Create a new city context object in `src/data/cityContext.ts`
+2. Define the map configuration (basemap, starting location, zoom levels)
+3. Specify which question categories are available for this city
+4. Update `src/App.tsx` to use the new city context
+
 ## Notes
 - The application currently uses mock data for POIs, questions, and players
 - Multiplayer functionality is simulated (not real-time)
 - The game state is managed entirely client-side
+- Question categories filter which questions are available based on the city context
 - LSP warnings about module imports are expected due to version-specific aliases in vite.config.ts
