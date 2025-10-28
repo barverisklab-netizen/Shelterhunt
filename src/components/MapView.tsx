@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { MapPin, Home, Flame, Hospital, Trees, Library, School, Layers } from 'lucide-react';
+import { MapPin, Home, Flame, Hospital, Trees, Library, School, Layers, Heart, Building2, Cable, Train } from 'lucide-react';
 import { POI } from '../data/mockData';
 import { kotoLayers } from '../types/kotoLayers';
 import mapboxgl from 'mapbox-gl';
@@ -10,6 +10,28 @@ import 'mapbox-gl/dist/mapbox-gl.css';
 const token = import.meta.env.VITE_MAPBOX_TOKEN as string;
 console.log('Mapbox token loaded:', token ? 'Yes' : 'No', token?.substring(0, 10) + '...');
 mapboxgl.accessToken = token;
+
+// Helper function to get icons for Koto layers
+const getKotoLayerIcon = (label: string): React.ReactNode => {
+  switch (label) {
+    case 'AED Locations':
+      return <Heart className="w-4 h-4 text-red-400" />;
+    case 'Bridges':
+      return <Cable className="w-4 h-4 text-blue-400" />;
+    case 'Shrines/Temples':
+      return <Home className="w-4 h-4 text-purple-400" />;
+    case 'Flood Depth':
+      return <MapPin className="w-4 h-4 text-orange-400" />;
+    case 'Community Centers':
+      return <Building2 className="w-4 h-4 text-cyan-400" />;
+    case 'Flood Gates':
+      return <Cable className="w-4 h-4 text-indigo-400" />;
+    case 'Train Stations':
+      return <Train className="w-4 h-4 text-green-400" />;
+    default:
+      return <MapPin className="w-4 h-4 text-gray-400" />;
+  }
+};
 
 interface MapViewProps {
   pois: POI[];
@@ -341,65 +363,26 @@ export function MapView({
         <Layers className="w-5 h-5 text-white" />
       </motion.button>
 
-      {/* Layer Control Panel */}
+      {/* Koto Layer Control Panel */}
       <AnimatePresence>
         {showLayerControl && (
           <motion.div
-            className="absolute top-16 left-4 glass-card rounded-2xl p-4 space-y-3 z-10 min-w-[200px]"
+            className="absolute top-16 left-4 glass-card rounded-2xl p-4 space-y-3 z-10 min-w-[220px]"
             initial={{ opacity: 0, y: -10, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -10, scale: 0.95 }}
           >
-            <div className="text-white/90 mb-2">Map Layers</div>
+            <div className="text-white/90 mb-2 font-semibold">Koto Layers</div>
             
-            <LayerToggle
-              label="Flood Zones"
-              icon={<MapPin className="w-4 h-4 text-orange-400" />}
-              checked={layersVisible.floods}
-              onChange={() => toggleLayer('floods')}
-            />
-            
-            <LayerToggle
-              label="Shelters"
-              icon={<Home className="w-4 h-4 text-purple-400" />}
-              checked={layersVisible.shelters}
-              onChange={() => toggleLayer('shelters')}
-            />
-            
-            <LayerToggle
-              label="Schools"
-              icon={<School className="w-4 h-4 text-yellow-400" />}
-              checked={layersVisible.schools}
-              onChange={() => toggleLayer('schools')}
-            />
-            
-            <LayerToggle
-              label="Fire Stations"
-              icon={<Flame className="w-4 h-4 text-red-400" />}
-              checked={layersVisible.fireStations}
-              onChange={() => toggleLayer('fireStations')}
-            />
-            
-            <LayerToggle
-              label="Hospitals"
-              icon={<Hospital className="w-4 h-4 text-blue-400" />}
-              checked={layersVisible.hospitals}
-              onChange={() => toggleLayer('hospitals')}
-            />
-            
-            <LayerToggle
-              label="Parks"
-              icon={<Trees className="w-4 h-4 text-green-400" />}
-              checked={layersVisible.parks}
-              onChange={() => toggleLayer('parks')}
-            />
-            
-            <LayerToggle
-              label="Libraries"
-              icon={<Library className="w-4 h-4 text-cyan-400" />}
-              checked={layersVisible.libraries}
-              onChange={() => toggleLayer('libraries')}
-            />
+            {kotoLayers.map((layer) => (
+              <LayerToggle
+                key={layer.id}
+                label={layer.label}
+                icon={getKotoLayerIcon(layer.label)}
+                checked={kotoLayersVisible[layer.label]}
+                onChange={() => toggleKotoLayer(layer.label)}
+              />
+            ))}
           </motion.div>
         )}
       </AnimatePresence>
