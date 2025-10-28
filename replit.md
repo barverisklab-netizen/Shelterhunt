@@ -140,7 +140,25 @@ The application is set up to display Koto, Tokyo-specific layers, but requires M
    - Click on features to see popup information
 
 ## Recent Changes
-- **October 28, 2025 (Latest Update - Koto, Tokyo Integration)**: 
+- **October 28, 2025 (Latest Update - Koto Layer System Enhancement)**: 
+  - ✅ **Enhanced Layer Toggle System**
+    - Layer toggles now dynamically generated from `kotoLayers` array data
+    - Icons mapped to layer IDs (e.g., Bridges=11, Community Centers=6, AED=3, etc.)
+    - Icon colors extracted from `legendItems.swatchStyle` for visual consistency
+    - Toggle menu shows all 7 Koto layers with correct styling
+    
+  - ✅ **Improved Feature Popups**
+    - Popups now display layer information from `legendItems` (label + description)
+    - Feature-specific data formatted using query template from layer metadata
+    - Enhanced popup styling with dark glass background
+    - Each popup shows: Layer name → Layer description → Feature details
+    
+  - ✅ **Basemap Configuration**
+    - Map now uses basemap URL from city context instead of hardcoded value
+    - Single source of truth: change basemap in `src/data/cityContext.ts`
+    - Easy to customize per city or switch between Mapbox styles
+
+- **October 28, 2025 (Koto, Tokyo Integration)**: 
   - ✅ **Changed location from Boston to Koto, Tokyo, Japan**
     - Map center: 35.6731°N, 139.8171°E
     - Updated all POIs to Koto-specific locations (Koto Fire Station, Ariake Community Center, etc.)
@@ -149,16 +167,16 @@ The application is set up to display Koto, Tokyo-specific layers, but requires M
   - ✅ **Integrated Koto, Tokyo Mapbox Layers**
     - Created layer type definitions in `src/types/kotoLayers.ts`
     - Implemented 7 Koto-specific layers:
-      - **Flood Depth**: Color-coded flood risk zones (1m to 10m+ depth)
-      - **AED Locations**: Evacuation support facilities with AED
-      - **Bridges**: City bridge landmarks
-      - **Shrines/Temples**: Religious and cultural landmarks
-      - **Community Centers**: Designated community facilities
-      - **Flood Gates**: City flood control infrastructure
-      - **Train Stations**: Rail and metro stations
-    - Added click-to-query functionality (shows feature info in popups)
-    - Layers are toggleable via MapView component
-    - Updated legend to show all Koto layers organized by category
+      - **Layer ID 3 - AED Locations**: Evacuation support facilities with AED (red #c1272d)
+      - **Layer ID 6 - Community Centers**: Designated community facilities (cyan #00FFFF)
+      - **Layer ID 9 - Flood Depth**: Color-coded flood risk zones 1m to 10m+ depth (multi-color)
+      - **Layer ID 10 - Flood Gates**: City flood control infrastructure (indigo #0008ff)
+      - **Layer ID 11 - Bridges**: City bridge landmarks (blue #0000FF)
+      - **Layer ID 12 - Shrines/Temples**: Religious and cultural landmarks (purple #800080)
+      - **Layer ID 13 - Train Stations**: Rail and metro stations (green #00FF00)
+    - Added click-to-query functionality with enhanced popups
+    - Layers toggleable via MapView component with dynamic icons
+    - All styling (colors, filters, paint properties) sourced from `kotoLayers` data
     
   - ⚠️ **Note**: Layers require Mapbox tileset configuration to display data
     - Tilesets need to be uploaded to Mapbox Studio

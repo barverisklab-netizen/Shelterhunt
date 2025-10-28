@@ -12,25 +12,33 @@ mapboxgl.accessToken = MAPBOX_CONFIG.accessToken;
 console.log('Mapbox token loaded:', MAPBOX_CONFIG.accessToken ? 'Yes' : 'No', MAPBOX_CONFIG.accessToken?.substring(0, 10) + '...');
 console.log('Mapbox username configured:', MAPBOX_CONFIG.username);
 
-// Helper function to get icons for Koto layers
-const getKotoLayerIcon = (label: string): React.ReactNode => {
-  switch (label) {
-    case 'AED Locations':
-      return <Heart className="w-4 h-4 text-red-400" />;
-    case 'Bridges':
-      return <Cable className="w-4 h-4 text-blue-400" />;
-    case 'Shrines/Temples':
-      return <Home className="w-4 h-4 text-purple-400" />;
-    case 'Flood Depth':
-      return <MapPin className="w-4 h-4 text-orange-400" />;
-    case 'Community Centers':
-      return <Building2 className="w-4 h-4 text-cyan-400" />;
-    case 'Flood Gates':
-      return <Cable className="w-4 h-4 text-indigo-400" />;
-    case 'Train Stations':
-      return <Train className="w-4 h-4 text-green-400" />;
+// Helper function to get icons for Koto layers based on ID
+const getKotoLayerIcon = (layer: typeof kotoLayers[0]): React.ReactNode => {
+  if (!layer?.metadata?.legendItems?.[0]) {
+    return <MapPin className="w-4 h-4 text-gray-400" />;
+  }
+  
+  const color = layer.metadata.legendItems[0].swatchStyle.strokeColor || 
+                layer.metadata.legendItems[0].swatchStyle.fillColor || 
+                '#9ca3af';
+  
+  switch (layer.id) {
+    case 3: // AED Locations
+      return <Heart className="w-4 h-4" style={{ color }} />;
+    case 11: // Bridges
+      return <Cable className="w-4 h-4" style={{ color }} />;
+    case 12: // Shrines/Temples
+      return <Home className="w-4 h-4" style={{ color }} />;
+    case 9: // Flood Depth
+      return <MapPin className="w-4 h-4" style={{ color }} />;
+    case 6: // Community Centers
+      return <Building2 className="w-4 h-4" style={{ color }} />;
+    case 10: // Flood Gates
+      return <Cable className="w-4 h-4" style={{ color }} />;
+    case 13: // Train Stations
+      return <Train className="w-4 h-4" style={{ color }} />;
     default:
-      return <MapPin className="w-4 h-4 text-gray-400" />;
+      return <MapPin className="w-4 h-4" style={{ color }} />;
   }
 };
 
@@ -278,11 +286,27 @@ export function MapView({
               const feature = e.features[0];
               const props = feature.properties || {};
               
-              // Format HTML using the query template
-              let html = layer.metadata.query.template;
+              // Build popup HTML with layer info and feature data
+              const legendItem = layer.metadata.legendItems[0];
+              const popupHeader = `
+                <div style="background: rgba(0,0,0,0.8); padding: 12px; border-radius: 8px; min-width: 200px;">
+                  <div style="color: #fff; font-weight: bold; margin-bottom: 8px; font-size: 14px;">
+                    ${legendItem.label}
+                  </div>
+                  <div style="color: #ccc; font-size: 12px; margin-bottom: 8px;">
+                    ${legendItem.description}
+                  </div>
+                  <div style="border-top: 1px solid rgba(255,255,255,0.2); padding-top: 8px;">
+              `;
+              
+              // Format feature data using the query template
+              let featureData = layer.metadata.query.template;
               Object.keys(props).forEach(key => {
-                html = html.replace(new RegExp(`{{${key}}}`, 'g'), props[key] || 'N/A');
+                featureData = featureData.replace(new RegExp(`{{${key}}}`, 'g'), props[key] || 'N/A');
               });
+              
+              const popupFooter = '</div></div>';
+              const html = popupHeader + featureData + popupFooter;
               
               new mapboxgl.Popup()
                 .setLngLat(e.lngLat)
@@ -380,7 +404,7 @@ export function MapView({
               <LayerToggle
                 key={layer.id}
                 label={layer.label}
-                icon={getKotoLayerIcon(layer.label)}
+                icon={getKotoLayerIcon(layer)}
                 checked={kotoLayersVisible[layer.label]}
                 onChange={() => toggleKotoLayer(layer.label)}
               />
