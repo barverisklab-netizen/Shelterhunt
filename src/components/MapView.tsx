@@ -398,7 +398,7 @@ export function MapView({
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -10, scale: 0.95 }}
           >
-            <div className="text-white/90 mb-2 font-semibold">Koto Layers</div>
+            <div className="text-white mb-2 font-semibold">Koto Layers</div>
             
             {kotoLayers.map((layer) => (
               <LayerToggle
