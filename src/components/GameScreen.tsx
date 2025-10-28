@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from 'motion/react';
-import { Clock, Lightbulb, MapPin, Home, Trophy, Frown, Navigation } from 'lucide-react';
+import { Clock, Lightbulb, MapPin, Home, Trophy, Frown, Navigation, X } from 'lucide-react';
 import { Button } from './ui/button';
 import { MapView } from './MapView';
 import { QuestionDrawer } from './QuestionDrawer';
@@ -134,6 +134,13 @@ export function GameScreen({
       >
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
+            <button
+              onClick={onEndGame}
+              className="glass-card rounded-xl p-2 hover:bg-white/10 transition-colors"
+              title="Exit to main menu"
+            >
+              <X className="w-5 h-5 text-white/80" />
+            </button>
             <h1 className="text-xl font-bold text-white">Secret Shelter</h1>
             <div className="flex items-center gap-2">
               <div
