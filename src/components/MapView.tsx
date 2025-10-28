@@ -154,7 +154,7 @@ export function MapView({
 
   return (
     <div className="relative w-full h-full min-h-[500px] z-0">
-      <div ref={mapContainer} className="absolute inset-0 rounded-2xl overflow-hidden z-0" style={{ width: '100%', height: '100%' }} />
+      <div ref={mapContainer} className="absolute inset-0 z-0" style={{ width: '100%', height: '100%' }} />
 
       {/* Add CSS animations */}
       <style>{`
@@ -249,21 +249,49 @@ export function MapView({
         )}
       </AnimatePresence>
 
-      {/* Map Legend */}
-      <div className="absolute bottom-4 left-4 glass-card rounded-xl p-3 space-y-2 z-10">
-        <div className="flex items-center gap-2 text-xs text-white/90">
-          <div className="w-3 h-3 rounded-full bg-blue-400" />
-          <span>Your Location</span>
-        </div>
-        <div className="flex items-center gap-2 text-xs text-white/90">
-          <div className="w-3 h-3 rounded-full bg-red-500/50" />
-          <span>High Risk Flood</span>
-        </div>
-        <div className="flex items-center gap-2 text-xs text-white/90">
-          <div className="w-3 h-3 rounded-full bg-orange-500/50" />
-          <span>Medium Risk</span>
-        </div>
-      </div>
+      {/* Map Legend - Minimizable */}
+      <AnimatePresence>
+        {showLayerControl ? (
+          <motion.div
+            className="absolute bottom-20 left-4 glass-card rounded-xl p-3 space-y-2 z-10"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 20 }}
+          >
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-white/90 text-sm font-semibold">Legend</span>
+              <button
+                onClick={() => setShowLayerControl(false)}
+                className="text-white/60 hover:text-white/90 transition-colors"
+              >
+                ✕
+              </button>
+            </div>
+            <div className="flex items-center gap-2 text-xs text-white/90">
+              <div className="w-3 h-3 rounded-full bg-blue-400" />
+              <span>Your Location</span>
+            </div>
+            <div className="flex items-center gap-2 text-xs text-white/90">
+              <div className="w-3 h-3 rounded-full bg-red-500/50" />
+              <span>High Risk Flood</span>
+            </div>
+            <div className="flex items-center gap-2 text-xs text-white/90">
+              <div className="w-3 h-3 rounded-full bg-orange-500/50" />
+              <span>Medium Risk</span>
+            </div>
+          </motion.div>
+        ) : (
+          <motion.button
+            onClick={() => setShowLayerControl(true)}
+            className="absolute bottom-20 left-4 glass-card rounded-xl p-3 z-10 text-white/90 hover:text-white transition-colors"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 20 }}
+          >
+            <span className="text-sm font-semibold">Legend</span>
+          </motion.button>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
