@@ -120,7 +120,7 @@ export function GameScreen({
   const canGuess = nearbyPOI?.type === 'shelter' && !hasGuessed;
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col bg-gray-900">
       {/* Top Bar */}
       <motion.div
         className={`glass-strong p-4 border-b border-white/20 ${
