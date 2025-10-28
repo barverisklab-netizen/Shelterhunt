@@ -184,6 +184,7 @@ export function GameScreen({
             }
             setLocationPickerMode(false);
           }}
+          basemapUrl={defaultCityContext.mapConfig.basemapUrl}
         />
 
         {/* Floating Action Buttons */}

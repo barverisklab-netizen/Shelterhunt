@@ -43,6 +43,7 @@ interface MapViewProps {
   onPOIClick?: (poi: POI) => void;
   locationPickerMode?: boolean;
   onLocationPicked?: (location: { lat: number; lng: number }) => void;
+  basemapUrl?: string;
 }
 
 const POI_ICONS = {
@@ -120,7 +121,8 @@ export function MapView({
   gameEnded,
   onPOIClick,
   locationPickerMode,
-  onLocationPicked
+  onLocationPicked,
+  basemapUrl = 'mapbox://styles/mapbox/dark-v11'
 }: MapViewProps) {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
@@ -161,7 +163,7 @@ export function MapView({
     try {
       map.current = new mapboxgl.Map({
         container: mapContainer.current,
-        style: 'mapbox://styles/mapbox/dark-v11',
+        style: basemapUrl,
         center: [playerLocation.lng, playerLocation.lat],
         zoom: 14
       });
