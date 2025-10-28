@@ -140,9 +140,17 @@ The application is set up to display Koto, Tokyo-specific layers, but requires M
    - Click on features to see popup information
 
 ## Recent Changes
-- **October 28, 2025 (Latest Update - Koto Layer System Enhancement)**: 
+- **October 28, 2025 (Latest Update - Fully Dynamic Layer System)**: 
+  - ✅ **Fully Dynamic Legend**
+    - Legend now completely generated from `kotoLayers` data - no hardcoded values
+    - Automatically iterates through `legendItems` array for each layer
+    - Swatch colors pulled from `legendItems.swatchStyle` (strokeColor or fillColor)
+    - Labels use `legendItems.label` instead of hardcoded strings
+    - Swatch shapes determined by `swatchType` (symbol/line = circle, fill = square)
+    - Adding new layers to `kotoLayers.ts` automatically updates legend
+    
   - ✅ **Enhanced Layer Toggle System**
-    - Layer toggles now dynamically generated from `kotoLayers` array data
+    - Layer toggles dynamically generated from `kotoLayers` array data
     - Icons mapped to layer IDs (e.g., Bridges=11, Community Centers=6, AED=3, etc.)
     - Icon colors extracted from `legendItems.swatchStyle` for visual consistency
     - Toggle menu shows all 7 Koto layers with correct styling

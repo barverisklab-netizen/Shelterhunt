@@ -436,53 +436,32 @@ export function MapView({
               <span>Your Location</span>
             </div>
             <div className="border-t border-white/10 my-2"></div>
-            <div className="text-xs text-white/70 font-semibold mb-1">Flood Zones</div>
-            <div className="flex items-center gap-2 text-xs text-white/90">
-              <div className="w-3 h-3 bg-[#fc0303]" />
-              <span>8-10m+ depth</span>
-            </div>
-            <div className="flex items-center gap-2 text-xs text-white/90">
-              <div className="w-3 h-3 bg-[#fb8783]" />
-              <span>6-8m depth</span>
-            </div>
-            <div className="flex items-center gap-2 text-xs text-white/90">
-              <div className="w-3 h-3 bg-[#f98f48]" />
-              <span>4-6m depth</span>
-            </div>
-            <div className="flex items-center gap-2 text-xs text-white/90">
-              <div className="w-3 h-3 bg-[hsl(31,100%,65%)]" />
-              <span>2-4m depth</span>
-            </div>
-            <div className="border-t border-white/10 my-2"></div>
-            <div className="text-xs text-white/70 font-semibold mb-1">Infrastructure</div>
-            <div className="flex items-center gap-2 text-xs text-white/90">
-              <div className="w-3 h-3 rounded-full bg-cyan-400" />
-              <span>Train Stations</span>
-            </div>
-            <div className="flex items-center gap-2 text-xs text-white/90">
-              <div className="w-3 h-3 rounded-full bg-blue-400" />
-              <span>Bridges</span>
-            </div>
-            <div className="flex items-center gap-2 text-xs text-white/90">
-              <div className="w-3 h-3 rounded-full bg-indigo-400" />
-              <span>Flood Gates</span>
-            </div>
-            <div className="border-t border-white/10 my-2"></div>
-            <div className="text-xs text-white/70 font-semibold mb-1">Emergency</div>
-            <div className="flex items-center gap-2 text-xs text-white/90">
-              <div className="w-3 h-3 rounded-full bg-red-400" />
-              <span>AED Locations</span>
-            </div>
-            <div className="flex items-center gap-2 text-xs text-white/90">
-              <div className="w-3 h-3 rounded-full bg-orange-400" />
-              <span>Community Centers</span>
-            </div>
-            <div className="border-t border-white/10 my-2"></div>
-            <div className="text-xs text-white/70 font-semibold mb-1">Cultural</div>
-            <div className="flex items-center gap-2 text-xs text-white/90">
-              <div className="w-3 h-3 rounded-full bg-purple-400" />
-              <span>Shrines/Temples</span>
-            </div>
+            
+            {/* Dynamic Legend Items from kotoLayers */}
+            {kotoLayers.map((layer, layerIndex) => (
+              <div key={layer.id}>
+                {layer.metadata.legendItems.map((legendItem, itemIndex) => {
+                  const swatchColor = legendItem.swatchStyle.strokeColor || legendItem.swatchStyle.fillColor || '#9ca3af';
+                  const swatchClasses = legendItem.swatchType === 'symbol' || legendItem.swatchType === 'line' 
+                    ? 'rounded-full' 
+                    : '';
+                  
+                  return (
+                    <div key={`${layer.id}-${itemIndex}`} className="flex items-center gap-2 text-xs text-white/90 mb-2">
+                      <div 
+                        className={`w-3 h-3 ${swatchClasses}`}
+                        style={{ backgroundColor: swatchColor }}
+                      />
+                      <span>{legendItem.label}</span>
+                    </div>
+                  );
+                })}
+                {layerIndex < kotoLayers.length - 1 && (
+                  <div className="border-t border-white/10 my-2"></div>
+                )}
+              </div>
+            ))}
+            
             <div className="text-xs text-white/60 mt-3 italic">
               Note: Actual layer data requires Mapbox tileset configuration
             </div>
