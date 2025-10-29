@@ -160,13 +160,13 @@ export function OnboardingScreen({ onJoinGame, onHostGame, onPlaySolo, onShowHel
           transition={{ delay: 0.3, duration: 0.4 }}
         >
           {[
-            { label: 'LOCATION', color: 'bg-red-600' },
-            { label: 'TRIVIA', color: 'bg-blue-600' },
-            { label: 'TEAM', color: 'bg-yellow-500' }
+            { label: 'LOCATION', color: 'bg-red-600', textColor: 'text-white' },
+            { label: 'TRIVIA', color: 'bg-blue-600', textColor: 'text-white' },
+            { label: 'TEAM', color: 'bg-yellow-500', textColor: 'text-black' }
           ].map((feature, index) => (
             <motion.div
               key={feature.label}
-              className={`${feature.color} text-${feature.color === 'bg-yellow-500' ? 'black' : 'white'} px-6 py-2 text-sm font-bold uppercase tracking-wider border-2 border-black`}
+              className={`${feature.color} ${feature.textColor} px-6 py-2 text-sm font-bold uppercase tracking-wider border-2 border-black`}
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.4 + index * 0.1 }}
