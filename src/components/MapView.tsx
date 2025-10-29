@@ -382,23 +382,23 @@ export function MapView({
       {/* Layer Control Button */}
       <motion.button
         onClick={() => setShowLayerControl(!showLayerControl)}
-        className="absolute top-4 left-4 glass-strong rounded-2xl p-3 shadow-glow hover:scale-105 transition-transform z-10"
-        whileHover={{ scale: 1.05 }}
-        whileTap={{ scale: 0.95 }}
+        className="absolute top-4 left-4 bg-white border-4 border-black p-3 hover:bg-gray-100 transition-colors z-10"
+        whileHover={{ scale: 1.02 }}
+        whileTap={{ scale: 0.98 }}
       >
-        <Layers className="w-5 h-5 text-white" />
+        <Layers className="w-5 h-5 text-black" />
       </motion.button>
 
       {/* Koto Layer Control Panel */}
       <AnimatePresence>
         {showLayerControl && (
           <motion.div
-            className="absolute top-16 left-4 glass-card rounded-2xl p-4 space-y-3 z-10 min-w-[220px]"
+            className="absolute top-16 left-4 bg-white border-4 border-black p-4 space-y-3 z-10 min-w-[220px]"
             initial={{ opacity: 0, y: -10, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -10, scale: 0.95 }}
           >
-            <div className="text-white mb-2 font-semibold">Koto Layers</div>
+            <div className="text-black mb-2 font-bold uppercase">Koto Layers</div>
             
             {kotoLayers.map((layer) => (
               <LayerToggle
@@ -417,25 +417,25 @@ export function MapView({
       <AnimatePresence>
         {showLayerControl ? (
           <motion.div
-            className="absolute bottom-20 left-4 glass-card rounded-xl p-3 space-y-2 z-10 max-h-[60vh] overflow-y-auto"
+            className="absolute bottom-20 left-4 bg-white border-4 border-black p-3 space-y-2 z-10 max-h-[60vh] overflow-y-auto"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 20 }}
           >
             <div className="flex items-center justify-between mb-2">
-              <span className="text-white/90 text-sm font-semibold">Koto, Tokyo Layers</span>
+              <span className="text-black text-sm font-bold uppercase">Koto, Tokyo Layers</span>
               <button
                 onClick={() => setShowLayerControl(false)}
-                className="text-white/60 hover:text-white/90 transition-colors"
+                className="text-black hover:text-red-600 transition-colors font-bold"
               >
                 ✕
               </button>
             </div>
-            <div className="flex items-center gap-2 text-xs text-white/90">
+            <div className="flex items-center gap-2 text-xs text-black">
               <div className="w-3 h-3 rounded-full bg-blue-400" />
               <span>Your Location</span>
             </div>
-            <div className="border-t border-white/10 my-2"></div>
+            <div className="border-t-4 border-black my-2"></div>
             
             {/* Dynamic Legend Items from kotoLayers */}
             {kotoLayers.map((layer, layerIndex) => (
@@ -447,7 +447,7 @@ export function MapView({
                     : '';
                   
                   return (
-                    <div key={`${layer.id}-${itemIndex}`} className="flex items-center gap-2 text-xs text-white/90 mb-2">
+                    <div key={`${layer.id}-${itemIndex}`} className="flex items-center gap-2 text-xs text-black mb-2">
                       <div 
                         className={`w-3 h-3 ${swatchClasses}`}
                         style={{ backgroundColor: swatchColor }}
@@ -457,24 +457,24 @@ export function MapView({
                   );
                 })}
                 {layerIndex < kotoLayers.length - 1 && (
-                  <div className="border-t border-white/10 my-2"></div>
+                  <div className="border-t-4 border-black my-2"></div>
                 )}
               </div>
             ))}
             
-            <div className="text-xs text-white/60 mt-3 italic">
+            <div className="text-xs text-gray-600 mt-3">
               Note: Actual layer data requires Mapbox tileset configuration
             </div>
           </motion.div>
         ) : (
           <motion.button
             onClick={() => setShowLayerControl(true)}
-            className="absolute bottom-20 left-4 glass-card rounded-xl p-3 z-10 text-white/90 hover:text-white transition-colors"
+            className="absolute bottom-20 left-4 bg-white border-4 border-black p-3 z-10 text-black hover:bg-gray-100 transition-colors"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 20 }}
           >
-            <span className="text-sm font-semibold">Legend</span>
+            <span className="text-sm font-bold uppercase">Legend</span>
           </motion.button>
         )}
       </AnimatePresence>
@@ -494,15 +494,15 @@ function LayerToggle({
   onChange: () => void;
 }) {
   return (
-    <label className="flex items-center gap-3 cursor-pointer hover:bg-white/5 rounded-lg p-2 transition-colors">
+    <label className="flex items-center gap-3 cursor-pointer hover:bg-gray-100 p-2 transition-colors">
       <input
         type="checkbox"
         checked={checked}
         onChange={onChange}
-        className="w-4 h-4 rounded accent-cyan-400"
+        className="w-4 h-4 accent-black border-2 border-black"
       />
       {icon}
-      <span className="text-sm text-white">{label}</span>
+      <span className="text-sm text-black">{label}</span>
     </label>
   );
 }

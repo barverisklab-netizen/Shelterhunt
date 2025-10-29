@@ -31,26 +31,26 @@ export function CluesPanel({ isOpen, clues, onClose }: CluesPanelProps) {
             exit={{ x: '100%' }}
             transition={{ type: 'spring', damping: 30, stiffness: 300 }}
           >
-            <div className="glass-strong h-full flex flex-col border-l border-white/20">
+            <div className="bg-white h-full flex flex-col border-l-4 border-black">
               {/* Header */}
-              <div className="p-6 border-b border-white/20">
+              <div className="p-6 border-b-4 border-black">
                 <div className="flex items-start justify-between mb-2">
                   <div className="flex items-center gap-3">
-                    <div className="glass-card rounded-2xl p-3">
-                      <Lightbulb className="w-6 h-6 text-yellow-400" />
+                    <div className="bg-black p-3">
+                      <Lightbulb className="w-6 h-6 text-white" />
                     </div>
                     <div>
-                      <h3 className="text-2xl text-white">My Clues</h3>
-                      <p className="text-sm text-white/60">
+                      <h3 className="text-2xl text-black font-bold uppercase">My Clues</h3>
+                      <p className="text-sm text-gray-600">
                         {clues.length} clue{clues.length !== 1 ? 's' : ''} collected
                       </p>
                     </div>
                   </div>
                   <button
                     onClick={onClose}
-                    className="glass rounded-full p-2 hover:bg-white/10 transition-colors"
+                    className="bg-white border-4 border-black p-2 hover:bg-gray-100 transition-colors"
                   >
-                    <X className="w-5 h-5 text-white/80" />
+                    <X className="w-5 h-5 text-black" />
                   </button>
                 </div>
               </div>
@@ -63,12 +63,12 @@ export function CluesPanel({ isOpen, clues, onClose }: CluesPanelProps) {
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                   >
-                    <div className="glass-card rounded-full p-6">
-                      <Sparkles className="w-12 h-12 text-white/40" />
+                    <div className="bg-black p-6">
+                      <Sparkles className="w-12 h-12 text-white" />
                     </div>
                     <div>
-                      <div className="text-xl text-white mb-2">No clues yet</div>
-                      <div className="text-white/60 text-sm max-w-xs">
+                      <div className="text-xl text-black mb-2 font-bold uppercase">No clues yet</div>
+                      <div className="text-gray-600 text-sm max-w-xs">
                         Visit locations and answer trivia questions to unlock clues about the secret shelter
                       </div>
                     </div>
@@ -78,10 +78,10 @@ export function CluesPanel({ isOpen, clues, onClose }: CluesPanelProps) {
                     {clues.map((clue, index) => (
                       <motion.div
                         key={clue.id}
-                        className={`glass-card rounded-2xl p-4 ${
+                        className={`bg-white border-4 p-4 ${
                           clue.answer
-                            ? 'border-green-400/30 bg-green-500/5'
-                            : 'border-red-400/30 bg-red-500/5'
+                            ? 'border-green-600'
+                            : 'border-red-600'
                         }`}
                         initial={{ opacity: 0, x: 20 }}
                         animate={{ opacity: 1, x: 0 }}
@@ -90,7 +90,7 @@ export function CluesPanel({ isOpen, clues, onClose }: CluesPanelProps) {
                         <div className="flex items-start gap-3">
                           <div
                             className={`flex-shrink-0 mt-1 ${
-                              clue.answer ? 'text-green-400' : 'text-red-400'
+                              clue.answer ? 'text-green-600' : 'text-red-600'
                             }`}
                           >
                             {clue.answer ? (
@@ -100,11 +100,11 @@ export function CluesPanel({ isOpen, clues, onClose }: CluesPanelProps) {
                             )}
                           </div>
                           <div className="flex-1">
-                            <div className="text-xs text-white/60 mb-1 uppercase tracking-wide">
+                            <div className="text-xs text-gray-600 mb-1 uppercase tracking-wide font-bold">
                               {clue.category}
                             </div>
-                            <div className="text-white">{clue.text}</div>
-                            <div className="text-sm text-white/50 mt-2">
+                            <div className="text-black">{clue.text}</div>
+                            <div className="text-sm text-gray-500 mt-2">
                               {new Date(clue.timestamp).toLocaleTimeString()}
                             </div>
                           </div>
@@ -117,17 +117,17 @@ export function CluesPanel({ isOpen, clues, onClose }: CluesPanelProps) {
 
               {/* Tips Section */}
               {clues.length > 0 && (
-                <div className="p-6 border-t border-white/20">
+                <div className="p-6 border-t-4 border-black">
                   <motion.div
-                    className="glass-card rounded-2xl p-4"
+                    className="bg-white border-4 border-black p-4"
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                   >
                     <div className="flex items-start gap-3">
-                      <Lightbulb className="w-5 h-5 text-yellow-400 flex-shrink-0 mt-0.5" />
+                      <Lightbulb className="w-5 h-5 text-black flex-shrink-0 mt-0.5" />
                       <div>
-                        <div className="text-sm text-white mb-1">Deduction Tips</div>
-                        <div className="text-xs text-white/70 space-y-1">
+                        <div className="text-sm text-black mb-1 font-bold uppercase">Deduction Tips</div>
+                        <div className="text-xs text-gray-600 space-y-1">
                           <p>• Use green clues to narrow down possibilities</p>
                           <p>• Red clues help eliminate wrong locations</p>
                           <p>• Visit the shelter when you're confident!</p>
@@ -139,10 +139,12 @@ export function CluesPanel({ isOpen, clues, onClose }: CluesPanelProps) {
               )}
 
               {/* Back Button */}
-              <div className="p-6 border-t border-white/20">
+              <div className="p-6 border-t-4 border-black">
                 <Button
                   onClick={onClose}
-                  className="w-full glass-strong border-white/30 text-white py-4 rounded-2xl hover:bg-white/20"
+                  variant="outline"
+                  size="lg"
+                  className="w-full"
                 >
                   Back to Map
                 </Button>

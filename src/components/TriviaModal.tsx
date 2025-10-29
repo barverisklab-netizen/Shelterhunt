@@ -60,34 +60,34 @@ export function TriviaModal({ isOpen, trivia, onClose, onSubmit }: TriviaModalPr
               exit={{ opacity: 0, scale: 0.9, y: 20 }}
               transition={{ type: 'spring', damping: 25 }}
             >
-              <div className="glass-strong rounded-3xl p-6 shadow-2xl border border-white/30">
+              <div className="bg-white border-4 border-black p-6">
                 {/* Header */}
                 <div className="flex items-start justify-between mb-6">
                   <div className="flex items-center gap-3">
-                    <div className="glass-card rounded-2xl p-3">
-                      <Sparkles className="w-6 h-6 text-yellow-400" />
+                    <div className="bg-black p-3">
+                      <Sparkles className="w-6 h-6 text-white" />
                     </div>
                     <div>
-                      <h3 className="text-2xl text-white">Trivia Challenge</h3>
-                      <p className="text-sm text-white/60">Answer correctly to unlock a clue</p>
+                      <h3 className="text-2xl text-black font-bold uppercase">Trivia Challenge</h3>
+                      <p className="text-sm text-gray-600">Answer correctly to unlock a clue</p>
                     </div>
                   </div>
                   <button
                     onClick={handleClose}
-                    className="glass rounded-full p-2 hover:bg-white/10 transition-colors"
+                    className="bg-white border-4 border-black p-2 hover:bg-gray-100 transition-colors"
                   >
-                    <X className="w-5 h-5 text-white/80" />
+                    <X className="w-5 h-5 text-black" />
                   </button>
                 </div>
 
                 {/* Question */}
                 <motion.div
-                  className="glass-card rounded-2xl p-6 mb-6"
+                  className="bg-white border-4 border-black p-6 mb-6"
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.1 }}
                 >
-                  <div className="text-lg text-white leading-relaxed">
+                  <div className="text-lg text-black leading-relaxed font-bold">
                     {trivia.question}
                   </div>
                 </motion.div>
@@ -104,25 +104,25 @@ export function TriviaModal({ isOpen, trivia, onClose, onSubmit }: TriviaModalPr
                         key={index}
                         onClick={() => !showResult && setSelectedAnswer(index)}
                         disabled={showResult}
-                        className={`w-full p-4 rounded-2xl text-left transition-all ${
+                        className={`w-full p-4 border-4 text-left transition-all ${
                           showCorrect
-                            ? 'glass-strong border-green-400/50 shadow-glow-green'
+                            ? 'bg-white border-green-600'
                             : showWrong
-                            ? 'glass-strong border-red-400/50 shadow-glow-red'
+                            ? 'bg-white border-red-600'
                             : isSelected
-                            ? 'glass-strong border-cyan-400/50 shadow-glow'
-                            : 'glass border-white/20 hover:border-white/40'
+                            ? 'bg-black text-white border-black'
+                            : 'bg-white text-black border-black hover:bg-gray-100'
                         } disabled:cursor-not-allowed`}
                         initial={{ opacity: 0, x: -20 }}
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ delay: 0.2 + index * 0.05 }}
-                        whileHover={!showResult ? { scale: 1.02 } : {}}
-                        whileTap={!showResult ? { scale: 0.98 } : {}}
+                        whileHover={!showResult ? { scale: 1.01 } : {}}
+                        whileTap={!showResult ? { scale: 0.99 } : {}}
                       >
                         <div className="flex items-center justify-between">
-                          <span className="text-white">{answer}</span>
-                          {showCorrect && <CheckCircle className="w-5 h-5 text-green-400" />}
-                          {showWrong && <XCircle className="w-5 h-5 text-red-400" />}
+                          <span className={showCorrect || showWrong ? 'text-black' : ''}>{answer}</span>
+                          {showCorrect && <CheckCircle className="w-5 h-5 text-green-600" />}
+                          {showWrong && <XCircle className="w-5 h-5 text-red-600" />}
                         </div>
                       </motion.button>
                     );
@@ -133,10 +133,10 @@ export function TriviaModal({ isOpen, trivia, onClose, onSubmit }: TriviaModalPr
                 <AnimatePresence>
                   {showResult && (
                     <motion.div
-                      className={`mb-6 p-4 rounded-2xl ${
+                      className={`mb-6 p-4 border-4 ${
                         isCorrect
-                          ? 'glass-card border-green-400/30 bg-green-500/10'
-                          : 'glass-card border-red-400/30 bg-red-500/10'
+                          ? 'bg-white border-green-600'
+                          : 'bg-white border-red-600'
                       }`}
                       initial={{ opacity: 0, y: -10 }}
                       animate={{ opacity: 1, y: 0 }}
@@ -145,18 +145,18 @@ export function TriviaModal({ isOpen, trivia, onClose, onSubmit }: TriviaModalPr
                       <div className="flex items-center gap-3">
                         {isCorrect ? (
                           <>
-                            <CheckCircle className="w-6 h-6 text-green-400" />
+                            <CheckCircle className="w-6 h-6 text-green-600" />
                             <div>
-                              <div className="text-white">Correct! 🎉</div>
-                              <div className="text-sm text-white/80">You unlocked a clue!</div>
+                              <div className="text-black font-bold uppercase">Correct! 🎉</div>
+                              <div className="text-sm text-gray-600">You unlocked a clue!</div>
                             </div>
                           </>
                         ) : (
                           <>
-                            <XCircle className="w-6 h-6 text-red-400" />
+                            <XCircle className="w-6 h-6 text-red-600" />
                             <div>
-                              <div className="text-white">Incorrect</div>
-                              <div className="text-sm text-white/80">This question is locked for 2 minutes</div>
+                              <div className="text-black font-bold uppercase">Incorrect</div>
+                              <div className="text-sm text-gray-600">This question is locked for 2 minutes</div>
                             </div>
                           </>
                         )}
@@ -170,7 +170,9 @@ export function TriviaModal({ isOpen, trivia, onClose, onSubmit }: TriviaModalPr
                   <Button
                     onClick={handleSubmit}
                     disabled={selectedAnswer === null}
-                    className="w-full glass-strong border-white/30 text-white py-6 text-lg rounded-2xl shadow-glow hover:bg-white/20 disabled:opacity-50 disabled:cursor-not-allowed"
+                    variant="destructive"
+                    size="lg"
+                    className="w-full"
                   >
                     Submit Answer
                   </Button>

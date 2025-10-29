@@ -127,8 +127,8 @@ export function GameScreen({
     <div className="fixed inset-0 flex flex-col bg-gray-900">
       {/* Top Bar */}
       <motion.div
-        className={`glass-strong p-4 border-b border-white/20 ${
-          teamColor === 'red' ? 'border-l-4 border-l-red-400' : 'border-l-4 border-l-blue-400'
+        className={`bauhaus-white p-4 border-b-4 border-black ${
+          teamColor === 'red' ? 'border-l-4 border-l-red-600' : 'border-l-4 border-l-blue-600'
         }`}
         initial={{ y: -50, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
@@ -137,32 +137,32 @@ export function GameScreen({
           <div className="flex items-center gap-4">
             <button
               onClick={onEndGame}
-              className="glass-card rounded-xl p-2 hover:bg-white/10 transition-colors"
+              className="bauhaus-black p-2 border-4 border-black hover:bauhaus-red transition-colors"
               title="Exit to main menu"
             >
-              <X className="w-5 h-5 text-white/80" />
+              <X className="w-5 h-5 text-white" />
             </button>
-            <h1 className="text-xl font-bold text-white">Secret Shelter</h1>
+            <h1 className="text-xl font-bold text-black uppercase">Secret Shelter</h1>
             <div className="flex items-center gap-2">
               <div
-                className={`w-3 h-3 rounded-full ${
-                  teamColor === 'red' ? 'bg-red-400' : 'bg-blue-400'
+                className={`w-3 h-3 ${
+                  teamColor === 'red' ? 'bg-red-600' : 'bg-blue-600'
                 }`}
               />
-              <span className="text-white/80 text-sm">
+              <span className="text-black text-sm font-bold uppercase">
                 {teamColor === 'red' ? 'Red' : 'Blue'} Team
               </span>
             </div>
           </div>
 
-          <div className="flex items-center gap-2 glass-card px-4 py-2 rounded-full">
+          <div className="flex items-center gap-2 bauhaus-red px-4 py-2 border-4 border-black">
             <Clock className="w-4 h-4 text-white" />
-            <span className="text-white tabular-nums">
+            <span className="text-white tabular-nums font-bold">
               {Math.floor(timeRemaining / 60)}:{(timeRemaining % 60).toString().padStart(2, '0')}
             </span>
           </div>
 
-          <div className="text-white/80 text-sm">
+          <div className="text-black text-sm font-bold uppercase">
             {clues.length} clue{clues.length !== 1 ? 's' : ''}
           </div>
         </div>
@@ -191,13 +191,13 @@ export function GameScreen({
         <div className="absolute top-4 right-4 flex flex-col gap-3">
           <motion.button
             onClick={() => setCluesOpen(true)}
-            className="glass-strong rounded-2xl p-4 shadow-glow hover:scale-105 transition-transform"
+            className="bauhaus-white p-4 border-4 border-black bauhaus-shadow hover:scale-105 transition-transform"
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
           >
-            <Lightbulb className="w-6 h-6 text-yellow-400" />
+            <Lightbulb className="w-6 h-6 text-yellow-500" />
             {clues.length > 0 && (
-              <div className="absolute -top-1 -right-1 w-5 h-5 bg-cyan-400 rounded-full flex items-center justify-center text-xs">
+              <div className="absolute -top-1 -right-1 w-5 h-5 bg-red-600 border-2 border-black flex items-center justify-center text-xs font-bold text-white">
                 {clues.length}
               </div>
             )}
@@ -206,42 +206,42 @@ export function GameScreen({
           {canGuess && (
             <motion.button
               onClick={handleGuess}
-              className="glass-strong rounded-2xl p-4 border-2 border-green-400/50 shadow-glow-green hover:scale-105 transition-transform pulse-glow"
+              className="bauhaus-red p-4 border-4 border-black bauhaus-shadow hover:scale-105 transition-transform"
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
             >
-              <Home className="w-6 h-6 text-green-400" />
+              <Home className="w-6 h-6 text-white" />
             </motion.button>
           )}
 
           {/* Mock Location Selector Button */}
           <motion.button
             onClick={() => setLocationPickerMode(!locationPickerMode)}
-            className={`glass-strong rounded-2xl p-4 shadow-glow hover:scale-105 transition-transform ${
-              locationPickerMode ? 'border-2 border-cyan-400' : ''
+            className={`bauhaus-black p-4 border-4 border-black bauhaus-shadow hover:scale-105 transition-transform ${
+              locationPickerMode ? 'border-red-600' : ''
             }`}
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             title={locationPickerMode ? "Cancel location selection" : "Pick location on map"}
           >
-            <Navigation className={`w-6 h-6 ${locationPickerMode ? 'text-cyan-300' : 'text-cyan-400'}`} />
+            <Navigation className={`w-6 h-6 ${locationPickerMode ? 'text-red-400' : 'text-white'}`} />
           </motion.button>
         </div>
 
         {/* Location Status */}
         {nearbyPOI && !gameEnded && (
           <motion.div
-            className="absolute top-4 left-4 glass-card rounded-2xl p-4 max-w-xs"
+            className="absolute top-4 left-4 bauhaus-white p-4 max-w-xs border-4 border-black bauhaus-shadow"
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
           >
             <div className="flex items-center gap-3">
-              <MapPin className="w-5 h-5 text-cyan-400" />
+              <MapPin className="w-5 h-5 text-red-600" />
               <div>
-                <div className="text-white">{nearbyPOI.name}</div>
-                <div className="text-xs text-white/60">Tap to ask questions</div>
+                <div className="text-black font-bold">{nearbyPOI.name}</div>
+                <div className="text-xs text-black/70 font-semibold">Tap to ask questions</div>
               </div>
             </div>
           </motion.div>
@@ -275,13 +275,13 @@ export function GameScreen({
         {gameEnded && gameResult && (
           <>
             <motion.div
-              className="fixed inset-0 bg-black/70 backdrop-blur-md z-50"
+              className="fixed inset-0 bg-black/90 z-50"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
             />
             <div className="fixed inset-0 flex items-center justify-center p-4 z-50">
               <motion.div
-                className="w-full max-w-md glass-strong rounded-3xl p-8 text-center space-y-6"
+                className="w-full max-w-md bauhaus-white p-8 text-center space-y-6 border-4 border-black bauhaus-shadow"
                 initial={{ opacity: 0, scale: 0.8, y: 50 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 transition={{ type: 'spring', damping: 20 }}
@@ -289,22 +289,22 @@ export function GameScreen({
                 {gameResult === 'win' ? (
                   <>
                     <motion.div
-                      className="inline-block glass-card rounded-full p-6"
+                      className="inline-block bauhaus-red p-6 border-4 border-black"
                       animate={{ rotate: [0, 10, -10, 10, 0], scale: [1, 1.1, 1] }}
                       transition={{ duration: 0.5, repeat: 2 }}
                     >
-                      <Trophy className="w-16 h-16 text-yellow-400" />
+                      <Trophy className="w-16 h-16 text-white" />
                     </motion.div>
                     <div>
-                      <h2 className="text-4xl text-white mb-2">Victory! 🎉</h2>
-                      <p className="text-white/80">You found the secret shelter!</p>
+                      <h2 className="text-4xl text-black mb-2 font-bold uppercase">Victory! 🎉</h2>
+                      <p className="text-black font-semibold">You found the secret shelter!</p>
                     </div>
-                    <div className="glass-card rounded-2xl p-4 space-y-2 text-left">
-                      <div className="flex justify-between text-white/80">
+                    <div className="bauhaus-white border-4 border-black p-4 space-y-2 text-left">
+                      <div className="flex justify-between text-black font-bold">
                         <span>Clues Collected:</span>
                         <span>{clues.length}</span>
                       </div>
-                      <div className="flex justify-between text-white/80">
+                      <div className="flex justify-between text-black font-bold">
                         <span>Locations Visited:</span>
                         <span>{visitedPOIs.length}</span>
                       </div>
@@ -312,18 +312,18 @@ export function GameScreen({
                   </>
                 ) : (
                   <>
-                    <div className="glass-card rounded-full p-6 inline-block">
-                      <Frown className="w-16 h-16 text-red-400" />
+                    <div className="bauhaus-black p-6 inline-block border-4 border-black">
+                      <Frown className="w-16 h-16 text-white" />
                     </div>
                     <div>
-                      <h2 className="text-4xl text-white mb-2">Not Quite</h2>
-                      <p className="text-white/80">That's not the shelter. Keep looking!</p>
+                      <h2 className="text-4xl text-black mb-2 font-bold uppercase">Not Quite</h2>
+                      <p className="text-black font-semibold">That's not the shelter. Keep looking!</p>
                     </div>
                   </>
                 )}
                 <Button
                   onClick={onEndGame}
-                  className="w-full glass-strong border-white/30 text-white py-4 rounded-2xl hover:bg-white/20"
+                  className="w-full bauhaus-red border-4 border-black text-white py-4 hover:bauhaus-black bauhaus-shadow font-bold uppercase"
                 >
                   Return to Lobby
                 </Button>
@@ -337,14 +337,14 @@ export function GameScreen({
       <AnimatePresence>
         {locationPickerMode && (
           <motion.div
-            className="fixed top-24 left-1/2 -translate-x-1/2 z-40 glass-card rounded-2xl px-6 py-3 pointer-events-none"
+            className="fixed top-24 left-1/2 -translate-x-1/2 z-40 bauhaus-white px-6 py-3 pointer-events-none border-4 border-black bauhaus-shadow"
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
           >
-            <div className="flex items-center gap-2 text-white">
-              <Navigation className="w-5 h-5 text-cyan-400" />
-              <span className="font-semibold">Click anywhere on the map to set your location</span>
+            <div className="flex items-center gap-2 text-black">
+              <Navigation className="w-5 h-5 text-red-600" />
+              <span className="font-bold uppercase">Click anywhere on the map to set your location</span>
             </div>
           </motion.div>
         )}

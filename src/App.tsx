@@ -115,14 +115,7 @@ export default function App() {
   const teamColor = currentPlayer?.team || 'red';
 
   return (
-    <div className="min-h-screen gradient-bg relative overflow-hidden">
-      {/* Animated background elements */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-1/4 -left-1/4 w-96 h-96 bg-purple-500/30 rounded-full blur-3xl animate-pulse" />
-        <div className="absolute bottom-1/4 -right-1/4 w-96 h-96 bg-pink-500/30 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-cyan-500/20 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '2s' }} />
-      </div>
-
+    <div className="min-h-screen bg-white relative overflow-hidden">
       {/* Main Content */}
       <div className="relative z-10">
         {gameState === 'onboarding' && (
@@ -169,12 +162,11 @@ export default function App() {
       <Toaster
         position="top-center"
         toastOptions={{
-          className: 'glass-strong border-white/30',
+          className: 'bauhaus-card bauhaus-border',
           style: {
-            background: 'rgba(255, 255, 255, 0.1)',
-            backdropFilter: 'blur(20px)',
-            border: '1px solid rgba(255, 255, 255, 0.2)',
-            color: 'white',
+            background: 'white',
+            border: '3px solid black',
+            color: 'black',
           },
         }}
       />

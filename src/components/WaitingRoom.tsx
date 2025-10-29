@@ -68,20 +68,19 @@ export function WaitingRoom({
 
           {/* Game Code */}
           <motion.div
-            className="glass-card rounded-2xl p-4 inline-block"
-            whileHover={{ scale: 1.05 }}
+            className="bg-white border-4 border-black p-4 inline-block"
+            whileHover={{ scale: 1.02 }}
           >
-            <div className="text-sm text-white/60 mb-1">Game Code</div>
+            <div className="text-sm text-gray-600 mb-1 font-bold uppercase">Game Code</div>
             <div className="flex items-center gap-3">
-              <div className="text-3xl tracking-widest text-white">
+              <div className="text-3xl tracking-widest text-black font-bold">
                 {gameCode}
               </div>
               <Button
                 onClick={copyGameCode}
                 size="sm"
-                className={`glass border-white/30 text-white hover:bg-white/20 transition-all ${
-                  copied ? 'bg-green-500/20 border-green-400/50' : ''
-                }`}
+                variant={copied ? "outline" : "outline"}
+                className={copied ? 'border-green-600 text-green-600' : ''}
               >
                 {copied ? (
                   <Check className="w-4 h-4" />
@@ -97,20 +96,20 @@ export function WaitingRoom({
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {/* Red Team */}
           <motion.div
-            className="glass-card rounded-2xl p-6 space-y-4"
+            className="bg-white border-4 border-black p-6 space-y-4"
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.2 }}
           >
             <div className="flex items-center gap-2 mb-4">
-              <div className="w-4 h-4 rounded-full bg-red-400" />
-              <h3 className="text-xl text-white">Red Team</h3>
+              <div className="w-4 h-4 bg-red-600" />
+              <h3 className="text-xl text-black font-bold uppercase">Red Team</h3>
             </div>
             <div className="space-y-2">
               {redTeam.map((player, index) => (
                 <motion.div
                   key={player.id}
-                  className="glass rounded-xl p-3 flex items-center justify-between"
+                  className="bg-white border-3 border-black p-3 flex items-center justify-between"
                   initial={{ opacity: 0, x: -10 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: 0.3 + index * 0.1 }}
@@ -118,46 +117,46 @@ export function WaitingRoom({
                   <div className="flex items-center gap-3">
                     <div className="text-2xl">{player.avatar}</div>
                     <div>
-                      <div className="text-white flex items-center gap-2">
+                      <div className="text-black flex items-center gap-2 font-bold">
                         {player.name}
                         {isHost && player.id === currentUserId && (
-                          <Crown className="w-4 h-4 text-yellow-400" />
+                          <Crown className="w-4 h-4 text-black" />
                         )}
                       </div>
-                      <div className="text-xs text-white/60">
+                      <div className="text-xs text-gray-600">
                         {player.id === currentUserId ? 'You' : 'Player'}
                       </div>
                     </div>
                   </div>
                   {player.ready ? (
-                    <Check className="w-5 h-5 text-green-400" />
+                    <Check className="w-5 h-5 text-green-600" />
                   ) : (
-                    <X className="w-5 h-5 text-white/30" />
+                    <X className="w-5 h-5 text-gray-400" />
                   )}
                 </motion.div>
               ))}
               {redTeam.length === 0 && (
-                <div className="text-center text-white/40 py-4">Waiting for players...</div>
+                <div className="text-center text-gray-600 py-4">Waiting for players...</div>
               )}
             </div>
           </motion.div>
 
           {/* Blue Team */}
           <motion.div
-            className="glass-card rounded-2xl p-6 space-y-4"
+            className="bg-white border-4 border-black p-6 space-y-4"
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.2 }}
           >
             <div className="flex items-center gap-2 mb-4">
-              <div className="w-4 h-4 rounded-full bg-blue-400" />
-              <h3 className="text-xl text-white">Blue Team</h3>
+              <div className="w-4 h-4 bg-blue-600" />
+              <h3 className="text-xl text-black font-bold uppercase">Blue Team</h3>
             </div>
             <div className="space-y-2">
               {blueTeam.map((player, index) => (
                 <motion.div
                   key={player.id}
-                  className="glass rounded-xl p-3 flex items-center justify-between"
+                  className="bg-white border-3 border-black p-3 flex items-center justify-between"
                   initial={{ opacity: 0, x: 10 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: 0.3 + index * 0.1 }}
@@ -165,26 +164,26 @@ export function WaitingRoom({
                   <div className="flex items-center gap-3">
                     <div className="text-2xl">{player.avatar}</div>
                     <div>
-                      <div className="text-white flex items-center gap-2">
+                      <div className="text-black flex items-center gap-2 font-bold">
                         {player.name}
                         {isHost && player.id === currentUserId && (
-                          <Crown className="w-4 h-4 text-yellow-400" />
+                          <Crown className="w-4 h-4 text-black" />
                         )}
                       </div>
-                      <div className="text-xs text-white/60">
+                      <div className="text-xs text-gray-600">
                         {player.id === currentUserId ? 'You' : 'Player'}
                       </div>
                     </div>
                   </div>
                   {player.ready ? (
-                    <Check className="w-5 h-5 text-green-400" />
+                    <Check className="w-5 h-5 text-green-600" />
                   ) : (
-                    <X className="w-5 h-5 text-white/30" />
+                    <X className="w-5 h-5 text-gray-400" />
                   )}
                 </motion.div>
               ))}
               {blueTeam.length === 0 && (
-                <div className="text-center text-white/40 py-4">Waiting for players...</div>
+                <div className="text-center text-gray-600 py-4">Waiting for players...</div>
               )}
             </div>
           </motion.div>
@@ -201,18 +200,18 @@ export function WaitingRoom({
             <Button
               onClick={onStartGame}
               disabled={!allReady || players.length < 1}
-              className="w-full glass-strong border-white/30 text-white py-6 text-lg rounded-2xl shadow-glow hover:bg-white/20 disabled:opacity-50 disabled:cursor-not-allowed"
+              variant="destructive"
+              size="lg"
+              className="w-full"
             >
               {allReady && players.length >= 1 ? 'Start Game' : 'Waiting for players to be ready...'}
             </Button>
           ) : (
             <Button
               onClick={onToggleReady}
-              className={`w-full py-6 text-lg rounded-2xl transition-all ${
-                currentPlayer?.ready
-                  ? 'glass-strong border-green-400/50 text-white shadow-glow-green'
-                  : 'glass border-white/30 text-white hover:bg-white/20'
-              }`}
+              variant={currentPlayer?.ready ? "default" : "outline"}
+              size="lg"
+              className="w-full"
             >
               {currentPlayer?.ready ? (
                 <>
@@ -228,7 +227,8 @@ export function WaitingRoom({
           <Button
             onClick={onLeaveGame}
             variant="outline"
-            className="w-full glass border-white/30 text-white/90 hover:text-white py-4 rounded-2xl hover:bg-white/10"
+            size="lg"
+            className="w-full"
           >
             Leave Game
           </Button>

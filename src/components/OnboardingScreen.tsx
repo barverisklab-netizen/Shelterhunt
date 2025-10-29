@@ -22,134 +22,156 @@ export function OnboardingScreen({ onJoinGame, onHostGame, onPlaySolo, onShowHel
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4">
+    <div className="min-h-screen bg-white flex items-center justify-center p-4 relative overflow-hidden">
+      {/* Bauhaus Geometric Background Elements */}
+      <div className="absolute top-10 left-10 w-32 h-32 bg-red-600 opacity-90"></div>
+      <div className="absolute top-40 right-20 w-24 h-24 rounded-full bg-blue-600 opacity-80"></div>
+      <div className="absolute bottom-32 left-1/4" style={{
+        width: 0,
+        height: 0,
+        borderLeft: '50px solid transparent',
+        borderRight: '50px solid transparent',
+        borderBottom: '87px solid #EAB308',
+        opacity: 0.7
+      }}></div>
+      <div className="absolute bottom-20 right-1/3 w-16 h-16 bg-yellow-500"></div>
+      <div className="absolute top-1/3 right-10 w-20 h-20 bg-black"></div>
+      
       <motion.div
-        className="w-full max-w-md space-y-8"
+        className="w-full max-w-md space-y-8 relative z-10"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6 }}
+        transition={{ duration: 0.4 }}
       >
-        {/* Logo and Title */}
+        {/* Logo and Title - Bauhaus Style */}
         <motion.div
-          className="text-center space-y-4"
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ delay: 0.2, duration: 0.5 }}
+          className="text-center space-y-6"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.1, duration: 0.4 }}
         >
-          <motion.div
-            className="inline-block glass-strong rounded-3xl p-6 shadow-glow"
-            animate={{ y: [0, -10, 0] }}
-            transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
-          >
-            <MapPin className="w-16 h-16 text-white" />
-          </motion.div>
+          {/* Geometric Logo Composition */}
+          <div className="flex items-center justify-center">
+            <div className="relative w-32 h-32">
+              {/* Large Red Square */}
+              <div className="absolute inset-0 bg-red-600 border-4 border-black"></div>
+              {/* Black Circle */}
+              <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-16 h-16 rounded-full bg-black border-4 border-white"></div>
+              {/* MapPin Icon in Center */}
+              <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
+                <MapPin className="w-8 h-8 text-white" />
+              </div>
+            </div>
+          </div>
 
           <div className="space-y-2">
-            <h1 className="text-5xl gradient-text text-glow">
-              Secret Shelter
+            <h1 className="text-6xl font-black text-black uppercase tracking-tight leading-none">
+              Secret<br/>Shelter
             </h1>
-            <p className="text-white/80 text-lg">
-              Find the secret shelter before the storm!
+            <p className="text-black text-base font-medium uppercase tracking-wider">
+              Find the shelter before the storm!
             </p>
           </div>
         </motion.div>
 
-        {/* Action Buttons */}
+        {/* Action Buttons - Bauhaus Style */}
         <motion.div
           className="space-y-4"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4, duration: 0.5 }}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.2, duration: 0.4 }}
         >
           {/* Join Game Section */}
           {!showJoinInput ? (
-            <Button
+            <button
               onClick={() => setShowJoinInput(true)}
-              className="w-full glass-strong hover:glass border-white/30 text-white py-6 text-lg rounded-2xl shadow-glow transition-all hover:scale-105"
+              className="w-full bg-white border-4 border-black hover:shadow-[8px_8px_0_black] transition-all py-6 flex items-center justify-center gap-2 cursor-pointer"
             >
-              <Users className="w-5 h-5 mr-2" />
-              Join Game
-            </Button>
+              <Users className="w-5 h-5" />
+              <span className="text-lg font-bold uppercase tracking-wide">Join Game</span>
+            </button>
           ) : (
             <motion.div
-              className="glass-card rounded-2xl p-4 space-y-3"
+              className="bg-white border-4 border-red-600 p-4 space-y-3"
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
             >
               <Input
                 type="text"
-                placeholder="Enter game code..."
+                placeholder="ENTER CODE"
                 value={gameCode}
                 onChange={(e) => setGameCode(e.target.value.toUpperCase())}
-                className="glass border-white/30 text-white placeholder:text-white/50 text-center text-lg tracking-wider"
+                className="border-2 border-black text-black placeholder:text-gray-400 text-center text-xl tracking-widest font-bold uppercase bg-white"
                 maxLength={6}
                 onKeyPress={(e) => e.key === 'Enter' && handleJoin()}
               />
               <div className="flex gap-2">
-                <Button
+                <button
                   onClick={() => setShowJoinInput(false)}
-                  variant="outline"
-                  className="flex-1 glass border-white/30 text-white hover:bg-white/10"
+                  className="flex-1 bg-white border-2 border-black py-3 font-bold uppercase text-sm hover:shadow-[4px_4px_0_black] transition-all"
                 >
                   Cancel
-                </Button>
-                <Button
+                </button>
+                <button
                   onClick={handleJoin}
                   disabled={!gameCode.trim()}
-                  className="flex-1 glass-strong border-white/30 text-white hover:bg-white/20 disabled:opacity-50"
+                  className="flex-1 bg-red-600 text-white border-2 border-black py-3 font-bold uppercase text-sm hover:shadow-[4px_4px_0_black] transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
-                  <Play className="w-4 h-4 mr-2" />
+                  <Play className="w-4 h-4" />
                   Join
-                </Button>
+                </button>
               </div>
             </motion.div>
           )}
 
           {/* Play Solo Button */}
-          <Button
+          <button
             onClick={onPlaySolo}
-            className="w-full glass-strong hover:glass border-white/30 text-white py-6 text-lg rounded-2xl shadow-glow transition-all hover:scale-105"
+            className="w-full bg-red-600 text-white border-4 border-black hover:shadow-[8px_8px_0_black] transition-all py-6 flex items-center justify-center gap-2 cursor-pointer"
           >
-            <User className="w-5 h-5 mr-2" />
-            Play Solo
-          </Button>
+            <User className="w-5 h-5" />
+            <span className="text-lg font-bold uppercase tracking-wide">Play Solo</span>
+          </button>
 
           {/* Host Game Button */}
-          <Button
+          <button
             onClick={onHostGame}
-            className="w-full glass-strong hover:glass border-white/30 text-white py-6 text-lg rounded-2xl shadow-glow transition-all hover:scale-105"
+            className="w-full bg-black text-white border-4 border-black hover:shadow-[8px_8px_0_red] transition-all py-6 flex items-center justify-center gap-2 cursor-pointer"
           >
-            <Users className="w-5 h-5 mr-2" />
-            Host Multiplayer
-          </Button>
+            <Users className="w-5 h-5" />
+            <span className="text-lg font-bold uppercase tracking-wide">Host Multiplayer</span>
+          </button>
 
           {/* How to Play Button */}
-          <Button
+          <button
             onClick={onShowHelp}
-            variant="outline"
-            className="w-full glass border-white/30 text-white/90 hover:text-white py-4 rounded-2xl hover:bg-white/10"
+            className="w-full bg-white text-black border-4 border-black hover:shadow-[4px_4px_0_black] transition-all py-4 flex items-center justify-center gap-2 cursor-pointer"
           >
-            <Info className="w-5 h-5 mr-2" />
-            How to Play
-          </Button>
+            <Info className="w-5 h-5" />
+            <span className="text-base font-bold uppercase tracking-wide">How to Play</span>
+          </button>
         </motion.div>
 
-        {/* Feature Pills */}
+        {/* Feature Tags - Bauhaus Geometric Style */}
         <motion.div
           className="flex flex-wrap justify-center gap-3"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ delay: 0.6, duration: 0.5 }}
+          transition={{ delay: 0.3, duration: 0.4 }}
         >
-          {['Location-Based', 'Trivia Challenge', 'Team Competition'].map((feature, index) => (
+          {[
+            { label: 'LOCATION', color: 'bg-red-600' },
+            { label: 'TRIVIA', color: 'bg-blue-600' },
+            { label: 'TEAM', color: 'bg-yellow-500' }
+          ].map((feature, index) => (
             <motion.div
-              key={feature}
-              className="glass-card px-4 py-2 rounded-full text-sm text-white/80"
-              initial={{ opacity: 0, scale: 0 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 0.7 + index * 0.1, type: 'spring' }}
+              key={feature.label}
+              className={`${feature.color} text-${feature.color === 'bg-yellow-500' ? 'black' : 'white'} px-6 py-2 text-sm font-bold uppercase tracking-wider border-2 border-black`}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.4 + index * 0.1 }}
             >
-              {feature}
+              {feature.label}
             </motion.div>
           ))}
         </motion.div>

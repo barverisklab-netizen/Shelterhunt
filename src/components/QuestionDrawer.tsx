@@ -49,16 +49,16 @@ export function QuestionDrawer({
       animate={{ y: isOpen ? 0 : 'calc(100% - 60px)' }}
       transition={{ type: 'spring', damping: 30, stiffness: 300 }}
     >
-      <div className="glass-strong border-t border-white/20 rounded-t-3xl shadow-2xl">
+      <div className="bg-white border-t-4 border-black">
         {/* Drawer Handle */}
         <button
           onClick={onToggle}
-          className="w-full py-4 flex flex-col items-center gap-2 cursor-pointer hover:bg-white/5 transition-colors rounded-t-3xl"
+          className="w-full py-4 flex flex-col items-center gap-2 cursor-pointer hover:bg-gray-100 transition-colors"
         >
-          <div className="w-12 h-1.5 rounded-full bg-white/30" />
-          <div className="flex items-center gap-2 text-white">
+          <div className="w-12 h-1 bg-black" />
+          <div className="flex items-center gap-2 text-black">
             <MapPin className="w-5 h-5" />
-            <span className="text-lg">Ask a Question</span>
+            <span className="text-lg font-bold uppercase">Ask a Question</span>
             <motion.div
               animate={{ rotate: isOpen ? 180 : 0 }}
               transition={{ duration: 0.3 }}
@@ -79,10 +79,10 @@ export function QuestionDrawer({
             >
               {/* Location Status */}
               <motion.div
-                className={`mb-4 p-4 rounded-2xl ${
+                className={`mb-4 p-4 border-4 ${
                   nearbyPOI
-                    ? 'glass-card border-green-400/30'
-                    : 'glass-card border-red-400/30'
+                    ? 'bg-white border-green-600'
+                    : 'bg-white border-red-600'
                 }`}
                 initial={{ scale: 0.95 }}
                 animate={{ scale: 1 }}
@@ -90,18 +90,18 @@ export function QuestionDrawer({
                 <div className="flex items-center gap-3">
                   {nearbyPOI ? (
                     <>
-                      <Unlock className="w-5 h-5 text-green-400" />
+                      <Unlock className="w-5 h-5 text-green-600" />
                       <div>
-                        <div className="text-white">In Range</div>
-                        <div className="text-sm text-white/60">You can ask questions at this location</div>
+                        <div className="text-black font-bold uppercase">In Range</div>
+                        <div className="text-sm text-gray-600">You can ask questions at this location</div>
                       </div>
                     </>
                   ) : (
                     <>
-                      <Lock className="w-5 h-5 text-red-400" />
+                      <Lock className="w-5 h-5 text-red-600" />
                       <div>
-                        <div className="text-white">Out of Range</div>
-                        <div className="text-sm text-white/60">Visit a POI to unlock questions</div>
+                        <div className="text-black font-bold uppercase">Out of Range</div>
+                        <div className="text-sm text-gray-600">Visit a POI to unlock questions</div>
                       </div>
                     </>
                   )}
@@ -112,7 +112,7 @@ export function QuestionDrawer({
               {!selectedCategory ? (
                 // Show Categories
                 <div className="space-y-3">
-                  <h3 className="text-white font-semibold text-lg mb-3">Choose a Category</h3>
+                  <h3 className="text-black font-bold text-lg mb-3 uppercase">Choose a Category</h3>
                   {availableCategories.map((category, index) => {
                     const IconComponent = CATEGORY_ICONS[category.id];
                     const questionsInCategory = questions.filter(q => q.category === category.id);
@@ -122,19 +122,19 @@ export function QuestionDrawer({
                         key={category.id}
                         onClick={() => setSelectedCategory(category.id)}
                         disabled={!nearbyPOI}
-                        className="w-full glass-card rounded-2xl p-4 text-left hover:bg-white/10 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="w-full bg-white border-4 border-black p-4 text-left hover:bg-gray-100 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                         initial={{ opacity: 0, x: -20 }}
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ delay: index * 0.1 }}
                       >
                         <div className="flex items-start gap-4">
-                          <div className="glass-strong rounded-xl p-3">
-                            <IconComponent className="w-6 h-6 text-cyan-400" />
+                          <div className="bg-black p-3">
+                            <IconComponent className="w-6 h-6 text-white" />
                           </div>
                           <div className="flex-1">
-                            <div className="text-white font-semibold mb-1">{category.name}</div>
-                            <div className="text-sm text-white/60 mb-2">{category.description}</div>
-                            <div className="text-xs text-cyan-400">
+                            <div className="text-black font-bold mb-1 uppercase">{category.name}</div>
+                            <div className="text-sm text-gray-600 mb-2">{category.description}</div>
+                            <div className="text-xs text-black font-bold">
                               {questionsInCategory.length} question{questionsInCategory.length !== 1 ? 's' : ''} available
                             </div>
                           </div>
@@ -152,11 +152,11 @@ export function QuestionDrawer({
                         setSelectedCategory(null);
                         setSelectedParams({});
                       }}
-                      className="glass-card rounded-xl p-2 hover:bg-white/10 transition-colors"
+                      className="bg-white border-4 border-black p-2 hover:bg-gray-100 transition-colors"
                     >
-                      <ArrowLeft className="w-5 h-5 text-white" />
+                      <ArrowLeft className="w-5 h-5 text-black" />
                     </button>
-                    <h3 className="text-white font-semibold text-lg">
+                    <h3 className="text-black font-bold text-lg uppercase">
                       {availableCategories.find(c => c.id === selectedCategory)?.name}
                     </h3>
                   </div>
@@ -169,7 +169,7 @@ export function QuestionDrawer({
                     return (
                       <motion.div
                         key={question.id}
-                        className={`glass-card rounded-2xl p-4 space-y-3 ${
+                        className={`bg-white border-4 border-black p-4 space-y-3 ${
                           isLocked ? 'opacity-50' : ''
                         }`}
                         initial={{ opacity: 0, y: 20 }}
@@ -179,12 +179,12 @@ export function QuestionDrawer({
                         {/* Question Header */}
                         <div className="flex items-start justify-between gap-3">
                           <div className="flex-1">
-                            <div className="text-white">
+                            <div className="text-black">
                               {question.text.replace('{param}', '___')}
                             </div>
                           </div>
                           {isLocked && (
-                            <Lock className="w-5 h-5 text-red-400 flex-shrink-0" />
+                            <Lock className="w-5 h-5 text-red-600 flex-shrink-0" />
                           )}
                         </div>
 
@@ -198,10 +198,10 @@ export function QuestionDrawer({
                                   setSelectedParams({ ...selectedParams, [question.id]: option })
                                 }
                                 disabled={!isEligible || isLocked}
-                                className={`px-4 py-2 rounded-xl text-sm transition-all ${
+                                className={`px-4 py-2 border-3 text-sm transition-all ${
                                   selectedParam === option
-                                    ? 'glass-strong border-cyan-400/50 text-white shadow-glow'
-                                    : 'glass border-white/20 text-white/80 hover:border-white/40'
+                                    ? 'bg-black text-white border-black'
+                                    : 'bg-white text-black border-black hover:bg-gray-100'
                                 } disabled:opacity-50 disabled:cursor-not-allowed`}
                               >
                                 {option}
@@ -218,11 +218,7 @@ export function QuestionDrawer({
                             }
                           }}
                           disabled={!isEligible || !selectedParam || isLocked}
-                          className={`w-full rounded-xl transition-all ${
-                            isEligible && selectedParam && !isLocked
-                              ? 'glass-strong border-green-400/50 text-white shadow-glow-green hover:bg-white/20'
-                              : 'glass border-white/20 text-white/60'
-                          } disabled:opacity-50 disabled:cursor-not-allowed`}
+                          variant={isEligible && selectedParam && !isLocked ? "destructive" : "outline"}
                         >
                           {isLocked ? (
                             'Locked - Answer Cooldown'
@@ -237,7 +233,7 @@ export function QuestionDrawer({
                         </Button>
 
                         {isLocked && (
-                          <div className="text-xs text-center text-red-400">
+                          <div className="text-xs text-center text-red-600 font-bold">
                             Try again in 2 minutes after a wrong answer
                           </div>
                         )}
