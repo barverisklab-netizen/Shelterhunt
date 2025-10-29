@@ -69,12 +69,12 @@ export function TriviaModal({ isOpen, trivia, onClose, onSubmit }: TriviaModalPr
                     </div>
                     <div>
                       <h3 className="text-2xl text-black font-bold uppercase">Trivia Challenge</h3>
-                      <p className="text-sm text-gray-600">Answer correctly to unlock a clue</p>
+                      <p className="text-sm text-black/70">Answer correctly to unlock a clue</p>
                     </div>
                   </div>
                   <button
                     onClick={handleClose}
-                    className="bg-white border-4 border-black p-2 hover:bg-gray-100 transition-colors"
+                    className="bg-white border-4 border-black p-2 hover:bg-black/5 transition-colors"
                   >
                     <X className="w-5 h-5 text-black" />
                   </button>
@@ -111,7 +111,7 @@ export function TriviaModal({ isOpen, trivia, onClose, onSubmit }: TriviaModalPr
                             ? 'bg-white border-black'
                             : isSelected
                             ? 'bg-black text-black border-black'
-                            : 'bg-white text-black border-black hover:bg-gray-100'
+                            : 'bg-white text-black border-black hover:bg-black/5'
                         } disabled:cursor-not-allowed`}
                         initial={{ opacity: 0, x: -20 }}
                         animate={{ opacity: 1, x: 0 }}
@@ -148,7 +148,7 @@ export function TriviaModal({ isOpen, trivia, onClose, onSubmit }: TriviaModalPr
                             <CheckCircle className="w-6 h-6 text-red-600" />
                             <div>
                               <div className="text-black font-bold uppercase">Correct! 🎉</div>
-                              <div className="text-sm text-gray-600">You unlocked a clue!</div>
+                              <div className="text-sm text-black/70">You unlocked a clue!</div>
                             </div>
                           </>
                         ) : (
@@ -156,7 +156,7 @@ export function TriviaModal({ isOpen, trivia, onClose, onSubmit }: TriviaModalPr
                             <XCircle className="w-6 h-6 text-black" />
                             <div>
                               <div className="text-black font-bold uppercase">Incorrect</div>
-                              <div className="text-sm text-gray-600">This question is locked for 2 minutes</div>
+                              <div className="text-sm text-black/70">This question is locked for 2 minutes</div>
                             </div>
                           </>
                         )}

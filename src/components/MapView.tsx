@@ -12,15 +12,66 @@ mapboxgl.accessToken = MAPBOX_CONFIG.accessToken;
 console.log('Mapbox token loaded:', MAPBOX_CONFIG.accessToken ? 'Yes' : 'No', MAPBOX_CONFIG.accessToken?.substring(0, 10) + '...');
 console.log('Mapbox username configured:', MAPBOX_CONFIG.username);
 
+// Bauhaus color sanitization - converts any color to approved palette
+const sanitizeToBauhausColor = (color: string | undefined): string => {
+  if (!color) return '#000000';
+  
+  // Approved Bauhaus colors only: white, black, red
+  const BAUHAUS_BLACK = '#000000';
+  const BAUHAUS_WHITE = '#FFFFFF';
+  const BAUHAUS_RED = '#DC2626';
+  
+  const lowerColor = color.toLowerCase().trim();
+  
+  // Already approved colors - return as is
+  if (lowerColor === '#dc2626' || lowerColor === '#000000' || lowerColor === '#ffffff') {
+    return color.toUpperCase();
+  }
+  
+  // Check if color is in red spectrum (hex colors starting with high red values)
+  const hexMatch = lowerColor.match(/^#?([a-f0-9]{6}|[a-f0-9]{3})$/);
+  if (hexMatch) {
+    const hex = hexMatch[1];
+    const fullHex = hex.length === 3 ? hex.split('').map(c => c + c).join('') : hex;
+    const r = parseInt(fullHex.substring(0, 2), 16);
+    const g = parseInt(fullHex.substring(2, 4), 16);
+    const b = parseInt(fullHex.substring(4, 6), 16);
+    
+    // If red channel is dominant (red > green and red > blue), map to Bauhaus red
+    if (r > g && r > b && r > 128) {
+      return BAUHAUS_RED;
+    }
+  }
+  
+  // Check for rgb/rgba strings
+  const rgbMatch = lowerColor.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/);
+  if (rgbMatch) {
+    const r = parseInt(rgbMatch[1]);
+    const g = parseInt(rgbMatch[2]);
+    const b = parseInt(rgbMatch[3]);
+    
+    // If red channel is dominant, map to Bauhaus red
+    if (r > g && r > b && r > 128) {
+      return BAUHAUS_RED;
+    }
+  }
+  
+  // Map all other colors (blue, green, yellow, etc.) to black
+  return BAUHAUS_BLACK;
+};
+
 // Helper function to get icons for Koto layers based on ID
 const getKotoLayerIcon = (layer: typeof kotoLayers[0]): React.ReactNode => {
   if (!layer?.metadata?.legendItems?.[0]) {
-    return <MapPin className="w-4 h-4 text-gray-400" />;
+    return <MapPin className="w-4 h-4 text-black" />;
   }
   
-  const color = layer.metadata.legendItems[0].swatchStyle.strokeColor || 
-                layer.metadata.legendItems[0].swatchStyle.fillColor || 
-                '#000000';
+  const rawColor = layer.metadata.legendItems[0].swatchStyle.strokeColor || 
+                   layer.metadata.legendItems[0].swatchStyle.fillColor || 
+                   '#000000';
+  
+  // Sanitize to Bauhaus-compliant color
+  const color = sanitizeToBauhausColor(rawColor);
   
   switch (layer.id) {
     case 3: // AED Locations
@@ -382,7 +433,7 @@ export function MapView({
       {/* Layer Control Button */}
       <motion.button
         onClick={() => setShowLayerControl(!showLayerControl)}
-        className="absolute top-4 left-4 bg-white border-4 border-black p-3 hover:bg-gray-100 transition-colors z-10"
+        className="absolute top-4 left-4 bg-white border-4 border-black p-3 hover:bg-black/5 transition-colors z-10"
         whileHover={{ scale: 1.02 }}
         whileTap={{ scale: 0.98 }}
       >
@@ -462,14 +513,14 @@ export function MapView({
               </div>
             ))}
             
-            <div className="text-xs text-gray-600 mt-3">
+            <div className="text-xs text-black/70 mt-3">
               Note: Actual layer data requires Mapbox tileset configuration
             </div>
           </motion.div>
         ) : (
           <motion.button
             onClick={() => setShowLayerControl(true)}
-            className="absolute bottom-20 left-4 bg-white border-4 border-black p-3 z-10 text-black hover:bg-gray-100 transition-colors"
+            className="absolute bottom-20 left-4 bg-white border-4 border-black p-3 z-10 text-black hover:bg-black/5 transition-colors"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 20 }}
@@ -494,12 +545,12 @@ function LayerToggle({
   onChange: () => void;
 }) {
   return (
-    <label className="flex items-center gap-3 cursor-pointer hover:bg-gray-100 p-2 transition-colors">
+    <label className="flex items-center gap-3 cursor-pointer hover:bg-black/5 p-2 transition-colors">
       <input
         type="checkbox"
         checked={checked}
         onChange={onChange}
-        className="w-4 h-4 accent-black border-2 border-black"
+        className="w-4 h-4 accent-black border-4 border-black"
       />
       {icon}
       <span className="text-sm text-black">{label}</span>

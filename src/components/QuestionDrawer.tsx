@@ -53,7 +53,7 @@ export function QuestionDrawer({
         {/* Drawer Handle */}
         <button
           onClick={onToggle}
-          className="w-full py-4 flex flex-col items-center gap-2 cursor-pointer hover:bg-gray-100 transition-colors"
+          className="w-full py-4 flex flex-col items-center gap-2 cursor-pointer hover:bg-black/5 transition-colors"
         >
           <div className="w-12 h-1 bg-black" />
           <div className="flex items-center gap-2 text-black">
@@ -93,7 +93,7 @@ export function QuestionDrawer({
                       <Unlock className="w-5 h-5 text-red-600" />
                       <div>
                         <div className="text-black font-bold uppercase">In Range</div>
-                        <div className="text-sm text-gray-600">You can ask questions at this location</div>
+                        <div className="text-sm text-black/70">You can ask questions at this location</div>
                       </div>
                     </>
                   ) : (
@@ -101,7 +101,7 @@ export function QuestionDrawer({
                       <Lock className="w-5 h-5 text-red-600" />
                       <div>
                         <div className="text-black font-bold uppercase">Out of Range</div>
-                        <div className="text-sm text-gray-600">Visit a POI to unlock questions</div>
+                        <div className="text-sm text-black/70">Visit a POI to unlock questions</div>
                       </div>
                     </>
                   )}
@@ -122,7 +122,7 @@ export function QuestionDrawer({
                         key={category.id}
                         onClick={() => setSelectedCategory(category.id)}
                         disabled={!nearbyPOI}
-                        className="w-full bg-white border-4 border-black p-4 text-left hover:bg-gray-100 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="w-full bg-white border-4 border-black p-4 text-left hover:bg-black/5 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                         initial={{ opacity: 0, x: -20 }}
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ delay: index * 0.1 }}
@@ -133,7 +133,7 @@ export function QuestionDrawer({
                           </div>
                           <div className="flex-1">
                             <div className="text-black font-bold mb-1 uppercase">{category.name}</div>
-                            <div className="text-sm text-gray-600 mb-2">{category.description}</div>
+                            <div className="text-sm text-black/70 mb-2">{category.description}</div>
                             <div className="text-xs text-black font-bold">
                               {questionsInCategory.length} question{questionsInCategory.length !== 1 ? 's' : ''} available
                             </div>
@@ -152,7 +152,7 @@ export function QuestionDrawer({
                         setSelectedCategory(null);
                         setSelectedParams({});
                       }}
-                      className="bg-white border-4 border-black p-2 hover:bg-gray-100 transition-colors"
+                      className="bg-white border-4 border-black p-2 hover:bg-black/5 transition-colors"
                     >
                       <ArrowLeft className="w-5 h-5 text-black" />
                     </button>
@@ -201,7 +201,7 @@ export function QuestionDrawer({
                                 className={`px-4 py-2 border-3 text-sm transition-all ${
                                   selectedParam === option
                                     ? 'bg-black text-black border-black'
-                                    : 'bg-white text-black border-black hover:bg-gray-100'
+                                    : 'bg-white text-black border-black hover:bg-black/5'
                                 } disabled:opacity-50 disabled:cursor-not-allowed`}
                               >
                                 {option}

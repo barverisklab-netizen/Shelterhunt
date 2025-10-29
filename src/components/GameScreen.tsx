@@ -124,7 +124,7 @@ export function GameScreen({
   const canGuess = nearbyPOI?.type === 'shelter' && !hasGuessed;
 
   return (
-    <div className="fixed inset-0 flex flex-col bg-gray-900">
+    <div className="fixed inset-0 flex flex-col bg-black">
       {/* Top Bar */}
       <motion.div
         className={`bauhaus-white p-4 border-b-4 border-black ${
@@ -197,7 +197,7 @@ export function GameScreen({
           >
             <Lightbulb className="w-6 h-6 text-red-600" />
             {clues.length > 0 && (
-              <div className="absolute -top-1 -right-1 w-5 h-5 bg-red-600 border-2 border-black flex items-center justify-center text-xs font-bold text-black">
+              <div className="absolute -top-1 -right-1 w-5 h-5 bg-red-600 border-4 border-black flex items-center justify-center text-xs font-bold text-white">
                 {clues.length}
               </div>
             )}

@@ -1,6 +1,6 @@
-import { motion, AnimatePresence } from 'motion/react';
-import { X, MapPin, Brain, Lightbulb, Trophy } from 'lucide-react';
-import { Button } from './ui/button';
+import { motion, AnimatePresence } from "motion/react";
+import { X, MapPin, Brain, Lightbulb, Trophy } from "lucide-react";
+import { Button } from "./ui/button";
 
 interface HelpModalProps {
   isOpen: boolean;
@@ -11,28 +11,32 @@ export function HelpModal({ isOpen, onClose }: HelpModalProps) {
   const steps = [
     {
       icon: MapPin,
-      title: 'Visit Locations',
-      description: 'Move around the city to visit Points of Interest (POIs) marked on the map.',
-      color: 'text-black'
+      title: "Visit Locations",
+      description:
+        "Move around the city to visit Points of Interest (POIs) marked on the map.",
+      color: "text-black",
     },
     {
       icon: Brain,
-      title: 'Answer Trivia',
-      description: 'When near a POI, ask questions and answer trivia challenges to unlock clues.',
-      color: 'text-black'
+      title: "Answer Trivia",
+      description:
+        "When near a POI, ask questions and answer trivia challenges to unlock clues.",
+      color: "text-black",
     },
     {
       icon: Lightbulb,
-      title: 'Collect Clues',
-      description: 'Use correct answers to gather clues about the secret shelter\'s location and characteristics.',
-      color: 'text-black'
+      title: "Collect Clues",
+      description:
+        "Use correct answers to gather clues about the secret shelter's location and characteristics.",
+      color: "text-black",
     },
     {
       icon: Trophy,
-      title: 'Find the Shelter',
-      description: 'Use your clues to deduce which shelter is the secret one, then visit it to win!',
-      color: 'text-black'
-    }
+      title: "Find the Shelter",
+      description:
+        "Use your clues to deduce which shelter is the secret one, then visit it to win!",
+      color: "text-black",
+    },
   ];
 
   return (
@@ -55,18 +59,22 @@ export function HelpModal({ isOpen, onClose }: HelpModalProps) {
               initial={{ opacity: 0, scale: 0.9, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: 20 }}
-              transition={{ type: 'spring', damping: 25 }}
+              transition={{ type: "spring", damping: 25 }}
             >
               <div className="bg-white border-4 border-black p-6 max-h-[90vh] overflow-y-auto">
                 {/* Header */}
                 <div className="flex items-start justify-between mb-6">
                   <div>
-                    <h2 className="text-3xl text-black mb-2 font-bold uppercase">How to Play</h2>
-                    <p className="text-gray-600">Master the art of urban deduction</p>
+                    <h2 className="text-3xl text-black mb-2 font-bold uppercase">
+                      How to Play
+                    </h2>
+                    <p className="text-black/70">
+                      Master the art of urban deduction
+                    </p>
                   </div>
                   <button
                     onClick={onClose}
-                    className="bg-white border-4 border-black p-2 hover:bg-gray-100 transition-colors"
+                    className="bg-white border-4 border-black p-2 hover:bg-black/5 transition-colors"
                   >
                     <X className="w-5 h-5 text-black" />
                   </button>
@@ -79,11 +87,15 @@ export function HelpModal({ isOpen, onClose }: HelpModalProps) {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.1 }}
                 >
-                  <h3 className="text-xl text-black mb-3 font-bold uppercase">Game Overview</h3>
-                  <p className="text-gray-600 leading-relaxed">
-                    A hurricane is approaching! Your team must find the secret emergency shelter hidden in the city. 
-                    Visit various locations, answer trivia questions about disaster preparedness, and collect clues 
-                    to deduce which shelter is the secret one. The first team to find it wins!
+                  <h3 className="text-xl text-black mb-3 font-bold uppercase">
+                    Game Overview
+                  </h3>
+                  <p className="text-black/70 leading-relaxed">
+                    A hurricane is approaching! Your team must find the secret
+                    emergency shelter hidden in the city. Visit various
+                    locations, answer trivia questions about disaster
+                    preparedness, and collect clues to deduce which shelter is
+                    the secret one. The first team to find it wins!
                   </p>
                 </motion.div>
 
@@ -105,10 +117,16 @@ export function HelpModal({ isOpen, onClose }: HelpModalProps) {
                           </div>
                           <div>
                             <div className="flex items-center gap-3 mb-2">
-                              <span className="text-gray-600 text-sm font-bold">Step {index + 1}</span>
-                              <h4 className="text-lg text-black font-bold uppercase">{step.title}</h4>
+                              <span className="text-black/70 text-sm font-bold">
+                                Step {index + 1}
+                              </span>
+                              <h4 className="text-lg text-black font-bold uppercase">
+                                {step.title}
+                              </h4>
                             </div>
-                            <p className="text-gray-600 text-sm">{step.description}</p>
+                            <p className="text-black/70 text-sm">
+                              {step.description}
+                            </p>
                           </div>
                         </div>
                       </motion.div>
@@ -127,26 +145,40 @@ export function HelpModal({ isOpen, onClose }: HelpModalProps) {
                     <Lightbulb className="w-5 h-5 text-black" />
                     Pro Tips
                   </h3>
-                  <ul className="space-y-2 text-gray-600 text-sm">
+                  <ul className="space-y-2 text-black/70 text-sm">
                     <li className="flex items-start gap-2">
                       <span className="text-black mt-1 font-bold">•</span>
-                      <span>Green clues tell you what the shelter HAS, red clues tell you what it DOESN'T have</span>
+                      <span>
+                        Green clues tell you what the shelter HAS, red clues
+                        tell you what it DOESN'T have
+                      </span>
                     </li>
                     <li className="flex items-start gap-2">
                       <span className="text-black mt-1 font-bold">•</span>
-                      <span>Wrong trivia answers lock that question for 2 minutes - answer carefully!</span>
+                      <span>
+                        Wrong trivia answers lock that question for 2 minutes -
+                        answer carefully!
+                      </span>
                     </li>
                     <li className="flex items-start gap-2">
                       <span className="text-black mt-1 font-bold">•</span>
-                      <span>Visit different types of POIs to unlock more question categories</span>
+                      <span>
+                        Visit different types of POIs to unlock more question
+                        categories
+                      </span>
                     </li>
                     <li className="flex items-start gap-2">
                       <span className="text-black mt-1 font-bold">•</span>
-                      <span>You only get ONE guess - make sure you're confident before submitting!</span>
+                      <span>
+                        You only get ONE guess - make sure you're confident
+                        before submitting!
+                      </span>
                     </li>
                     <li className="flex items-start gap-2">
                       <span className="text-black mt-1 font-bold">•</span>
-                      <span>Work with your team to cover more ground and share clues</span>
+                      <span>
+                        Work with your team to cover more ground and share clues
+                      </span>
                     </li>
                   </ul>
                 </motion.div>

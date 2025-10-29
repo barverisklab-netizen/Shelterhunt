@@ -71,7 +71,7 @@ export function WaitingRoom({
             className="bg-white border-4 border-black p-4 inline-block"
             whileHover={{ scale: 1.02 }}
           >
-            <div className="text-sm text-gray-600 mb-1 font-bold uppercase">Game Code</div>
+            <div className="text-sm text-black/70 mb-1 font-bold uppercase">Game Code</div>
             <div className="flex items-center gap-3">
               <div className="text-3xl tracking-widest text-black font-bold">
                 {gameCode}
@@ -123,7 +123,7 @@ export function WaitingRoom({
                           <Crown className="w-4 h-4 text-black" />
                         )}
                       </div>
-                      <div className="text-xs text-gray-600">
+                      <div className="text-xs text-black/70">
                         {player.id === currentUserId ? 'You' : 'Player'}
                       </div>
                     </div>
@@ -131,12 +131,12 @@ export function WaitingRoom({
                   {player.ready ? (
                     <Check className="w-5 h-5 text-red-600" />
                   ) : (
-                    <X className="w-5 h-5 text-gray-400" />
+                    <X className="w-5 h-5 text-black" />
                   )}
                 </motion.div>
               ))}
               {redTeam.length === 0 && (
-                <div className="text-center text-gray-600 py-4">Waiting for players...</div>
+                <div className="text-center text-black/70 py-4">Waiting for players...</div>
               )}
             </div>
           </motion.div>
@@ -170,7 +170,7 @@ export function WaitingRoom({
                           <Crown className="w-4 h-4 text-black" />
                         )}
                       </div>
-                      <div className="text-xs text-gray-600">
+                      <div className="text-xs text-black/70">
                         {player.id === currentUserId ? 'You' : 'Player'}
                       </div>
                     </div>
@@ -178,12 +178,12 @@ export function WaitingRoom({
                   {player.ready ? (
                     <Check className="w-5 h-5 text-red-600" />
                   ) : (
-                    <X className="w-5 h-5 text-gray-400" />
+                    <X className="w-5 h-5 text-black" />
                   )}
                 </motion.div>
               ))}
               {blueTeam.length === 0 && (
-                <div className="text-center text-gray-600 py-4">Waiting for players...</div>
+                <div className="text-center text-black/70 py-4">Waiting for players...</div>
               )}
             </div>
           </motion.div>

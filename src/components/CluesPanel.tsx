@@ -41,14 +41,14 @@ export function CluesPanel({ isOpen, clues, onClose }: CluesPanelProps) {
                     </div>
                     <div>
                       <h3 className="text-2xl text-black font-bold uppercase">My Clues</h3>
-                      <p className="text-sm text-gray-600">
+                      <p className="text-sm text-black/70">
                         {clues.length} clue{clues.length !== 1 ? 's' : ''} collected
                       </p>
                     </div>
                   </div>
                   <button
                     onClick={onClose}
-                    className="bg-white border-4 border-black p-2 hover:bg-gray-100 transition-colors"
+                    className="bg-white border-4 border-black p-2 hover:bg-black/5 transition-colors"
                   >
                     <X className="w-5 h-5 text-black" />
                   </button>
@@ -68,7 +68,7 @@ export function CluesPanel({ isOpen, clues, onClose }: CluesPanelProps) {
                     </div>
                     <div>
                       <div className="text-xl text-black mb-2 font-bold uppercase">No clues yet</div>
-                      <div className="text-gray-600 text-sm max-w-xs">
+                      <div className="text-black/70 text-sm max-w-xs">
                         Visit locations and answer trivia questions to unlock clues about the secret shelter
                       </div>
                     </div>
@@ -100,11 +100,11 @@ export function CluesPanel({ isOpen, clues, onClose }: CluesPanelProps) {
                             )}
                           </div>
                           <div className="flex-1">
-                            <div className="text-xs text-gray-600 mb-1 uppercase tracking-wide font-bold">
+                            <div className="text-xs text-black/70 mb-1 uppercase tracking-wide font-bold">
                               {clue.category}
                             </div>
                             <div className="text-black">{clue.text}</div>
-                            <div className="text-sm text-gray-500 mt-2">
+                            <div className="text-sm text-black/60 mt-2">
                               {new Date(clue.timestamp).toLocaleTimeString()}
                             </div>
                           </div>
@@ -127,7 +127,7 @@ export function CluesPanel({ isOpen, clues, onClose }: CluesPanelProps) {
                       <Lightbulb className="w-5 h-5 text-black flex-shrink-0 mt-0.5" />
                       <div>
                         <div className="text-sm text-black mb-1 font-bold uppercase">Deduction Tips</div>
-                        <div className="text-xs text-gray-600 space-y-1">
+                        <div className="text-xs text-black/70 space-y-1">
                           <p>• Use green clues to narrow down possibilities</p>
                           <p>• Red clues help eliminate wrong locations</p>
                           <p>• Visit the shelter when you're confident!</p>

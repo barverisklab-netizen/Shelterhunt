@@ -1,6 +1,5 @@
 import { motion } from 'motion/react';
 import { MapPin, Users, Info, Play, User } from 'lucide-react';
-import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { useState } from 'react';
 
@@ -100,21 +99,21 @@ export function OnboardingScreen({ onJoinGame, onHostGame, onPlaySolo, onShowHel
                 placeholder="ENTER CODE"
                 value={gameCode}
                 onChange={(e) => setGameCode(e.target.value.toUpperCase())}
-                className="border-2 border-black text-black placeholder:text-gray-400 text-center text-xl tracking-widest font-bold uppercase bg-white"
+                className="border-4 border-black text-black placeholder:text-black/50 text-center text-xl tracking-widest font-bold uppercase bg-white"
                 maxLength={6}
                 onKeyPress={(e) => e.key === 'Enter' && handleJoin()}
               />
               <div className="flex gap-2">
                 <button
                   onClick={() => setShowJoinInput(false)}
-                  className="flex-1 bg-white border-2 border-black py-3 font-bold uppercase text-sm hover:shadow-[4px_4px_0_black] transition-all"
+                  className="flex-1 bg-white border-4 border-black py-3 font-bold uppercase text-sm hover:shadow-[4px_4px_0_black] transition-all"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handleJoin}
                   disabled={!gameCode.trim()}
-                  className="flex-1 bg-red-600 text-black border-2 border-black py-3 font-bold uppercase text-sm hover:shadow-[4px_4px_0_black] transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  className="flex-1 bg-red-600 text-white border-4 border-black py-3 font-bold uppercase text-sm hover:shadow-[4px_4px_0_black] transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
                   <Play className="w-4 h-4" />
                   Join
@@ -165,7 +164,7 @@ export function OnboardingScreen({ onJoinGame, onHostGame, onPlaySolo, onShowHel
           ].map((feature, index) => (
             <motion.div
               key={feature.label}
-              className={`${feature.color} ${feature.textColor} px-6 py-2 text-sm font-bold uppercase tracking-wider border-2 border-black`}
+              className={`${feature.color} ${feature.textColor} px-6 py-2 text-sm font-bold uppercase tracking-wider border-4 border-black`}
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.4 + index * 0.1 }}
