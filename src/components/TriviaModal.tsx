@@ -44,7 +44,7 @@ export function TriviaModal({ isOpen, trivia, onClose, onSubmit }: TriviaModalPr
         <>
           {/* Backdrop */}
           <motion.div
-            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50"
+            className="fixed inset-0 bg-black/80 z-50"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -65,7 +65,7 @@ export function TriviaModal({ isOpen, trivia, onClose, onSubmit }: TriviaModalPr
                 <div className="flex items-start justify-between mb-6">
                   <div className="flex items-center gap-3">
                     <div className="bg-black p-3">
-                      <Sparkles className="w-6 h-6 text-white" />
+                      <Sparkles className="w-6 h-6 text-black" />
                     </div>
                     <div>
                       <h3 className="text-2xl text-black font-bold uppercase">Trivia Challenge</h3>
@@ -106,11 +106,11 @@ export function TriviaModal({ isOpen, trivia, onClose, onSubmit }: TriviaModalPr
                         disabled={showResult}
                         className={`w-full p-4 border-4 text-left transition-all ${
                           showCorrect
-                            ? 'bg-white border-green-600'
-                            : showWrong
                             ? 'bg-white border-red-600'
+                            : showWrong
+                            ? 'bg-white border-black'
                             : isSelected
-                            ? 'bg-black text-white border-black'
+                            ? 'bg-black text-black border-black'
                             : 'bg-white text-black border-black hover:bg-gray-100'
                         } disabled:cursor-not-allowed`}
                         initial={{ opacity: 0, x: -20 }}
@@ -121,8 +121,8 @@ export function TriviaModal({ isOpen, trivia, onClose, onSubmit }: TriviaModalPr
                       >
                         <div className="flex items-center justify-between">
                           <span className={showCorrect || showWrong ? 'text-black' : ''}>{answer}</span>
-                          {showCorrect && <CheckCircle className="w-5 h-5 text-green-600" />}
-                          {showWrong && <XCircle className="w-5 h-5 text-red-600" />}
+                          {showCorrect && <CheckCircle className="w-5 h-5 text-red-600" />}
+                          {showWrong && <XCircle className="w-5 h-5 text-black" />}
                         </div>
                       </motion.button>
                     );
@@ -135,8 +135,8 @@ export function TriviaModal({ isOpen, trivia, onClose, onSubmit }: TriviaModalPr
                     <motion.div
                       className={`mb-6 p-4 border-4 ${
                         isCorrect
-                          ? 'bg-white border-green-600'
-                          : 'bg-white border-red-600'
+                          ? 'bg-white border-red-600'
+                          : 'bg-white border-black'
                       }`}
                       initial={{ opacity: 0, y: -10 }}
                       animate={{ opacity: 1, y: 0 }}
@@ -145,7 +145,7 @@ export function TriviaModal({ isOpen, trivia, onClose, onSubmit }: TriviaModalPr
                       <div className="flex items-center gap-3">
                         {isCorrect ? (
                           <>
-                            <CheckCircle className="w-6 h-6 text-green-600" />
+                            <CheckCircle className="w-6 h-6 text-red-600" />
                             <div>
                               <div className="text-black font-bold uppercase">Correct! 🎉</div>
                               <div className="text-sm text-gray-600">You unlocked a clue!</div>
@@ -153,7 +153,7 @@ export function TriviaModal({ isOpen, trivia, onClose, onSubmit }: TriviaModalPr
                           </>
                         ) : (
                           <>
-                            <XCircle className="w-6 h-6 text-red-600" />
+                            <XCircle className="w-6 h-6 text-black" />
                             <div>
                               <div className="text-black font-bold uppercase">Incorrect</div>
                               <div className="text-sm text-gray-600">This question is locked for 2 minutes</div>
@@ -188,7 +188,7 @@ export function TriviaModal({ isOpen, trivia, onClose, onSubmit }: TriviaModalPr
                         key={i}
                         className="absolute w-2 h-2 rounded-full"
                         style={{
-                          background: ['#667eea', '#764ba2', '#f093fb', '#4facfe', '#00f2fe'][i % 5],
+                          background: ['#DC2626', '#000000', '#FFFFFF'][i % 3],
                           left: `${50 + (Math.random() - 0.5) * 30}%`,
                           top: '50%',
                         }}

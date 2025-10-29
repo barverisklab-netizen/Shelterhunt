@@ -128,7 +128,7 @@ export function GameScreen({
       {/* Top Bar */}
       <motion.div
         className={`bauhaus-white p-4 border-b-4 border-black ${
-          teamColor === 'red' ? 'border-l-4 border-l-red-600' : 'border-l-4 border-l-blue-600'
+          teamColor === 'red' ? 'border-l-4 border-l-red-600' : 'border-l-4 border-l-black'
         }`}
         initial={{ y: -50, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
@@ -140,13 +140,13 @@ export function GameScreen({
               className="bauhaus-black p-2 border-4 border-black hover:bauhaus-red transition-colors"
               title="Exit to main menu"
             >
-              <X className="w-5 h-5 text-white" />
+              <X className="w-5 h-5 text-black" />
             </button>
             <h1 className="text-xl font-bold text-black uppercase">Secret Shelter</h1>
             <div className="flex items-center gap-2">
               <div
                 className={`w-3 h-3 ${
-                  teamColor === 'red' ? 'bg-red-600' : 'bg-blue-600'
+                  teamColor === 'red' ? 'bg-red-600' : 'bg-black'
                 }`}
               />
               <span className="text-black text-sm font-bold uppercase">
@@ -156,8 +156,8 @@ export function GameScreen({
           </div>
 
           <div className="flex items-center gap-2 bauhaus-red px-4 py-2 border-4 border-black">
-            <Clock className="w-4 h-4 text-white" />
-            <span className="text-white tabular-nums font-bold">
+            <Clock className="w-4 h-4 text-black" />
+            <span className="text-black tabular-nums font-bold">
               {Math.floor(timeRemaining / 60)}:{(timeRemaining % 60).toString().padStart(2, '0')}
             </span>
           </div>
@@ -195,9 +195,9 @@ export function GameScreen({
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
           >
-            <Lightbulb className="w-6 h-6 text-yellow-500" />
+            <Lightbulb className="w-6 h-6 text-red-600" />
             {clues.length > 0 && (
-              <div className="absolute -top-1 -right-1 w-5 h-5 bg-red-600 border-2 border-black flex items-center justify-center text-xs font-bold text-white">
+              <div className="absolute -top-1 -right-1 w-5 h-5 bg-red-600 border-2 border-black flex items-center justify-center text-xs font-bold text-black">
                 {clues.length}
               </div>
             )}
@@ -212,7 +212,7 @@ export function GameScreen({
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
             >
-              <Home className="w-6 h-6 text-white" />
+              <Home className="w-6 h-6 text-black" />
             </motion.button>
           )}
 
@@ -226,7 +226,7 @@ export function GameScreen({
             whileTap={{ scale: 0.95 }}
             title={locationPickerMode ? "Cancel location selection" : "Pick location on map"}
           >
-            <Navigation className={`w-6 h-6 ${locationPickerMode ? 'text-red-400' : 'text-white'}`} />
+            <Navigation className={`w-6 h-6 ${locationPickerMode ? 'text-red-600' : 'text-black'}`} />
           </motion.button>
         </div>
 
@@ -293,7 +293,7 @@ export function GameScreen({
                       animate={{ rotate: [0, 10, -10, 10, 0], scale: [1, 1.1, 1] }}
                       transition={{ duration: 0.5, repeat: 2 }}
                     >
-                      <Trophy className="w-16 h-16 text-white" />
+                      <Trophy className="w-16 h-16 text-black" />
                     </motion.div>
                     <div>
                       <h2 className="text-4xl text-black mb-2 font-bold uppercase">Victory! 🎉</h2>
@@ -313,7 +313,7 @@ export function GameScreen({
                 ) : (
                   <>
                     <div className="bauhaus-black p-6 inline-block border-4 border-black">
-                      <Frown className="w-16 h-16 text-white" />
+                      <Frown className="w-16 h-16 text-black" />
                     </div>
                     <div>
                       <h2 className="text-4xl text-black mb-2 font-bold uppercase">Not Quite</h2>
@@ -323,7 +323,7 @@ export function GameScreen({
                 )}
                 <Button
                   onClick={onEndGame}
-                  className="w-full bauhaus-red border-4 border-black text-white py-4 hover:bauhaus-black bauhaus-shadow font-bold uppercase"
+                  className="w-full bauhaus-red border-4 border-black text-black py-4 hover:bauhaus-black bauhaus-shadow font-bold uppercase"
                 >
                   Return to Lobby
                 </Button>

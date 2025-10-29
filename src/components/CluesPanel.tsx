@@ -16,7 +16,7 @@ export function CluesPanel({ isOpen, clues, onClose }: CluesPanelProps) {
         <>
           {/* Backdrop */}
           <motion.div
-            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50"
+            className="fixed inset-0 bg-black/80 z-50"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -37,7 +37,7 @@ export function CluesPanel({ isOpen, clues, onClose }: CluesPanelProps) {
                 <div className="flex items-start justify-between mb-2">
                   <div className="flex items-center gap-3">
                     <div className="bg-black p-3">
-                      <Lightbulb className="w-6 h-6 text-white" />
+                      <Lightbulb className="w-6 h-6 text-black" />
                     </div>
                     <div>
                       <h3 className="text-2xl text-black font-bold uppercase">My Clues</h3>
@@ -64,7 +64,7 @@ export function CluesPanel({ isOpen, clues, onClose }: CluesPanelProps) {
                     animate={{ opacity: 1, y: 0 }}
                   >
                     <div className="bg-black p-6">
-                      <Sparkles className="w-12 h-12 text-white" />
+                      <Sparkles className="w-12 h-12 text-black" />
                     </div>
                     <div>
                       <div className="text-xl text-black mb-2 font-bold uppercase">No clues yet</div>
@@ -80,8 +80,8 @@ export function CluesPanel({ isOpen, clues, onClose }: CluesPanelProps) {
                         key={clue.id}
                         className={`bg-white border-4 p-4 ${
                           clue.answer
-                            ? 'border-green-600'
-                            : 'border-red-600'
+                            ? 'border-red-600'
+                            : 'border-black'
                         }`}
                         initial={{ opacity: 0, x: 20 }}
                         animate={{ opacity: 1, x: 0 }}
@@ -90,7 +90,7 @@ export function CluesPanel({ isOpen, clues, onClose }: CluesPanelProps) {
                         <div className="flex items-start gap-3">
                           <div
                             className={`flex-shrink-0 mt-1 ${
-                              clue.answer ? 'text-green-600' : 'text-red-600'
+                              clue.answer ? 'text-red-600' : 'text-black'
                             }`}
                           >
                             {clue.answer ? (

@@ -59,7 +59,7 @@ export function WaitingRoom({
         {/* Header */}
         <div className="text-center space-y-4">
           <motion.h1
-            className="text-4xl gradient-text"
+            className="text-4xl text-black"
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
           >
@@ -80,7 +80,7 @@ export function WaitingRoom({
                 onClick={copyGameCode}
                 size="sm"
                 variant={copied ? "outline" : "outline"}
-                className={copied ? 'border-green-600 text-green-600' : ''}
+                className={copied ? 'border-red-600 text-red-600' : ''}
               >
                 {copied ? (
                   <Check className="w-4 h-4" />
@@ -129,7 +129,7 @@ export function WaitingRoom({
                     </div>
                   </div>
                   {player.ready ? (
-                    <Check className="w-5 h-5 text-green-600" />
+                    <Check className="w-5 h-5 text-red-600" />
                   ) : (
                     <X className="w-5 h-5 text-gray-400" />
                   )}
@@ -149,7 +149,7 @@ export function WaitingRoom({
             transition={{ delay: 0.2 }}
           >
             <div className="flex items-center gap-2 mb-4">
-              <div className="w-4 h-4 bg-blue-600" />
+              <div className="w-4 h-4 bg-black" />
               <h3 className="text-xl text-black font-bold uppercase">Blue Team</h3>
             </div>
             <div className="space-y-2">
@@ -176,7 +176,7 @@ export function WaitingRoom({
                     </div>
                   </div>
                   {player.ready ? (
-                    <Check className="w-5 h-5 text-green-600" />
+                    <Check className="w-5 h-5 text-red-600" />
                   ) : (
                     <X className="w-5 h-5 text-gray-400" />
                   )}
@@ -236,7 +236,7 @@ export function WaitingRoom({
 
         {/* Player Count */}
         <motion.div
-          className="text-center text-white/60 text-sm"
+          className="text-center text-black/60 text-sm"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.6 }}

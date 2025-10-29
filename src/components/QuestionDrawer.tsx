@@ -72,7 +72,7 @@ export function QuestionDrawer({
         <AnimatePresence>
           {isOpen && (
             <motion.div
-              className="max-h-[60vh] overflow-y-auto p-4"
+              className="max-h-[60vh] overflow-y-auto p-4 bg-white"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
@@ -81,7 +81,7 @@ export function QuestionDrawer({
               <motion.div
                 className={`mb-4 p-4 border-4 ${
                   nearbyPOI
-                    ? 'bg-white border-green-600'
+                    ? 'bg-white border-red-600'
                     : 'bg-white border-red-600'
                 }`}
                 initial={{ scale: 0.95 }}
@@ -90,7 +90,7 @@ export function QuestionDrawer({
                 <div className="flex items-center gap-3">
                   {nearbyPOI ? (
                     <>
-                      <Unlock className="w-5 h-5 text-green-600" />
+                      <Unlock className="w-5 h-5 text-red-600" />
                       <div>
                         <div className="text-black font-bold uppercase">In Range</div>
                         <div className="text-sm text-gray-600">You can ask questions at this location</div>
@@ -129,7 +129,7 @@ export function QuestionDrawer({
                       >
                         <div className="flex items-start gap-4">
                           <div className="bg-black p-3">
-                            <IconComponent className="w-6 h-6 text-white" />
+                            <IconComponent className="w-6 h-6 text-black" />
                           </div>
                           <div className="flex-1">
                             <div className="text-black font-bold mb-1 uppercase">{category.name}</div>
@@ -200,7 +200,7 @@ export function QuestionDrawer({
                                 disabled={!isEligible || isLocked}
                                 className={`px-4 py-2 border-3 text-sm transition-all ${
                                   selectedParam === option
-                                    ? 'bg-black text-white border-black'
+                                    ? 'bg-black text-black border-black'
                                     : 'bg-white text-black border-black hover:bg-gray-100'
                                 } disabled:opacity-50 disabled:cursor-not-allowed`}
                               >

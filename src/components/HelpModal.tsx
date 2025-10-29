@@ -13,25 +13,25 @@ export function HelpModal({ isOpen, onClose }: HelpModalProps) {
       icon: MapPin,
       title: 'Visit Locations',
       description: 'Move around the city to visit Points of Interest (POIs) marked on the map.',
-      color: 'text-cyan-400'
+      color: 'text-black'
     },
     {
       icon: Brain,
       title: 'Answer Trivia',
       description: 'When near a POI, ask questions and answer trivia challenges to unlock clues.',
-      color: 'text-purple-400'
+      color: 'text-black'
     },
     {
       icon: Lightbulb,
       title: 'Collect Clues',
       description: 'Use correct answers to gather clues about the secret shelter\'s location and characteristics.',
-      color: 'text-yellow-400'
+      color: 'text-black'
     },
     {
       icon: Trophy,
       title: 'Find the Shelter',
       description: 'Use your clues to deduce which shelter is the secret one, then visit it to win!',
-      color: 'text-green-400'
+      color: 'text-black'
     }
   ];
 
@@ -41,7 +41,7 @@ export function HelpModal({ isOpen, onClose }: HelpModalProps) {
         <>
           {/* Backdrop */}
           <motion.div
-            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50"
+            className="fixed inset-0 bg-black/80 z-50"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -101,7 +101,7 @@ export function HelpModal({ isOpen, onClose }: HelpModalProps) {
                       >
                         <div className="flex gap-4">
                           <div className="flex-shrink-0 bg-black p-3">
-                            <Icon className="w-6 h-6 text-white" />
+                            <Icon className="w-6 h-6 text-black" />
                           </div>
                           <div>
                             <div className="flex items-center gap-3 mb-2">

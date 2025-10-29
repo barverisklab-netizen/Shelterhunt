@@ -23,18 +23,17 @@ export function OnboardingScreen({ onJoinGame, onHostGame, onPlaySolo, onShowHel
 
   return (
     <div className="min-h-screen bg-white flex items-center justify-center p-4 relative overflow-hidden">
-      {/* Bauhaus Geometric Background Elements */}
-      <div className="absolute top-10 left-10 w-32 h-32 bg-red-600 opacity-90"></div>
-      <div className="absolute top-40 right-20 w-24 h-24 rounded-full bg-blue-600 opacity-80"></div>
+      {/* Bauhaus Geometric Background Elements - White/Black/Red Only */}
+      <div className="absolute top-10 left-10 w-32 h-32 bg-red-600"></div>
+      <div className="absolute top-40 right-20 w-24 h-24 rounded-full bg-black"></div>
       <div className="absolute bottom-32 left-1/4" style={{
         width: 0,
         height: 0,
         borderLeft: '50px solid transparent',
         borderRight: '50px solid transparent',
-        borderBottom: '87px solid #EAB308',
-        opacity: 0.7
+        borderBottom: '87px solid #DC2626'
       }}></div>
-      <div className="absolute bottom-20 right-1/3 w-16 h-16 bg-yellow-500"></div>
+      <div className="absolute bottom-20 right-1/3 w-16 h-16 bg-red-600"></div>
       <div className="absolute top-1/3 right-10 w-20 h-20 bg-black"></div>
       
       <motion.div
@@ -59,7 +58,7 @@ export function OnboardingScreen({ onJoinGame, onHostGame, onPlaySolo, onShowHel
               <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-16 h-16 rounded-full bg-black border-4 border-white"></div>
               {/* MapPin Icon in Center */}
               <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
-                <MapPin className="w-8 h-8 text-white" />
+                <MapPin className="w-8 h-8 text-black" />
               </div>
             </div>
           </div>
@@ -115,7 +114,7 @@ export function OnboardingScreen({ onJoinGame, onHostGame, onPlaySolo, onShowHel
                 <button
                   onClick={handleJoin}
                   disabled={!gameCode.trim()}
-                  className="flex-1 bg-red-600 text-white border-2 border-black py-3 font-bold uppercase text-sm hover:shadow-[4px_4px_0_black] transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  className="flex-1 bg-red-600 text-black border-2 border-black py-3 font-bold uppercase text-sm hover:shadow-[4px_4px_0_black] transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
                   <Play className="w-4 h-4" />
                   Join
@@ -127,7 +126,7 @@ export function OnboardingScreen({ onJoinGame, onHostGame, onPlaySolo, onShowHel
           {/* Play Solo Button */}
           <button
             onClick={onPlaySolo}
-            className="w-full bg-red-600 text-white border-4 border-black hover:shadow-[8px_8px_0_black] transition-all py-6 flex items-center justify-center gap-2 cursor-pointer"
+            className="w-full bg-red-600 text-black border-4 border-black hover:shadow-[8px_8px_0_black] transition-all py-6 flex items-center justify-center gap-2 cursor-pointer"
           >
             <User className="w-5 h-5" />
             <span className="text-lg font-bold uppercase tracking-wide">Play Solo</span>
@@ -136,7 +135,7 @@ export function OnboardingScreen({ onJoinGame, onHostGame, onPlaySolo, onShowHel
           {/* Host Game Button */}
           <button
             onClick={onHostGame}
-            className="w-full bg-black text-white border-4 border-black hover:shadow-[8px_8px_0_red] transition-all py-6 flex items-center justify-center gap-2 cursor-pointer"
+            className="w-full bg-black text-black border-4 border-black hover:shadow-[8px_8px_0_red] transition-all py-6 flex items-center justify-center gap-2 cursor-pointer"
           >
             <Users className="w-5 h-5" />
             <span className="text-lg font-bold uppercase tracking-wide">Host Multiplayer</span>
@@ -160,9 +159,9 @@ export function OnboardingScreen({ onJoinGame, onHostGame, onPlaySolo, onShowHel
           transition={{ delay: 0.3, duration: 0.4 }}
         >
           {[
-            { label: 'LOCATION', color: 'bg-red-600', textColor: 'text-white' },
-            { label: 'TRIVIA', color: 'bg-blue-600', textColor: 'text-white' },
-            { label: 'TEAM', color: 'bg-yellow-500', textColor: 'text-black' }
+            { label: 'LOCATION', color: 'bg-red-600', textColor: 'text-black' },
+            { label: 'TRIVIA', color: 'bg-black', textColor: 'text-black' },
+            { label: 'TEAM', color: 'bg-white', textColor: 'text-black' }
           ].map((feature, index) => (
             <motion.div
               key={feature.label}

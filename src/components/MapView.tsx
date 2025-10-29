@@ -20,7 +20,7 @@ const getKotoLayerIcon = (layer: typeof kotoLayers[0]): React.ReactNode => {
   
   const color = layer.metadata.legendItems[0].swatchStyle.strokeColor || 
                 layer.metadata.legendItems[0].swatchStyle.fillColor || 
-                '#9ca3af';
+                '#000000';
   
   switch (layer.id) {
     case 3: // AED Locations
@@ -64,12 +64,12 @@ const POI_ICONS = {
 };
 
 const POI_COLORS: Record<string, string> = {
-  shelter: '#c084fc',
-  fire_station: '#f87171',
-  hospital: '#60a5fa',
-  park: '#4ade80',
-  library: '#22d3ee',
-  school: '#facc15',
+  shelter: '#000000',
+  fire_station: '#DC2626',
+  hospital: '#DC2626',
+  park: '#000000',
+  library: '#DC2626',
+  school: '#DC2626',
 };
 
 // Mock flood hazard zones GeoJSON
@@ -432,7 +432,7 @@ export function MapView({
               </button>
             </div>
             <div className="flex items-center gap-2 text-xs text-black">
-              <div className="w-3 h-3 rounded-full bg-blue-400" />
+              <div className="w-3 h-3 rounded-full bg-red-600" />
               <span>Your Location</span>
             </div>
             <div className="border-t-4 border-black my-2"></div>
@@ -441,7 +441,7 @@ export function MapView({
             {kotoLayers.map((layer, layerIndex) => (
               <div key={layer.id}>
                 {layer.metadata.legendItems.map((legendItem, itemIndex) => {
-                  const swatchColor = legendItem.swatchStyle.strokeColor || legendItem.swatchStyle.fillColor || '#9ca3af';
+                  const swatchColor = legendItem.swatchStyle.strokeColor || legendItem.swatchStyle.fillColor || '#000000';
                   const swatchClasses = legendItem.swatchType === 'symbol' || legendItem.swatchType === 'line' 
                     ? 'rounded-full' 
                     : '';
