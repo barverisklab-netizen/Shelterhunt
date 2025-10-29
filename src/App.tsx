@@ -115,7 +115,7 @@ export default function App() {
   const teamColor = currentPlayer?.team || 'red';
 
   return (
-    <div className="min-h-screen bauhaus-white relative overflow-hidden">
+    <div className="min-h-screen bg-white relative overflow-hidden">
       {/* Main Content */}
       <div className="relative z-10">
         {gameState === 'onboarding' && (

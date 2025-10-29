@@ -49,13 +49,13 @@ export function QuestionDrawer({
       animate={{ y: isOpen ? 0 : 'calc(100% - 60px)' }}
       transition={{ type: 'spring', damping: 30, stiffness: 300 }}
     >
-      <div className="bauhaus-white border-t-4 border-black">
+      <div className="bg-white border-t-4 border-black">
         {/* Drawer Handle */}
         <button
           onClick={onToggle}
           className="w-full py-4 flex flex-col items-center gap-2 cursor-pointer hover:bg-gray-100 transition-colors"
         >
-          <div className="w-12 h-1 bauhaus-white" />
+          <div className="w-12 h-1 bg-black" />
           <div className="flex items-center gap-2 text-black">
             <MapPin className="w-5 h-5" />
             <span className="text-lg font-bold uppercase">Ask a Question</span>
@@ -72,7 +72,7 @@ export function QuestionDrawer({
         <AnimatePresence>
           {isOpen && (
             <motion.div
-              className="max-h-[60vh] overflow-y-auto p-4 bauhaus-white"
+              className="max-h-[60vh] overflow-y-auto p-4 bg-white"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
@@ -81,8 +81,8 @@ export function QuestionDrawer({
               <motion.div
                 className={`mb-4 p-4 border-4 ${
                   nearbyPOI
-                    ? 'bauhaus-white border-red-600'
-                    : 'bauhaus-white border-red-600'
+                    ? 'bg-white border-red-600'
+                    : 'bg-white border-red-600'
                 }`}
                 initial={{ scale: 0.95 }}
                 animate={{ scale: 1 }}
@@ -122,13 +122,13 @@ export function QuestionDrawer({
                         key={category.id}
                         onClick={() => setSelectedCategory(category.id)}
                         disabled={!nearbyPOI}
-                        className="w-full bauhaus-white border-4 border-black p-4 text-left hover:bg-gray-100 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="w-full bg-white border-4 border-black p-4 text-left hover:bg-gray-100 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                         initial={{ opacity: 0, x: -20 }}
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ delay: index * 0.1 }}
                       >
                         <div className="flex items-start gap-4">
-                          <div className="bauhaus-white p-3">
+                          <div className="bg-black p-3">
                             <IconComponent className="w-6 h-6 text-black" />
                           </div>
                           <div className="flex-1">
@@ -152,7 +152,7 @@ export function QuestionDrawer({
                         setSelectedCategory(null);
                         setSelectedParams({});
                       }}
-                      className="bauhaus-white border-4 border-black p-2 hover:bg-gray-100 transition-colors"
+                      className="bg-white border-4 border-black p-2 hover:bg-gray-100 transition-colors"
                     >
                       <ArrowLeft className="w-5 h-5 text-black" />
                     </button>
@@ -169,7 +169,7 @@ export function QuestionDrawer({
                     return (
                       <motion.div
                         key={question.id}
-                        className={`bauhaus-white border-4 border-black p-4 space-y-3 ${
+                        className={`bg-white border-4 border-black p-4 space-y-3 ${
                           isLocked ? 'opacity-50' : ''
                         }`}
                         initial={{ opacity: 0, y: 20 }}
@@ -200,8 +200,8 @@ export function QuestionDrawer({
                                 disabled={!isEligible || isLocked}
                                 className={`px-4 py-2 border-3 text-sm transition-all ${
                                   selectedParam === option
-                                    ? 'bauhaus-white text-black border-black'
-                                    : 'bauhaus-white text-black border-black hover:bg-gray-100'
+                                    ? 'bg-black text-black border-black'
+                                    : 'bg-white text-black border-black hover:bg-gray-100'
                                 } disabled:opacity-50 disabled:cursor-not-allowed`}
                               >
                                 {option}

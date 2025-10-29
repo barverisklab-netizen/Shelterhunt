@@ -68,7 +68,7 @@ export function WaitingRoom({
 
           {/* Game Code */}
           <motion.div
-            className="bauhaus-white border-4 border-black p-4 inline-block"
+            className="bg-white border-4 border-black p-4 inline-block"
             whileHover={{ scale: 1.02 }}
           >
             <div className="text-sm text-gray-600 mb-1 font-bold uppercase">Game Code</div>
@@ -96,7 +96,7 @@ export function WaitingRoom({
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {/* Red Team */}
           <motion.div
-            className="bauhaus-white border-4 border-black p-6 space-y-4"
+            className="bg-white border-4 border-black p-6 space-y-4"
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.2 }}
@@ -109,7 +109,7 @@ export function WaitingRoom({
               {redTeam.map((player, index) => (
                 <motion.div
                   key={player.id}
-                  className="bauhaus-white border-3 border-black p-3 flex items-center justify-between"
+                  className="bg-white border-3 border-black p-3 flex items-center justify-between"
                   initial={{ opacity: 0, x: -10 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: 0.3 + index * 0.1 }}
@@ -143,20 +143,20 @@ export function WaitingRoom({
 
           {/* Blue Team */}
           <motion.div
-            className="bauhaus-white border-4 border-black p-6 space-y-4"
+            className="bg-white border-4 border-black p-6 space-y-4"
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.2 }}
           >
             <div className="flex items-center gap-2 mb-4">
-              <div className="w-4 h-4 bauhaus-white" />
+              <div className="w-4 h-4 bg-black" />
               <h3 className="text-xl text-black font-bold uppercase">Blue Team</h3>
             </div>
             <div className="space-y-2">
               {blueTeam.map((player, index) => (
                 <motion.div
                   key={player.id}
-                  className="bauhaus-white border-3 border-black p-3 flex items-center justify-between"
+                  className="bg-white border-3 border-black p-3 flex items-center justify-between"
                   initial={{ opacity: 0, x: 10 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: 0.3 + index * 0.1 }}

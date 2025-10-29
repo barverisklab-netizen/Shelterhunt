@@ -146,7 +146,7 @@ export function GameScreen({
             <div className="flex items-center gap-2">
               <div
                 className={`w-3 h-3 ${
-                  teamColor === 'red' ? 'bg-red-600' : 'bauhaus-white'
+                  teamColor === 'red' ? 'bg-red-600' : 'bg-black'
                 }`}
               />
               <span className="text-black text-sm font-bold uppercase">
@@ -275,7 +275,7 @@ export function GameScreen({
         {gameEnded && gameResult && (
           <>
             <motion.div
-              className="fixed inset-0 bauhaus-white/90 z-50"
+              className="fixed inset-0 bg-black/90 z-50"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
             />

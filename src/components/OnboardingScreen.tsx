@@ -22,10 +22,10 @@ export function OnboardingScreen({ onJoinGame, onHostGame, onPlaySolo, onShowHel
   };
 
   return (
-    <div className="min-h-screen bauhaus-white flex items-center justify-center p-4 relative overflow-hidden">
+    <div className="min-h-screen bg-white flex items-center justify-center p-4 relative overflow-hidden">
       {/* Bauhaus Geometric Background Elements - White/Black/Red Only */}
       <div className="absolute top-10 left-10 w-32 h-32 bg-red-600"></div>
-      <div className="absolute top-40 right-20 w-24 h-24 rounded-full bauhaus-white"></div>
+      <div className="absolute top-40 right-20 w-24 h-24 rounded-full bg-black"></div>
       <div className="absolute bottom-32 left-1/4" style={{
         width: 0,
         height: 0,
@@ -34,7 +34,7 @@ export function OnboardingScreen({ onJoinGame, onHostGame, onPlaySolo, onShowHel
         borderBottom: '87px solid #DC2626'
       }}></div>
       <div className="absolute bottom-20 right-1/3 w-16 h-16 bg-red-600"></div>
-      <div className="absolute top-1/3 right-10 w-20 h-20 bauhaus-white"></div>
+      <div className="absolute top-1/3 right-10 w-20 h-20 bg-black"></div>
       
       <motion.div
         className="w-full max-w-md space-y-8 relative z-10"
@@ -55,7 +55,7 @@ export function OnboardingScreen({ onJoinGame, onHostGame, onPlaySolo, onShowHel
               {/* Large Red Square */}
               <div className="absolute inset-0 bg-red-600 border-4 border-black"></div>
               {/* Black Circle */}
-              <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-16 h-16 rounded-full bauhaus-white border-4 border-white"></div>
+              <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-16 h-16 rounded-full bg-black border-4 border-white"></div>
               {/* MapPin Icon in Center */}
               <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
                 <MapPin className="w-8 h-8 text-black" />
@@ -84,14 +84,14 @@ export function OnboardingScreen({ onJoinGame, onHostGame, onPlaySolo, onShowHel
           {!showJoinInput ? (
             <button
               onClick={() => setShowJoinInput(true)}
-              className="w-full bauhaus-white border-4 border-black hover:shadow-[8px_8px_0_black] transition-all py-6 flex items-center justify-center gap-2 cursor-pointer"
+              className="w-full bg-white border-4 border-black hover:shadow-[8px_8px_0_black] transition-all py-6 flex items-center justify-center gap-2 cursor-pointer"
             >
               <Users className="w-5 h-5" />
               <span className="text-lg font-bold uppercase tracking-wide">Join Game</span>
             </button>
           ) : (
             <motion.div
-              className="bauhaus-white border-4 border-red-600 p-4 space-y-3"
+              className="bg-white border-4 border-red-600 p-4 space-y-3"
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
             >
@@ -100,14 +100,14 @@ export function OnboardingScreen({ onJoinGame, onHostGame, onPlaySolo, onShowHel
                 placeholder="ENTER CODE"
                 value={gameCode}
                 onChange={(e) => setGameCode(e.target.value.toUpperCase())}
-                className="border-2 border-black text-black placeholder:text-gray-400 text-center text-xl tracking-widest font-bold uppercase bauhaus-white"
+                className="border-2 border-black text-black placeholder:text-gray-400 text-center text-xl tracking-widest font-bold uppercase bg-white"
                 maxLength={6}
                 onKeyPress={(e) => e.key === 'Enter' && handleJoin()}
               />
               <div className="flex gap-2">
                 <button
                   onClick={() => setShowJoinInput(false)}
-                  className="flex-1 bauhaus-white border-2 border-black py-3 font-bold uppercase text-sm hover:shadow-[4px_4px_0_black] transition-all"
+                  className="flex-1 bg-white border-2 border-black py-3 font-bold uppercase text-sm hover:shadow-[4px_4px_0_black] transition-all"
                 >
                   Cancel
                 </button>
@@ -135,7 +135,7 @@ export function OnboardingScreen({ onJoinGame, onHostGame, onPlaySolo, onShowHel
           {/* Host Game Button */}
           <button
             onClick={onHostGame}
-            className="w-full bauhaus-white text-black border-4 border-black hover:shadow-[8px_8px_0_red] transition-all py-6 flex items-center justify-center gap-2 cursor-pointer"
+            className="w-full bg-black text-black border-4 border-black hover:shadow-[8px_8px_0_red] transition-all py-6 flex items-center justify-center gap-2 cursor-pointer"
           >
             <Users className="w-5 h-5" />
             <span className="text-lg font-bold uppercase tracking-wide">Host Multiplayer</span>
@@ -144,7 +144,7 @@ export function OnboardingScreen({ onJoinGame, onHostGame, onPlaySolo, onShowHel
           {/* How to Play Button */}
           <button
             onClick={onShowHelp}
-            className="w-full bauhaus-white text-black border-4 border-black hover:shadow-[4px_4px_0_black] transition-all py-4 flex items-center justify-center gap-2 cursor-pointer"
+            className="w-full bg-white text-black border-4 border-black hover:shadow-[4px_4px_0_black] transition-all py-4 flex items-center justify-center gap-2 cursor-pointer"
           >
             <Info className="w-5 h-5" />
             <span className="text-base font-bold uppercase tracking-wide">How to Play</span>
@@ -160,8 +160,8 @@ export function OnboardingScreen({ onJoinGame, onHostGame, onPlaySolo, onShowHel
         >
           {[
             { label: 'LOCATION', color: 'bg-red-600', textColor: 'text-black' },
-            { label: 'TRIVIA', color: 'bauhaus-white', textColor: 'text-black' },
-            { label: 'TEAM', color: 'bauhaus-white', textColor: 'text-black' }
+            { label: 'TRIVIA', color: 'bg-black', textColor: 'text-black' },
+            { label: 'TEAM', color: 'bg-white', textColor: 'text-black' }
           ].map((feature, index) => (
             <motion.div
               key={feature.label}

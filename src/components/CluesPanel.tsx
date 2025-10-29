@@ -16,7 +16,7 @@ export function CluesPanel({ isOpen, clues, onClose }: CluesPanelProps) {
         <>
           {/* Backdrop */}
           <motion.div
-            className="fixed inset-0 bauhaus-white/80 z-50"
+            className="fixed inset-0 bg-black/80 z-50"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -31,12 +31,12 @@ export function CluesPanel({ isOpen, clues, onClose }: CluesPanelProps) {
             exit={{ x: '100%' }}
             transition={{ type: 'spring', damping: 30, stiffness: 300 }}
           >
-            <div className="bauhaus-white h-full flex flex-col border-l-4 border-black">
+            <div className="bg-white h-full flex flex-col border-l-4 border-black">
               {/* Header */}
               <div className="p-6 border-b-4 border-black">
                 <div className="flex items-start justify-between mb-2">
                   <div className="flex items-center gap-3">
-                    <div className="bauhaus-white p-3">
+                    <div className="bg-black p-3">
                       <Lightbulb className="w-6 h-6 text-black" />
                     </div>
                     <div>
@@ -48,7 +48,7 @@ export function CluesPanel({ isOpen, clues, onClose }: CluesPanelProps) {
                   </div>
                   <button
                     onClick={onClose}
-                    className="bauhaus-white border-4 border-black p-2 hover:bg-gray-100 transition-colors"
+                    className="bg-white border-4 border-black p-2 hover:bg-gray-100 transition-colors"
                   >
                     <X className="w-5 h-5 text-black" />
                   </button>
@@ -63,7 +63,7 @@ export function CluesPanel({ isOpen, clues, onClose }: CluesPanelProps) {
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                   >
-                    <div className="bauhaus-white p-6">
+                    <div className="bg-black p-6">
                       <Sparkles className="w-12 h-12 text-black" />
                     </div>
                     <div>
@@ -78,7 +78,7 @@ export function CluesPanel({ isOpen, clues, onClose }: CluesPanelProps) {
                     {clues.map((clue, index) => (
                       <motion.div
                         key={clue.id}
-                        className={`bauhaus-white border-4 p-4 ${
+                        className={`bg-white border-4 p-4 ${
                           clue.answer
                             ? 'border-red-600'
                             : 'border-black'
@@ -119,7 +119,7 @@ export function CluesPanel({ isOpen, clues, onClose }: CluesPanelProps) {
               {clues.length > 0 && (
                 <div className="p-6 border-t-4 border-black">
                   <motion.div
-                    className="bauhaus-white border-4 border-black p-4"
+                    className="bg-white border-4 border-black p-4"
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                   >

@@ -382,7 +382,7 @@ export function MapView({
       {/* Layer Control Button */}
       <motion.button
         onClick={() => setShowLayerControl(!showLayerControl)}
-        className="absolute top-4 left-4 bauhaus-white border-4 border-black p-3 hover:bg-gray-100 transition-colors z-10"
+        className="absolute top-4 left-4 bg-white border-4 border-black p-3 hover:bg-gray-100 transition-colors z-10"
         whileHover={{ scale: 1.02 }}
         whileTap={{ scale: 0.98 }}
       >
@@ -393,7 +393,7 @@ export function MapView({
       <AnimatePresence>
         {showLayerControl && (
           <motion.div
-            className="absolute top-16 left-4 bauhaus-white border-4 border-black p-4 space-y-3 z-10 min-w-[220px]"
+            className="absolute top-16 left-4 bg-white border-4 border-black p-4 space-y-3 z-10 min-w-[220px]"
             initial={{ opacity: 0, y: -10, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -10, scale: 0.95 }}
@@ -417,7 +417,7 @@ export function MapView({
       <AnimatePresence>
         {showLayerControl ? (
           <motion.div
-            className="absolute bottom-20 left-4 bauhaus-white border-4 border-black p-3 space-y-2 z-10 max-h-[60vh] overflow-y-auto"
+            className="absolute bottom-20 left-4 bg-white border-4 border-black p-3 space-y-2 z-10 max-h-[60vh] overflow-y-auto"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 20 }}
@@ -469,7 +469,7 @@ export function MapView({
         ) : (
           <motion.button
             onClick={() => setShowLayerControl(true)}
-            className="absolute bottom-20 left-4 bauhaus-white border-4 border-black p-3 z-10 text-black hover:bg-gray-100 transition-colors"
+            className="absolute bottom-20 left-4 bg-white border-4 border-black p-3 z-10 text-black hover:bg-gray-100 transition-colors"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 20 }}
