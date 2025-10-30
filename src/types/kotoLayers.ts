@@ -37,6 +37,199 @@ export interface KotoLayer {
 }
 
 export const kotoLayers: KotoLayer[] = [
+  // Designated Evacuation Centers
+  {
+    id: 2,
+    label: "Designated Evacuation Centers",
+    metadata: {
+      query: {
+        template:
+          "Name: <b>{{Landmark name (EN)}}</b> | {{Landmark name (JP)}}<br>Category: <b>{{Category}}</b><br>Address: <b>{{Address}}</b>",
+      },
+      loadOnInit: true,
+      legendItems: [
+        {
+          label: "Designated Evacuation Centers",
+          isActive: true,
+          isEnabled: true,
+          swatchType: "line",
+          description: "Government-designated evacuation center.",
+          swatchStyle: { strokeColor: "#c1272d", strokeWidth: 2 },
+        },
+      ],
+    },
+    layerType: "symbol",
+    sourceType: "vector",
+    sourceData: { layerId: "8sbllw5a", layerName: "ihi_evacuation_centers_all-c2o5a5" },
+    style: {
+      paint: {
+        "text-color": "#000000",
+        "text-halo-blur": 0.5,
+        "text-halo-color": "#ffffff",
+        "text-halo-width": 1.2,
+      },
+      filter: ["==", ["get", "Category"], "Designated EC"],
+      layout: {
+        "icon-size": 0.75,
+        "text-font": ["Roboto Bold"],
+        "text-size": 10,
+        "icon-image": ["match", ["get", "Category"], "Designated EC", "ihi_dec", ""],
+        "text-field": ["match", ["get", "Category"], "Designated EC", ["get", "Landmark name (EN)"], ""],
+        "text-anchor": "top",
+        "text-offset": [0, 2.5],
+        "icon-allow-overlap": true,
+      },
+    },
+  },
+  // Voluntary Evacuation Centers
+  {
+    id: 5,
+    label: "Voluntary Evacuation Centers",
+    metadata: {
+      query: {
+        template:
+          "Name: <b>{{Landmark name (EN)}}</b> | {{Landmark name (JP)}}<br>Category: <b>{{Category}}</b><br>Address: <b>{{Address}}</b>",
+      },
+      loadOnInit: false,
+      legendItems: [
+        {
+          label: "Voluntary Evacuation Centers",
+          isActive: true,
+          isEnabled: true,
+          swatchType: "line",
+          description: "Voluntary evacuation center.",
+          swatchStyle: { strokeColor: "#c1272d", strokeWidth: 2 },
+        },
+      ],
+    },
+    layerType: "symbol",
+    sourceType: "vector",
+    sourceData: { layerId: "8sbllw5a", layerName: "ihi_evacuation_centers_all-c2o5a5" },
+    style: {
+      paint: {
+        "text-color": "#000000",
+        "text-halo-blur": 0.5,
+        "text-halo-color": "#ffffff",
+        "text-halo-width": 1.2,
+      },
+      filter: ["==", ["get", "Category"], "Voluntary EC"],
+      layout: {
+        "icon-size": 0.8,
+        "text-font": ["Roboto Bold"],
+        "text-size": 10,
+        "icon-image": ["match", ["get", "Category"], "Voluntary EC", "ihi_vec", ""],
+        "text-field": ["match", ["get", "Category"], "Voluntary EC", ["get", "Landmark name (EN)"], ""],
+        "text-anchor": "top",
+        "text-offset": [0, 1.5],
+        "icon-allow-overlap": true,
+      },
+    },
+  },
+  // Temporary Evacuation Centers (Corporate/UR)
+  {
+    id: 4,
+    label: "Temporary Evacuation Centers",
+    metadata: {
+      query: {
+        template:
+          "Name: <b>{{Landmark name (EN)}}</b> | {{Landmark name (JP)}}<br>Category: <b>{{Category}}</b><br>Address: <b>{{Address}}</b>",
+      },
+      loadOnInit: false,
+      legendItems: [
+        {
+          label: "Temporary Evacuation Centers (Corporate/UR)",
+          isActive: true,
+          isEnabled: true,
+          swatchType: "line",
+          description: "Temporary evacuation center location.",
+          swatchStyle: { strokeColor: "#c1272d", strokeWidth: 2 },
+        },
+      ],
+    },
+    layerType: "symbol",
+    sourceType: "vector",
+    sourceData: { layerId: "8sbllw5a", layerName: "ihi_evacuation_centers_all-c2o5a5" },
+    style: {
+      paint: {
+        "text-color": "#000000",
+        "text-halo-blur": 0.5,
+        "text-halo-color": "#ffffff",
+        "text-halo-width": 1.2,
+      },
+      filter: [
+        "in",
+        ["get", "Category"],
+        ["literal", ["Temp EC (Corporate)", "Temp EC (UR)"]]
+      ],
+      layout: {
+        "icon-size": 0.8,
+        "text-font": ["Roboto Bold"],
+        "text-size": 10,
+        "icon-image": [
+          "match",
+          ["get", "Category"],
+          ["Temp EC (Corporate)", "Temp EC (UR)"],
+          "ihi_tec",
+          ""
+        ],
+        "text-field": [
+          "match",
+          ["get", "Category"],
+          ["Temp EC (Corporate)", "Temp EC (UR)"],
+          ["get", "Landmark name (EN)"],
+          ""
+        ],
+        "text-anchor": "top",
+        "text-offset": [0, 2.5],
+        "icon-allow-overlap": true,
+      },
+    },
+  },
+  // Evacuation Centers (generic EC)
+  {
+    id: 18,
+    label: "Evacuation Centers",
+    metadata: {
+      query: {
+        template:
+          "Name: <b>{{Landmark name (EN)}}</b> | {{Landmark name (JP)}}<br>Category: <b>{{Category}}</b><br>Address: <b>{{Address}}</b>",
+      },
+      loadOnInit: false,
+      legendItems: [
+        {
+          label: "Evacuation Centers",
+          isActive: true,
+          isEnabled: true,
+          swatchType: "line",
+          description: "General evacuation center.",
+          swatchStyle: { strokeColor: "#c1272d", strokeWidth: 2 },
+        },
+      ],
+    },
+    layerType: "symbol",
+    sourceType: "vector",
+    sourceData: { layerId: "8sbllw5a", layerName: "ihi_evacuation_centers_all-c2o5a5" },
+    style: {
+      paint: {
+        "text-color": "#000000",
+        "text-halo-blur": 0.5,
+        "text-halo-color": "#ffffff",
+        "text-halo-width": 1.2,
+      },
+      filter: ["==", ["get", "Category"], "EC"],
+      layout: {
+        "icon-size": 0.75,
+        "text-font": ["Roboto Bold"],
+        "text-size": 10,
+        "icon-image": ["match", ["get", "Category"], "EC", "ihi_ec", ""],
+        "text-field": ["match", ["get", "Category"], "EC", ["get", "Landmark name (EN)"], ""],
+        "text-anchor": "top",
+        "text-offset": [0, 2.5],
+        "icon-allow-overlap": true,
+      },
+    },
+  },
+  // AED Locations
   {
     id: 3,
     label: "AED Locations",
@@ -94,6 +287,7 @@ export const kotoLayers: KotoLayer[] = [
       }
     }
   },
+  //Flood map
   {
     id: 9,
     label: "Flood Depth",
@@ -135,6 +329,7 @@ export const kotoLayers: KotoLayer[] = [
       layout: {}
     }
   },
+  //Bridges
   {
     id: 11,
     label: "Bridges",
@@ -168,7 +363,7 @@ export const kotoLayers: KotoLayer[] = [
         "text-halo-color": "#ffffff",
         "text-halo-width": 1.2
       },
-      filter: ["===", "Category", "Bridge"],
+      filter: ["==", ["get", "Category"], "Bridge"],
       layout: {
         "icon-size": 0.6,
         "text-font": ["Roboto Bold"],
@@ -193,6 +388,7 @@ export const kotoLayers: KotoLayer[] = [
       }
     }
   },
+  //Shrines/Temples
   {
     id: 12,
     label: "Shrines/Temples",
@@ -226,7 +422,7 @@ export const kotoLayers: KotoLayer[] = [
         "text-halo-color": "#ffffff",
         "text-halo-width": 1.2
       },
-      filter: ["===", "Category", "Shrine/Temple"],
+      filter: ["==", ["get", "Category"], "Shrine/Temple"],
       layout: {
         "icon-size": 0.6,
         "text-font": ["Roboto Bold"],
@@ -251,6 +447,7 @@ export const kotoLayers: KotoLayer[] = [
       }
     }
   },
+  //Community Centers
   {
     id: 6,
     label: "Community Centers",
@@ -284,7 +481,7 @@ export const kotoLayers: KotoLayer[] = [
         "text-halo-color": "#ffffff",
         "text-halo-width": 1.2
       },
-      filter: ["===", "Category", "Community Center"],
+      filter: ["==", ["get", "Category"], "Community Center"],
       layout: {
         "icon-size": 0.6,
         "text-font": ["Roboto Bold"],
@@ -309,6 +506,7 @@ export const kotoLayers: KotoLayer[] = [
       }
     }
   },
+    //Flood Gates
   {
     id: 10,
     label: "Flood Gates",
@@ -342,7 +540,7 @@ export const kotoLayers: KotoLayer[] = [
         "text-halo-color": "#ffffff",
         "text-halo-width": 1.2
       },
-      filter: ["===", "Category", "Flood Gate"],
+      filter: ["==", ["get", "Category"], "Flood Gate"],
       layout: {
         "icon-size": 0.6,
         "text-font": ["Roboto Bold"],
@@ -367,6 +565,7 @@ export const kotoLayers: KotoLayer[] = [
       }
     }
   },
+  //Train Stations
   {
     id: 13,
     label: "Train Stations",
@@ -400,7 +599,7 @@ export const kotoLayers: KotoLayer[] = [
         "text-halo-color": "#ffffff",
         "text-halo-width": 1.2
       },
-      filter: ["===", "Category", "Train Station"],
+      filter: ["==", ["get", "Category"], "Train Station"],
       layout: {
         "icon-size": 0.6,
         "text-font": ["Roboto Bold"],

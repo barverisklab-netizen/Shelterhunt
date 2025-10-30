@@ -9,6 +9,7 @@ import { POI, Question, TriviaQuestion, Clue } from '../data/mockData';
 import { defaultCityContext } from '../data/cityContext';
 import { useState } from 'react';
 
+
 interface GameScreenProps {
   pois: POI[];
   questions: Question[];
@@ -195,9 +196,9 @@ export function GameScreen({
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
           >
-            <Lightbulb className="w-6 h-6 text-red-600" />
+            <Lightbulb className="w-6 h-6 text-white" />
             {clues.length > 0 && (
-              <div className="absolute -top-1 -right-1 w-5 h-5 bg-red-600 border-4 border-black flex items-center justify-center text-xs font-bold text-white">
+              <div className="absolute -top-1 -right-1 w-5 h-5 bg-white border-4 border-black flex items-center justify-center text-xs font-bold text-white">
                 {clues.length}
               </div>
             )}
@@ -220,13 +221,13 @@ export function GameScreen({
           <motion.button
             onClick={() => setLocationPickerMode(!locationPickerMode)}
             className={`bauhaus-black p-4 border-4 border-black bauhaus-shadow hover:scale-105 transition-transform ${
-              locationPickerMode ? 'border-red-600' : ''
+              locationPickerMode ? 'border-red' : ''
             }`}
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             title={locationPickerMode ? "Cancel location selection" : "Pick location on map"}
           >
-            <Navigation className={`w-6 h-6 ${locationPickerMode ? 'text-red-600' : 'text-black'}`} />
+            <Navigation className={`w-6 h-6 ${locationPickerMode ? 'text-white' : 'text-black'}`} />
           </motion.button>
         </div>
 
@@ -247,7 +248,7 @@ export function GameScreen({
           </motion.div>
         )}
       </div>
-
+  
       {/* Question Drawer */}
       <QuestionDrawer
         questions={questions}
@@ -333,22 +334,7 @@ export function GameScreen({
         )}
       </AnimatePresence>
 
-      {/* Location Picker Mode Indicator */}
-      <AnimatePresence>
-        {locationPickerMode && (
-          <motion.div
-            className="fixed top-24 left-1/2 -translate-x-1/2 z-40 bauhaus-white px-6 py-3 pointer-events-none border-4 border-black bauhaus-shadow"
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-          >
-            <div className="flex items-center gap-2 text-black">
-              <Navigation className="w-5 h-5 text-red-600" />
-              <span className="font-bold uppercase">Click anywhere on the map to set your location</span>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+
     </div>
   );
 }

@@ -103,7 +103,7 @@ export function WaitingRoom({
           >
             <div className="flex items-center gap-2 mb-4">
               <div className="w-4 h-4 bg-red-600" />
-              <h3 className="text-xl text-black font-bold uppercase">Red Team</h3>
+              <h3 className="text-xl text-black font-bold uppercase">Red</h3>
             </div>
             <div className="space-y-2">
               {redTeam.map((player, index) => (

@@ -45,7 +45,7 @@ export function HelpModal({ isOpen, onClose }: HelpModalProps) {
         <>
           {/* Backdrop */}
           <motion.div
-            className="fixed inset-0 bg-black/80 z-50"
+            className="fixed inset-0 bauhaus-white z-50"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -59,9 +59,12 @@ export function HelpModal({ isOpen, onClose }: HelpModalProps) {
               initial={{ opacity: 0, scale: 0.9, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: 20 }}
-              transition={{ type: "spring", damping: 25 }}
+              transition={{ type: "spring", damping: 10 }}
+              style={{
+                backgroundColor: "#FFF", //FIXME: Use Bauhaus color variable
+              }}
             >
-              <div className="bg-white border-4 border-black p-6 max-h-[90vh] overflow-y-auto">
+              <div className="bauhaus-white border-4 border-black p-6 max-h-[90vh] overflow-y-auto">
                 {/* Header */}
                 <div className="flex items-start justify-between mb-6">
                   <div>

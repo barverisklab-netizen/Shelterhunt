@@ -25,13 +25,7 @@ export function OnboardingScreen({ onJoinGame, onHostGame, onPlaySolo, onShowHel
       {/* Bauhaus Geometric Background Elements - White/Black/Red Only */}
       <div className="absolute top-10 left-10 w-32 h-32 bg-red-600"></div>
       <div className="absolute top-40 right-20 w-24 h-24 rounded-full bg-black"></div>
-      <div className="absolute bottom-32 left-1/4" style={{
-        width: 0,
-        height: 0,
-        borderLeft: '50px solid transparent',
-        borderRight: '50px solid transparent',
-        borderBottom: '87px solid #DC2626'
-      }}></div>
+      
       <div className="absolute bottom-20 right-1/3 w-16 h-16 bg-red-600"></div>
       <div className="absolute top-1/3 right-10 w-20 h-20 bg-black"></div>
       
@@ -51,20 +45,16 @@ export function OnboardingScreen({ onJoinGame, onHostGame, onPlaySolo, onShowHel
           {/* Geometric Logo Composition */}
           <div className="flex items-center justify-center">
             <div className="relative w-32 h-32">
-              {/* Large Red Square */}
-              <div className="absolute inset-0 bg-red-600 border-4 border-black"></div>
-              {/* Black Circle */}
-              <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-16 h-16 rounded-full bg-black border-4 border-white"></div>
               {/* MapPin Icon in Center */}
               <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
-                <MapPin className="w-8 h-8 text-black" />
+                <MapPin className="w-12 h-12 text-black" />
               </div>
             </div>
           </div>
 
           <div className="space-y-2">
             <h1 className="text-6xl font-black text-black uppercase tracking-tight leading-none">
-              Secret<br/>Shelter
+              ShelterHunt
             </h1>
             <p className="text-black text-base font-medium uppercase tracking-wider">
               Find the shelter before the storm!
@@ -113,7 +103,7 @@ export function OnboardingScreen({ onJoinGame, onHostGame, onPlaySolo, onShowHel
                 <button
                   onClick={handleJoin}
                   disabled={!gameCode.trim()}
-                  className="flex-1 bg-red-600 text-white border-4 border-black py-3 font-bold uppercase text-sm hover:shadow-[4px_4px_0_black] transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  className="flex-1 bg-red-600 text-black border-4 border-black py-3 font-bold uppercase text-sm hover:shadow-[4px_4px_0_black] transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
                   <Play className="w-4 h-4" />
                   Join

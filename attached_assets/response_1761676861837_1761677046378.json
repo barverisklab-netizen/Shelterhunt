@@ -4,7 +4,7 @@
     "label": "AED Locations",
     "metadata": {
       "query": {
-        "template": "Name: <b>{{Landmark name (EN)}}</b> | {{Landmark name (JP)}}<br>Category: <b>{{Category}}</b><br>Address: <b>{{Address}}</b>"
+        "template": "Name: <b>{{Landmark name (EN)}}</b><br>Category: <b>{{Category}}</b><br>Address: <b>{{Address}}</b>"
       },
       "loadOnInit": false,
       "legendItems": [
@@ -36,38 +36,18 @@
       },
       "layout": {
         "icon-size": 0.6,
-        "text-font": [
-          "Roboto Bold"
-        ],
+        "text-font": ["Roboto Bold"],
         "text-size": 10,
-        "icon-image": [
-          "match",
-          [
-            "get",
-            "Category"
-          ],
-          "AED",
-          "ihi_aed",
-          ""
-        ],
+        "icon-image": ["match", ["get", "Category"], "AED", "ihi_aed", ""],
         "text-field": [
           "match",
-          [
-            "get",
-            "Category"
-          ],
+          ["get", "Category"],
           "AED",
-          [
-            "get",
-            "Landmark name (EN)"
-          ],
+          ["get", "Landmark name (EN)"],
           ""
         ],
         "text-anchor": "top",
-        "text-offset": [
-          0,
-          1.5
-        ],
+        "text-offset": [0, 1.5],
         "icon-allow-overlap": true
       }
     }
@@ -107,45 +87,27 @@
         "text-halo-color": "#ffffff",
         "text-halo-width": 1.2
       },
-      "filter": [
-        "===",
-        "Category",
-        "Bridge"
-      ],
+      "filter": ["===", "Category", "Bridge"],
       "layout": {
         "icon-size": 0.6,
-        "text-font": [
-          "Roboto Bold"
-        ],
+        "text-font": ["Roboto Bold"],
         "text-size": 10,
         "icon-image": [
           "match",
-          [
-            "get",
-            "Category"
-          ],
+          ["get", "Category"],
           "Bridge",
           "ihi_bridges",
           ""
         ],
         "text-field": [
           "match",
-          [
-            "get",
-            "Category"
-          ],
+          ["get", "Category"],
           "Bridge",
-          [
-            "get",
-            "Landmark name (EN)"
-          ],
+          ["get", "Landmark name (EN)"],
           ""
         ],
         "text-anchor": "top",
-        "text-offset": [
-          0,
-          1.5
-        ],
+        "text-offset": [0, 1.5],
         "icon-allow-overlap": true
       }
     }
@@ -185,45 +147,27 @@
         "text-halo-color": "#ffffff",
         "text-halo-width": 1.2
       },
-      "filter": [
-        "===",
-        "Category",
-        "Shrine/Temple"
-      ],
+      "filter": ["===", "Category", "Shrine/Temple"],
       "layout": {
         "icon-size": 0.6,
-        "text-font": [
-          "Roboto Bold"
-        ],
+        "text-font": ["Roboto Bold"],
         "text-size": 10,
         "icon-image": [
           "match",
-          [
-            "get",
-            "Category"
-          ],
+          ["get", "Category"],
           "Shrine/Temple",
           "ihi_shrinetemples",
           ""
         ],
         "text-field": [
           "match",
-          [
-            "get",
-            "Category"
-          ],
+          ["get", "Category"],
           "Shrine/Temple",
-          [
-            "get",
-            "Landmark name (EN)"
-          ],
+          ["get", "Landmark name (EN)"],
           ""
         ],
         "text-anchor": "top",
-        "text-offset": [
-          0,
-          1.5
-        ],
+        "text-offset": [0, 1.5],
         "icon-allow-overlap": true
       }
     }
@@ -257,13 +201,8 @@
       "paint": {
         "fill-color": [
           "interpolate",
-          [
-            "linear"
-          ],
-          [
-            "get",
-            "flood_depth"
-          ],
+          ["linear"],
+          ["get", "flood_depth"],
           1,
           "hsl(60, 98%, 90%)",
           2,
@@ -317,45 +256,27 @@
         "text-halo-color": "#ffffff",
         "text-halo-width": 1.2
       },
-      "filter": [
-        "===",
-        "Category",
-        "Community Center"
-      ],
+      "filter": ["===", "Category", "Community Center"],
       "layout": {
         "icon-size": 0.6,
-        "text-font": [
-          "Roboto Bold"
-        ],
+        "text-font": ["Roboto Bold"],
         "text-size": 10,
         "icon-image": [
           "match",
-          [
-            "get",
-            "Category"
-          ],
+          ["get", "Category"],
           "Community Center",
           "ihi_communitycenter",
           ""
         ],
         "text-field": [
           "match",
-          [
-            "get",
-            "Category"
-          ],
+          ["get", "Category"],
           "Community Center",
-          [
-            "get",
-            "Landmark name (EN)"
-          ],
+          ["get", "Landmark name (EN)"],
           ""
         ],
         "text-anchor": "top",
-        "text-offset": [
-          0,
-          1.5
-        ],
+        "text-offset": [0, 1.5],
         "icon-allow-overlap": true
       }
     }
@@ -395,45 +316,27 @@
         "text-halo-color": "#ffffff",
         "text-halo-width": 1.2
       },
-      "filter": [
-        "===",
-        "Category",
-        "Flood Gate"
-      ],
+      "filter": ["===", "Category", "Flood Gate"],
       "layout": {
         "icon-size": 0.6,
-        "text-font": [
-          "Roboto Bold"
-        ],
+        "text-font": ["Roboto Bold"],
         "text-size": 10,
         "icon-image": [
           "match",
-          [
-            "get",
-            "Category"
-          ],
+          ["get", "Category"],
           "Flood Gate",
           "ihi_floodgates",
           ""
         ],
         "text-field": [
           "match",
-          [
-            "get",
-            "Category"
-          ],
+          ["get", "Category"],
           "Flood Gate",
-          [
-            "get",
-            "Landmark name (EN)"
-          ],
+          ["get", "Landmark name (EN)"],
           ""
         ],
         "text-anchor": "top",
-        "text-offset": [
-          0,
-          1.5
-        ],
+        "text-offset": [0, 1.5],
         "icon-allow-overlap": true
       }
     }
@@ -473,45 +376,27 @@
         "text-halo-color": "#ffffff",
         "text-halo-width": 1.2
       },
-      "filter": [
-        "===",
-        "Category",
-        "Train Station"
-      ],
+      "filter": ["===", "Category", "Train Station"],
       "layout": {
         "icon-size": 0.6,
-        "text-font": [
-          "Roboto Bold"
-        ],
+        "text-font": ["Roboto Bold"],
         "text-size": 10,
         "icon-image": [
           "match",
-          [
-            "get",
-            "Category"
-          ],
+          ["get", "Category"],
           "Train Station",
           "ihi_train",
           ""
         ],
         "text-field": [
           "match",
-          [
-            "get",
-            "Category"
-          ],
+          ["get", "Category"],
           "Train Station",
-          [
-            "get",
-            "Landmark name (EN)"
-          ],
+          ["get", "Landmark name (EN)"],
           ""
         ],
         "text-anchor": "top",
-        "text-offset": [
-          0,
-          1.5
-        ],
+        "text-offset": [0, 1.5],
         "icon-allow-overlap": true
       }
     }
@@ -551,54 +436,27 @@
         "text-halo-color": "#ffffff",
         "text-halo-width": 1.2
       },
-      "filter": [
-        "===",
-        "Category",
-        [
-          "Temp EC (Corporate)",
-          "Temp EC (UR)"
-        ]
-      ],
+      "filter": ["===", "Category", ["Temp EC (Corporate)", "Temp EC (UR)"]],
       "layout": {
         "icon-size": 0.8,
-        "text-font": [
-          "Roboto Bold"
-        ],
+        "text-font": ["Roboto Bold"],
         "text-size": 10,
         "icon-image": [
           "match",
-          [
-            "get",
-            "Category"
-          ],
-          [
-            "Temp EC (Corporate)",
-            "Temp EC (UR)"
-          ],
+          ["get", "Category"],
+          ["Temp EC (Corporate)", "Temp EC (UR)"],
           "ihi_tec",
           ""
         ],
         "text-field": [
           "match",
-          [
-            "get",
-            "Category"
-          ],
-          [
-            "Temp EC (Corporate)",
-            "Temp EC (UR)"
-          ],
-          [
-            "get",
-            "Landmark name (EN)"
-          ],
+          ["get", "Category"],
+          ["Temp EC (Corporate)", "Temp EC (UR)"],
+          ["get", "Landmark name (EN)"],
           ""
         ],
         "text-anchor": "top",
-        "text-offset": [
-          0,
-          2.5
-        ],
+        "text-offset": [0, 2.5],
         "icon-allow-overlap": true
       }
     }
@@ -638,45 +496,27 @@
         "text-halo-color": "#ffffff",
         "text-halo-width": 1.2
       },
-      "filter": [
-        "===",
-        "Category",
-        "Voluntary EC"
-      ],
+      "filter": ["===", "Category", "Voluntary EC"],
       "layout": {
         "icon-size": 0.8,
-        "text-font": [
-          "Roboto Bold"
-        ],
+        "text-font": ["Roboto Bold"],
         "text-size": 10,
         "icon-image": [
           "match",
-          [
-            "get",
-            "Category"
-          ],
+          ["get", "Category"],
           "Voluntary EC",
           "ihi_vec",
           ""
         ],
         "text-field": [
           "match",
-          [
-            "get",
-            "Category"
-          ],
+          ["get", "Category"],
           "Voluntary EC",
-          [
-            "get",
-            "Landmark name (EN)"
-          ],
+          ["get", "Landmark name (EN)"],
           ""
         ],
         "text-anchor": "top",
-        "text-offset": [
-          0,
-          1.5
-        ],
+        "text-offset": [0, 1.5],
         "icon-allow-overlap": true
       }
     }
@@ -716,45 +556,21 @@
         "text-halo-color": "#ffffff",
         "text-halo-width": 1.2
       },
-      "filter": [
-        "===",
-        "Category",
-        "Evacuation Centers"
-      ],
+      "filter": ["===", "Category", "Evacuation Centers"],
       "layout": {
         "icon-size": 0.75,
-        "text-font": [
-          "Roboto Bold"
-        ],
+        "text-font": ["Roboto Bold"],
         "text-size": 10,
-        "icon-image": [
-          "match",
-          [
-            "get",
-            "Category"
-          ],
-          "EC",
-          "ihi_ec",
-          ""
-        ],
+        "icon-image": ["match", ["get", "Category"], "EC", "ihi_ec", ""],
         "text-field": [
           "match",
-          [
-            "get",
-            "Category"
-          ],
+          ["get", "Category"],
           "EC",
-          [
-            "get",
-            "Landmark name (EN)"
-          ],
+          ["get", "Landmark name (EN)"],
           ""
         ],
         "text-anchor": "top",
-        "text-offset": [
-          0,
-          2.5
-        ],
+        "text-offset": [0, 2.5],
         "icon-allow-overlap": true
       }
     }
@@ -794,45 +610,27 @@
         "text-halo-color": "#ffffff",
         "text-halo-width": 1.2
       },
-      "filter": [
-        "===",
-        "Category",
-        "Designated EC"
-      ],
+      "filter": ["===", "Category", "Designated EC"],
       "layout": {
         "icon-size": 0.75,
-        "text-font": [
-          "Roboto Bold"
-        ],
+        "text-font": ["Roboto Bold"],
         "text-size": 10,
         "icon-image": [
           "match",
-          [
-            "get",
-            "Category"
-          ],
+          ["get", "Category"],
           "Designated EC",
           "ihi_dec",
           ""
         ],
         "text-field": [
           "match",
-          [
-            "get",
-            "Category"
-          ],
+          ["get", "Category"],
           "Designated EC",
-          [
-            "get",
-            "Landmark name (EN)"
-          ],
+          ["get", "Landmark name (EN)"],
           ""
         ],
         "text-anchor": "top",
-        "text-offset": [
-          0,
-          2.5
-        ],
+        "text-offset": [0, 2.5],
         "icon-allow-overlap": true
       }
     }

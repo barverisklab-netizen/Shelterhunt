@@ -29,7 +29,7 @@
     --bauhaus-yellow: 48 100% 50%;
     --bauhaus-blue: 217 91% 60%;
     --bauhaus-black: 0 0% 0%;
-    --bauhaus-white: 0 0% 100%;
+    --bauhaus-white: #fff;
   }
 }
 
