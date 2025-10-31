@@ -1,13 +1,16 @@
 import { motion, AnimatePresence } from 'motion/react';
-import { Clock, Lightbulb, MapPin, Home, Trophy, Frown, Navigation, X } from 'lucide-react';
-import { Button } from './ui/button';
+import { Clock, Lightbulb, MapPin, X} from 'lucide-react';
 import { MapView } from './MapView';
 import { QuestionDrawer } from './QuestionDrawer';
 import { CluesPanel } from './CluesPanel';
 import { TriviaModal } from './TriviaModal';
+import { GuessConfirmScreen } from './GuessConfirmScreen';
+import { ShelterVictoryScreen } from './ShelterVictoryScreen';
+import { ShelterPenaltyScreen } from './ShelterPenaltyScreen';
 import { POI, Question, TriviaQuestion, Clue } from '../data/mockData';
 import { defaultCityContext } from '../data/cityContext';
 import { useState } from 'react';
+import { toast } from "sonner@2.0.3";
 
 
 interface GameScreenProps {
@@ -17,10 +20,14 @@ interface GameScreenProps {
   playerLocation: { lat: number; lng: number };
   teamColor: 'red' | 'blue';
   timeRemaining: number;
-  secretShelterId: string;
-  onGuessSubmit: (poiId: string) => void;
+  secretShelter?: { id: string; name: string } | null;
+  shelterOptions: { id: string; name: string }[];
+  isTimerCritical: boolean;
+  onApplyPenalty: () => void;
   onEndGame: () => void;
   onLocationChange?: (location: { lat: number; lng: number }) => void;
+  onSecretShelterChange?: (info: { id: string; name: string }) => void;
+  onShelterOptionsChange?: (options: { id: string; name: string }[]) => void;
 }
 
 export function GameScreen({
@@ -30,10 +37,14 @@ export function GameScreen({
   playerLocation,
   teamColor,
   timeRemaining,
-  secretShelterId,
-  onGuessSubmit,
+  secretShelter,
+  shelterOptions,
+  isTimerCritical,
+  onApplyPenalty,
   onEndGame,
-  onLocationChange
+  onLocationChange,
+  onSecretShelterChange,
+  onShelterOptionsChange,
 }: GameScreenProps) {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [cluesOpen, setCluesOpen] = useState(false);
@@ -43,10 +54,17 @@ export function GameScreen({
   const [visitedPOIs, setVisitedPOIs] = useState<string[]>([]);
   const [lockedQuestions, setLockedQuestions] = useState<string[]>([]);
   const [nearbyPOI, setNearbyPOI] = useState<POI | null>(null);
-  const [gameEnded, setGameEnded] = useState(false);
-  const [gameResult, setGameResult] = useState<'win' | 'lose' | null>(null);
-  const [hasGuessed, setHasGuessed] = useState(false);
-  const [locationPickerMode, setLocationPickerMode] = useState(false);
+  const [selectedShelterId, setSelectedShelterId] = useState<string | null>(null);
+  const [confirmGuessOpen, setConfirmGuessOpen] = useState(false);
+  const [outcome, setOutcome] = useState<'none' | 'win' | 'penalty'>('none');
+
+  const normalizeName = (value?: string | null) =>
+    (value ?? '').trim().toLowerCase();
+  const secretPOI = secretShelter
+    ? pois.find(
+        (p) => normalizeName(p.name) === normalizeName(secretShelter.name)
+      )
+    : undefined;
 
   // Check if player is near a POI (simplified for demo)
   const checkNearbyPOI = () => {
@@ -82,7 +100,6 @@ export function GameScreen({
 
     if (isCorrect) {
       // Generate a clue based on the secret shelter
-      const secretPOI = pois.find(p => p.id === secretShelterId);
       const clueTexts = [
         { text: `Surge rank is ${secretPOI?.surgeRank || 2}`, answer: true, category: 'Location' },
         { text: `Capacity is ${secretPOI?.capacity || 100}+ people`, answer: true, category: 'Capacity' },
@@ -111,25 +128,77 @@ export function GameScreen({
     setTriviaOpen(false);
     setCurrentTrivia(null);
   };
+  const selectedShelterOption = selectedShelterId
+    ? shelterOptions.find((option) => option.id === selectedShelterId) ?? null
+    : null;
 
-  const handleGuess = () => {
-    if (!nearbyPOI || hasGuessed) return;
+  const timerContainerClasses = [
+    "flex items-center gap-2 px-4 py-2 border rounded-full",
+    isTimerCritical
+      ? "bg-neutral-900 border-red-500 text-white animate-pulse"
+      : "bg-neutral-100 border-neutral-900 text-neutral-900"
+  ].join(" ");
+  const timerTextClasses = isTimerCritical
+    ? "tabular-nums font-bold text-white"
+    : "tabular-nums font-bold text-neutral-900";
+  const isGuessDisabled = !secretShelter || shelterOptions.length === 0;
 
-    setHasGuessed(true);
-    const isCorrect = nearbyPOI.id === secretShelterId;
-    setGameResult(isCorrect ? 'win' : 'lose');
-    setGameEnded(true);
-    onGuessSubmit(nearbyPOI.id);
+  const handleGuessRequest = () => {
+    if (isGuessDisabled) {
+      return;
+    }
+
+    if (!selectedShelterOption) {
+      toast.warning("Select a shelter before submitting a guess.");
+      return;
+    }
+
+    if (!secretShelter) {
+      toast.error("The secret shelter is still being prepared. Try again in a moment.");
+      return;
+    }
+
+    setConfirmGuessOpen(true);
   };
 
-  const canGuess = nearbyPOI?.type === 'shelter' && !hasGuessed;
+  const resolveGuess = () => {
+    setConfirmGuessOpen(false);
+
+    if (!selectedShelterOption || !secretShelter) {
+      toast.error("Unable to submit your guess right now. Please try again.");
+      return;
+    }
+
+    const matches =
+      selectedShelterOption.id === secretShelter.id ||
+      normalizeName(selectedShelterOption.name) ===
+        normalizeName(secretShelter.name);
+
+    setCluesOpen(false);
+    setSelectedShelterId(null);
+
+    if (matches) {
+      toast.success(`🎉 Correct! You found ${selectedShelterOption.name}!`);
+      setOutcome('win');
+    } else {
+      toast.error(`Not ${secretShelter.name}. Timer reset to 10 minutes.`);
+      onApplyPenalty();
+      setOutcome('penalty');
+    }
+  };
+
+  const handlePenaltyContinue = () => {
+    setOutcome('none');
+  };
 
   return (
-    <div className="fixed inset-0 flex flex-col bg-black">
+    <div className="fixed inset-0 flex flex-col bg-neutral-950">
       {/* Top Bar */}
       <motion.div
-        className={`bauhaus-white p-4 border-b-4 border-black ${
-          teamColor === 'red' ? 'border-l-4 border-l-red-600' : 'border-l-4 border-l-black'
+        className={`bg-background text-neutral-900 p-4 border-b border-neutral-900 ${
+          teamColor === 'red'
+            ? 'border-l-4 border-l-neutral-500'
+            : 'border-l-4 border-l-neutral-900'
         }`}
         initial={{ y: -50, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
@@ -138,27 +207,20 @@ export function GameScreen({
           <div className="flex items-center gap-4">
             <button
               onClick={onEndGame}
-              className="bauhaus-black p-2 border-4 border-black hover:bauhaus-red transition-colors"
+              className="rounded border-4 border-black bg-yellow-300 p-2 text-black shadow-sm transition-colors hover:bg-yellow-200"
               title="Exit to main menu"
             >
-              <X className="w-5 h-5 text-black" />
+              <X className="w-5 h-5" />
             </button>
-            <h1 className="text-xl font-bold text-black uppercase">Secret Shelter</h1>
-            <div className="flex items-center gap-2">
-              <div
-                className={`w-3 h-3 ${
-                  teamColor === 'red' ? 'bg-red-600' : 'bg-black'
-                }`}
-              />
-              <span className="text-black text-sm font-bold uppercase">
-                {teamColor === 'red' ? 'Red' : 'Blue'} Team
-              </span>
-            </div>
+            <h1 className="text-xl font-bold text-black uppercase">
+              Secret Shelter
+              {secretShelter?.name ? ` — ${secretShelter.name}` : ''}
+            </h1>
           </div>
 
-          <div className="flex items-center gap-2 bauhaus-red px-4 py-2 border-4 border-black">
-            <Clock className="w-4 h-4 text-black" />
-            <span className="text-black tabular-nums font-bold">
+          <div className={timerContainerClasses}>
+            <Clock className={`w-4 h-4 ${isTimerCritical ? 'text-red-600' : 'text-black'}`} />
+            <span className={timerTextClasses}>
               {Math.floor(timeRemaining / 60)}:{(timeRemaining % 60).toString().padStart(2, '0')}
             </span>
           </div>
@@ -174,75 +236,44 @@ export function GameScreen({
         <MapView
           pois={pois}
           playerLocation={playerLocation}
-          secretShelterId={secretShelterId}
           visitedPOIs={visitedPOIs}
-          gameEnded={gameEnded}
+          gameEnded={outcome === 'win'}
           onPOIClick={simulateMove}
-          locationPickerMode={locationPickerMode}
-          onLocationPicked={(location) => {
-            if (onLocationChange) {
-              onLocationChange(location);
-            }
-            setLocationPickerMode(false);
-          }}
-          basemapUrl={defaultCityContext.mapConfig.basemapUrl}
+          onSecretShelterChange={onSecretShelterChange}
+          onShelterOptionsChange={onShelterOptionsChange}
         />
 
         {/* Floating Action Buttons */}
         <div className="absolute top-4 right-4 flex flex-col gap-3">
           <motion.button
             onClick={() => setCluesOpen(true)}
-            className="bauhaus-white p-4 border-4 border-black bauhaus-shadow hover:scale-105 transition-transform"
+            className="relative flex items-center justify-center bg-background p-4 border border-neutral-900 shadow-md hover:scale-105 transition-transform rounded-full"
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
           >
-            <Lightbulb className="w-6 h-6 text-white" />
+            <Lightbulb className="w-6 h-6 text-black" />
             {clues.length > 0 && (
-              <div className="absolute -top-1 -right-1 w-5 h-5 bg-white border-4 border-black flex items-center justify-center text-xs font-bold text-white">
+              <div className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full border border-neutral-900 bg-background text-xs font-bold text-neutral-900">
                 {clues.length}
               </div>
             )}
           </motion.button>
-
-          {canGuess && (
-            <motion.button
-              onClick={handleGuess}
-              className="bauhaus-red p-4 border-4 border-black bauhaus-shadow hover:scale-105 transition-transform"
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-            >
-              <Home className="w-6 h-6 text-black" />
-            </motion.button>
-          )}
-
-          {/* Mock Location Selector Button */}
-          <motion.button
-            onClick={() => setLocationPickerMode(!locationPickerMode)}
-            className={`bauhaus-black p-4 border-4 border-black bauhaus-shadow hover:scale-105 transition-transform ${
-              locationPickerMode ? 'border-red' : ''
-            }`}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            title={locationPickerMode ? "Cancel location selection" : "Pick location on map"}
-          >
-            <Navigation className={`w-6 h-6 ${locationPickerMode ? 'text-white' : 'text-black'}`} />
-          </motion.button>
         </div>
 
         {/* Location Status */}
-        {nearbyPOI && !gameEnded && (
+        {nearbyPOI && outcome !== 'win' && (
           <motion.div
-            className="absolute top-4 left-4 bauhaus-white p-4 max-w-xs border-4 border-black bauhaus-shadow"
+            className="absolute top-4 left-4 max-w-xs rounded-xl border border-neutral-900 bg-background p-4 shadow-md"
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
           >
             <div className="flex items-center gap-3">
-              <MapPin className="w-5 h-5 text-red-600" />
+              <div className="flex h-10 w-10 items-center justify-center rounded-full border border-neutral-900 bg-neutral-100">
+                <MapPin className="w-5 h-5 text-neutral-800" />
+              </div>
               <div>
-                <div className="text-black font-bold">{nearbyPOI.name}</div>
-                <div className="text-xs text-black/70 font-semibold">Tap to ask questions</div>
+                <div className="text-neutral-900 font-semibold">{nearbyPOI.name}</div>
+                <div className="text-xs text-neutral-600 font-medium">Tap to ask questions</div>
               </div>
             </div>
           </motion.div>
@@ -269,71 +300,49 @@ export function GameScreen({
       />
 
       {/* Clues Panel */}
-      <CluesPanel isOpen={cluesOpen} clues={clues} onClose={() => setCluesOpen(false)} />
+      <CluesPanel
+        isOpen={cluesOpen}
+        clues={clues}
+        onClose={() => setCluesOpen(false)}
+        shelterOptions={shelterOptions}
+        selectedShelterId={selectedShelterId}
+        onShelterSelect={setSelectedShelterId}
+        onGuessRequest={handleGuessRequest}
+        isGuessDisabled={isGuessDisabled}
+      />
 
-      {/* Game End Modal */}
       <AnimatePresence>
-        {gameEnded && gameResult && (
-          <>
-            <motion.div
-              className="fixed inset-0 bg-black/90 z-50"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-            />
-            <div className="fixed inset-0 flex items-center justify-center p-4 z-50">
-              <motion.div
-                className="w-full max-w-md bauhaus-white p-8 text-center space-y-6 border-4 border-black bauhaus-shadow"
-                initial={{ opacity: 0, scale: 0.8, y: 50 }}
-                animate={{ opacity: 1, scale: 1, y: 0 }}
-                transition={{ type: 'spring', damping: 20 }}
-              >
-                {gameResult === 'win' ? (
-                  <>
-                    <motion.div
-                      className="inline-block bauhaus-red p-6 border-4 border-black"
-                      animate={{ rotate: [0, 10, -10, 10, 0], scale: [1, 1.1, 1] }}
-                      transition={{ duration: 0.5, repeat: 2 }}
-                    >
-                      <Trophy className="w-16 h-16 text-black" />
-                    </motion.div>
-                    <div>
-                      <h2 className="text-4xl text-black mb-2 font-bold uppercase">Victory! 🎉</h2>
-                      <p className="text-black font-semibold">You found the secret shelter!</p>
-                    </div>
-                    <div className="bauhaus-white border-4 border-black p-4 space-y-2 text-left">
-                      <div className="flex justify-between text-black font-bold">
-                        <span>Clues Collected:</span>
-                        <span>{clues.length}</span>
-                      </div>
-                      <div className="flex justify-between text-black font-bold">
-                        <span>Locations Visited:</span>
-                        <span>{visitedPOIs.length}</span>
-                      </div>
-                    </div>
-                  </>
-                ) : (
-                  <>
-                    <div className="bauhaus-black p-6 inline-block border-4 border-black">
-                      <Frown className="w-16 h-16 text-black" />
-                    </div>
-                    <div>
-                      <h2 className="text-4xl text-black mb-2 font-bold uppercase">Not Quite</h2>
-                      <p className="text-black font-semibold">That's not the shelter. Keep looking!</p>
-                    </div>
-                  </>
-                )}
-                <Button
-                  onClick={onEndGame}
-                  className="w-full bauhaus-red border-4 border-black text-black py-4 hover:bauhaus-black bauhaus-shadow font-bold uppercase"
-                >
-                  Return to Lobby
-                </Button>
-              </motion.div>
-            </div>
-          </>
+        {confirmGuessOpen && selectedShelterOption && (
+          <GuessConfirmScreen
+            key="guess-confirm"
+            shelterName={selectedShelterOption.name}
+            onConfirm={resolveGuess}
+            onCancel={() => setConfirmGuessOpen(false)}
+          />
         )}
       </AnimatePresence>
 
+      <AnimatePresence>
+        {outcome === 'win' && (
+          <ShelterVictoryScreen
+            key="victory"
+            shelterName={secretShelter?.name}
+            clueCount={clues.length}
+            visitedCount={visitedPOIs.length}
+            onPlayAgain={onEndGame}
+          />
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {outcome === 'penalty' && (
+          <ShelterPenaltyScreen
+            key="penalty"
+            onContinue={handlePenaltyContinue}
+            onReturn={onEndGame}
+          />
+        )}
+      </AnimatePresence>
 
     </div>
   );

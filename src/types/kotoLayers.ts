@@ -299,7 +299,7 @@ export const kotoLayers: KotoLayer[] = [
       legendItems: [{
         label: "Flood Risk Zones",
         swatchType: "fill",
-        description: "<b>Flood depth zones from hazard modeling</b>",
+        description: "Flood depth zones from hazard modeling.",
         swatchStyle: {
           fillColor: "#fc0303"
         }

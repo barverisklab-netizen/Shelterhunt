@@ -1,7 +1,5 @@
 import { motion } from 'motion/react';
-import { MapPin, Users, Info, Play, User } from 'lucide-react';
-import { Input } from './ui/input';
-import { useState } from 'react';
+import { MapPin, Users, Info, User } from 'lucide-react';
 
 interface OnboardingScreenProps {
   onJoinGame: (code: string) => void;
@@ -10,18 +8,15 @@ interface OnboardingScreenProps {
   onShowHelp: () => void;
 }
 
-export function OnboardingScreen({ onJoinGame, onHostGame, onPlaySolo, onShowHelp }: OnboardingScreenProps) {
-  const [gameCode, setGameCode] = useState('');
-  const [showJoinInput, setShowJoinInput] = useState(false);
-
-  const handleJoin = () => {
-    if (gameCode.trim()) {
-      onJoinGame(gameCode.trim());
-    }
-  };
+export function OnboardingScreen({
+  onJoinGame: _onJoinGame,
+  onHostGame: _onHostGame,
+  onPlaySolo,
+  onShowHelp,
+}: OnboardingScreenProps) {
 
   return (
-    <div className="min-h-screen bg-white flex items-center justify-center p-4 relative overflow-hidden">
+    <div className="min-h-screen bg-background flex items-center justify-center p-4 relative overflow-hidden">
       {/* Bauhaus Geometric Background Elements - White/Black/Red Only */}
       <div className="absolute top-10 left-10 w-32 h-32 bg-red-600"></div>
       <div className="absolute top-40 right-20 w-24 h-24 rounded-full bg-black"></div>
@@ -53,10 +48,10 @@ export function OnboardingScreen({ onJoinGame, onHostGame, onPlaySolo, onShowHel
           </div>
 
           <div className="space-y-2">
-            <h1 className="text-6xl font-black text-black uppercase tracking-tight leading-none">
+            <h1 className="text-4xl font-black text-black uppercase tracking-tight leading-none">
               ShelterHunt
             </h1>
-            <p className="text-black text-base font-medium uppercase tracking-wider">
+            <p className="text-black text-base font-medium titlecase tracking-wider">
               Find the shelter before the storm!
             </p>
           </div>
@@ -69,49 +64,6 @@ export function OnboardingScreen({ onJoinGame, onHostGame, onPlaySolo, onShowHel
           animate={{ opacity: 1 }}
           transition={{ delay: 0.2, duration: 0.4 }}
         >
-          {/* Join Game Section */}
-          {!showJoinInput ? (
-            <button
-              onClick={() => setShowJoinInput(true)}
-              className="w-full bg-white border-4 border-black hover:shadow-[8px_8px_0_black] transition-all py-6 flex items-center justify-center gap-2 cursor-pointer"
-            >
-              <Users className="w-5 h-5" />
-              <span className="text-lg font-bold uppercase tracking-wide">Join Game</span>
-            </button>
-          ) : (
-            <motion.div
-              className="bg-white border-4 border-red-600 p-4 space-y-3"
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-            >
-              <Input
-                type="text"
-                placeholder="ENTER CODE"
-                value={gameCode}
-                onChange={(e) => setGameCode(e.target.value.toUpperCase())}
-                className="border-4 border-black text-black placeholder:text-black/50 text-center text-xl tracking-widest font-bold uppercase bg-white"
-                maxLength={6}
-                onKeyPress={(e) => e.key === 'Enter' && handleJoin()}
-              />
-              <div className="flex gap-2">
-                <button
-                  onClick={() => setShowJoinInput(false)}
-                  className="flex-1 bg-white border-4 border-black py-3 font-bold uppercase text-sm hover:shadow-[4px_4px_0_black] transition-all"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleJoin}
-                  disabled={!gameCode.trim()}
-                  className="flex-1 bg-red-600 text-black border-4 border-black py-3 font-bold uppercase text-sm hover:shadow-[4px_4px_0_black] transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                >
-                  <Play className="w-4 h-4" />
-                  Join
-                </button>
-              </div>
-            </motion.div>
-          )}
-
           {/* Play Solo Button */}
           <button
             onClick={onPlaySolo}
@@ -121,19 +73,32 @@ export function OnboardingScreen({ onJoinGame, onHostGame, onPlaySolo, onShowHel
             <span className="text-lg font-bold uppercase tracking-wide">Play Solo</span>
           </button>
 
-          {/* Host Game Button */}
+          {/* Join Game Section */}
+          {/* TODO: Re-enable multiplayer join flow when networking is implemented */}
           <button
-            onClick={onHostGame}
-            className="w-full bg-black text-black border-4 border-black hover:shadow-[8px_8px_0_red] transition-all py-6 flex items-center justify-center gap-2 cursor-pointer"
+            disabled
+            className="w-full bg-gray-200 border-4 border-black transition-all py-6 flex items-center justify-center gap-2 cursor-not-allowed opacity-60"
+            title="Multiplayer coming soon"
           >
-            <Users className="w-5 h-5" />
-            <span className="text-lg font-bold uppercase tracking-wide">Host Multiplayer</span>
+            <Users className="w-5 h-5 text-black-30" />
+            <span className="text-lg font-bold uppercase tracking-wide text-black-30">Join Game</span>
+          </button>
+
+          {/* Host Game Button */}
+          {/* TODO: Re-enable multiplayer hosting controls when networking is implemented */}
+          <button
+            disabled
+            className="w-full bg-gray-200 border-4 border-black transition-all py-6 flex items-center justify-center gap-2 cursor-not-allowed opacity-60"
+            title="Multiplayer coming soon"
+          >
+            <Users className="w-5 h-5 text-black-30" />
+            <span className="text-lg font-bold uppercase tracking-wide text-black-30">Host Multiplayer</span>
           </button>
 
           {/* How to Play Button */}
           <button
             onClick={onShowHelp}
-            className="w-full bg-white text-black border-4 border-black hover:shadow-[4px_4px_0_black] transition-all py-4 flex items-center justify-center gap-2 cursor-pointer"
+            className="w-full bg-background text-black border-4 border-black hover:shadow-[4px_4px_0_black] transition-all py-4 flex items-center justify-center gap-2 cursor-pointer"
           >
             <Info className="w-5 h-5" />
             <span className="text-base font-bold uppercase tracking-wide">How to Play</span>
@@ -150,7 +115,7 @@ export function OnboardingScreen({ onJoinGame, onHostGame, onPlaySolo, onShowHel
           {[
             { label: 'LOCATION', color: 'bg-red-600', textColor: 'text-black' },
             { label: 'TRIVIA', color: 'bg-black', textColor: 'text-black' },
-            { label: 'TEAM', color: 'bg-white', textColor: 'text-black' }
+            { label: 'TEAM', color: 'bg-background', textColor: 'text-black' }
           ].map((feature, index) => (
             <motion.div
               key={feature.label}

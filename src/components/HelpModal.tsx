@@ -45,7 +45,7 @@ export function HelpModal({ isOpen, onClose }: HelpModalProps) {
         <>
           {/* Backdrop */}
           <motion.div
-            className="fixed inset-0 bauhaus-white z-50"
+            className="fixed inset-0 bg-black/70 z-50"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -55,16 +55,13 @@ export function HelpModal({ isOpen, onClose }: HelpModalProps) {
           {/* Modal */}
           <div className="fixed inset-0 flex items-center justify-center p-4 z-50 pointer-events-none">
             <motion.div
-              className="w-full max-w-2xl pointer-events-auto"
+              className="w-full max-w-2xl pointer-events-auto rounded-lg border border-neutral-900 bg-background shadow-xl"
               initial={{ opacity: 0, scale: 0.9, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: 20 }}
               transition={{ type: "spring", damping: 10 }}
-              style={{
-                backgroundColor: "#FFF", //FIXME: Use Bauhaus color variable
-              }}
             >
-              <div className="bauhaus-white border-4 border-black p-6 max-h-[90vh] overflow-y-auto">
+              <div className="max-h-[90vh] overflow-y-auto p-6">
                 {/* Header */}
                 <div className="flex items-start justify-between mb-6">
                   <div>
@@ -77,7 +74,7 @@ export function HelpModal({ isOpen, onClose }: HelpModalProps) {
                   </div>
                   <button
                     onClick={onClose}
-                    className="bg-white border-4 border-black p-2 hover:bg-black/5 transition-colors"
+                    className="rounded border border-neutral-900 bg-background p-2 hover:bg-neutral-100 transition-colors"
                   >
                     <X className="w-5 h-5 text-black" />
                   </button>
@@ -85,7 +82,7 @@ export function HelpModal({ isOpen, onClose }: HelpModalProps) {
 
                 {/* Game Overview */}
                 <motion.div
-                  className="bg-white border-4 border-black p-6 mb-6"
+                  className="mb-6 rounded border border-neutral-900 bg-neutral-50 p-6"
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.1 }}
@@ -109,14 +106,14 @@ export function HelpModal({ isOpen, onClose }: HelpModalProps) {
                     return (
                       <motion.div
                         key={index}
-                        className="bg-white border-4 border-black p-5"
+                        className="rounded border border-neutral-900 bg-background p-5"
                         initial={{ opacity: 0, x: -20 }}
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ delay: 0.2 + index * 0.1 }}
                       >
                         <div className="flex gap-4">
-                          <div className="flex-shrink-0 bg-black p-3">
-                            <Icon className="w-6 h-6 text-black" />
+                          <div className="flex-shrink-0 rounded-full bg-neutral-900 p-3">
+                            <Icon className="w-6 h-6 text-white" />
                           </div>
                           <div>
                             <div className="flex items-center gap-3 mb-2">
@@ -139,7 +136,7 @@ export function HelpModal({ isOpen, onClose }: HelpModalProps) {
 
                 {/* Tips */}
                 <motion.div
-                  className="bg-white border-4 border-black p-6"
+                  className="rounded border border-neutral-900 bg-neutral-50 p-6"
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.6 }}

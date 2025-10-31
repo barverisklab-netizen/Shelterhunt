@@ -27,7 +27,7 @@ export const kotoTokyoCityContext: CityContext = {
       lat: 35.6731,
       lng: 139.8171,
     },
-    minZoom: 12,
+    minZoom: 14,
     maxZoom: 18,
   },
   questionCategories: [

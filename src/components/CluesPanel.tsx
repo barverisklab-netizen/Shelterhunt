@@ -7,9 +7,23 @@ interface CluesPanelProps {
   isOpen: boolean;
   clues: Clue[];
   onClose: () => void;
+  shelterOptions: { id: string; name: string }[];
+  selectedShelterId: string | null;
+  onShelterSelect: (id: string | null) => void;
+  onGuessRequest: () => void;
+  isGuessDisabled?: boolean;
 }
 
-export function CluesPanel({ isOpen, clues, onClose }: CluesPanelProps) {
+export function CluesPanel({
+  isOpen,
+  clues,
+  onClose,
+  shelterOptions,
+  selectedShelterId,
+  onShelterSelect,
+  onGuessRequest,
+  isGuessDisabled = false,
+}: CluesPanelProps) {
   return (
     <AnimatePresence>
       {isOpen && (
@@ -25,20 +39,17 @@ export function CluesPanel({ isOpen, clues, onClose }: CluesPanelProps) {
 
           {/* Panel */}
           <motion.div
-            className="fixed top-0 right-0 bottom-0 w-full max-w-md z-50 flex flex-col"
+            className="fixed top-0 right-0 bottom-0 w-full max-w-md z-50 flex flex-col bg-neutral-100"
             initial={{ x: "100%" }}
             animate={{ x: 0 }}
             exit={{ x: "100%" }}
             transition={{ type: "spring", damping: 30, stiffness: 300 }}
-            style={{
-              backgroundColor: "#FFF", //FIXME: Use Bauhaus color variable
-            }}
           >
-            <div className="bg-white h-full flex flex-col border-l-4 border-black">
+            <div className="h-full flex flex-col border-l border-neutral-900 bg-background">
               {/* Header */}
-              <div className="p-6 border-b-4 border-black">
+              <div className="p-6 border-b border-neutral-900">
                 <div className="flex items-start justify-between mb-2">
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-3 text-black">
                     <div className="bg-black p-3">
                       <Lightbulb className="w-6 h-6 text-black" />
                     </div>
@@ -54,7 +65,7 @@ export function CluesPanel({ isOpen, clues, onClose }: CluesPanelProps) {
                   </div>
                   <button
                     onClick={onClose}
-                    className="bg-white border-4 border-black p-2 hover:bg-black/5 transition-colors"
+                    className="rounded border border-neutral-900 bg-background p-2 text-neutral-900 hover:bg-neutral-100 transition-colors"
                   >
                     <X className="w-5 h-5 text-black" />
                   </button>
@@ -87,8 +98,10 @@ export function CluesPanel({ isOpen, clues, onClose }: CluesPanelProps) {
                     {clues.map((clue, index) => (
                       <motion.div
                         key={clue.id}
-                        className={`bg-white border-4 p-4 ${
-                          clue.answer ? "border-red-600" : "border-black"
+                        className={`rounded border p-4 ${
+                          clue.answer
+                            ? "border-red-500 bg-background"
+                            : "border-neutral-900 bg-background"
                         }`}
                         initial={{ opacity: 0, x: 20 }}
                         animate={{ opacity: 1, x: 0 }}
@@ -124,14 +137,14 @@ export function CluesPanel({ isOpen, clues, onClose }: CluesPanelProps) {
 
               {/* Tips Section */}
               {clues.length > 0 && (
-                <div className="p-6 border-t-4 border-black">
+                <div className="p-6 border-t border-neutral-900">
                   <motion.div
-                    className="bg-white border-4 border-black p-4"
+                    className="rounded border border-neutral-900 bg-neutral-50 p-4"
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                   >
-                    <div className="flex items-start gap-3">
-                      <Lightbulb className="w-5 h-5 text-black flex-shrink-0 mt-0.5" />
+                    <div className="flex items-start gap-3 text-black">
+                      <Lightbulb className="w-5 h-5 flex-shrink-0 mt-0.5" />
                       <div>
                         <div className="text-sm text-black mb-1 font-bold uppercase">
                           Deduction Tips
@@ -147,13 +160,50 @@ export function CluesPanel({ isOpen, clues, onClose }: CluesPanelProps) {
                 </div>
               )}
 
-              {/* Back Button */}
-              <div className="p-6 border-t-4 border-black">
+              {/* Guess Controls */}
+              <div className="p-6 border-t border-neutral-900 space-y-4">
+                <div className="space-y-2">
+                  <label className="text-sm text-black font-bold uppercase">
+                    Choose Your Shelter
+                  </label>
+                  <select
+                    value={selectedShelterId ?? ""}
+                    onChange={(event) =>
+                      onShelterSelect(event.target.value || null)
+                    }
+                    className="w-full rounded border border-neutral-900 bg-background p-3 text-sm font-semibold uppercase text-neutral-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-neutral-500"
+                  >
+                    <option value="" disabled hidden>
+                      Select a shelter to guess
+                    </option>
+                    {shelterOptions.map((option) => (
+                      <option key={option.id} value={option.id}>
+                        {option.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="text-xs text-black/70 font-semibold uppercase">
+                  A wrong selection will reset your timer to 10 minutes. Make
+                  sure you are confident before you lock in your guess.
+                </div>
+
+                <Button
+                  onClick={onGuessRequest}
+                  className="w-full rounded border border-neutral-900 bg-neutral-900 py-4 text-sm font-bold uppercase text-white hover:bg-neutral-800"
+                  disabled={
+                    isGuessDisabled || !selectedShelterId || !shelterOptions.length
+                  }
+                >
+                  Submit Guess
+                </Button>
+
                 <Button
                   onClick={onClose}
                   variant="outline"
                   size="lg"
-                  className="w-full"
+                  className="w-full font-semibold uppercase"
                 >
                   Back to Map
                 </Button>

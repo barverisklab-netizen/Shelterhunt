@@ -79,6 +79,17 @@ Secret Shelter is an interactive location-based deduction game where players rac
 - **Port**: 5000 (frontend server)
 - **Host**: 0.0.0.0 (required for Replit proxy)
 
+
+## Environment variables
+
+- Commit `.env.example` (no secrets).
+- Do NOT commit `.env.local`. This file is ignored by git and is for local secrets (e.g. Mapbox token).
+
+Restart the dev server after changing env files:
+```bash
+npm run dev
+```
+
 ### Running the Project
 ```bash
 npm install

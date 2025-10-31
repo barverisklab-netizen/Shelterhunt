@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import {
   MapPin,
@@ -13,11 +13,11 @@ import {
   Building2,
   Cable,
   Train,
-  Compass,
 } from "lucide-react";
 import { POI } from "../data/mockData";
 import { kotoLayers } from "../types/kotoLayers";
 import { MAPBOX_CONFIG, getTilesetUrl } from "../config/mapbox";
+import { defaultCityContext } from "../data/cityContext";
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
 import { toast } from "sonner@2.0.3"
@@ -72,13 +72,12 @@ const getKotoLayerIcon = (layer: (typeof kotoLayers)[0]): React.ReactNode => {
 interface MapViewProps {
   pois: POI[];
   playerLocation: { lat: number; lng: number };
-  secretShelterId: string;
   visitedPOIs: string[];
   gameEnded?: boolean;
   onPOIClick?: (poi: POI) => void;
-  locationPickerMode?: boolean;
-  onLocationPicked?: (location: { lat: number; lng: number }) => void;
   basemapUrl?: string;
+  onSecretShelterChange?: (info: { id: string; name: string }) => void;
+  onShelterOptionsChange?: (options: { id: string; name: string }[]) => void;
 }
 
 // const POI_ICONS = {
@@ -94,19 +93,95 @@ interface MapViewProps {
 export function MapView({
   pois,
   playerLocation,
-  secretShelterId,
   visitedPOIs,
   gameEnded,
   onPOIClick,
-  locationPickerMode,
-  onLocationPicked,
-  basemapUrl = "mapbox://styles/mapbox/dark-v11",
+  basemapUrl = defaultCityContext.mapConfig.basemapUrl,
+  onSecretShelterChange,
+  onShelterOptionsChange,
 }: MapViewProps) {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
   const markers = useRef<{ [key: string]: mapboxgl.Marker }>({});
   const playerMarker = useRef<mapboxgl.Marker | null>(null);
+  const geolocateControl = useRef<mapboxgl.GeolocateControl | null>(null);
+  const infoPopup = useRef<mapboxgl.Popup | null>(null);
+  const hasSelectedShelter = useRef(false);
+  const hasEmittedShelterOptions = useRef(false);
 
+  const selectShelterFromTiles = useCallback(() => {
+    if (hasSelectedShelter.current || !map.current) {
+      return;
+    }
+
+    try {
+      const features = map.current.querySourceFeatures(
+        "koto-source-8sbllw5a",
+        {
+          sourceLayer: "ihi_evacuation_centers_all-c2o5a5",
+          filter: ["==", ["get", "Category"], "Designated EC"],
+        },
+      );
+
+      const options: { id: string; name: string }[] = [];
+      const seenNames = new Set<string>();
+      const seenIds = new Set<string>();
+
+      features.forEach((feature) => {
+        const properties = (feature.properties || {}) as Record<
+          string,
+          unknown
+        >;
+        const rawName =
+          (properties["Landmark name (EN)"] as string | undefined) ??
+          (properties["Landmark name (JP)"] as string | undefined) ??
+          (properties.name as string | undefined) ??
+          "";
+        const name = rawName?.trim();
+        if (!name) return;
+        const key = name.toLowerCase();
+        if (seenNames.has(key)) return;
+        seenNames.add(key);
+
+        let resolvedId =
+          (properties["OBJECTID"] != null
+            ? String(properties["OBJECTID"])
+            : feature.id != null
+              ? String(feature.id)
+              : name) ?? name;
+
+        if (seenIds.has(resolvedId)) {
+          let suffix = 1;
+          while (seenIds.has(`${resolvedId}-${suffix}`)) {
+            suffix += 1;
+          }
+          resolvedId = `${resolvedId}-${suffix}`;
+        }
+        seenIds.add(resolvedId);
+
+        options.push({ id: resolvedId, name });
+      });
+
+      if (onShelterOptionsChange && (options.length || !hasEmittedShelterOptions.current)) {
+        const sorted = [...options].sort((a, b) => a.name.localeCompare(b.name));
+        onShelterOptionsChange(sorted);
+        hasEmittedShelterOptions.current = true;
+      }
+
+      if (!options.length || !onSecretShelterChange) {
+        return;
+      }
+
+      const chosen =
+        options[Math.floor(Math.random() * options.length)];
+
+      hasSelectedShelter.current = true;
+      onSecretShelterChange({ id: chosen.id, name: chosen.name });
+      map.current.off("idle", selectShelterFromTiles);
+    } catch (error) {
+      console.warn("[mapbox] Unable to select shelter from tiles:", error);
+    }
+  }, [onSecretShelterChange, onShelterOptionsChange]);
   const [layersVisible, setLayersVisible] = useState({
     floods: true,
     shelters: true,
@@ -133,12 +208,7 @@ export function MapView({
   useEffect(() => {
     if (!mapContainer.current || map.current) return;
 
-    console.log("Initializing Mapbox map...");
-    console.log("Container element:", mapContainer.current);
-    console.log("Container dimensions:", {
-      width: mapContainer.current.offsetWidth,
-      height: mapContainer.current.offsetHeight,
-    });
+    hasEmittedShelterOptions.current = false;
 
     try {
       map.current = new mapboxgl.Map({
@@ -146,12 +216,37 @@ export function MapView({
         style: basemapUrl,
         center: [playerLocation.lng, playerLocation.lat],
         zoom: 14,
+        minZoom: defaultCityContext.mapConfig.minZoom ?? 10,
       });
 
       map.current.on("load", () => {
         console.log("Mapbox map loaded successfully!");
         // Add Koto layer sources and layers
         addKotoLayers();
+
+        if (onSecretShelterChange) {
+          hasSelectedShelter.current = false;
+          map.current?.on("idle", selectShelterFromTiles);
+        }
+
+        if (!geolocateControl.current) {
+          const control = new mapboxgl.GeolocateControl({
+            positionOptions: { enableHighAccuracy: true },
+            trackUserLocation: true,
+            showUserHeading: true,
+            showAccuracyCircle: false,
+          });
+          geolocateControl.current = control;
+          map.current?.addControl(control, "top-right");
+
+          window.requestAnimationFrame(() => {
+            try {
+              control.trigger();
+            } catch (error) {
+              console.warn("[mapbox] Failed to trigger geolocate control:", error);
+            }
+          });
+        }
       });
 
       console.log("Mapbox map created successfully");
@@ -161,11 +256,31 @@ export function MapView({
 
     return () => {
       if (map.current) {
+        if ((map.current as any)?.__kotoPopupHandler) {
+          map.current.off(
+            "click",
+            (map.current as any).__kotoPopupHandler,
+          );
+          (map.current as any).__kotoPopupHandler = null;
+        }
+        if (infoPopup.current) {
+          infoPopup.current.remove();
+          infoPopup.current = null;
+        }
+        if (onSecretShelterChange) {
+          map.current.off("idle", selectShelterFromTiles);
+        }
+        if (geolocateControl.current) {
+          map.current.removeControl(geolocateControl.current);
+          geolocateControl.current = null;
+        }
         map.current.remove();
         map.current = null;
+        hasSelectedShelter.current = false;
+        hasEmittedShelterOptions.current = false;
       }
     };
-  }, [basemapUrl]);
+  }, [basemapUrl, onSecretShelterChange, onShelterOptionsChange, selectShelterFromTiles]);
 
   // Recenter camera when playerLocation changes (no reinit)
   useEffect(() => {
@@ -179,67 +294,6 @@ export function MapView({
 
 
   // Handle location picker mode (minimal changes, adds console log)
-  useEffect(() => {
-    if (!map.current) return;
-
-    const handleMapClick = (e: mapboxgl.MapMouseEvent) => {
-      if (!locationPickerMode) return;
-
-      const { lng, lat } = e.lngLat;
-      // log picked location
-      console.log(`[LocationPicker] lat=${lat}, lng=${lng}`);
-
-      if (onLocationPicked) onLocationPicked({ lat, lng });
-    };
-
-    if (locationPickerMode) {
-      map.current.getCanvas().style.cursor = "crosshair";
-      map.current.on("click", handleMapClick);
-    } else {
-      // ensure cursor reset when leaving picker mode
-      map.current.getCanvas().style.cursor = "";
-      // in case a prior handler was still attached
-      map.current.off("click", handleMapClick);
-    }
-
-    return () => {
-      if (!map.current) return;
-      map.current.off("click", handleMapClick);
-      map.current.getCanvas().style.cursor = "";
-    };
-  }, [locationPickerMode, onLocationPicked]);
-
-  // Toast notification when location picker mode is active
-  useEffect(() => {
-    if (!locationPickerMode) {
-      // dismiss any existing toast when picker is off
-      toast.dismiss("location-picker");
-      return;
-    }
-
-    // show persistent toast while picker is active
-      toast(
-        (t) => (
-          <div className="flex items-center gap-3 text-black">
-            <Compass className="w-5 h-5 text-red-600" />
-            <span className="font-bold uppercase">
-              Click anywhere on the map to set your location
-            </span>
-          </div>
-        ),
-        {
-          id: "location-picker", // ensures a single instance
-          duration: Infinity,    // stays until manually dismissed
-          style: {
-            background: "yellow",
-            border: "3px solid black",
-            color: "black",
-            boxShadow: "4px 4px 0 black",
-          },
-        }
-      );
-    }, [locationPickerMode]);
-    
   // Temporarily disable POI markers and player markers for debugging
 
   const toggleLayer = (layer: keyof typeof layersVisible) => {
@@ -268,6 +322,14 @@ export function MapView({
 
       // Track sources we add in this call to avoid re-adding
       const addedSources = new Set<string>();
+      const layerMetaRegistry: Record<
+        string,
+        {
+          template?: string;
+          label: string;
+          legendItems?: (typeof kotoLayers)[number]["metadata"]["legendItems"];
+        }
+      > = (m as any).__kotoLayerMeta || ((m as any).__kotoLayerMeta = {});
 
       // Simple, safe HTML escape for interpolated values
       const escapeHtml = (s: string) =>
@@ -315,39 +377,20 @@ export function MapView({
           // console.debug(`[koto] add layer: ${layerId}`);
         }
 
-        // Bind popup/cursor only once per style layer id
+        const template = layer.metadata?.query?.template;
+        if (template) {
+          layerMetaRegistry[layerId] = {
+            template,
+            label: layer.label,
+            legendItems: layer.metadata?.legendItems,
+          };
+        } else {
+          delete layerMetaRegistry[layerId];
+        }
+
+        // Bind cursor only once per style layer id
         if (!boundLayers.has(layerId)) {
-          const template = layer.metadata?.query?.template;
-
           if (template) {
-            // Click → popup
-            m.on("click", layerId, (e: any) => {
-              const f = e.features?.[0];
-              if (!f) return;
-
-              const legend = layer.metadata?.legendItems?.[0];
-              const headerHtml = `
-                <div style="background: rgba(0,0,0,0.85); padding: 12px; border-radius: 8px; min-width: 220px; color: #fff;">
-                  <div style="font-weight:700; margin-bottom:6px; font-size:14px;">
-                    ${escapeHtml(legend?.label ?? layer.label)}
-                  </div>
-                  ${
-                    legend?.description
-                      ? `<div style="opacity:0.9; font-size:12px; margin-bottom:8px;">${legend.description}</div>`
-                      : ""
-                  }
-                  <div style="font-size:12px;">
-              `;
-              const bodyHtml = renderTemplate(template, f.properties || {});
-              const footerHtml = `</div></div>`;
-
-              new mapboxgl.Popup({ closeButton: true, closeOnClick: true })
-                .setLngLat(e.lngLat)
-                .setHTML(headerHtml + bodyHtml + footerHtml)
-                .addTo(m);
-            });
-
-            // Hover cursor affordance
             m.on("mouseenter", layerId, () => {
               m.getCanvas().style.cursor = "pointer";
             });
@@ -359,6 +402,92 @@ export function MapView({
           boundLayers.add(layerId);
         }
       });
+
+      if (!(m as any).__kotoPopupHandler) {
+        const handleCombinedClick = (
+          e: mapboxgl.MapMouseEvent & mapboxgl.EventData,
+        ) => {
+          const layerIds = Object.keys(layerMetaRegistry).filter(
+            (id) => layerMetaRegistry[id]?.template,
+          );
+
+          if (!layerIds.length) {
+            return;
+          }
+
+          const features = m.queryRenderedFeatures(e.point, {
+            layers: layerIds,
+          });
+
+          if (!features.length) {
+            if (infoPopup.current) {
+              infoPopup.current.remove();
+              infoPopup.current = null;
+            }
+            return;
+          }
+
+          const sections = features
+            .map((feature) => {
+              const mapLayerId = feature.layer?.id;
+              if (!mapLayerId) return null;
+              const meta = layerMetaRegistry[mapLayerId];
+              if (!meta?.template) return null;
+
+              const legend = meta.legendItems?.[0];
+              const headerHtml = `
+                <div style="padding: 12px;">
+                  <div style="font-weight:700; margin-bottom:6px; font-size:14px;">
+                    ${escapeHtml(legend?.label ?? meta.label)}
+                  </div>
+                  ${
+                    legend?.description
+                      ? `<div style="opacity:0.9; font-size:12px; margin-bottom:8px;">${escapeHtml(legend.description)}</div>`
+                      : ""
+                  }
+                  <div style="font-size:12px;">
+              `;
+              const bodyHtml = renderTemplate(
+                meta.template,
+                feature.properties || {},
+              );
+              const footerHtml = `</div></div>`;
+              return headerHtml + bodyHtml + footerHtml;
+            })
+            .filter((section): section is string => Boolean(section));
+
+          if (!sections.length) {
+            if (infoPopup.current) {
+              infoPopup.current.remove();
+              infoPopup.current = null;
+            }
+            return;
+          }
+
+          const combinedHtml = `
+            <div style="background: rgba(0,0,0,0.85); border-radius: 8px; min-width: 220px; color: #fff;">
+              ${sections.join(
+                `<div style="height:1px; background: rgba(255,255,255,0.2); margin: 0 12px;"></div>`,
+              )}
+            </div>
+          `;
+
+          if (!infoPopup.current) {
+            infoPopup.current = new mapboxgl.Popup({
+              closeButton: true,
+              closeOnClick: true,
+            });
+          }
+
+          infoPopup.current
+            .setLngLat(e.lngLat)
+            .setHTML(combinedHtml)
+            .addTo(m);
+        };
+
+        (m as any).__kotoPopupHandler = handleCombinedClick;
+        m.on("click", handleCombinedClick);
+      }
 
       // console.info("[koto] layers initialized");
     } catch (error) {
@@ -422,23 +551,31 @@ export function MapView({
       {/* Layer Control Button */}
       <motion.button
         onClick={() => setShowLayerControl(!showLayerControl)}
-        className="absolute top-4 left-4 bg-white border-4 border-black p-3 hover:bg-black/5 transition-colors z-10"
+        className="absolute top-4 left-4 z-10 rounded-full border border-neutral-900 bg-background p-3 text-neutral-900 shadow-sm transition-colors hover:bg-neutral-100"
         whileHover={{ scale: 1.02 }}
         whileTap={{ scale: 0.98 }}
       >
-        <Layers className="w-5 h-5 text-white" />
+        <Layers className="w-5 h-5 text-black" />
       </motion.button>
 
-      {/* Koto Layer Control Panel */}
+       {/* Koto Layer Control Panel */}
       <AnimatePresence>
         {showLayerControl && (
           <motion.div
-            className="absolute top-16 left-4 bg-white border-4 border-black p-4 space-y-3 z-10 min-w-[220px]"
+            className={
+              "absolute top-16 left-4 z-10 bg-background border-4 border-black p-4 space-y-3 " +
+              "w-[90vw] sm:w-auto min-w-[220px]"
+            }
             initial={{ opacity: 0, y: -10, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -10, scale: 0.95 }}
             style={{
               backgroundColor: "#FFF", //FIXME: Use Bauhaus color variable
+              // Limit height so roughly 4 items are visible; allow scrolling for the rest.
+              // `min(60vh, 240px)` keeps the panel usable on very tall screens while
+              // ensuring ~4 items fit on most devices.
+              maxHeight: "min(60vh, 240px)",
+              overflowY: "auto",
             }}
           >
             <div className="text-black mb-2 font-bold uppercase">
@@ -462,7 +599,7 @@ export function MapView({
       <AnimatePresence>
         {showLayerControl ? (
           <motion.div
-            className="absolute bottom-20 left-4 bg-white border-4 border-black p-3 space-y-2 z-10 max-h-[60vh] overflow-y-auto"
+            className="absolute bottom-20 left-4 bg-background border-4 border-black p-3 space-y-2 z-10 max-h-[60vh] overflow-y-auto"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 20 }}
@@ -524,7 +661,7 @@ export function MapView({
         ) : (
           <motion.button
             onClick={() => setShowLayerControl(true)}
-            className="absolute bottom-20 left-4 bg-white border-4 border-black p-3 z-10 text-black hover:bg-black/5 transition-colors"
+            className="absolute bottom-20 left-4 bg-background border-4 border-black p-3 z-10 text-black hover:bg-black/5 transition-colors"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 20 }}

@@ -3,7 +3,9 @@
 
 export const MAPBOX_CONFIG = {
   // Mapbox username for Koto layer tilesets
-  username: "mitfluxmap",
+  username:
+    (import.meta.env?.VITE_MAPBOX_USERNAME as string | undefined) ??
+    "mitfluxmap",
 
   // Access token is loaded from environment variable (already configured)
   accessToken: import.meta.env.VITE_MAPBOX_TOKEN as string,

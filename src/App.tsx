@@ -3,6 +3,7 @@ import { OnboardingScreen } from "./components/OnboardingScreen";
 import { WaitingRoom } from "./components/WaitingRoom";
 import { GameScreen } from "./components/GameScreen";
 import { HelpModal } from "./components/HelpModal";
+import { TerminalScreen } from "./components/TerminalScreen";
 import { Toaster } from "./components/ui/sonner";
 import { toast } from "sonner@2.0.3";
 import {
@@ -10,7 +11,6 @@ import {
   mockQuestions,
   mockTriviaQuestions,
   mockPlayers,
-  SECRET_SHELTER_ID,
   Player,
 } from "./data/mockData";
 import { defaultCityContext } from "./data/cityContext";
@@ -29,6 +29,14 @@ export default function App() {
     lat: defaultCityContext.mapConfig.startLocation.lat,
     lng: defaultCityContext.mapConfig.startLocation.lng,
   });
+  const [secretShelter, setSecretShelter] = useState<{
+    id: string;
+    name: string;
+  } | null>(null);
+  const [shelterOptions, setShelterOptions] = useState<
+    { id: string; name: string }[]
+  >([]);
+  const [isTimerCritical, setIsTimerCritical] = useState(false);
 
   // Timer countdown
   useEffect(() => {
@@ -37,6 +45,9 @@ export default function App() {
         setTimeRemaining((prev) => {
           if (prev <= 1) {
             setGameState("ended");
+            setSecretShelter(null);
+            setShelterOptions([]);
+            setIsTimerCritical(false);
             toast.error("Time's up! Game over.");
             return 0;
           }
@@ -50,6 +61,10 @@ export default function App() {
   const handleJoinGame = (code: string) => {
     setGameCode(code);
     setIsHost(false);
+    setTimeRemaining(1800);
+    setIsTimerCritical(false);
+    setShelterOptions([]);
+    setSecretShelter(null);
     setGameState("waiting");
     toast.success(`Joined game ${code}`);
   };
@@ -58,6 +73,10 @@ export default function App() {
     const code = Math.random().toString(36).substring(2, 8).toUpperCase();
     setGameCode(code);
     setIsHost(true);
+    setTimeRemaining(1800);
+    setIsTimerCritical(false);
+    setShelterOptions([]);
+    setSecretShelter(null);
     setGameState("waiting");
     toast.success(`Game created: ${code}`);
   };
@@ -74,6 +93,10 @@ export default function App() {
     setPlayers([soloPlayer]);
     setGameCode("SOLO");
     setIsHost(true);
+    setTimeRemaining(1800);
+    setIsTimerCritical(false);
+    setShelterOptions([]);
+    setSecretShelter(null);
     setGameState("playing");
     toast.success("Solo game started! Find the secret shelter!");
   };
@@ -87,6 +110,10 @@ export default function App() {
   };
 
   const handleStartGame = () => {
+    setTimeRemaining(1800);
+    setIsTimerCritical(false);
+    setShelterOptions([]);
+    setSecretShelter(null);
     setGameState("playing");
     toast.success("Game started! Find the secret shelter!");
   };
@@ -96,15 +123,15 @@ export default function App() {
     setGameCode("");
     setPlayers(mockPlayers);
     setTimeRemaining(1800);
+    setShelterOptions([]);
+    setIsTimerCritical(false);
+    setSecretShelter(null);
     toast.info("Left the game");
   };
 
-  const handleGuessSubmit = (poiId: string) => {
-    if (poiId === SECRET_SHELTER_ID) {
-      toast.success("🎉 Correct! You found the secret shelter!");
-    } else {
-      toast.error("Wrong shelter! Keep searching...");
-    }
+  const handleWrongGuessPenalty = () => {
+    setTimeRemaining(600);
+    setIsTimerCritical(true);
   };
 
   const handleEndGame = () => {
@@ -115,7 +142,7 @@ export default function App() {
   const teamColor = currentPlayer?.team || "red";
 
   return (
-    <div className="min-h-screen bg-white relative overflow-hidden">
+    <div className="min-h-screen bg-background relative overflow-hidden">
       {/* Main Content */}
       <div className="relative z-10">
         {gameState === "onboarding" && (
@@ -147,11 +174,19 @@ export default function App() {
             playerLocation={playerLocation}
             teamColor={teamColor}
             timeRemaining={timeRemaining}
-            secretShelterId={SECRET_SHELTER_ID}
-            onGuessSubmit={handleGuessSubmit}
+            secretShelter={secretShelter}
+            shelterOptions={shelterOptions}
+            isTimerCritical={isTimerCritical}
+            onApplyPenalty={handleWrongGuessPenalty}
             onEndGame={handleEndGame}
             onLocationChange={setPlayerLocation}
+            onSecretShelterChange={setSecretShelter}
+            onShelterOptionsChange={setShelterOptions}
           />
+        )}
+
+        {gameState === "ended" && (
+          <TerminalScreen onRestart={handleLeaveGame} />
         )}
       </div>
 
@@ -162,12 +197,8 @@ export default function App() {
       <Toaster
         position="top-center"
         toastOptions={{
-          className: "bauhaus-card bauhaus-border",
-          style: {
-            background: "yellow",
-            border: "3px solid black",
-            color: "black",
-          },
+          className: "rounded border-4 border-black bg-yellow-300 text-black shadow-lg",
+          style: { background: '#fde047', border: '4px solid #000', color: '#000' }
         }}
       />
     </div>

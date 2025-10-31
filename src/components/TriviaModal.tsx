@@ -60,7 +60,7 @@ export function TriviaModal({ isOpen, trivia, onClose, onSubmit }: TriviaModalPr
               exit={{ opacity: 0, scale: 0.9, y: 20 }}
               transition={{ type: 'spring', damping: 25 }}
             >
-              <div className="bg-white border-4 border-black p-6">
+              <div className="bg-background border-4 border-black p-6">
                 {/* Header */}
                 <div className="flex items-start justify-between mb-6">
                   <div className="flex items-center gap-3">
@@ -74,7 +74,7 @@ export function TriviaModal({ isOpen, trivia, onClose, onSubmit }: TriviaModalPr
                   </div>
                   <button
                     onClick={handleClose}
-                    className="bg-white border-4 border-black p-2 hover:bg-black/5 transition-colors"
+                    className="bg-background border-4 border-black p-2 hover:bg-black/5 transition-colors"
                   >
                     <X className="w-5 h-5 text-black" />
                   </button>
@@ -82,7 +82,7 @@ export function TriviaModal({ isOpen, trivia, onClose, onSubmit }: TriviaModalPr
 
                 {/* Question */}
                 <motion.div
-                  className="bg-white border-4 border-black p-6 mb-6"
+                  className="bg-background border-4 border-black p-6 mb-6"
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.1 }}
@@ -106,12 +106,12 @@ export function TriviaModal({ isOpen, trivia, onClose, onSubmit }: TriviaModalPr
                         disabled={showResult}
                         className={`w-full p-4 border-4 text-left transition-all ${
                           showCorrect
-                            ? 'bg-white border-red-600'
+                            ? 'bg-background border-red-600'
                             : showWrong
-                            ? 'bg-white border-black'
+                            ? 'bg-background border-black'
                             : isSelected
                             ? 'bg-black text-black border-black'
-                            : 'bg-white text-black border-black hover:bg-black/5'
+                            : 'bg-background text-black border-black hover:bg-black/5'
                         } disabled:cursor-not-allowed`}
                         initial={{ opacity: 0, x: -20 }}
                         animate={{ opacity: 1, x: 0 }}
@@ -135,8 +135,8 @@ export function TriviaModal({ isOpen, trivia, onClose, onSubmit }: TriviaModalPr
                     <motion.div
                       className={`mb-6 p-4 border-4 ${
                         isCorrect
-                          ? 'bg-white border-red-600'
-                          : 'bg-white border-black'
+                          ? 'bg-background border-red-600'
+                          : 'bg-background border-black'
                       }`}
                       initial={{ opacity: 0, y: -10 }}
                       animate={{ opacity: 1, y: 0 }}

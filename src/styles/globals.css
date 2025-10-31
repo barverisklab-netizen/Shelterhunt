@@ -2,49 +2,39 @@
 
 @layer base {
   :root {
-    /* Bauhaus Color Palette - White/Black/Red */
-    --background: 0 0% 100%;           /* Pure White */
-    --foreground: 0 0% 0%;             /* Pure Black */
-    --card: 0 0% 100%;                 /* White */
-    --card-foreground: 0 0% 0%;        /* Black */
-    --popover: 0 0% 100%;              /* White */
-    --popover-foreground: 0 0% 0%;     /* Black */
-    --primary: 0 84% 45%;              /* Bauhaus Red */
-    --primary-foreground: 0 0% 100%;   /* White on Red */
-    --secondary: 0 0% 0%;              /* Black */
-    --secondary-foreground: 0 0% 100%; /* White on Black */
-    --muted: 0 0% 90%;                 /* Light Gray */
-    --muted-foreground: 0 0% 40%;      /* Dark Gray */
-    --accent: 0 84% 45%;               /* Bauhaus Red Accent */
-    --accent-foreground: 0 0% 100%;    /* White */
-    --destructive: 0 84% 45%;          /* Red */
+    --background: 0 0% 98%;
+    --foreground: 0 0% 12%;
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 12%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 12%;
+    --primary: 0 0% 10%;
+    --primary-foreground: 0 0% 96%;
+    --secondary: 0 0% 92%;
+    --secondary-foreground: 0 0% 12%;
+    --muted: 0 0% 92%;
+    --muted-foreground: 0 0% 35%;
+    --accent: 0 0% 92%;
+    --accent-foreground: 0 0% 12%;
+    --destructive: 0 73% 41%;
     --destructive-foreground: 0 0% 100%;
-    --border: 0 0% 0%;                 /* Black Borders */
-    --input: 0 0% 100%;                /* White Inputs */
-    --ring: 0 84% 45%;                 /* Red Focus Ring */
-    --radius: 0rem;                     /* No border radius - sharp corners */
-    
-    /* Bauhaus Colors */
-    --bauhaus-red: 0 84% 45%;
-    --bauhaus-yellow: 48 100% 50%;
-    --bauhaus-blue: 217 91% 60%;
-    --bauhaus-black: 0 0% 0%;
-    --bauhaus-white: #fff;
+    --border: 0 0% 18%;
+    --input: 0 0% 100%;
+    --ring: 0 0% 18%;
+    --radius: 0.5rem;
   }
-}
 
-@layer base {
   * {
     @apply border-border;
   }
+
   body {
     @apply bg-background text-foreground;
-    /* Geometric Sans-Serif Typography - Bauhaus Style */
     font-family: 'Inter', 'Helvetica Neue', 'Arial', sans-serif;
     font-feature-settings: "rlig" 1, "calt" 1;
     letter-spacing: 0.01em;
   }
-  
+
   h1, h2, h3, h4, h5, h6 {
     font-weight: 700;
     letter-spacing: -0.02em;
@@ -52,192 +42,28 @@
   }
 }
 
-/* Bauhaus Design System */
-@layer utilities {
-  /* Solid Color Backgrounds - No Glassmorphism */
-  .bauhaus-white {
-    background: hsl(var(--bauhaus-white));
-    color: hsl(var(--bauhaus-black));
-  }
-  
-  .bauhaus-black {
-    background: hsl(var(--bauhaus-black));
-    color: hsl(var(--bauhaus-white));
-  }
-  
-  .bauhaus-red {
-    background: hsl(var(--bauhaus-red));
-    color: hsl(var(--bauhaus-white));
-  }
-  
-  .bauhaus-yellow {
-    background: hsl(var(--bauhaus-yellow));
-    color: hsl(var(--bauhaus-black));
-  }
-  
-  .bauhaus-blue {
-    background: hsl(var(--bauhaus-blue));
-    color: hsl(var(--bauhaus-white));
-  }
-  
-  /* Bauhaus Borders - Thick and Bold */
-  .bauhaus-border {
-    border: 3px solid hsl(var(--bauhaus-black));
-  }
-  
-  .bauhaus-border-thin {
-    border: 2px solid hsl(var(--bauhaus-black));
-  }
-  
-  .bauhaus-border-red {
-    border: 3px solid hsl(var(--bauhaus-red));
-  }
-  
-  /* Geometric Shapes */
-  .bauhaus-square {
-    aspect-ratio: 1;
-    width: 100%;
-  }
-  
-  .bauhaus-circle {
-    aspect-ratio: 1;
-    border-radius: 50%;
-  }
-  
-  .bauhaus-triangle {
-    width: 0;
-    height: 0;
-    border-style: solid;
-  }
-  
-  .bauhaus-triangle-up {
-    border-width: 0 50px 86.6px 50px;
-    border-color: transparent transparent hsl(var(--bauhaus-red)) transparent;
-  }
-  
-  .bauhaus-triangle-down {
-    border-width: 86.6px 50px 0 50px;
-    border-color: hsl(var(--bauhaus-red)) transparent transparent transparent;
-  }
-  
-  /* Grid System - Bauhaus inspired */
-  .bauhaus-grid {
-    display: grid;
-    gap: 0;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  }
-  
-  /* Sharp Shadows - No Blur */
-  .bauhaus-shadow {
-    box-shadow: 8px 8px 0 hsl(var(--bauhaus-black));
-  }
-  
-  .bauhaus-shadow-red {
-    box-shadow: 8px 8px 0 hsl(var(--bauhaus-red));
-  }
-  
-  .bauhaus-shadow-sm {
-    box-shadow: 4px 4px 0 hsl(var(--bauhaus-black));
-  }
-  
-  /* Geometric Patterns */
-  .bauhaus-pattern-dots {
-    background-image: radial-gradient(circle, hsl(var(--bauhaus-black)) 2px, transparent 2px);
-    background-size: 20px 20px;
-  }
-  
-  .bauhaus-pattern-grid {
-    background-image: 
-      linear-gradient(hsl(var(--bauhaus-black)) 1px, transparent 1px),
-      linear-gradient(90deg, hsl(var(--bauhaus-black)) 1px, transparent 1px);
-    background-size: 20px 20px;
-  }
-  
-  .bauhaus-pattern-stripes {
-    background-image: repeating-linear-gradient(
-      45deg,
-      hsl(var(--bauhaus-red)),
-      hsl(var(--bauhaus-red)) 10px,
-      hsl(var(--bauhaus-white)) 10px,
-      hsl(var(--bauhaus-white)) 20px
-    );
-  }
-  
-  /* Typography Emphasis */
-  .bauhaus-text-bold {
-    font-weight: 900;
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-  }
-  
-  /* Card Styles - Solid and Geometric */
-  .bauhaus-card {
-    background: hsl(var(--bauhaus-white));
-    border: 3px solid hsl(var(--bauhaus-black));
-    padding: 1.5rem;
-  }
-  
-  .bauhaus-card-accent {
-    background: hsl(var(--bauhaus-white));
-    border: 3px solid hsl(var(--bauhaus-red));
-    padding: 1.5rem;
-  }
-  
-  /* Button Styles */
-  .bauhaus-button {
-    background: hsl(var(--bauhaus-black));
-    color: hsl(var(--bauhaus-white));
-    border: none;
-    padding: 0.75rem 1.5rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    transition: transform 0.1s;
-  }
-  
-  .bauhaus-button:hover {
-    transform: translate(-2px, -2px);
-    box-shadow: 4px 4px 0 hsl(var(--bauhaus-red));
-  }
-  
-  .bauhaus-button-red {
-    background: hsl(var(--bauhaus-red));
-    color: hsl(var(--bauhaus-white));
-  }
-  
-  .bauhaus-button-red:hover {
-    transform: translate(-2px, -2px);
-    box-shadow: 4px 4px 0 hsl(var(--bauhaus-black));
-  }
+a {
+  @apply text-foreground;
 }
 
-/* Custom scrollbar - Bauhaus Style */
+a:hover {
+  @apply text-neutral-600;
+}
+
 ::-webkit-scrollbar {
-  width: 12px;
-  height: 12px;
+  width: 10px;
+  height: 10px;
 }
 
 ::-webkit-scrollbar-track {
-  background: hsl(var(--bauhaus-white));
-  border-left: 2px solid hsl(var(--bauhaus-black));
+  background: hsl(var(--muted));
 }
 
 ::-webkit-scrollbar-thumb {
-  background: hsl(var(--bauhaus-black));
-  border: 2px solid hsl(var(--bauhaus-white));
+  background: hsl(var(--border));
+  border-radius: 999px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: hsl(var(--bauhaus-red));
-}
-
-/* Mapbox GL CSS fixes */
-.mapboxgl-canvas-container {
-  height: 100% !important;
-  width: 100% !important;
-}
-
-.mapboxgl-canvas {
-  height: 100% !important;
-  width: 100% !important;
+  background: hsl(var(--primary));
 }

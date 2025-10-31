@@ -68,7 +68,7 @@ export function WaitingRoom({
 
           {/* Game Code */}
           <motion.div
-            className="bg-white border-4 border-black p-4 inline-block"
+            className="bg-background border-4 border-black p-4 inline-block"
             whileHover={{ scale: 1.02 }}
           >
             <div className="text-sm text-black/70 mb-1 font-bold uppercase">Game Code</div>
@@ -96,7 +96,7 @@ export function WaitingRoom({
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {/* Red Team */}
           <motion.div
-            className="bg-white border-4 border-black p-6 space-y-4"
+            className="bg-background border-4 border-black p-6 space-y-4"
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.2 }}
@@ -109,7 +109,7 @@ export function WaitingRoom({
               {redTeam.map((player, index) => (
                 <motion.div
                   key={player.id}
-                  className="bg-white border-3 border-black p-3 flex items-center justify-between"
+                  className="bg-background border-3 border-black p-3 flex items-center justify-between"
                   initial={{ opacity: 0, x: -10 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: 0.3 + index * 0.1 }}
@@ -143,7 +143,7 @@ export function WaitingRoom({
 
           {/* Blue Team */}
           <motion.div
-            className="bg-white border-4 border-black p-6 space-y-4"
+            className="bg-background border-4 border-black p-6 space-y-4"
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.2 }}
@@ -156,7 +156,7 @@ export function WaitingRoom({
               {blueTeam.map((player, index) => (
                 <motion.div
                   key={player.id}
-                  className="bg-white border-3 border-black p-3 flex items-center justify-between"
+                  className="bg-background border-3 border-black p-3 flex items-center justify-between"
                   initial={{ opacity: 0, x: 10 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: 0.3 + index * 0.1 }}
