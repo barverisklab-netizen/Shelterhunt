@@ -11,6 +11,10 @@ import { POI, Question, TriviaQuestion, Clue } from '../data/mockData';
 import { defaultCityContext } from '../data/cityContext';
 import { useState } from 'react';
 import { toast } from "sonner@2.0.3";
+import { BlurReveal } from './ui/blur-reveal';
+
+
+const ENABLE_SECRET_SHELTER_BLUR = true;
 
 
 interface GameScreenProps {
@@ -212,7 +216,17 @@ export function GameScreen({
             </button>
             <h1 className="text-xl font-bold text-black uppercase">
               Secret Shelter
-              {secretShelter?.name ? ` — ${secretShelter.name}` : ''}
+              {secretShelter?.name ? (
+                <>
+                {ENABLE_SECRET_SHELTER_BLUR ? (
+                    <BlurReveal className="ml-1" aria-label="Secret shelter name">
+                      {secretShelter.name}
+                    </BlurReveal>
+                  ) : (
+                    <span className="ml-1">{secretShelter.name}</span>
+                  )}
+                </>
+              ) : null}
             </h1>
           </div>
 
