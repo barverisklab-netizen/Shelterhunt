@@ -107,6 +107,15 @@ export function OnboardingScreen({
             >
               Find the shelter before the storm!
             </motion.p>
+              <motion.span
+              className="block text-xs font-medium tracking-[0.3em] uppercase text-neutral-500 text-center"
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 1.05, duration: 0.5, ease: 'easeOut' }}
+            >
+              v{packageInfo.version}
+            </motion.span>
+          
           </div>
         </div>
 
@@ -204,15 +213,9 @@ export function OnboardingScreen({
               {feature.label}
             </motion.div>
           ))}
+                    
         </div>
-          <motion.span
-              className="block text-xs font-medium tracking-[0.3em] uppercase text-neutral-500"
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 1.05, duration: 0.5, ease: 'easeOut' }}
-            >
-              v{packageInfo.version}
-            </motion.span>
+          
       </div>
       
     </motion.div>

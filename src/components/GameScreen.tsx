@@ -214,20 +214,23 @@ export function GameScreen({
             >
               <X className="w-5 h-5" />
             </button>
-            <h1 className="text-xl font-bold text-black uppercase">
-              Secret Shelter
+            <div className="flex flex-col">
+              <h1 className="text-xl font-bold text-black uppercase">Secret Shelter</h1>
               {secretShelter?.name ? (
-                <>
-                {ENABLE_SECRET_SHELTER_BLUR ? (
-                    <BlurReveal className="ml-1" aria-label="Secret shelter name">
-                      {secretShelter.name}
-                    </BlurReveal>
-                  ) : (
-                    <span className="ml-1">{secretShelter.name}</span>
-                  )}
-                </>
+                ENABLE_SECRET_SHELTER_BLUR ? (
+                  <BlurReveal
+                    className="text-sm font-semibold text-black/90"
+                    aria-label="Secret shelter name"
+                  >
+                    {secretShelter.name}
+                  </BlurReveal>
+                ) : (
+                  <span className="text-sm font-semibold text-black/90">
+                    {secretShelter.name}
+                  </span>
+                )
               ) : null}
-            </h1>
+            </div>
           </div>
 
           <div className={timerContainerClasses}>

@@ -9,6 +9,7 @@
   - **Data**: Static POIs, trivia, question templates, and player states are defined in `src/data/mockData.ts`. City-specific map defaults and question categories live in `src/data/cityContext.ts`.
   - **Design System**: Bauhaus-inspired utilities, typography, and color tokens are centralized in `src/styles/globals.css`. The Tailwind entry point is `src/index.css`.
   - **Maps**: `Mapbox GL` powers the interactive map via `src/components/MapView.tsx`. Tokens and tileset IDs are configured through environment variables (`.env.local` and `src/config/mapbox.ts`).
+  - **Releases**: Follow the workflow in `docs/release-process.md` to publish versioned builds and GitHub releases.
 
   ## Main Screens & Interactions
 
