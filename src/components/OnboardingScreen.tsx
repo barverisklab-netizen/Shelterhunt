@@ -1,5 +1,6 @@
 import { MapPin, Users, Info, User } from 'lucide-react';
 import { motion } from 'motion/react';
+import packageInfo from '../../package.json';
 
 interface OnboardingScreenProps {
   onJoinGame: (code: string) => void;
@@ -204,7 +205,16 @@ export function OnboardingScreen({
             </motion.div>
           ))}
         </div>
+          <motion.span
+              className="block text-xs font-medium tracking-[0.3em] uppercase text-neutral-500"
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 1.05, duration: 0.5, ease: 'easeOut' }}
+            >
+              v{packageInfo.version}
+            </motion.span>
       </div>
+      
     </motion.div>
   );
 }
