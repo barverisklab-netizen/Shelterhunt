@@ -43,8 +43,11 @@ Secret Shelter is an interactive location-based deduction game where players rac
 │   ├── data/
 │   │   ├── mockData.ts           # Game data (POIs, questions, etc.)
 │   │   └── cityContext.ts        # City-specific configuration
+│   ├── cityContext/
+│   │   └── koto/
+│   │       └── layers.ts         # Koto layer data for Koto, Tokyo
 │   ├── types/
-│   │   └── kotoLayers.ts         # Koto layer type definitions and data
+│   │   └── kotoLayers.ts         # Koto layer type definitions
 │   ├── styles/
 │   │   └── globals.css           # Global styles and Tailwind config
 │   ├── App.tsx                   # Main app component
@@ -158,7 +161,7 @@ The application is set up to display Koto, Tokyo-specific layers, but requires M
     - Swatch colors pulled from `legendItems.swatchStyle` (strokeColor or fillColor)
     - Labels use `legendItems.label` instead of hardcoded strings
     - Swatch shapes determined by `swatchType` (symbol/line = circle, fill = square)
-    - Adding new layers to `kotoLayers.ts` automatically updates legend
+    - Adding new layers to `src/cityContext/koto/layers.ts` automatically updates legend
     
   - ✅ **Enhanced Layer Toggle System**
     - Layer toggles dynamically generated from `kotoLayers` array data

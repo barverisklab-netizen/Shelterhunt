@@ -15,7 +15,7 @@ import {
   Train,
 } from "lucide-react";
 import { POI } from "../data/mockData";
-import { kotoLayers } from "../types/kotoLayers";
+import { kotoLayers } from "@/cityContext/koto/layers";
 import { MAPBOX_CONFIG, getTilesetUrl } from "../config/mapbox";
 import { defaultCityContext } from "../data/cityContext";
 import mapboxgl from "mapbox-gl";

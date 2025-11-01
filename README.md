@@ -18,7 +18,7 @@
 
   ## Core UI Modules
 
-  - **MapView** (`src/components/MapView.tsx`): Wraps Mapbox GL, handles POI markers, exposes a location picker mode, and wires in Koto-specific layers (`src/types/kotoLayers.ts`).
+  - **MapView** (`src/components/MapView.tsx`): Wraps Mapbox GL, handles POI markers, exposes a location picker mode, and wires in Koto-specific layers (`src/cityContext/koto/layers.ts`).
   - **Question Drawer** (`src/components/QuestionDrawer.tsx`): Bottom sheet that gates question prompts based on proximity, filters by category, and feeds the trivia flow.
   - **Trivia & Clues** (`src/components/TriviaModal.tsx`, `src/components/CluesPanel.tsx`): Modal and side panel overlays that deliver Bauhaus-styled feedback, animated with `motion/react`.
   - **UI Primitives** (`src/components/ui/*`): Custom shadcn-derived kit (buttons, drawers, dialogs, etc.) that underpins the entire interaction model.
