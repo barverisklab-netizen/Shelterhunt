@@ -13,21 +13,21 @@ export function ShelterPenaltyScreen({
 }: ShelterPenaltyScreenProps) {
   return (
     <motion.div
-      className="fixed inset-0 z-50 bg-neutral-100 flex items-center justify-center p-6"
+      className="fixed inset-0 z-50 bg-background flex items-center justify-center p-6"
       initial={{ opacity: 0, scale: 0.85, y: 30 }}
       animate={{ opacity: 1, scale: 1, y: 0 }}
       exit={{ opacity: 0, scale: 0.85, y: 30 }}
       transition={{ type: "spring", damping: 20, stiffness: 220 }}
     >
       <div className="w-full max-w-lg text-center space-y-6 rounded-lg border border-neutral-900 bg-background p-10 shadow-xl">
-        <div className="inline-block rounded-full border border-neutral-900 bg-neutral-900 p-6">
-          <Frown className="w-16 h-16 text-white" />
+        <div className="inline-block rounded-full border border-neutral-900 bg-black p-6">
+          <Frown className="w-16 h-16 text-black" />
         </div>
         <div className="space-y-2">
-          <h2 className="text-3xl text-neutral-900 font-bold uppercase">
+          <h2 className="text-3xl text-black font-bold uppercase">
             Not Quite There
           </h2>
-          <p className="text-neutral-600 font-semibold">
+          <p className="text-black font-semibold">
             That wasn&apos;t the secret shelter. Your timer has been reset to 10
             minutes—make every clue count.
           </p>
@@ -35,7 +35,7 @@ export function ShelterPenaltyScreen({
         <div className="flex flex-col gap-3">
           <Button
             onClick={onContinue}
-            className="w-full rounded border border-neutral-900 bg-neutral-900 py-4 text-sm font-bold uppercase text-white hover:bg-neutral-800"
+            className="w-full rounded border border-neutral-900 bg-black py-4 text-sm font-bold uppercase text-black hover:bg-neutral-800"
           >
             Keep Playing
           </Button>

@@ -113,7 +113,7 @@ export function HelpModal({ isOpen, onClose }: HelpModalProps) {
                       >
                         <div className="flex gap-4">
                           <div className="flex-shrink-0 rounded-full bg-neutral-900 p-3">
-                            <Icon className="w-6 h-6 text-white" />
+                            <Icon className="w-6 h-6 text-black" />
                           </div>
                           <div>
                             <div className="flex items-center gap-3 mb-2">

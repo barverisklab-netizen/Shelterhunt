@@ -191,7 +191,7 @@ export function CluesPanel({
 
                 <Button
                   onClick={onGuessRequest}
-                  className="w-full rounded border border-neutral-900 bg-neutral-900 py-4 text-sm font-bold uppercase text-white hover:bg-neutral-800"
+                  className="w-full rounded border border-neutral-900 bg-neutral-900 py-4 text-sm font-bold uppercase text-black hover:bg-neutral-800"
                   disabled={
                     isGuessDisabled || !selectedShelterId || !shelterOptions.length
                   }

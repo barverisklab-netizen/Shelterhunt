@@ -135,12 +135,10 @@ export function GameScreen({
   const timerContainerClasses = [
     "flex items-center gap-2 px-4 py-2 border rounded-full",
     isTimerCritical
-      ? "bg-neutral-900 border-red-500 text-white animate-pulse"
+      ? "bg-neutral-900 border-red-500 text-black animate-pulse"
       : "bg-neutral-100 border-neutral-900 text-neutral-900"
   ].join(" ");
-  const timerTextClasses = isTimerCritical
-    ? "tabular-nums font-bold text-white"
-    : "tabular-nums font-bold text-neutral-900";
+  const timerTextClasses = "tabular-nums font-bold text-black";
   const isGuessDisabled = !secretShelter || shelterOptions.length === 0;
 
   const handleGuessRequest = () => {

@@ -237,7 +237,7 @@ export function MapView({
             showAccuracyCircle: false,
           });
           geolocateControl.current = control;
-          map.current?.addControl(control, "top-right");
+          map.current?.addControl(control, "bottom-right");
 
           window.requestAnimationFrame(() => {
             try {
@@ -300,8 +300,25 @@ export function MapView({
     setLayersVisible((prev) => ({ ...prev, [layer]: !prev[layer] }));
   };
 
+  const clearAllLayers = () => {
+    if (!map.current) return;
+
+    const updated: Record<string, boolean> = {};
+
+    kotoLayers.forEach((layer) => {
+      const layerId = `koto-layer-${layer.id}`;
+      if (map.current?.getLayer(layerId)) {
+        map.current.setLayoutProperty(layerId, "visibility", "none");
+      }
+      updated[layer.label] = false;
+    });
+
+    setKotoLayersVisible(updated);
+  };
+
   // Add Koto layers to the map
   const addKotoLayers = () => {
+  const anyLayerActive = Object.values(kotoLayersVisible).some(Boolean);
     const m = map.current;
     if (!m) return;
 
@@ -520,8 +537,11 @@ export function MapView({
     }
   };
 
+  const anyLayerActive = Object.values(kotoLayersVisible).some(Boolean);
+
   return (
     <div className="relative w-full h-full min-h-[500px] z-0">
+      
       <div
         ref={mapContainer}
         className="absolute inset-0 z-0"
@@ -562,24 +582,25 @@ export function MapView({
       <AnimatePresence>
         {showLayerControl && (
           <motion.div
-            className={
-              "absolute top-16 left-4 z-10 bg-background border-4 border-black p-4 space-y-3 " +
-              "w-[90vw] sm:w-auto min-w-[220px]"
-            }
+            className="absolute top-16 left-4 z-10 w-[90vw] min-w-[220px] space-y-3 rounded-lg border border-black bg-background p-4 shadow-lg sm:w-auto"
             initial={{ opacity: 0, y: -10, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -10, scale: 0.95 }}
             style={{
-              backgroundColor: "#FFF", //FIXME: Use Bauhaus color variable
-              // Limit height so roughly 4 items are visible; allow scrolling for the rest.
-              // `min(60vh, 240px)` keeps the panel usable on very tall screens while
-              // ensuring ~4 items fit on most devices.
               maxHeight: "min(60vh, 240px)",
               overflowY: "auto",
             }}
           >
-            <div className="text-black mb-2 font-bold uppercase">
-              Koto Layers
+            <div className="mb-2 flex items-center justify-between">
+              <span className="text-sm font-semibold uppercase text-black">Map Layers</span>
+              <button
+                type="button"
+                onClick={clearAllLayers}
+                disabled={!anyLayerActive}
+                className="rounded border border-black bg-background px-3 py-1 text-xs font-semibold uppercase text-black transition-colors hover:bg-neutral-100 disabled:cursor-not-allowed disabled:border-neutral-400 disabled:bg-neutral-200 disabled:text-neutral-500"
+              >
+                Clear All
+              </button>
             </div>
 
             {kotoLayers.map((layer) => (
@@ -595,53 +616,51 @@ export function MapView({
         )}
       </AnimatePresence>
 
-      {/* Map Legend - Minimizable - Koto, Tokyo */}
+{/* Map Legend */}
       <AnimatePresence>
         {showLayerControl ? (
           <motion.div
-            className="absolute bottom-20 left-4 bg-background border-4 border-black p-3 space-y-2 z-10 max-h-[60vh] overflow-y-auto"
+            className="absolute bottom-20 left-4 z-10 max-h-[60vh] space-y-2 overflow-y-auto rounded-lg border border-black bg-background p-3 shadow-lg"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 20 }}
           >
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-white text-sm font-bold uppercase">
-                Koto, Tokyo Layers
-              </span>
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-semibold uppercase text-black">Layer Legend</span>
               <button
                 onClick={() => setShowLayerControl(false)}
-                className="text-black hover:text-red-600 transition-colors font-bold"
+                className="text-black transition-colors hover:text-red-600"
+                aria-label="Close legend"
               >
                 ✕
               </button>
             </div>
-            <div className="flex items-center gap-2 text-xs text-black">
-              <div className="w-3 h-3 rounded-full bg-red-600" />
+            <div className="my-2 flex items-center gap-2 text-xs text-black">
+              <div className="h-3 w-3 rounded-full bg-black" />
               <span>Your Location</span>
             </div>
-            <div className="border-t-4 border-black my-2"></div>
+            <div className="my-2 border-t border-black"></div>
 
-            {/* Dynamic Legend Items from kotoLayers */}
             {kotoLayers.map((layer, layerIndex) => (
               <div key={layer.id}>
                 {layer.metadata.legendItems.map((legendItem, itemIndex) => {
                   const swatchColor =
                     legendItem.swatchStyle.strokeColor ||
                     legendItem.swatchStyle.fillColor ||
-                    "#000000";
+                    "#000";
                   const swatchClasses =
                     legendItem.swatchType === "symbol" ||
                     legendItem.swatchType === "line"
                       ? "rounded-full"
-                      : "";
+                      : "rounded";
 
                   return (
                     <div
                       key={`${layer.id}-${itemIndex}`}
-                      className="flex items-center gap-2 text-xs text-black mb-2"
+                      className="mb-2 flex items-center gap-2 text-xs text-black"
                     >
                       <div
-                        className={`w-3 h-3 ${swatchClasses}`}
+                        className={`h-3 w-3 ${swatchClasses}`}
                         style={{ backgroundColor: swatchColor }}
                       />
                       <span>{legendItem.label}</span>
@@ -649,24 +668,24 @@ export function MapView({
                   );
                 })}
                 {layerIndex < kotoLayers.length - 1 && (
-                  <div className="border-t-4 border-black my-2"></div>
+                  <div className="my-2 border-t border-neutral-300"></div>
                 )}
               </div>
             ))}
 
-            <div className="text-xs text-black/70 mt-3">
+            <div className="mt-3 text-xs text-black/70">
               Note: Actual layer data requires Mapbox tileset configuration
             </div>
           </motion.div>
         ) : (
           <motion.button
             onClick={() => setShowLayerControl(true)}
-            className="absolute bottom-20 left-4 bg-background border-4 border-black p-3 z-10 text-black hover:bg-black/5 transition-colors"
+            className="absolute bottom-20 left-4 z-10 rounded-full border border-black bg-background px-4 py-2 text-sm font-semibold uppercase text-black shadow-sm transition-colors hover:bg-neutral-100"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 20 }}
           >
-            <span className="text-sm font-bold uppercase">Legend</span>
+            Legend
           </motion.button>
         )}
       </AnimatePresence>
@@ -686,12 +705,12 @@ function LayerToggle({
   onChange: () => void;
 }) {
   return (
-    <label className="flex items-center gap-3 cursor-pointer hover:bg-black/5 p-2 transition-colors">
+    <label className="flex items-center gap-3 cursor-pointer rounded px-2 py-1 transition-colors hover:bg-neutral-100">
       <input
         type="checkbox"
         checked={checked}
         onChange={onChange}
-        className="w-4 h-4 accent-black border-4 border-black"
+        className="h-4 w-4 accent-black border border-black"
       />
       {icon}
       <span className="text-sm text-black">{label}</span>
