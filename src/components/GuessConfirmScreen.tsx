@@ -55,7 +55,7 @@ export function GuessConfirmScreen({
 
         <div className="flex w-full max-w-md flex-col gap-3">
           <Button
-            className="w-full rounded border-4 border-black bg-yellow-300 py-4 text-sm font-bold uppercase text-black transition-colors hover:bg-yellow-200"
+            className="w-full rounded border-4 border-black bg-red-500 py-4 text-sm font-bold uppercase text-white transition-colors hover:bg-red-600"
             onClick={onConfirm}
           >
             Lock In Guess

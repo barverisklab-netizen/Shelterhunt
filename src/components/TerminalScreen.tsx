@@ -16,8 +16,8 @@ export function TerminalScreen({ onRestart }: TerminalScreenProps) {
         transition={{ type: "spring", damping: 18, stiffness: 240 }}
       >
         <div className="flex justify-center">
-          <div className="rounded-full border-4 border-black bg-yellow-300 p-5">
-            <AlertTriangle className="w-12 h-12 text-black" />
+          <div className="rounded-full border-4 border-black bg-red-500 p-5">
+            <AlertTriangle className="w-12 h-12 text-white" />
           </div>
         </div>
         <div className="space-y-3">
@@ -31,7 +31,7 @@ export function TerminalScreen({ onRestart }: TerminalScreenProps) {
         </div>
         <Button
           onClick={onRestart}
-          className="w-full rounded border-4 border-black bg-yellow-300 py-4 text-sm font-bold uppercase text-black transition-colors hover:bg-yellow-200"
+          className="w-full rounded border-4 border-black bg-red-500 py-4 text-sm font-bold uppercase text-white transition-colors hover:bg-red-600"
         >
           Back to Onboarding
         </Button>

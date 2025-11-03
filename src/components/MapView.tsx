@@ -1257,7 +1257,7 @@ const [measureState, setMeasureState] = useState<{
                     <button
                       type="button"
                       onClick={handleDrawCircle}
-                      className="w-full sm:w-auto rounded border border-black bg-black px-3 py-2 text-xs font-bold uppercase tracking-wide text-white hover:bg-neutral-800"
+                      className="w-full sm:w-auto rounded border border-black bg-background px-3 py-2 text-xs font-bold uppercase tracking-wide text-black hover:bg-neutral-100"
                     >
                       Draw Circle
                     </button>
@@ -1317,7 +1317,7 @@ const [measureState, setMeasureState] = useState<{
                         closeMeasurePopup();
                         clearMeasurement();
                       }}
-                      className="rounded border border-black bg-red-600 px-3 py-2 text-xs font-bold uppercase tracking-wide text-red hover:bg-neutral-800"
+                      className="rounded border border-black bg-red-500/20 px-3 py-2 text-xs font-bold uppercase tracking-wide text-black hover:bg-red-600 hover:text-white active:bg-red-600 active:text-white"
                     >
                       Delete
                     </button>

@@ -221,11 +221,11 @@ export function GameScreen({
         initial={{ y: -50, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
       >
-        <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
             <button
               onClick={onEndGame}
-              className="rounded border-4 border-black bg-yellow-300 p-2 text-black shadow-sm transition-colors hover:bg-yellow-200"
+              className="rounded border-4 border-black bg-red-500 p-2 text-white shadow-sm transition-colors hover:bg-red-600"
               title="Exit to main menu"
             >
               <X className="w-5 h-5" />

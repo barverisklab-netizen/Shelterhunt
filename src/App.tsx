@@ -197,8 +197,8 @@ export default function App() {
       <Toaster
         position="top-center"
         toastOptions={{
-          className: "rounded border-4 border-black bg-yellow-300 text-black shadow-lg",
-          style: { background: '#fde047', border: '4px solid #000', color: '#000' }
+          className: "rounded border-4 border-black bg-red-500 text-white shadow-lg",
+          style: { background: "#ef4444", border: "4px solid #000", color: "#fff" },
         }}
       />
     </div>

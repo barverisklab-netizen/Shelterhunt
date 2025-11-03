@@ -93,7 +93,7 @@ export function CluesPanel({
                       </span>
                     </div>
                   </AccordionTrigger>
-                  <AccordionContent className="px-4">
+                  <AccordionContent className="px-6 py-6">
                     <p className="mb-4 text-xs text-black/70">
                       Each clue narrows the possible shelters. Compare green (true)
                       against red (false) hints to deduce the right location.
@@ -198,7 +198,7 @@ export function CluesPanel({
                       </span>
                     </div>
                   </AccordionTrigger>
-                  <AccordionContent className="px-4">
+                  <AccordionContent className="px-6 py-6">
                     <p className="mb-3 text-xs text-black/70">
                       Draw a search radius to inspect which shelters fall within a
                       chosen distance.
@@ -210,7 +210,7 @@ export function CluesPanel({
                         onClose();
                         onStartMeasure();
                       }}
-                      className="w-full text-xs tracking-wide disabled:border-neutral-400 disabled:text-neutral-500"
+                      className="w-full bg-neutral-100 text-xs tracking-wide hover:bg-neutral-200 active:bg-black active:text-white disabled:border-neutral-400 disabled:text-neutral-500 disabled:bg-neutral-200"
                       disabled={isMeasureActive}
                     >
                       {isMeasureActive ? "Measurement Active" : "Measure Shelters Radius"}
@@ -230,7 +230,7 @@ export function CluesPanel({
                       </span>
                     </div>
                   </AccordionTrigger>
-                  <AccordionContent className="space-y-3 px-4">
+                  <AccordionContent className="space-y-3 px-6 py-6">
                     <div className="space-y-2">
                       <label className="text-xs font-semibold uppercase text-black/70">
                         Choose your shelter
@@ -256,7 +256,7 @@ export function CluesPanel({
                     </p>
                     <Button
                       onClick={onGuessRequest}
-                      className="w-full"
+                      className="w-full bg-neutral-100 text-black hover:bg-neutral-200 active:bg-black active:text-white disabled:bg-neutral-200 disabled:text-neutral-500 disabled:border-neutral-400 disabled:opacity-100"
                       disabled={
                         isGuessDisabled || !selectedShelterId || !shelterOptions.length
                       }

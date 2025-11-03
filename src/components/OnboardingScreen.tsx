@@ -139,7 +139,7 @@ export function OnboardingScreen({
           <motion.button
             type="button"
             disabled
-            className="w-full bg-gray-200 border-4 border-black transition-all py-6 flex items-center justify-center gap-2 cursor-not-allowed opacity-60"
+            className="w-full bg-background border-4 border-black transition-all py-6 flex items-center justify-center gap-2 cursor-not-allowed opacity-60"
             title="Multiplayer coming soon"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -149,8 +149,8 @@ export function OnboardingScreen({
               ease: 'easeOut',
             }}
           >
-            <Users className="w-5 h-5 text-black-30" />
-            <span className="text-lg font-bold uppercase tracking-wide text-black-30">Join Game</span>
+            <Users className="w-5 h-5 text-neutral-500" />
+            <span className="text-lg font-bold uppercase tracking-wide text-neutral-500">Join Game</span>
           </motion.button>
 
           {/* Host Game Button */}
@@ -158,7 +158,7 @@ export function OnboardingScreen({
           <motion.button
             type="button"
             disabled
-            className="w-full bg-gray-200 border-4 border-black transition-all py-6 flex items-center justify-center gap-2 cursor-not-allowed opacity-60"
+            className="w-full bg-background border-4 border-black transition-all py-6 flex items-center justify-center gap-2 cursor-not-allowed opacity-60"
             title="Multiplayer coming soon"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -168,8 +168,8 @@ export function OnboardingScreen({
               ease: 'easeOut',
             }}
           >
-            <Users className="w-5 h-5 text-black-30" />
-            <span className="text-lg font-bold uppercase tracking-wide text-black-30">Host Multiplayer</span>
+            <Users className="w-5 h-5 text-neutral-500" />
+            <span className="text-lg font-bold uppercase tracking-wide text-neutral-500">Host Multiplayer</span>
           </motion.button>
 
           {/* How to Play Button */}

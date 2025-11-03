@@ -23,9 +23,9 @@ export function ShelterVictoryScreen({
       exit={{ opacity: 0, scale: 0.85, y: 40 }}
       transition={{ type: "spring", damping: 18, stiffness: 240 }}
     >
-      <div className="w-full max-w-lg text-center space-y-6 rounded-lg bg-green-500-10 p-10 shadow-xl">
+      <div className="w-full max-w-lg text-center space-y-6 rounded-lg bg-red-500/10 p-10 shadow-xl">
         <motion.div
-          className="inline-block rounded-full bg-green-500/20 p-6"
+          className="inline-block rounded-full bg-red-500/20 p-6"
           animate={{ rotate: [0, 8, -8, 8, 0], scale: [1, 1.1, 1] }}
           transition={{ duration: 0.6, repeat: 1 }}
         >

@@ -68,19 +68,21 @@
   :root, :host {
     --font-sans: ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
     --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-    --color-red-400: oklch(.704 .191 22.216);
-    --color-red-500: oklch(.637 .237 25.331);
-    --color-orange-400: oklch(.75 .183 55.934);
-    --color-orange-500: oklch(.705 .213 47.604);
-    --color-yellow-400: oklch(.852 .199 91.936);
-    --color-green-400: oklch(.792 .209 151.711);
-    --color-green-500: oklch(.723 .219 149.579);
-    --color-cyan-400: oklch(.789 .154 211.53);
-    --color-cyan-500: oklch(.715 .143 215.221);
-    --color-blue-400: oklch(.707 .165 254.624);
-    --color-purple-400: oklch(.714 .203 305.504);
-    --color-purple-500: oklch(.627 .265 303.9);
-    --color-pink-500: oklch(.656 .241 354.308);
+    --color-red-400: #f87171;
+    --color-red-500: #ef4444;
+    --color-red-600: #dc2626;
+    --color-red-700: #b91c1c;
+    --color-neutral-50: #fafafa;
+    --color-neutral-100: #f5f5f5;
+    --color-neutral-200: #e5e5e5;
+    --color-neutral-300: #d4d4d4;
+    --color-neutral-400: #a3a3a3;
+    --color-neutral-500: #737373;
+    --color-neutral-600: #525252;
+    --color-neutral-700: #404040;
+    --color-neutral-800: #262626;
+    --color-neutral-900: #171717;
+    --color-neutral-950: #0a0a0a;
     --color-black: #000;
     --color-white: #fff;
     --spacing: .25rem;
@@ -442,9 +444,118 @@
     color: oklch(.145 0 0);
     font-feature-settings: "rlig" 1, "calt" 1;
   }
+
+  button,
+  [data-slot="button"] {
+    min-height: 45px;
+    border-radius: 9999px !important;
+  }
+
+  button[class*="bg-background"],
+  [data-slot="button"][class*="bg-background"] {
+    border-color: var(--color-neutral-400) !important;
+  }
 }
 
 @layer utilities {
+  .bg-neutral-50 {
+    background-color: var(--color-neutral-50);
+  }
+
+  .bg-neutral-100 {
+    background-color: var(--color-neutral-100);
+  }
+
+  .bg-neutral-200 {
+    background-color: var(--color-neutral-200);
+  }
+
+  .bg-neutral-800 {
+    background-color: var(--color-neutral-800);
+  }
+
+  .bg-neutral-900 {
+    background-color: var(--color-neutral-900);
+  }
+
+  .bg-neutral-950 {
+    background-color: var(--color-neutral-950);
+  }
+
+  .bg-red-500\/20 {
+    background-color: color-mix(in srgb, var(--color-red-500) 20%, transparent);
+  }
+
+  @supports (color: color-mix(in lab, red, red)) {
+    .bg-red-500\/20 {
+      background-color: color-mix(in oklab, var(--color-red-500) 20%, transparent);
+    }
+  }
+
+  .hover\:bg-neutral-100:hover {
+    background-color: var(--color-neutral-100);
+  }
+
+  .hover\:bg-neutral-200:hover {
+    background-color: var(--color-neutral-200);
+  }
+
+  .hover\:bg-neutral-800:hover {
+    background-color: var(--color-neutral-800);
+  }
+
+  .hover\:bg-neutral-900:hover {
+    background-color: var(--color-neutral-900);
+  }
+
+  .hover\:bg-red-600:hover {
+    background-color: var(--color-red-600);
+  }
+
+  .border-neutral-400 {
+    border-color: var(--color-neutral-400);
+  }
+
+  .border-neutral-900 {
+    border-color: var(--color-neutral-900);
+  }
+
+  .disabled\:bg-neutral-200:disabled {
+    background-color: var(--color-neutral-200);
+  }
+
+  .disabled\:border-neutral-400:disabled {
+    border-color: var(--color-neutral-400);
+  }
+
+  .text-neutral-500 {
+    color: var(--color-neutral-500);
+  }
+
+  .text-neutral-600 {
+    color: var(--color-neutral-600);
+  }
+
+  .text-neutral-800 {
+    color: var(--color-neutral-800);
+  }
+
+  .text-neutral-900 {
+    color: var(--color-neutral-900);
+  }
+
+  .disabled\:text-neutral-500:disabled {
+    color: var(--color-neutral-500);
+  }
+
+  .focus-visible\:ring-neutral-500:focus-visible {
+    box-shadow: 0 0 0 calc(var(--spacing) * 2) var(--color-neutral-500);
+  }
+
+  .disabled\:opacity-100:disabled {
+    opacity: 1;
+  }
+
   .pointer-events-auto {
     pointer-events: auto;
   }
