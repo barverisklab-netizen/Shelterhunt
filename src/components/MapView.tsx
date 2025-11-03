@@ -21,6 +21,7 @@ import { defaultCityContext } from "../data/cityContext";
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
 import { toast } from "sonner@2.0.3"
+import { circle as turfCircle, booleanPointInPolygon, point as turfPoint } from "@turf/turf";
 
 // Set Mapbox access token from config
 mapboxgl.accessToken = MAPBOX_CONFIG.accessToken;
@@ -69,6 +70,16 @@ const getKotoLayerIcon = (layer: (typeof kotoLayers)[0]): React.ReactNode => {
   }
 };
 
+const SHELTER_KOTO_LAYER_IDS = kotoLayers
+  .filter((layer) => /Evacuation/i.test(layer.label))
+  .map((layer) => `koto-layer-${layer.id}`);
+
+const MEASURE_CIRCLE_SOURCE_ID = "measure-circle-source";
+const MEASURE_CIRCLE_FILL_LAYER_ID = "measure-circle-fill";
+const MEASURE_CIRCLE_OUTLINE_LAYER_ID = "measure-circle-outline";
+
+type MeasureStatus = "idle" | "placing" | "configuring" | "active";
+
 interface MapViewProps {
   pois: POI[];
   playerLocation: { lat: number; lng: number };
@@ -78,6 +89,8 @@ interface MapViewProps {
   basemapUrl?: string;
   onSecretShelterChange?: (info: { id: string; name: string }) => void;
   onShelterOptionsChange?: (options: { id: string; name: string }[]) => void;
+  measureTrigger?: number;
+  onMeasurementActiveChange?: (active: boolean) => void;
 }
 
 // const POI_ICONS = {
@@ -99,6 +112,8 @@ export function MapView({
   basemapUrl = defaultCityContext.mapConfig.basemapUrl,
   onSecretShelterChange,
   onShelterOptionsChange,
+  measureTrigger,
+  onMeasurementActiveChange,
 }: MapViewProps) {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
@@ -108,6 +123,363 @@ export function MapView({
   const infoPopup = useRef<mapboxgl.Popup | null>(null);
   const hasSelectedShelter = useRef(false);
   const hasEmittedShelterOptions = useRef(false);
+  const measureMarkerRef = useRef<mapboxgl.Marker | null>(null);
+  const measureShelterMarkersRef = useRef<mapboxgl.Marker[]>([]);
+  const measurePopupRef = useRef<mapboxgl.Popup | null>(null);
+  const shelterLayerVisibilityRef = useRef<Record<string, string>>({});
+  const lastMeasureTriggerRef = useRef<number>(0);
+  const measureStatusRef = useRef<MeasureStatus>("idle");
+
+const [measureState, setMeasureState] = useState<{
+  status: MeasureStatus;
+  radius: number;
+  count: number;
+  center: { lng: number; lat: number } | null;
+  shelterNames: string[];
+}>({
+  status: "idle",
+  radius: 250,
+  count: 0,
+  center: null,
+  shelterNames: [],
+});
+
+  const closeMeasurePopup = useCallback(() => {
+    if (measurePopupRef.current) {
+      measurePopupRef.current.remove();
+      measurePopupRef.current = null;
+    }
+  }, []);
+
+  const removeShelterMarkers = useCallback(() => {
+    measureShelterMarkersRef.current.forEach((marker) => marker.remove());
+    measureShelterMarkersRef.current = [];
+  }, []);
+
+  const removeMeasurementCircle = useCallback(() => {
+    const m = map.current;
+    if (!m) return;
+
+    if (m.getLayer(MEASURE_CIRCLE_FILL_LAYER_ID)) {
+      m.removeLayer(MEASURE_CIRCLE_FILL_LAYER_ID);
+    }
+    if (m.getLayer(MEASURE_CIRCLE_OUTLINE_LAYER_ID)) {
+      m.removeLayer(MEASURE_CIRCLE_OUTLINE_LAYER_ID);
+    }
+    if (m.getSource(MEASURE_CIRCLE_SOURCE_ID)) {
+      m.removeSource(MEASURE_CIRCLE_SOURCE_ID);
+    }
+  }, []);
+
+  const removeMeasurementArtifacts = useCallback(() => {
+    removeMeasurementCircle();
+    removeShelterMarkers();
+    closeMeasurePopup();
+  }, [closeMeasurePopup, removeMeasurementCircle, removeShelterMarkers]);
+
+  const restoreShelterLayers = useCallback(() => {
+    const m = map.current;
+    if (!m) return;
+
+    Object.entries(shelterLayerVisibilityRef.current).forEach(
+      ([layerId, visibility]) => {
+        if (m.getLayer(layerId)) {
+          m.setLayoutProperty(layerId, "visibility", visibility);
+        }
+      },
+    );
+    shelterLayerVisibilityRef.current = {};
+  }, []);
+
+  const hideShelterLayers = useCallback(() => {
+    const m = map.current;
+    if (!m) return;
+
+    SHELTER_KOTO_LAYER_IDS.forEach((layerId) => {
+      if (!m.getLayer(layerId)) return;
+      const currentVisibility =
+        (m.getLayoutProperty(layerId, "visibility") as string) ?? "visible";
+      if (!(layerId in shelterLayerVisibilityRef.current)) {
+        shelterLayerVisibilityRef.current[layerId] = currentVisibility;
+      }
+      m.setLayoutProperty(layerId, "visibility", "none");
+    });
+  }, []);
+
+  const clearMeasurement = useCallback(() => {
+    removeMeasurementArtifacts();
+    restoreShelterLayers();
+    if (measureMarkerRef.current) {
+      measureMarkerRef.current.remove();
+      measureMarkerRef.current = null;
+    }
+  setMeasureState({
+    status: "idle",
+    radius: 250,
+    count: 0,
+    center: null,
+    shelterNames: [],
+  });
+  }, [removeMeasurementArtifacts, restoreShelterLayers]);
+
+  const updateShelterMarkers = useCallback(
+    (features: mapboxgl.MapboxGeoJSONFeature[]) => {
+      const m = map.current;
+      if (!m) return;
+
+      measureShelterMarkersRef.current.forEach((marker) => marker.remove());
+      const newMarkers: mapboxgl.Marker[] = [];
+
+      features.forEach((feature) => {
+        if (feature.geometry.type !== "Point") return;
+        const coords = feature.geometry.coordinates as [number, number];
+        if (!coords || coords.length < 2) return;
+
+        const el = document.createElement("div");
+        el.className = "measure-shelter-marker";
+        el.title =
+          (feature.properties?.["Landmark name (EN)"] as string) ||
+          (feature.properties?.["Landmark name (JP)"] as string) ||
+          (feature.properties?.["name"] as string) ||
+          "Shelter";
+
+        const marker = new mapboxgl.Marker({ element: el })
+          .setLngLat(coords as [number, number])
+          .addTo(m);
+        newMarkers.push(marker);
+      });
+
+      measureShelterMarkersRef.current = newMarkers;
+    },
+    [],
+  );
+
+  const updateCircle = useCallback(
+    (center: { lng: number; lat: number }, radius: number) => {
+      const m = map.current;
+      if (!m) return;
+
+      const circleFeature = turfCircle([center.lng, center.lat], radius / 1000, {
+        steps: 64,
+        units: "kilometers",
+      });
+
+      if (m.getSource(MEASURE_CIRCLE_SOURCE_ID)) {
+        (m.getSource(MEASURE_CIRCLE_SOURCE_ID) as mapboxgl.GeoJSONSource).setData(
+          circleFeature as any,
+        );
+      } else {
+        m.addSource(MEASURE_CIRCLE_SOURCE_ID, {
+          type: "geojson",
+          data: circleFeature as any,
+        });
+        m.addLayer({
+          id: MEASURE_CIRCLE_FILL_LAYER_ID,
+          type: "fill",
+          source: MEASURE_CIRCLE_SOURCE_ID,
+          paint: {
+            "fill-color": "#c1272d",
+            "fill-opacity": 0.18,
+          },
+        });
+        m.addLayer({
+          id: MEASURE_CIRCLE_OUTLINE_LAYER_ID,
+          type: "line",
+          source: MEASURE_CIRCLE_SOURCE_ID,
+          paint: {
+            "line-color": "#c1272d",
+            "line-width": 2,
+            "line-dasharray": [1.5, 1.5],
+          },
+        });
+      }
+
+      const shelterFeatures = m.queryRenderedFeatures(undefined, {
+        layers: SHELTER_KOTO_LAYER_IDS,
+      });
+
+      const inside = shelterFeatures.filter((feature) => {
+        if (feature.geometry.type !== "Point") return false;
+        const coords = feature.geometry.coordinates as [number, number];
+        if (!coords) return false;
+        return booleanPointInPolygon(turfPoint(coords), circleFeature);
+      });
+
+      const insideNames = inside
+        .map((feature) => {
+          const props = feature.properties || {};
+          return (
+            (props["Landmark name (EN)"] as string) ||
+            (props["Landmark name (JP)"] as string) ||
+            (props["name"] as string) ||
+            "Shelter"
+          );
+        })
+        .filter(Boolean);
+
+      updateShelterMarkers(inside);
+      hideShelterLayers();
+
+      setMeasureState((prev) => ({
+        ...prev,
+        status: "active",
+        center,
+        radius,
+        count: inside.length,
+        shelterNames: insideNames,
+      }));
+    },
+    [hideShelterLayers, updateShelterMarkers],
+  );
+
+  const beginAdjustRadius = useCallback(() => {
+    removeMeasurementCircle();
+    updateShelterMarkers([]);
+    restoreShelterLayers();
+    setMeasureState((prev) => ({
+      ...prev,
+      status: prev.center ? "configuring" : "placing",
+      count: 0,
+      shelterNames: [],
+    }));
+  }, [removeMeasurementCircle, restoreShelterLayers, updateShelterMarkers]);
+
+  const beginMoveCenter = useCallback(() => {
+    removeMeasurementArtifacts();
+    restoreShelterLayers();
+    if (measureMarkerRef.current) {
+      measureMarkerRef.current.remove();
+      measureMarkerRef.current = null;
+    }
+    setMeasureState((prev) => ({
+      status: "placing",
+      radius: prev.radius ?? 250,
+      count: 0,
+      center: null,
+      shelterNames: [],
+    }));
+    toast.info("Tap the map to place a new measurement point.");
+  }, [removeMeasurementArtifacts, restoreShelterLayers]);
+
+  const showMarkerMenu = useCallback(() => {
+    const m = map.current;
+    if (!m || !measureState.center) return;
+
+    if (!measurePopupRef.current) {
+      measurePopupRef.current = new mapboxgl.Popup({
+        closeButton: true,
+        closeOnClick: false,
+        offset: 18,
+        className: "measure-popup-wrapper",
+      });
+    }
+
+    measurePopupRef.current
+      .setLngLat([measureState.center.lng, measureState.center.lat])
+      .setHTML(`
+        <div class="measure-popup">
+          <button type="button" data-action="adjust">Adjust radius</button>
+          <button type="button" data-action="move">Move center</button>
+          <button type="button" data-action="delete" class="danger">Delete</button>
+        </div>
+      `)
+      .addTo(m);
+
+    const popupEl = measurePopupRef.current.getElement();
+    const bindAction = (selector: string, handler: () => void) => {
+      const node = popupEl.querySelector(selector);
+      if (!node) return;
+      node.addEventListener(
+        "click",
+        (event) => {
+          event.stopPropagation();
+          handler();
+        },
+        { once: true },
+      );
+    };
+
+    bindAction('[data-action="adjust"]', () => {
+      closeMeasurePopup();
+      beginAdjustRadius();
+    });
+    bindAction('[data-action="move"]', () => {
+      closeMeasurePopup();
+      beginMoveCenter();
+    });
+    bindAction('[data-action="delete"]', () => {
+      closeMeasurePopup();
+      clearMeasurement();
+    });
+  }, [
+    beginAdjustRadius,
+    beginMoveCenter,
+    clearMeasurement,
+    closeMeasurePopup,
+    measureState.center,
+  ]);
+
+  const placeMeasureMarker = useCallback(
+    (lng: number, lat: number) => {
+      const m = map.current;
+      if (!m) return;
+
+      if (!measureMarkerRef.current) {
+        const el = document.createElement("div");
+        el.className = "measure-marker";
+        el.addEventListener("click", (event) => {
+          event.stopPropagation();
+          showMarkerMenu();
+        });
+
+        measureMarkerRef.current = new mapboxgl.Marker({
+          element: el,
+          draggable: true,
+        })
+          .setLngLat([lng, lat])
+          .addTo(m);
+
+        measureMarkerRef.current.on("dragstart", () => {
+          closeMeasurePopup();
+        });
+
+        measureMarkerRef.current.on("dragend", () => {
+          const updated = measureMarkerRef.current?.getLngLat();
+          if (!updated) return;
+        removeMeasurementArtifacts();
+        restoreShelterLayers();
+        setMeasureState((prev) => ({
+          ...prev,
+          status: "configuring",
+          center: { lng: updated.lng, lat: updated.lat },
+          count: 0,
+          shelterNames: [],
+        }));
+          toast.info("Set a radius and draw the circle.");
+        });
+      }
+
+      measureMarkerRef.current?.setLngLat([lng, lat]);
+    },
+    [closeMeasurePopup, removeMeasurementArtifacts, restoreShelterLayers, showMarkerMenu],
+  );
+
+  const handleRadiusValueChange = useCallback((value: number) => {
+    setMeasureState((prev) => ({
+      ...prev,
+      radius: value,
+    }));
+  }, []);
+
+  const handleDrawCircle = useCallback(() => {
+    if (!measureState.center) {
+      toast.warning("Choose a point on the map first.");
+      return;
+    }
+
+    updateCircle(measureState.center, measureState.radius);
+    toast.success("Radius applied. Shelters in range highlighted.");
+  }, [measureState.center, measureState.radius, updateCircle]);
 
   const selectShelterFromTiles = useCallback(() => {
     if (hasSelectedShelter.current || !map.current) {
@@ -292,6 +664,71 @@ export function MapView({
     // or: m.easeTo({ center: [playerLocation.lng, playerLocation.lat], duration: 350 });
   }, [playerLocation.lng, playerLocation.lat]);
 
+  useEffect(() => {
+    measureStatusRef.current = measureState.status;
+  }, [measureState.status]);
+
+  useEffect(() => {
+    onMeasurementActiveChange?.(measureState.status !== "idle");
+  }, [measureState.status, onMeasurementActiveChange]);
+
+  useEffect(() => {
+    if (measureTrigger == null) return;
+    if (measureTrigger === lastMeasureTriggerRef.current) return;
+    lastMeasureTriggerRef.current = measureTrigger;
+
+    if (!map.current) return;
+
+    removeMeasurementArtifacts();
+    restoreShelterLayers();
+    if (measureMarkerRef.current) {
+      measureMarkerRef.current.remove();
+      measureMarkerRef.current = null;
+    }
+    setMeasureState({
+      status: "placing",
+      radius: 250,
+      count: 0,
+      center: null,
+      shelterNames: [],
+    });
+    toast.info("Tap the map to drop a measurement point.");
+  }, [
+    measureTrigger,
+    removeMeasurementArtifacts,
+    restoreShelterLayers,
+  ]);
+
+  useEffect(() => {
+    const m = map.current;
+    if (!m) return;
+
+    const handleMapClick = (
+      event: mapboxgl.MapMouseEvent & mapboxgl.EventData,
+    ) => {
+      if (measureStatusRef.current !== "placing") {
+        return;
+      }
+
+      const { lng, lat } = event.lngLat;
+      placeMeasureMarker(lng, lat);
+      setMeasureState((prev) => ({
+        ...prev,
+        status: "configuring",
+        center: { lng, lat },
+        count: 0,
+        shelterNames: [],
+      }));
+      toast.info("Set a radius and draw the circle.");
+    };
+
+    m.on("click", handleMapClick);
+
+    return () => {
+      m.off("click", handleMapClick);
+    };
+  }, [placeMeasureMarker]);
+
 
   // Handle location picker mode (minimal changes, adds console log)
   // Temporarily disable POI markers and player markers for debugging
@@ -318,7 +755,6 @@ export function MapView({
 
   // Add Koto layers to the map
   const addKotoLayers = () => {
-  const anyLayerActive = Object.values(kotoLayersVisible).some(Boolean);
     const m = map.current;
     if (!m) return;
 
@@ -424,6 +860,10 @@ export function MapView({
         const handleCombinedClick = (
           e: mapboxgl.MapMouseEvent & mapboxgl.EventData,
         ) => {
+          if (measureStatusRef.current !== "idle") {
+            return;
+          }
+
           const layerIds = Object.keys(layerMetaRegistry).filter(
             (id) => layerMetaRegistry[id]?.template,
           );
@@ -566,6 +1006,64 @@ export function MapView({
         .mapboxgl-popup-tip {
           display: none;
         }
+        .measure-marker {
+          width: 20px;
+          height: 20px;
+          border: 3px solid #c1272d;
+          background: #ffffff;
+          border-radius: 50%;
+          box-shadow: 0 0 0 2px #000000;
+          position: relative;
+        }
+        .measure-marker::after {
+          content: "";
+          position: absolute;
+          inset: 4px;
+          background: #c1272d;
+          border-radius: 50%;
+          opacity: 0.85;
+        }
+        .measure-shelter-marker {
+          width: 16px;
+          height: 16px;
+          border-radius: 50%;
+          border: 3px solid #c1272d;
+          background: #0f0f0f;
+          box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.45);
+        }
+        .measure-popup {
+          display: flex;
+          flex-direction: column;
+          gap: 6px;
+          background: #ffffff;
+          color: #0f0f0f;
+          border: 1px solid #0f0f0f;
+          border-radius: 8px;
+          padding: 10px;
+          min-width: 160px;
+          font-family: 'Inter', sans-serif;
+        }
+        .measure-popup button {
+          border: 1px solid #0f0f0f;
+          background: #f5f5f5;
+          font-size: 12px;
+          font-weight: 600;
+          padding: 6px 8px;
+          text-transform: uppercase;
+          cursor: pointer;
+          transition: background 0.15s ease;
+        }
+        .measure-popup button:hover {
+          background: #e2e2e2;
+        }
+        .measure-popup button.danger {
+          background: #0f0f0f;
+          color: #ffffff;
+          border-color: #000000;
+        }
+        .measure-popup button.danger:hover {
+          background: #1a1a1a;
+        }
       `}</style>
 
       {/* Layer Control Button */}
@@ -687,6 +1185,161 @@ export function MapView({
           >
             Legend
           </motion.button>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {measureState.status !== "idle" && (
+          <motion.div
+            className="absolute bottom-4 left-1/2 z-30 w-[92vw] max-w-sm -translate-x-1/2 rounded-lg border border-black bg-background p-4 shadow-xl"
+            initial={{ opacity: 0, y: 20, scale: 0.96 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 20, scale: 0.96 }}
+          >
+            <div className="space-y-3 text-black">
+              {measureState.status === "placing" && (
+                <>
+                  <div>
+                    <h3 className="text-sm font-bold uppercase tracking-wide">
+                      Measure Shelters
+                    </h3>
+                    <p className="text-xs text-black/70">
+                      Tap anywhere on the map to drop a center point. We’ll help you
+                      count nearby shelters.
+                    </p>
+                  </div>
+                  <div className="flex flex-col gap-2 sm:flex-row sm:justify-end">
+                    <button
+                      type="button"
+                      onClick={clearMeasurement}
+                      className="w-full sm:w-auto rounded border border-black px-3 py-2 text-xs font-semibold uppercase tracking-wide hover:bg-neutral-100"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </>
+              )}
+
+              {measureState.status === "configuring" && (
+                <>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="text-sm font-bold uppercase tracking-wide">
+                        Set Radius
+                      </h3>
+                      <p className="text-xs text-black/70">
+                        Choose a radius in 10&nbsp;m increments (100&nbsp;m – 1,000&nbsp;m).
+                      </p>
+                    </div>
+                    <div className="text-lg font-bold text-black">
+                      {measureState.radius}m
+                    </div>
+                  </div>
+                  <input
+                    type="range"
+                    min={100}
+                    max={1000}
+                    step={10}
+                    value={measureState.radius}
+                    onChange={(event) =>
+                      handleRadiusValueChange(Number(event.target.value))
+                    }
+                    className="w-full accent-black"
+                  />
+                  <div className="flex flex-col gap-2 sm:flex-row sm:justify-end">
+                    <button
+                      type="button"
+                      onClick={clearMeasurement}
+                      className="w-full sm:w-auto rounded border border-black px-3 py-2 text-xs font-semibold uppercase tracking-wide hover:bg-neutral-100"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleDrawCircle}
+                      className="w-full sm:w-auto rounded border border-black bg-black px-3 py-2 text-xs font-bold uppercase tracking-wide text-white hover:bg-neutral-800"
+                    >
+                      Draw Circle
+                    </button>
+                  </div>
+                </>
+              )}
+
+              {measureState.status === "active" && (
+                <>
+                  <div>
+                    <h3 className="text-sm font-bold uppercase tracking-wide">
+                      Shelters Nearby
+                    </h3>
+                    <p className="text-xs text-black/70">
+                      {measureState.count} shelter{measureState.count === 1 ? "" : "s"} within{" "}
+                      {measureState.radius} meters.
+                    </p>
+                    {measureState.shelterNames.length > 0 ? (
+                      <ul className="mt-3 space-y-1 rounded border border-black/40 bg-background p-3 text-xs font-semibold uppercase tracking-wide text-black">
+                        {measureState.shelterNames.map((name, index) => (
+                          <li key={`${name}-${index}`} className="flex items-center gap-2">
+                            <span className="inline-flex h-1.5 w-1.5 rounded-full bg-black" />
+                            <span className="truncate">{name}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <p className="mt-3 text-xs text-black/50 italic">
+                        No shelters detected in this radius.
+                      </p>
+                    )}
+                  </div>
+                  <div className="grid gap-2 sm:grid-cols-3">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        closeMeasurePopup();
+                        beginAdjustRadius();
+                      }}
+                      className="rounded border border-black px-3 py-2 text-xs font-semibold uppercase tracking-wide hover:bg-neutral-100"
+                    >
+                      Adjust Radius
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        closeMeasurePopup();
+                        beginMoveCenter();
+                      }}
+                      className="rounded border border-black px-3 py-2 text-xs font-semibold uppercase tracking-wide hover:bg-neutral-100"
+                    >
+                      Move Point
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        closeMeasurePopup();
+                        clearMeasurement();
+                      }}
+                      className="rounded border border-black bg-red-600 px-3 py-2 text-xs font-bold uppercase tracking-wide text-red hover:bg-neutral-800"
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {measureState.status === "active" && measureState.center && (
+          <motion.div
+            className="absolute top-4 left-1/2 z-30 -translate-x-1/2 rounded-full border border-black bg-background px-4 py-2 text-xs font-semibold uppercase tracking-wide text-black shadow-md"
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+          >
+            {measureState.count} shelter{measureState.count === 1 ? "" : "s"} within{" "}
+            {measureState.radius}m
+          </motion.div>
         )}
       </AnimatePresence>
     </div>

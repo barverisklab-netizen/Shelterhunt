@@ -21,7 +21,7 @@ export function ShelterPenaltyScreen({
     >
       <div className="w-full max-w-lg text-center space-y-6 rounded-lg border border-neutral-900 bg-background p-10 shadow-xl">
         <div className="inline-block rounded-full border border-neutral-900 bg-black p-6">
-          <Frown className="w-16 h-16 text-black" />
+          <Frown className="w-16 h-16 text-white" />
         </div>
         <div className="space-y-2">
           <h2 className="text-3xl text-black font-bold uppercase">
@@ -35,7 +35,7 @@ export function ShelterPenaltyScreen({
         <div className="flex flex-col gap-3">
           <Button
             onClick={onContinue}
-            className="w-full rounded border border-neutral-900 bg-black py-4 text-sm font-bold uppercase text-black hover:bg-neutral-800"
+            className="w-full bg-black hover:bg-neutral-900"
           >
             Keep Playing
           </Button>

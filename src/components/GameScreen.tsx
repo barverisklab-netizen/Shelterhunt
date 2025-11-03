@@ -9,7 +9,7 @@ import { ShelterVictoryScreen } from './ShelterVictoryScreen';
 import { ShelterPenaltyScreen } from './ShelterPenaltyScreen';
 import { POI, Question, TriviaQuestion, Clue } from '../data/mockData';
 import { defaultCityContext } from '../data/cityContext';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { toast } from "sonner@2.0.3";
 import { BlurReveal } from './ui/blur-reveal';
 
@@ -61,6 +61,14 @@ export function GameScreen({
   const [selectedShelterId, setSelectedShelterId] = useState<string | null>(null);
   const [confirmGuessOpen, setConfirmGuessOpen] = useState(false);
   const [outcome, setOutcome] = useState<'none' | 'win' | 'penalty'>('none');
+  const [measureTrigger, setMeasureTrigger] = useState(0);
+  const [isMeasureActive, setIsMeasureActive] = useState(false);
+
+  useEffect(() => {
+    if (isMeasureActive) {
+      setDrawerOpen(false);
+    }
+  }, [isMeasureActive]);
 
   const normalizeName = (value?: string | null) =>
     (value ?? '').trim().toLowerCase();
@@ -139,10 +147,12 @@ export function GameScreen({
   const timerContainerClasses = [
     "flex items-center gap-2 px-4 py-2 border rounded-full",
     isTimerCritical
-      ? "bg-neutral-900 border-red-500 text-black animate-pulse"
+      ? "bg-neutral-900 border-red-500 text-white animate-pulse"
       : "bg-neutral-100 border-neutral-900 text-neutral-900"
   ].join(" ");
-  const timerTextClasses = "tabular-nums font-bold text-black";
+  const timerTextClasses = isTimerCritical
+    ? "tabular-nums font-bold text-white"
+    : "tabular-nums font-bold text-black";
   const isGuessDisabled = !secretShelter || shelterOptions.length === 0;
 
   const handleGuessRequest = () => {
@@ -193,6 +203,12 @@ export function GameScreen({
     setOutcome('none');
   };
 
+  const handleStartMeasure = () => {
+    setCluesOpen(false);
+    setDrawerOpen(false);
+    setMeasureTrigger((prev) => prev + 1);
+  };
+
   return (
     <div className="fixed inset-0 flex flex-col bg-neutral-950">
       {/* Top Bar */}
@@ -239,10 +255,6 @@ export function GameScreen({
               {Math.floor(timeRemaining / 60)}:{(timeRemaining % 60).toString().padStart(2, '0')}
             </span>
           </div>
-
-          <div className="text-black text-sm font-bold uppercase">
-            {clues.length} clue{clues.length !== 1 ? 's' : ''}
-          </div>
         </div>
       </motion.div>
 
@@ -256,6 +268,8 @@ export function GameScreen({
           onPOIClick={simulateMove}
           onSecretShelterChange={onSecretShelterChange}
           onShelterOptionsChange={onShelterOptionsChange}
+          measureTrigger={measureTrigger}
+          onMeasurementActiveChange={setIsMeasureActive}
         />
 
         {/* Floating Action Buttons */}
@@ -296,15 +310,17 @@ export function GameScreen({
       </div>
   
       {/* Question Drawer */}
-      <QuestionDrawer
-        questions={questions}
-        availableCategories={defaultCityContext.questionCategories}
-        isOpen={drawerOpen}
-        onToggle={() => setDrawerOpen(!drawerOpen)}
-        onAskQuestion={handleAskQuestion}
-        nearbyPOI={nearbyPOI?.id || null}
-        lockedQuestions={lockedQuestions}
-      />
+      {!isMeasureActive && (
+        <QuestionDrawer
+          questions={questions}
+          availableCategories={defaultCityContext.questionCategories}
+          isOpen={drawerOpen}
+          onToggle={() => setDrawerOpen(!drawerOpen)}
+          onAskQuestion={handleAskQuestion}
+          nearbyPOI={nearbyPOI?.id || null}
+          lockedQuestions={lockedQuestions}
+        />
+      )}
 
       {/* Trivia Modal */}
       <TriviaModal
@@ -324,6 +340,8 @@ export function GameScreen({
         onShelterSelect={setSelectedShelterId}
         onGuessRequest={handleGuessRequest}
         isGuessDisabled={isGuessDisabled}
+        onStartMeasure={handleStartMeasure}
+        isMeasureActive={isMeasureActive}
       />
 
       <AnimatePresence>

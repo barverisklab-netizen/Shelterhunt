@@ -155,7 +155,7 @@ export function QuestionDrawer({
                       >
                         <div className="flex items-start gap-4">
                           <div className="bg-black p-3">
-                            <IconComponent className="w-6 h-6 text-black" />
+                            <IconComponent className="w-6 h-6 text-white" />
                           </div>
                           <div className="flex-1">
                             <div className="text-black font-bold mb-1 uppercase">
@@ -239,7 +239,7 @@ export function QuestionDrawer({
                                 disabled={!isEligible || isLocked}
                                 className={`px-4 py-2 border-3 text-sm transition-all ${
                                   selectedParam === option
-                                    ? "bg-black text-black border-black"
+                                    ? "bg-black text-white border-black"
                                     : "bg-background text-black border-black hover:bg-black/5"
                                 } disabled:opacity-50 disabled:cursor-not-allowed`}
                               >

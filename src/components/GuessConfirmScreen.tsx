@@ -30,7 +30,7 @@ export function GuessConfirmScreen({
         </button>
         <div className="flex items-center gap-3">
           <div className="rounded-full border border-neutral-900 bg-black p-3">
-            <AlertTriangle className="w-6 h-6 text-black" />
+            <AlertTriangle className="w-6 h-6 text-white" />
           </div>
           <h3 className="text-2xl font-black uppercase text-black">
             Confirm Guess

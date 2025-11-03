@@ -1,6 +1,12 @@
-import { motion, AnimatePresence } from "motion/react";
+import { AnimatePresence, motion } from "motion/react";
 import { X, Lightbulb, CheckCircle, XCircle, Sparkles } from "lucide-react";
 import { Button } from "./ui/button";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "./ui/accordion";
 import { Clue } from "../data/mockData";
 
 interface CluesPanelProps {
@@ -12,6 +18,8 @@ interface CluesPanelProps {
   onShelterSelect: (id: string | null) => void;
   onGuessRequest: () => void;
   isGuessDisabled?: boolean;
+  onStartMeasure: () => void;
+  isMeasureActive?: boolean;
 }
 
 export function CluesPanel({
@@ -23,191 +31,250 @@ export function CluesPanel({
   onShelterSelect,
   onGuessRequest,
   isGuessDisabled = false,
+  onStartMeasure,
+  isMeasureActive = false,
 }: CluesPanelProps) {
   return (
     <AnimatePresence>
       {isOpen && (
         <>
-          {/* Backdrop */}
           <motion.div
-            className="fixed inset-0 bg-black/80 z-50"
+            className="fixed inset-0 z-40 bg-black/80"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
           />
 
-          {/* Panel */}
           <motion.div
-            className="fixed top-0 right-0 bottom-0 w-full max-w-md z-50 flex flex-col bg-neutral-100"
+            className="fixed top-0 right-0 bottom-0 z-50 flex w-full max-w-md flex-col border-l border-neutral-900 bg-background"
             initial={{ x: "100%" }}
             animate={{ x: 0 }}
             exit={{ x: "100%" }}
-            transition={{ type: "spring", damping: 30, stiffness: 300 }}
+            transition={{ type: "spring", damping: 28, stiffness: 320 }}
           >
-            <div className="h-full flex flex-col border-l border-neutral-900 bg-background">
-              {/* Header */}
-              <div className="p-6 border-b border-neutral-900">
-                <div className="flex items-start justify-between mb-2">
-                  <div className="flex items-center gap-3 text-black">
-                    <div className="bg-black p-3">
-                      <Lightbulb className="w-6 h-6 text-black" />
-                    </div>
-                    <div>
-                      <h3 className="text-2xl text-black font-bold uppercase">
-                        My Clues
-                      </h3>
-                      <p className="text-sm text-black/70">
-                        {clues.length} clue{clues.length !== 1 ? "s" : ""}{" "}
-                        collected
-                      </p>
-                    </div>
+            <header className="border-b border-neutral-900 p-6">
+              <div className="flex items-start justify-between">
+                <div className="flex gap-3 text-black">
+                  <div className="bg-black p-3">
+                    <Lightbulb className="h-6 w-6 text-white" />
                   </div>
-                  <button
-                    onClick={onClose}
-                    className="rounded border border-neutral-900 bg-background p-2 text-neutral-900 hover:bg-neutral-100 transition-colors"
-                  >
-                    <X className="w-5 h-5 text-black" />
-                  </button>
+                  <div>
+                    <h3 className="text-2xl font-bold uppercase">My Clues</h3>
+                    <p className="text-sm text-black/70">
+                      {clues.length} clue{clues.length === 1 ? "" : "s"} collected
+                    </p>
+                  </div>
                 </div>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  onClick={onClose}
+                  aria-label="Close clues panel"
+                  className="px-0"
+                >
+                  <X className="h-5 w-5" />
+                </Button>
               </div>
+            </header>
 
-              {/* Clues List */}
-              <div className="flex-1 overflow-y-auto p-6">
-                {clues.length === 0 ? (
-                  <motion.div
-                    className="flex flex-col items-center justify-center h-full text-center space-y-4"
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                  >
-                    <div className="bg-black p-6">
-                      <Sparkles className="w-12 h-12 text-black" />
+            <div className="flex-1 overflow-y-auto p-6 space-y-6">
+              <Accordion type="multiple" defaultValue={["clues"]} className="space-y-4">
+                <AccordionItem
+                  value="clues"
+                  className="rounded border border-neutral-900 bg-background"
+                >
+                  <AccordionTrigger className="px-4 text-black">
+                    <div className="flex w-full items-center justify-between text-sm font-bold uppercase tracking-wide">
+                      <span>Clues</span>
+                      <span className="text-xs font-semibold text-black/60">
+                        {clues.length} found
+                      </span>
                     </div>
-                    <div>
-                      <div className="text-xl text-black mb-2 font-bold uppercase">
-                        No clues yet
-                      </div>
-                      <div className="text-black/70 text-sm max-w-xs">
-                        Visit locations and answer trivia questions to unlock
-                        clues about the secret shelter
-                      </div>
-                    </div>
-                  </motion.div>
-                ) : (
-                  <div className="space-y-3">
-                    {clues.map((clue, index) => (
+                  </AccordionTrigger>
+                  <AccordionContent className="px-4">
+                    <p className="mb-4 text-xs text-black/70">
+                      Each clue narrows the possible shelters. Compare green (true)
+                      against red (false) hints to deduce the right location.
+                    </p>
+                    {clues.length === 0 ? (
                       <motion.div
-                        key={clue.id}
-                        className={`rounded border p-4 ${
-                          clue.answer
-                            ? "border-red-500 bg-background"
-                            : "border-neutral-900 bg-background"
-                        }`}
-                        initial={{ opacity: 0, x: 20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: index * 0.05 }}
+                        className="flex flex-col items-center justify-center gap-4 py-8 text-center"
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
                       >
-                        <div className="flex items-start gap-3">
-                          <div
-                            className={`flex-shrink-0 mt-1 ${
-                              clue.answer ? "text-red-600" : "text-black"
-                            }`}
-                          >
-                            {clue.answer ? (
-                              <CheckCircle className="w-5 h-5" />
-                            ) : (
-                              <XCircle className="w-5 h-5" />
-                            )}
+                        <div className="bg-black p-6">
+                          <Sparkles className="h-12 w-12 text-white" />
+                        </div>
+                        <div>
+                          <div className="mb-2 text-xl font-bold uppercase">
+                            No clues yet
                           </div>
-                          <div className="flex-1">
-                            <div className="text-xs text-black/70 mb-1 uppercase tracking-wide font-bold">
-                              {clue.category}
-                            </div>
-                            <div className="text-black">{clue.text}</div>
-                            <div className="text-sm text-black/60 mt-2">
-                              {new Date(clue.timestamp).toLocaleTimeString()}
-                            </div>
-                          </div>
+                          <p className="text-sm text-black/70">
+                            Visit locations and answer trivia questions to unlock
+                            intelligence about the secret shelter.
+                          </p>
                         </div>
                       </motion.div>
-                    ))}
-                  </div>
-                )}
-              </div>
+                    ) : (
+                      <div className="space-y-3">
+                        {clues.map((clue, index) => (
+                          <motion.div
+                            key={clue.id}
+                            className={`rounded border p-4 ${
+                              clue.answer
+                                ? "border-green-600 bg-background"
+                                : "border-red-500 bg-background"
+                            }`}
+                            initial={{ opacity: 0, x: 20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ delay: index * 0.05 }}
+                          >
+                            <div className="flex items-start gap-3">
+                              <div
+                                className={`mt-1 flex-shrink-0 ${
+                                  clue.answer ? "text-green-600" : "text-red-600"
+                                }`}
+                              >
+                                {clue.answer ? (
+                                  <CheckCircle className="h-5 w-5" />
+                                ) : (
+                                  <XCircle className="h-5 w-5" />
+                                )}
+                              </div>
+                              <div className="flex-1 text-black">
+                                <div className="mb-1 text-xs font-bold uppercase tracking-wide text-black/70">
+                                  {clue.category}
+                                </div>
+                                <div>{clue.text}</div>
+                                <div className="mt-2 text-sm text-black/60">
+                                  {new Date(clue.timestamp).toLocaleTimeString()}
+                                </div>
+                              </div>
+                            </div>
+                          </motion.div>
+                        ))}
+                      </div>
+                    )}
+                  </AccordionContent>
+                </AccordionItem>
+              </Accordion>
 
-              {/* Tips Section */}
               {clues.length > 0 && (
-                <div className="p-6 border-t border-neutral-900">
-                  <motion.div
-                    className="rounded border border-neutral-900 bg-neutral-50 p-4"
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                  >
-                    <div className="flex items-start gap-3 text-black">
-                      <Lightbulb className="w-5 h-5 flex-shrink-0 mt-0.5" />
-                      <div>
-                        <div className="text-sm text-black mb-1 font-bold uppercase">
-                          Deduction Tips
-                        </div>
-                        <div className="text-xs text-black/70 space-y-1">
-                          <p>• Use green clues to narrow down possibilities</p>
-                          <p>• Red clues help eliminate wrong locations</p>
-                          <p>• Visit the shelter when you're confident!</p>
-                        </div>
+                <motion.div
+                  className="rounded border border-neutral-900 bg-neutral-50 p-4"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                >
+                  <div className="flex items-start gap-3 text-black">
+                    <Lightbulb className="mt-0.5 h-5 w-5 flex-shrink-0" />
+                    <div>
+                      <div className="text-sm font-bold uppercase">Deduction Tips</div>
+                      <div className="space-y-1 text-xs text-black/70">
+                        <p>• Use green clues to confirm correct attributes</p>
+                        <p>• Red clues help you rule out bad candidates</p>
+                        <p>• Stack multiple hints before locking in a guess</p>
                       </div>
                     </div>
-                  </motion.div>
-                </div>
+                  </div>
+                </motion.div>
               )}
 
-              {/* Guess Controls */}
-              <div className="p-6 border-t border-neutral-900 space-y-4">
-                <div className="space-y-2">
-                  <label className="text-sm text-black font-bold uppercase">
-                    Choose Your Shelter
-                  </label>
-                  <select
-                    value={selectedShelterId ?? ""}
-                    onChange={(event) =>
-                      onShelterSelect(event.target.value || null)
-                    }
-                    className="w-full rounded border border-neutral-900 bg-background p-3 text-sm font-semibold uppercase text-neutral-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-neutral-500"
-                  >
-                    <option value="" disabled hidden>
-                      Select a shelter to guess
-                    </option>
-                    {shelterOptions.map((option) => (
-                      <option key={option.id} value={option.id}>
-                        {option.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className="text-xs text-black/70 font-semibold uppercase">
-                  A wrong selection will reset your timer to 10 minutes. Make
-                  sure you are confident before you lock in your guess.
-                </div>
-
-                <Button
-                  onClick={onGuessRequest}
-                  className="w-full rounded border border-neutral-900 bg-neutral-900 py-4 text-sm font-bold uppercase text-black hover:bg-neutral-800"
-                  disabled={
-                    isGuessDisabled || !selectedShelterId || !shelterOptions.length
-                  }
+              <Accordion type="multiple" defaultValue={["tools", "guess"]} className="space-y-4">
+                <AccordionItem
+                  value="tools"
+                  className="rounded border border-neutral-900 bg-background"
                 >
-                  Submit Guess
-                </Button>
+                  <AccordionTrigger className="px-4 text-black">
+                    <div className="flex w-full items-center justify-between text-sm font-bold uppercase tracking-wide">
+                      <span>Tools</span>
+                      <span
+                        className={`text-[10px] font-semibold uppercase ${
+                          isMeasureActive ? "text-red-600" : "text-black/40"
+                        }`}
+                      >
+                        {isMeasureActive ? "Active" : "Idle"}
+                      </span>
+                    </div>
+                  </AccordionTrigger>
+                  <AccordionContent className="px-4">
+                    <p className="mb-3 text-xs text-black/70">
+                      Draw a search radius to inspect which shelters fall within a
+                      chosen distance.
+                    </p>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => {
+                        onClose();
+                        onStartMeasure();
+                      }}
+                      className="w-full text-xs tracking-wide disabled:border-neutral-400 disabled:text-neutral-500"
+                      disabled={isMeasureActive}
+                    >
+                      {isMeasureActive ? "Measurement Active" : "Measure Shelters Radius"}
+                    </Button>
+                  </AccordionContent>
+                </AccordionItem>
 
-                <Button
-                  onClick={onClose}
-                  variant="outline"
-                  size="lg"
-                  className="w-full font-semibold uppercase"
+                <AccordionItem
+                  value="guess"
+                  className="rounded border border-neutral-900 bg-background"
                 >
-                  Back to Map
-                </Button>
-              </div>
+                  <AccordionTrigger className="px-4 text-black">
+                    <div className="flex w-full items-center justify-between text-sm font-bold uppercase tracking-wide">
+                      <span>Guess Shelter</span>
+                      <span className="text-[10px] font-semibold uppercase text-black/60">
+                        Final step
+                      </span>
+                    </div>
+                  </AccordionTrigger>
+                  <AccordionContent className="space-y-3 px-4">
+                    <div className="space-y-2">
+                      <label className="text-xs font-semibold uppercase text-black/70">
+                        Choose your shelter
+                      </label>
+                      <select
+                        value={selectedShelterId ?? ""}
+                        onChange={(event) => onShelterSelect(event.target.value || null)}
+                        className="w-full rounded border border-neutral-900 bg-background p-3 text-sm font-semibold uppercase text-neutral-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-neutral-500"
+                      >
+                        <option value="" disabled hidden>
+                          Select a shelter
+                        </option>
+                        {shelterOptions.map((option) => (
+                          <option key={option.id} value={option.id}>
+                            {option.name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <p className="text-[11px] text-black/60">
+                      Wrong guesses reset the timer to <strong>10 minutes</strong>. Make
+                      sure your clues line up before submitting.
+                    </p>
+                    <Button
+                      onClick={onGuessRequest}
+                      className="w-full"
+                      disabled={
+                        isGuessDisabled || !selectedShelterId || !shelterOptions.length
+                      }
+                    >
+                      Submit Guess
+                    </Button>
+                  </AccordionContent>
+                </AccordionItem>
+              </Accordion>
+
+              <Button
+                onClick={onClose}
+                variant="outline"
+                size="default"
+                className="w-full font-semibold uppercase"
+              >
+                Back to Map
+              </Button>
             </div>
           </motion.div>
         </>

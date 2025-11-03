@@ -65,19 +65,22 @@ export function TriviaModal({ isOpen, trivia, onClose, onSubmit }: TriviaModalPr
                 <div className="flex items-start justify-between mb-6">
                   <div className="flex items-center gap-3">
                     <div className="bg-black p-3">
-                      <Sparkles className="w-6 h-6 text-black" />
+                      <Sparkles className="w-6 h-6 text-white" />
                     </div>
                     <div>
                       <h3 className="text-2xl text-black font-bold uppercase">Trivia Challenge</h3>
                       <p className="text-sm text-black/70">Answer correctly to unlock a clue</p>
                     </div>
                   </div>
-                  <button
+                  <Button
                     onClick={handleClose}
-                    className="bg-background border-4 border-black p-2 hover:bg-black/5 transition-colors"
+                    variant="outline"
+                    size="icon"
+                    className="hover:bg-black/5 transition-colors"
+                    aria-label="Close trivia"
                   >
                     <X className="w-5 h-5 text-black" />
-                  </button>
+                  </Button>
                 </div>
 
                 {/* Question */}
@@ -110,7 +113,7 @@ export function TriviaModal({ isOpen, trivia, onClose, onSubmit }: TriviaModalPr
                             : showWrong
                             ? 'bg-background border-black'
                             : isSelected
-                            ? 'bg-black text-black border-black'
+                            ? 'bg-black text-white border-black'
                             : 'bg-background text-black border-black hover:bg-black/5'
                         } disabled:cursor-not-allowed`}
                         initial={{ opacity: 0, x: -20 }}

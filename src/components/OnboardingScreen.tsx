@@ -196,7 +196,7 @@ export function OnboardingScreen({
         >
           {[
             { label: 'LOCATION', color: 'bg-red-600', textColor: 'text-black' },
-            { label: 'TRIVIA', color: 'bg-black', textColor: 'text-black' },
+            { label: 'TRIVIA', color: 'bg-black', textColor: 'text-white' },
             { label: 'TEAM', color: 'bg-background', textColor: 'text-black' }
           ].map((feature, index) => (
             <motion.div

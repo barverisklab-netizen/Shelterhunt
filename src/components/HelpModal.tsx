@@ -72,12 +72,15 @@ export function HelpModal({ isOpen, onClose }: HelpModalProps) {
                       Master the art of urban deduction
                     </p>
                   </div>
-                  <button
+                  <Button
                     onClick={onClose}
-                    className="rounded border border-neutral-900 bg-background p-2 hover:bg-neutral-100 transition-colors"
+                    variant="outline"
+                    size="icon"
+                    className="hover:bg-neutral-100 transition-colors"
+                    aria-label="Close help"
                   >
                     <X className="w-5 h-5 text-black" />
-                  </button>
+                  </Button>
                 </div>
 
                 {/* Game Overview */}
@@ -113,7 +116,7 @@ export function HelpModal({ isOpen, onClose }: HelpModalProps) {
                       >
                         <div className="flex gap-4">
                           <div className="flex-shrink-0 rounded-full bg-neutral-900 p-3">
-                            <Icon className="w-6 h-6 text-black" />
+                            <Icon className="w-6 h-6 text-white" />
                           </div>
                           <div>
                             <div className="flex items-center gap-3 mb-2">
