@@ -13,6 +13,8 @@ import {
   Building2,
   Cable,
   Train,
+  ChevronDown,
+  ChevronUp,
 } from "lucide-react";
 import { POI } from "../data/mockData";
 import { kotoLayers } from "@/cityContext/koto/layers";
@@ -77,6 +79,9 @@ const SHELTER_KOTO_LAYER_IDS = kotoLayers
 const MEASURE_CIRCLE_SOURCE_ID = "measure-circle-source";
 const MEASURE_CIRCLE_FILL_LAYER_ID = "measure-circle-fill";
 const MEASURE_CIRCLE_OUTLINE_LAYER_ID = "measure-circle-outline";
+const MEASURE_SHELTERS_SOURCE_ID = "measure-shelters-source";
+const MEASURE_SHELTERS_LAYER_ID = "measure-shelters-layer";
+const MEASURE_SHELTERS_LABEL_LAYER_ID = "measure-shelters-label-layer";
 
 type MeasureStatus = "idle" | "placing" | "configuring" | "active";
 
@@ -144,6 +149,8 @@ const [measureState, setMeasureState] = useState<{
   shelterNames: [],
 });
 
+  const [isMeasurePanelCollapsed, setIsMeasurePanelCollapsed] = useState(false);
+
   const closeMeasurePopup = useCallback(() => {
     if (measurePopupRef.current) {
       measurePopupRef.current.remove();
@@ -154,6 +161,18 @@ const [measureState, setMeasureState] = useState<{
   const removeShelterMarkers = useCallback(() => {
     measureShelterMarkersRef.current.forEach((marker) => marker.remove());
     measureShelterMarkersRef.current = [];
+    const m = map.current;
+    if (!m) return;
+
+    if (m.getLayer(MEASURE_SHELTERS_LABEL_LAYER_ID)) {
+      m.removeLayer(MEASURE_SHELTERS_LABEL_LAYER_ID);
+    }
+    if (m.getLayer(MEASURE_SHELTERS_LAYER_ID)) {
+      m.removeLayer(MEASURE_SHELTERS_LAYER_ID);
+    }
+    if (m.getSource(MEASURE_SHELTERS_SOURCE_ID)) {
+      m.removeSource(MEASURE_SHELTERS_SOURCE_ID);
+    }
   }, []);
 
   const removeMeasurementCircle = useCallback(() => {
@@ -228,28 +247,82 @@ const [measureState, setMeasureState] = useState<{
       if (!m) return;
 
       measureShelterMarkersRef.current.forEach((marker) => marker.remove());
-      const newMarkers: mapboxgl.Marker[] = [];
+      measureShelterMarkersRef.current = [];
 
-      features.forEach((feature) => {
-        if (feature.geometry.type !== "Point") return;
-        const coords = feature.geometry.coordinates as [number, number];
-        if (!coords || coords.length < 2) return;
+      if (m.getLayer(MEASURE_SHELTERS_LABEL_LAYER_ID)) {
+        m.removeLayer(MEASURE_SHELTERS_LABEL_LAYER_ID);
+      }
+      if (m.getLayer(MEASURE_SHELTERS_LAYER_ID)) {
+        m.removeLayer(MEASURE_SHELTERS_LAYER_ID);
+      }
 
-        const el = document.createElement("div");
-        el.className = "measure-shelter-marker";
-        el.title =
-          (feature.properties?.["Landmark name (EN)"] as string) ||
-          (feature.properties?.["Landmark name (JP)"] as string) ||
-          (feature.properties?.["name"] as string) ||
-          "Shelter";
+      const pointFeatures = features.filter(
+        (feature) => feature.geometry.type === "Point",
+      );
 
-        const marker = new mapboxgl.Marker({ element: el })
-          .setLngLat(coords as [number, number])
-          .addTo(m);
-        newMarkers.push(marker);
+      if (!pointFeatures.length) {
+        if (m.getSource(MEASURE_SHELTERS_SOURCE_ID)) {
+          m.removeSource(MEASURE_SHELTERS_SOURCE_ID);
+        }
+        return;
+      }
+
+      const featureCollection = {
+        type: "FeatureCollection",
+        features: pointFeatures.map((feature) => ({
+          type: "Feature",
+          geometry: feature.geometry,
+          properties: {
+            name:
+              (feature.properties?.["Landmark name (EN)"] as string) ||
+              (feature.properties?.["Landmark name (JP)"] as string) ||
+              (feature.properties?.["name"] as string) ||
+              "Shelter",
+          },
+        })),
+      } as const;
+
+      if (m.getSource(MEASURE_SHELTERS_SOURCE_ID)) {
+        (m.getSource(MEASURE_SHELTERS_SOURCE_ID) as mapboxgl.GeoJSONSource).setData(
+          featureCollection as any,
+        );
+      } else {
+        m.addSource(MEASURE_SHELTERS_SOURCE_ID, {
+          type: "geojson",
+          data: featureCollection as any,
+        });
+      }
+
+      m.addLayer({
+        id: MEASURE_SHELTERS_LAYER_ID,
+        type: "circle",
+        source: MEASURE_SHELTERS_SOURCE_ID,
+        paint: {
+          "circle-radius": 6,
+          "circle-color": "#0f0f0f",
+          "circle-stroke-color": "#c1272d",
+          "circle-stroke-width": 3,
+        },
       });
 
-      measureShelterMarkersRef.current = newMarkers;
+      m.addLayer({
+        id: MEASURE_SHELTERS_LABEL_LAYER_ID,
+        type: "symbol",
+        source: MEASURE_SHELTERS_SOURCE_ID,
+        layout: {
+          "text-field": ["get", "name"],
+          "text-font": ["Inter Regular", "Arial Unicode MS Regular"],
+          "text-size": 10,
+          "text-anchor": "top",
+          "text-offset": [0, 1.2],
+          "text-allow-overlap": false,
+        },
+        paint: {
+          "text-color": "#0f0f0f",
+          "text-halo-color": "#ffffff",
+          "text-halo-width": 1.2,
+        },
+      });
     },
     [],
   );
@@ -978,6 +1051,8 @@ const [measureState, setMeasureState] = useState<{
   };
 
   const anyLayerActive = Object.values(kotoLayersVisible).some(Boolean);
+  const isPanelCollapsed =
+    measureState.status === "active" && isMeasurePanelCollapsed;
 
   return (
     <div className="relative w-full h-full min-h-[500px] z-0">
@@ -1191,140 +1266,166 @@ const [measureState, setMeasureState] = useState<{
       <AnimatePresence>
         {measureState.status !== "idle" && (
           <motion.div
-            className="absolute bottom-4 left-1/2 z-30 w-[92vw] max-w-sm -translate-x-1/2 rounded-lg border border-black bg-background p-4 shadow-xl"
+            className={`absolute bottom-4 left-1/2 z-30 w-[92vw] max-w-sm -translate-x-1/2 rounded-lg border border-black bg-background shadow-xl transition-all duration-200 ease-out ${
+              isPanelCollapsed
+                ? "h-[30px] overflow-hidden px-3 py-1"
+                : "p-4"
+            }`}
             initial={{ opacity: 0, y: 20, scale: 0.96 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.96 }}
           >
-            <div className="space-y-3 text-black">
-              {measureState.status === "placing" && (
-                <>
-                  <div>
-                    <h3 className="text-sm font-bold uppercase tracking-wide">
-                      Measure Shelters
-                    </h3>
-                    <p className="text-xs text-black/70">
-                      Tap anywhere on the map to drop a center point. We’ll help you
-                      count nearby shelters.
-                    </p>
-                  </div>
-                  <div className="flex flex-col gap-2 sm:flex-row sm:justify-end">
-                    <button
-                      type="button"
-                      onClick={clearMeasurement}
-                      className="w-full sm:w-auto rounded border border-black px-3 py-2 text-xs font-semibold uppercase tracking-wide hover:bg-neutral-100"
-                    >
-                      Cancel
-                    </button>
-                  </div>
-                </>
-              )}
+            {measureState.status === "active" && (
+              <button
+                type="button"
+                onClick={() => setIsMeasurePanelCollapsed((prev) => !prev)}
+                className={` ${
+                  isPanelCollapsed ? "top-1.5 h-15 w-15" : "top-3 h-15 w-15"
+                }`}
+                aria-label={
+                  isPanelCollapsed
+                    ? "Expand measurement details"
+                    : "Collapse measurement details"
+                }
+              >
+                {isPanelCollapsed ? (
+                  <ChevronUp className="h-15 w-15 " />
+                ) : (
+                  <ChevronDown className="h-15 w-15" />
+                )}
+              </button>
+            )}
 
-              {measureState.status === "configuring" && (
-                <>
-                  <div className="flex items-center justify-between">
+            {!isPanelCollapsed && (
+              <div
+                className={`space-y-3 text-black ${
+                  measureState.status === "active" ? "pr-8" : ""
+                }`}
+              >
+                {measureState.status === "placing" && (
+                  <>
                     <div>
                       <h3 className="text-sm font-bold uppercase tracking-wide">
-                        Set Radius
+                        Measure Shelters
                       </h3>
                       <p className="text-xs text-black/70">
-                        Choose a radius in 10&nbsp;m increments (100&nbsp;m – 1,000&nbsp;m).
+                        Tap anywhere on the map to drop a center point. We’ll help you
+                        count nearby shelters.
                       </p>
                     </div>
-                    <div className="text-lg font-bold text-black">
-                      {measureState.radius}m
+                    <div className="flex flex-col gap-2 sm:flex-row sm:justify-end">
+                      <button
+                        type="button"
+                        onClick={clearMeasurement}
+                        className="w-full sm:w-auto rounded border border-black px-3 py-2 text-xs font-semibold uppercase tracking-wide hover:bg-neutral-100"
+                      >
+                        Cancel
+                      </button>
                     </div>
-                  </div>
-                  <input
-                    type="range"
-                    min={100}
-                    max={1000}
-                    step={10}
-                    value={measureState.radius}
-                    onChange={(event) =>
-                      handleRadiusValueChange(Number(event.target.value))
-                    }
-                    className="w-full accent-black"
-                  />
-                  <div className="flex flex-col gap-2 sm:flex-row sm:justify-end">
-                    <button
-                      type="button"
-                      onClick={clearMeasurement}
-                      className="w-full sm:w-auto rounded border border-black px-3 py-2 text-xs font-semibold uppercase tracking-wide hover:bg-neutral-100"
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      type="button"
-                      onClick={handleDrawCircle}
-                      className="w-full sm:w-auto rounded border border-black bg-background px-3 py-2 text-xs font-bold uppercase tracking-wide text-black hover:bg-neutral-100"
-                    >
-                      Draw Circle
-                    </button>
-                  </div>
-                </>
-              )}
+                  </>
+                )}
 
-              {measureState.status === "active" && (
-                <>
-                  <div>
-                    <h3 className="text-sm font-bold uppercase tracking-wide">
-                      Shelters Nearby
-                    </h3>
-                    <p className="text-xs text-black/70">
-                      {measureState.count} shelter{measureState.count === 1 ? "" : "s"} within{" "}
-                      {measureState.radius} meters.
-                    </p>
-                    {measureState.shelterNames.length > 0 ? (
-                      <ul className="mt-3 space-y-1 rounded border border-black/40 bg-background p-3 text-xs font-semibold uppercase tracking-wide text-black">
-                        {measureState.shelterNames.map((name, index) => (
-                          <li key={`${name}-${index}`} className="flex items-center gap-2">
-                            <span className="inline-flex h-1.5 w-1.5 rounded-full bg-black" />
-                            <span className="truncate">{name}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    ) : (
-                      <p className="mt-3 text-xs text-black/50 italic">
-                        No shelters detected in this radius.
+                {measureState.status === "configuring" && (
+                  <>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h3 className="text-sm font-bold uppercase tracking-wide">
+                          Set Radius
+                        </h3>
+                        <p className="text-xs text-black/70">
+                          Choose a radius in 10&nbsp;m increments (100&nbsp;m – 1,000&nbsp;m).
+                        </p>
+                      </div>
+                      <div className="text-lg font-bold text-black">
+                        {measureState.radius}m
+                      </div>
+                    </div>
+                    <input
+                      type="range"
+                      min={100}
+                      max={1000}
+                      step={10}
+                      value={measureState.radius}
+                      onChange={(event) =>
+                        handleRadiusValueChange(Number(event.target.value))
+                      }
+                      className="w-full accent-black"
+                    />
+                    <div className="flex flex-col gap-2 sm:flex-row sm:justify-end">
+                      <button
+                        type="button"
+                        onClick={clearMeasurement}
+                        className="w-full sm:w-auto rounded border border-black px-3 py-2 text-xs font-semibold uppercase tracking-wide hover:bg-neutral-100"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleDrawCircle}
+                        className="w-full sm:w-auto rounded border border-black bg-background px-3 py-2 text-xs font-bold uppercase tracking-wide text-black hover:bg-neutral-100"
+                      >
+                        Draw Circle
+                      </button>
+                    </div>
+                  </>
+                )}
+
+                {measureState.status === "active" && (
+                  <>
+                    <div>
+                      <h3 className="text-sm font-bold uppercase tracking-wide">
+                        Shelters Nearby
+                      </h3>
+                      <p className="text-xs text-black/70">
+                        {measureState.count} shelter{measureState.count === 1 ? "" : "s"} within{" "}
+                        {measureState.radius} meters.
                       </p>
-                    )}
-                  </div>
-                  <div className="grid gap-2 sm:grid-cols-3">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        closeMeasurePopup();
-                        beginAdjustRadius();
-                      }}
-                      className="rounded border border-black px-3 py-2 text-xs font-semibold uppercase tracking-wide hover:bg-neutral-100"
-                    >
-                      Adjust Radius
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        closeMeasurePopup();
-                        beginMoveCenter();
-                      }}
-                      className="rounded border border-black px-3 py-2 text-xs font-semibold uppercase tracking-wide hover:bg-neutral-100"
-                    >
-                      Move Point
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        closeMeasurePopup();
-                        clearMeasurement();
-                      }}
-                      className="rounded border border-black bg-red-500/20 px-3 py-2 text-xs font-bold uppercase tracking-wide text-black hover:bg-red-600 hover:text-white active:bg-red-600 active:text-white"
-                    >
-                      Delete
-                    </button>
-                  </div>
-                </>
-              )}
-            </div>
+                      {measureState.shelterNames.length > 0 ? (
+                        <p className="mt-3 text-xs text-black/70">
+                          Shelter names appear on the map beneath each highlighted marker.
+                        </p>
+                      ) : (
+                        <p className="mt-3 text-xs text-black/50 italic">
+                          No shelters detected in this radius.
+                        </p>
+                      )}
+                    </div>
+                    <div className="grid gap-2 sm:grid-cols-3">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          closeMeasurePopup();
+                          beginAdjustRadius();
+                        }}
+                        className="rounded border border-black px-3 py-2 text-xs font-semibold uppercase tracking-wide hover:bg-neutral-100"
+                      >
+                        Adjust Radius
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          closeMeasurePopup();
+                          beginMoveCenter();
+                        }}
+                        className="rounded border border-black px-3 py-2 text-xs font-semibold uppercase tracking-wide hover:bg-neutral-100"
+                      >
+                        Move Point
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          closeMeasurePopup();
+                          clearMeasurement();
+                        }}
+                        className="rounded border border-black bg-red-500/20 px-3 py-2 text-xs font-bold uppercase tracking-wide text-black hover:bg-red-600 hover:text-white active:bg-red-600 active:text-white"
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  </>
+                )}
+              </div>
+            )}
           </motion.div>
         )}
       </AnimatePresence>
