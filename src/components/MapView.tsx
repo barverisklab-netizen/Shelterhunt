@@ -151,6 +151,12 @@ const [measureState, setMeasureState] = useState<{
 
   const [isMeasurePanelCollapsed, setIsMeasurePanelCollapsed] = useState(false);
 
+  useEffect(() => {
+    if (measureState.status !== "active") {
+      setIsMeasurePanelCollapsed(false);
+    }
+  }, [measureState.status]);
+
   const closeMeasurePopup = useCallback(() => {
     if (measurePopupRef.current) {
       measurePopupRef.current.remove();
@@ -1054,6 +1060,23 @@ const [measureState, setMeasureState] = useState<{
   const isPanelCollapsed =
     measureState.status === "active" && isMeasurePanelCollapsed;
 
+  const isMeasurementInteractive =
+    measureState.status === "active" && measureState.shelterNames.length > 0;
+
+  const headerTitle =
+    measureState.status === "active"
+      ? "Shelters Nearby"
+      : measureState.status === "configuring"
+        ? "Set Radius"
+        : "Measure Shelters";
+
+  const headerSubtitle =
+    measureState.status === "active"
+      ? `${measureState.count} shelter${measureState.count === 1 ? "" : "s"} within ${measureState.radius} meters`
+      : measureState.status === "configuring"
+        ? "Adjust the measurement radius"
+        : "Drop a center point to begin";
+
   return (
     <div className="relative w-full h-full min-h-[500px] z-0">
       
@@ -1266,183 +1289,156 @@ const [measureState, setMeasureState] = useState<{
       <AnimatePresence>
         {measureState.status !== "idle" && (
           <motion.div
-            className={`absolute bottom-4 left-1/2 z-30 w-[92vw] max-w-sm -translate-x-1/2 rounded-lg border border-black bg-background shadow-xl transition-all duration-200 ease-out ${
-              isPanelCollapsed
-                ? "h-[30px] overflow-hidden px-3 py-1"
-                : "p-4"
-            }`}
+            className="absolute bottom-4 left-1/2 z-30 w-[92vw] max-w-sm -translate-x-1/2 rounded-lg bg-background p-4 shadow-xl"
             initial={{ opacity: 0, y: 20, scale: 0.96 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.96 }}
           >
-            {measureState.status === "active" && (
-              <button
-                type="button"
-                onClick={() => setIsMeasurePanelCollapsed((prev) => !prev)}
-                className={` ${
-                  isPanelCollapsed ? "top-1.5 h-15 w-15" : "top-3 h-15 w-15"
-                }`}
-                aria-label={
-                  isPanelCollapsed
-                    ? "Expand measurement details"
-                    : "Collapse measurement details"
+            <button
+              type="button"
+              onClick={() => {
+                if (isMeasurementInteractive) {
+                  setIsMeasurePanelCollapsed((prev) => !prev);
                 }
-              >
-                {isPanelCollapsed ? (
-                  <ChevronUp className="h-15 w-15 " />
-                ) : (
-                  <ChevronDown className="h-15 w-15" />
+              }}
+              className={`w-full rounded px-4 py-3 text-left transition-colors ${
+                isMeasurementInteractive ? "cursor-pointer" : "cursor-default"
+              }`}
+            >
+              <div className="flex items-center justify-between gap-3 pb-1">
+                <div className="space-y-1">
+                  <div className="text-sm font-bold uppercase text-black leading-tight">
+                    {headerTitle}
+                  </div>
+                  <div className="text-xs text-black/70">{headerSubtitle}</div>
+                </div>
+                {isMeasurementInteractive && (
+                  <motion.div
+                    animate={{ rotate: isPanelCollapsed ? 180 : 0 }}
+                    transition={{ duration: 0.2 }}
+                    className="text-black"
+                  >
+                    <ChevronDown className="h-4 w-4 text-black" />
+                  </motion.div>
                 )}
-              </button>
-            )}
+              </div>
+            </button>
 
-            {!isPanelCollapsed && (
-              <div
-                className={`space-y-3 text-black ${
-                  measureState.status === "active" ? "pr-8" : ""
-                }`}
-              >
-                {measureState.status === "placing" && (
-                  <>
-                    <div>
-                      <h3 className="text-sm font-bold uppercase tracking-wide">
-                        Measure Shelters
-                      </h3>
+            <AnimatePresence>
+              {!isPanelCollapsed && (
+                <motion.div
+                  key="measurement-panel-details"
+                  className="mt-4 space-y-3 text-black"
+                  initial={{ opacity: 0, y: -6 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -6 }}
+                >
+                  {measureState.status === "placing" && (
+                    <>
                       <p className="text-xs text-black/70">
                         Tap anywhere on the map to drop a center point. We’ll help you
                         count nearby shelters.
                       </p>
-                    </div>
-                    <div className="flex flex-col gap-2 sm:flex-row sm:justify-end">
-                      <button
-                        type="button"
-                        onClick={clearMeasurement}
-                        className="w-full sm:w-auto rounded border border-black px-3 py-2 text-xs font-semibold uppercase tracking-wide hover:bg-neutral-100"
-                      >
-                        Cancel
-                      </button>
-                    </div>
-                  </>
-                )}
+                      <div className="flex flex-col gap-2 sm:flex-row sm:justify-end">
+                        <button
+                          type="button"
+                          onClick={clearMeasurement}
+                          className="w-full sm:w-auto rounded border border-black px-3 py-2 text-xs font-semibold uppercase tracking-wide hover:bg-neutral-100"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </>
+                  )}
 
-                {measureState.status === "configuring" && (
-                  <>
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <h3 className="text-sm font-bold uppercase tracking-wide">
-                          Set Radius
-                        </h3>
+                  {measureState.status === "configuring" && (
+                    <>
+                      <div className="flex items-center justify-between">
                         <p className="text-xs text-black/70">
                           Choose a radius in 10&nbsp;m increments (100&nbsp;m – 1,000&nbsp;m).
                         </p>
+                        <span className="text-lg font-bold text-black">
+                          {measureState.radius}m
+                        </span>
                       </div>
-                      <div className="text-lg font-bold text-black">
-                        {measureState.radius}m
+                      <input
+                        type="range"
+                        min={100}
+                        max={1000}
+                        step={10}
+                        value={measureState.radius}
+                        onChange={(event) =>
+                          handleRadiusValueChange(Number(event.target.value))
+                        }
+                        className="w-full accent-black"
+                      />
+                      <div className="flex flex-col gap-2 sm:flex-row sm:justify-end">
+                        <button
+                          type="button"
+                          onClick={clearMeasurement}
+                          className="w-full sm:w-auto rounded border border-black px-3 py-2 text-xs font-semibold uppercase tracking-wide hover:bg-neutral-100"
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          type="button"
+                          onClick={handleDrawCircle}
+                          className="w-full sm:w-auto rounded border border-black bg-background px-3 py-2 text-xs font-bold uppercase tracking-wide text-black hover:bg-neutral-100"
+                        >
+                          Draw Circle
+                        </button>
                       </div>
-                    </div>
-                    <input
-                      type="range"
-                      min={100}
-                      max={1000}
-                      step={10}
-                      value={measureState.radius}
-                      onChange={(event) =>
-                        handleRadiusValueChange(Number(event.target.value))
-                      }
-                      className="w-full accent-black"
-                    />
-                    <div className="flex flex-col gap-2 sm:flex-row sm:justify-end">
-                      <button
-                        type="button"
-                        onClick={clearMeasurement}
-                        className="w-full sm:w-auto rounded border border-black px-3 py-2 text-xs font-semibold uppercase tracking-wide hover:bg-neutral-100"
-                      >
-                        Cancel
-                      </button>
-                      <button
-                        type="button"
-                        onClick={handleDrawCircle}
-                        className="w-full sm:w-auto rounded border border-black bg-background px-3 py-2 text-xs font-bold uppercase tracking-wide text-black hover:bg-neutral-100"
-                      >
-                        Draw Circle
-                      </button>
-                    </div>
-                  </>
-                )}
+                    </>
+                  )}
 
-                {measureState.status === "active" && (
-                  <>
-                    <div>
-                      <h3 className="text-sm font-bold uppercase tracking-wide">
-                        Shelters Nearby
-                      </h3>
-                      <p className="text-xs text-black/70">
-                        {measureState.count} shelter{measureState.count === 1 ? "" : "s"} within{" "}
-                        {measureState.radius} meters.
-                      </p>
-                      {measureState.shelterNames.length > 0 ? (
-                        <p className="mt-3 text-xs text-black/70">
-                          Shelter names appear on the map beneath each highlighted marker.
-                        </p>
-                      ) : (
-                        <p className="mt-3 text-xs text-black/50 italic">
+                  {measureState.status === "active" && (
+                    <>
+                      {measureState.shelterNames.length === 0 && (
+                        <p className="text-xs text-black/50 italic">
                           No shelters detected in this radius.
                         </p>
                       )}
-                    </div>
-                    <div className="grid gap-2 sm:grid-cols-3">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          closeMeasurePopup();
-                          beginAdjustRadius();
-                        }}
-                        className="rounded border border-black px-3 py-2 text-xs font-semibold uppercase tracking-wide hover:bg-neutral-100"
-                      >
-                        Adjust Radius
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          closeMeasurePopup();
-                          beginMoveCenter();
-                        }}
-                        className="rounded border border-black px-3 py-2 text-xs font-semibold uppercase tracking-wide hover:bg-neutral-100"
-                      >
-                        Move Point
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          closeMeasurePopup();
-                          clearMeasurement();
-                        }}
-                        className="rounded border border-black bg-red-500/20 px-3 py-2 text-xs font-bold uppercase tracking-wide text-black hover:bg-red-600 hover:text-white active:bg-red-600 active:text-white"
-                      >
-                        Delete
-                      </button>
-                    </div>
-                  </>
-                )}
-              </div>
-            )}
+                      <div className="grid gap-2 pb-1 sm:grid-cols-3">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            closeMeasurePopup();
+                            beginAdjustRadius();
+                          }}
+                          className="rounded border border-black px-3 py-2 text-xs font-semibold uppercase tracking-wide hover:bg-neutral-100"
+                        >
+                          Adjust Radius
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            closeMeasurePopup();
+                            beginMoveCenter();
+                          }}
+                          className="rounded border border-black px-3 py-2 text-xs font-semibold uppercase tracking-wide hover:bg-neutral-100"
+                        >
+                          Move Point
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            closeMeasurePopup();
+                            clearMeasurement();
+                          }}
+                          className="rounded border border-black bg-red-500/20 px-3 py-2 text-xs font-bold uppercase tracking-wide text-black hover:bg-red-600 hover:text-white active:bg-red-600 active:text-white"
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    </>
+                  )}
+                </motion.div>
+              )}
+            </AnimatePresence>
           </motion.div>
         )}
       </AnimatePresence>
 
-      <AnimatePresence>
-        {measureState.status === "active" && measureState.center && (
-          <motion.div
-            className="absolute top-4 left-1/2 z-30 -translate-x-1/2 rounded-full border border-black bg-background px-4 py-2 text-xs font-semibold uppercase tracking-wide text-black shadow-md"
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-          >
-            {measureState.count} shelter{measureState.count === 1 ? "" : "s"} within{" "}
-            {measureState.radius}m
-          </motion.div>
-        )}
-      </AnimatePresence>
     </div>
   );
 }
