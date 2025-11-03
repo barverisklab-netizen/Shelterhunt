@@ -34,7 +34,7 @@ Secret Shelter is an interactive location-based deduction game where players rac
 │   │   ├── WaitingRoom.tsx       # Multiplayer lobby
 │   │   ├── GameScreen.tsx        # Main game interface
 │   │   ├── MapView.tsx           # Mapbox integration
-│   │   ├── CluesPanel.tsx        # Clue management
+│   │   ├── GameplayPanel.tsx     # Gameplay controls & intel
 │   │   ├── QuestionDrawer.tsx    # Question interface
 │   │   ├── TriviaModal.tsx       # Trivia questions
 │   │   └── HelpModal.tsx         # Game instructions

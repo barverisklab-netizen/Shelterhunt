@@ -19,9 +19,9 @@ export function ShelterPenaltyScreen({
       exit={{ opacity: 0, scale: 0.85, y: 30 }}
       transition={{ type: "spring", damping: 20, stiffness: 220 }}
     >
-      <div className="w-full max-w-lg text-center space-y-6 rounded-lg border border-neutral-900 bg-background p-10 shadow-xl">
-        <div className="inline-block rounded-full border border-neutral-900 bg-black p-6">
-          <Frown className="w-16 h-16 text-white" />
+      <div className="w-full max-w-lg text-center space-y-6 rounded-lg bg-background p-10 shadow-xl">
+        <div className="inline-block rounded-full bg-black p-6">
+          <Frown className="w-16 h-16" color="#ef4444" strokeWidth={1.8} />
         </div>
         <div className="space-y-2">
           <h2 className="text-3xl text-black font-bold uppercase">
@@ -35,16 +35,16 @@ export function ShelterPenaltyScreen({
         <div className="flex flex-col gap-3">
           <Button
             onClick={onContinue}
-            className="w-full bg-black hover:bg-neutral-900"
+            className="w-full bg-black text-black border hover:bg-neutral-900 hover:text-white"
           >
             Keep Playing
           </Button>
           <Button
             variant="outline"
             onClick={onReturn}
-            className="w-full font-bold uppercase"
+             className="w-full bg-black text-black border hover:bg-neutral-900 hover:text-white"
           >
-            Return to Onboarding
+            Start New Game
           </Button>
         </div>
       </div>

@@ -2,7 +2,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { Clock, Lightbulb, MapPin, X} from 'lucide-react';
 import { MapView } from './MapView';
 import { QuestionDrawer } from './QuestionDrawer';
-import { CluesPanel } from './CluesPanel';
+import { GameplayPanel } from './GameplayPanel';
 import { TriviaModal } from './TriviaModal';
 import { GuessConfirmScreen } from './GuessConfirmScreen';
 import { ShelterVictoryScreen } from './ShelterVictoryScreen';
@@ -190,10 +190,10 @@ export function GameScreen({
     setSelectedShelterId(null);
 
     if (matches) {
-      toast.success(`🎉 Correct! You found ${selectedShelterOption.name}!`);
+      toast.success(`🎉 Bravo! You found the correct shelter!`);
       setOutcome('win');
     } else {
-      toast.error(`Not ${secretShelter.name}. Timer reset to 10 minutes.`);
+      toast.error(`Wrong guess!! Timer reset to 10 minutes.`);
       onApplyPenalty();
       setOutcome('penalty');
     }
@@ -330,8 +330,8 @@ export function GameScreen({
         onSubmit={handleTriviaSubmit}
       />
 
-      {/* Clues Panel */}
-      <CluesPanel
+      {/* Gameplay Panel */}
+      <GameplayPanel
         isOpen={cluesOpen}
         clues={clues}
         onClose={() => setCluesOpen(false)}
