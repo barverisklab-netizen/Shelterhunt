@@ -16,6 +16,8 @@ import { BlurReveal } from './ui/blur-reveal';
 
 const ENABLE_SECRET_SHELTER_BLUR = true;
 
+export type WrongGuessStage = 'first' | 'second' | 'third';
+
 
 interface GameScreenProps {
   pois: POI[];
@@ -27,7 +29,7 @@ interface GameScreenProps {
   secretShelter?: { id: string; name: string } | null;
   shelterOptions: { id: string; name: string }[];
   isTimerCritical: boolean;
-  onApplyPenalty: () => void;
+  onApplyPenalty: () => WrongGuessStage;
   onEndGame: () => void;
   onLocationChange?: (location: { lat: number; lng: number }) => void;
   onSecretShelterChange?: (info: { id: string; name: string }) => void;
@@ -63,6 +65,7 @@ export function GameScreen({
   const [outcome, setOutcome] = useState<'none' | 'win' | 'penalty'>('none');
   const [measureTrigger, setMeasureTrigger] = useState(0);
   const [isMeasureActive, setIsMeasureActive] = useState(false);
+  const [penaltyStage, setPenaltyStage] = useState<WrongGuessStage | null>(null);
 
   useEffect(() => {
     if (isMeasureActive) {
@@ -191,16 +194,31 @@ export function GameScreen({
 
     if (matches) {
       toast.success(`🎉 Bravo! You found the correct shelter!`);
+      setPenaltyStage(null);
       setOutcome('win');
     } else {
-      toast.error(`Wrong guess!! Timer reset to 10 minutes.`);
-      onApplyPenalty();
+      const stage = onApplyPenalty();
+      const penaltyMessage =
+        stage === 'first'
+          ? 'Wrong guess! Timer set to 10 minutes.'
+          : 'Wrong guess! Timer set to 5 minutes.';
+
+      if (stage === 'third') {
+        toast.error('That was your final guess. Game over.');
+        setPenaltyStage(null);
+        onEndGame();
+        return;
+      }
+
+      toast.error(penaltyMessage);
+      setPenaltyStage(stage);
       setOutcome('penalty');
     }
   };
 
   const handlePenaltyContinue = () => {
     setOutcome('none');
+    setPenaltyStage(null);
   };
 
   const handleStartMeasure = () => {
@@ -225,10 +243,10 @@ export function GameScreen({
           <div className="flex items-center gap-4">
             <button
               onClick={onEndGame}
-              className="rounded border-4 border-black bg-red-500 p-2 text-black shadow-sm transition-colors hover:bg-red-600"
+              className="rounded border-4 border-black bg-red-500 p-4 text-black shadow-sm transition-colors hover:bg-red-600"
               title="Exit to main menu"
             >
-              <X className="w-5 h-5" />
+              <X className="w-15 h-15" />
             </button>
             <div className="flex flex-col">
               <h1 className="text-xl font-bold text-black uppercase">Secret Shelter</h1>
@@ -368,11 +386,11 @@ export function GameScreen({
       </AnimatePresence>
 
       <AnimatePresence>
-        {outcome === 'penalty' && (
+        {outcome === 'penalty' && penaltyStage && (
           <ShelterPenaltyScreen
             key="penalty"
+            stage={penaltyStage}
             onContinue={handlePenaltyContinue}
-            onReturn={onEndGame}
           />
         )}
       </AnimatePresence>

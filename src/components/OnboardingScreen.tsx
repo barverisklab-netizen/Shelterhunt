@@ -97,7 +97,7 @@ export function OnboardingScreen({
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.75, duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
             >
-              ShelterHunt
+              ShelterSearch
             </motion.h1>
             <motion.p
               className="text-base font-medium titlecase tracking-wider text-black"
@@ -190,31 +190,8 @@ export function OnboardingScreen({
           </motion.button>
         </div>
 
-        {/* Feature Tags - Bauhaus Geometric Style */}
-        <div
-          className="flex flex-wrap justify-center gap-3"
-        >
-          {[
-            { label: 'LOCATION', color: 'bg-red-600', textColor: 'text-black' },
-            { label: 'TRIVIA', color: 'bg-black', textColor: 'text-white' },
-            { label: 'TEAM', color: 'bg-background', textColor: 'text-black' }
-          ].map((feature, index) => (
-            <motion.div
-              key={feature.label}
-              className={`${feature.color} ${feature.textColor} px-6 py-2 text-sm font-bold uppercase tracking-wider border-4 border-black`}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{
-                delay: featureBaseDelay + index * 0.12,
-                duration: 0.45,
-                ease: 'easeOut',
-              }}
-            >
-              {feature.label}
-            </motion.div>
-          ))}
-                    
-        </div>
+        
+        
           
       </div>
       

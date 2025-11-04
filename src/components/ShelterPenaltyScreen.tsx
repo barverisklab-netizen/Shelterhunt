@@ -2,15 +2,38 @@ import { motion } from "motion/react";
 import { Frown } from "lucide-react";
 import { Button } from "./ui/button";
 
+type PenaltyStage = "first" | "second" | "third";
+
 interface ShelterPenaltyScreenProps {
+  stage: PenaltyStage;
   onContinue: () => void;
-  onReturn: () => void;
 }
 
+const penaltyCopy: Record<PenaltyStage, { title: string; message: string }> = {
+  first: {
+    title: "Not Quite There",
+    message:
+      "That wasn't the secret shelter. Your timer has been reset to 10 minutes—make every clue count.",
+  },
+  second: {
+    title: "Pressure Rising",
+    message:
+      "Another miss. The timer now drops to 5 minutes. You will get one last chance, choose wisely.",
+  },
+  third: {
+    title: "Game Over",
+    message:
+      "You've used all three guesses. The shelter stays hidden—time to regroup and start again.",
+  },
+};
+
 export function ShelterPenaltyScreen({
+  stage,
   onContinue,
-  onReturn,
 }: ShelterPenaltyScreenProps) {
+  const { title, message } = penaltyCopy[stage];
+  const showContinue = stage !== "third";
+
   return (
     <motion.div
       className="fixed inset-0 z-50 bg-background flex items-center justify-center p-6"
@@ -25,27 +48,19 @@ export function ShelterPenaltyScreen({
         </div>
         <div className="space-y-2">
           <h2 className="text-3xl text-black font-bold uppercase">
-            Not Quite There
+            {title}
           </h2>
-          <p className="text-black font-semibold">
-            That wasn&apos;t the secret shelter. Your timer has been reset to 10
-            minutes—make every clue count.
-          </p>
+          <p className="text-black font-semibold">{message}</p>
         </div>
         <div className="flex flex-col gap-3">
-          <Button
-            onClick={onContinue}
-            className="w-full bg-black text-black border hover:bg-neutral-900 hover:text-white"
-          >
-            Keep Playing
-          </Button>
-          <Button
-            variant="outline"
-            onClick={onReturn}
-             className="w-full bg-black text-black border hover:bg-neutral-900 hover:text-white"
-          >
-            Start New Game
-          </Button>
+          {showContinue && (
+            <Button
+              onClick={onContinue}
+              className="w-full bg-black text-black border hover:bg-neutral-900 hover:text-white"
+            >
+              Keep Playing
+            </Button>
+          )}
         </div>
       </div>
     </motion.div>
