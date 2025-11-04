@@ -225,7 +225,7 @@ export function GameScreen({
           <div className="flex items-center gap-4">
             <button
               onClick={onEndGame}
-              className="rounded border-4 border-black bg-red-500 p-2 text-white shadow-sm transition-colors hover:bg-red-600"
+              className="rounded border-4 border-black bg-red-500 p-2 text-black shadow-sm transition-colors hover:bg-red-600"
               title="Exit to main menu"
             >
               <X className="w-5 h-5" />

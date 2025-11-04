@@ -30,5 +30,5 @@
   2. Add your Mapbox token to `.env.local` as `VITE_MAPBOX_TOKEN=<your-token>`
   3. Launch the dev server: `npm run dev`
 
-  For detailed Mapbox setup guidance, see `MAPBOX_SETUP.md`. Design references are available in the linked Figma file: https://www.figma.com/design/88OH71ZYHpnLVTbdIvkO8T/Location-Based-Deduction-Game.
+  For detailed Mapbox setup guidance, see `MAPBOX_SETUP.md`. 
   
