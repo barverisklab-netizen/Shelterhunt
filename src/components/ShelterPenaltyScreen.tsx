@@ -23,7 +23,7 @@ const penaltyCopy: Record<PenaltyStage, { title: string; message: string }> = {
   third: {
     title: "Game Over",
     message:
-      "You've used all three guesses. The shelter stays hidden—time to regroup and start again.",
+      "You've used all three guesses. time to regroup and start again.",
   },
 };
 

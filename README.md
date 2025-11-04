@@ -1,7 +1,7 @@
 
-  # Shelterhunt · Location-Based Deduction Game
+  # ShelterSearch · Location-Based Deduction Game
 
-  This repository contains the Shelterhunt prototype, a browser-based deduction game that helps players locate an emergency shelter before time runs out. The experience mirrors the visual system documented in Figma and is implemented with React, Vite, Tailwind v4, Mapbox GL, and the shadcn-inspired component kit included in `src/components/ui`.
+  This repository contains the ShelterSearch prototype, a browser-based deduction game that helps players locate an emergency shelter before time runs out. The experience mirrors the visual system documented in Figma and is implemented with React, Vite, Tailwind v4, Mapbox GL, and the shadcn-inspired component kit included in `src/components/ui`.
 
   ## Project Overview
 

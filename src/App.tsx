@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { OnboardingScreen } from "./components/OnboardingScreen";
 import { WaitingRoom } from "./components/WaitingRoom";
-import { GameScreen } from "./components/GameScreen";
+import { GameScreen, type WrongGuessStage } from "./components/GameScreen";
 import { HelpModal } from "./components/HelpModal";
 import { TerminalScreen } from "./components/TerminalScreen";
 import { Toaster } from "./components/ui/sonner";
@@ -37,6 +37,7 @@ export default function App() {
     { id: string; name: string }[]
   >([]);
   const [isTimerCritical, setIsTimerCritical] = useState(false);
+  const [wrongGuessCount, setWrongGuessCount] = useState(0);
 
   // Timer countdown
   useEffect(() => {
@@ -65,6 +66,7 @@ export default function App() {
     setIsTimerCritical(false);
     setShelterOptions([]);
     setSecretShelter(null);
+    setWrongGuessCount(0);
     setGameState("waiting");
     toast.success(`Joined game ${code}`);
   };
@@ -77,6 +79,7 @@ export default function App() {
     setIsTimerCritical(false);
     setShelterOptions([]);
     setSecretShelter(null);
+    setWrongGuessCount(0);
     setGameState("waiting");
     toast.success(`Game created: ${code}`);
   };
@@ -97,6 +100,7 @@ export default function App() {
     setIsTimerCritical(false);
     setShelterOptions([]);
     setSecretShelter(null);
+    setWrongGuessCount(0);
     setGameState("playing");
     toast.success("Solo game started! Find the secret shelter!");
   };
@@ -114,6 +118,7 @@ export default function App() {
     setIsTimerCritical(false);
     setShelterOptions([]);
     setSecretShelter(null);
+    setWrongGuessCount(0);
     setGameState("playing");
     toast.success("Game started! Find the secret shelter!");
   };
@@ -126,12 +131,27 @@ export default function App() {
     setShelterOptions([]);
     setIsTimerCritical(false);
     setSecretShelter(null);
+    setWrongGuessCount(0);
     toast.info("Left the game");
   };
 
-  const handleWrongGuessPenalty = () => {
-    setTimeRemaining(600);
-    setIsTimerCritical(true);
+  const handleWrongGuessPenalty = (): WrongGuessStage => {
+    const next = Math.min(wrongGuessCount + 1, 3);
+    setWrongGuessCount(next);
+
+    if (next === 1) {
+      setTimeRemaining(600);
+      setIsTimerCritical(true);
+      return "first";
+    }
+
+    if (next === 2) {
+      setTimeRemaining(300);
+      setIsTimerCritical(true);
+      return "second";
+    }
+
+    return "third";
   };
 
   const handleEndGame = () => {
