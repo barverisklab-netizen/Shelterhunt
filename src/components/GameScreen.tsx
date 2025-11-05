@@ -29,6 +29,7 @@ interface GameScreenProps {
   secretShelter?: { id: string; name: string } | null;
   shelterOptions: { id: string; name: string }[];
   isTimerCritical: boolean;
+  isTimerEnabled: boolean;
   onApplyPenalty: () => WrongGuessStage;
   onEndGame: () => void;
   onLocationChange?: (location: { lat: number; lng: number }) => void;
@@ -46,6 +47,7 @@ export function GameScreen({
   secretShelter,
   shelterOptions,
   isTimerCritical,
+  isTimerEnabled,
   onApplyPenalty,
   onEndGame,
   onLocationChange,
@@ -149,13 +151,16 @@ export function GameScreen({
 
   const timerContainerClasses = [
     "flex items-center gap-2 px-4 py-2 border rounded-full",
-    isTimerCritical
+    isTimerEnabled && isTimerCritical
       ? "bg-neutral-900 border-red-500 text-white animate-pulse"
       : "bg-neutral-100 border-neutral-900 text-neutral-900"
   ].join(" ");
-  const timerTextClasses = isTimerCritical
+  const timerTextClasses = isTimerEnabled && isTimerCritical
     ? "tabular-nums font-bold text-white"
     : "tabular-nums font-bold text-black";
+  const formattedTimer = `${Math.floor(timeRemaining / 60)}:${(timeRemaining % 60)
+    .toString()
+    .padStart(2, "0")}`;
   const isGuessDisabled = !secretShelter || shelterOptions.length === 0;
 
   const handleGuessRequest = () => {
@@ -198,17 +203,16 @@ export function GameScreen({
       setOutcome('win');
     } else {
       const stage = onApplyPenalty();
-      const penaltyMessage =
-        stage === 'first'
-          ? 'Wrong guess! Timer set to 10 minutes.'
-          : 'Wrong guess! Timer set to 5 minutes.';
-
       if (stage === 'third') {
         toast.error('That was your final guess. Game over.');
         setPenaltyStage(null);
         onEndGame();
         return;
       }
+
+      const penaltyMessage = stage === 'first'
+        ? 'Wrong guess! Timer set to 10 minutes.'
+        : 'Wrong guess! Timer set to 5 minutes.';
 
       toast.error(penaltyMessage);
       setPenaltyStage(stage);
@@ -267,12 +271,12 @@ export function GameScreen({
             </div>
           </div>
 
-          <div className={timerContainerClasses}>
-            <Clock className={`w-4 h-4 ${isTimerCritical ? 'text-red-600' : 'text-black'}`} />
-            <span className={timerTextClasses}>
-              {Math.floor(timeRemaining / 60)}:{(timeRemaining % 60).toString().padStart(2, '0')}
-            </span>
-          </div>
+          {isTimerEnabled ? (
+            <div className={timerContainerClasses}>
+              <Clock className={`w-4 h-4 ${isTimerCritical ? 'text-red-600' : 'text-black'}`} />
+              <span className={timerTextClasses}>{formattedTimer}</span>
+            </div>
+          ) : null}
         </div>
       </motion.div>
 
