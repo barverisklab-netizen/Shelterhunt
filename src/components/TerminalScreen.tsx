@@ -25,7 +25,7 @@ export function TerminalScreen({ onRestart }: TerminalScreenProps) {
             Time's Up
           </h2>
           <p className="text-black font-semibold">
-            You need to try harder. Study the clues, plan your next move, and
+            Try harder next time, and
             return when you are ready.
           </p>
         </div>

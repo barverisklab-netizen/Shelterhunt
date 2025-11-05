@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { IntroScreen } from "./components/IntroScreen";
 import { OnboardingScreen } from "./components/OnboardingScreen";
 import { WaitingRoom } from "./components/WaitingRoom";
 import { GameScreen, type WrongGuessStage } from "./components/GameScreen";
@@ -15,10 +16,10 @@ import {
 } from "./data/mockData";
 import { defaultCityContext } from "./data/cityContext";
 
-type GameState = "onboarding" | "waiting" | "playing" | "ended";
+type GameState = "intro" | "onboarding" | "waiting" | "playing" | "ended";
 
 export default function App() {
-  const [gameState, setGameState] = useState<GameState>("onboarding");
+  const [gameState, setGameState] = useState<GameState>("intro");
   const [gameCode, setGameCode] = useState("");
   const [isHost, setIsHost] = useState(false);
   const [players, setPlayers] = useState<Player[]>(mockPlayers);
@@ -69,6 +70,10 @@ export default function App() {
     setWrongGuessCount(0);
     setGameState("waiting");
     toast.success(`Joined game ${code}`);
+  };
+
+  const handleSkipIntro = () => {
+    setGameState("onboarding");
   };
 
   const handleHostGame = () => {
@@ -165,6 +170,8 @@ export default function App() {
     <div className="min-h-screen bg-background relative overflow-hidden">
       {/* Main Content */}
       <div className="relative z-10">
+        {gameState === "intro" && <IntroScreen onContinue={handleSkipIntro} />}
+
         {gameState === "onboarding" && (
           <OnboardingScreen
             onJoinGame={handleJoinGame}
