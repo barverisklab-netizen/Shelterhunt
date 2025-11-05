@@ -23,7 +23,8 @@ import { defaultCityContext } from "../data/cityContext";
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
 import { toast } from "sonner@2.0.3"
-import { circle as turfCircle, booleanPointInPolygon, point as turfPoint } from "@turf/turf";
+import { circle as turfCircle } from "@turf/turf";
+import { fetchDesignatedShelterPOIs } from "@/utils/lightningSelection";
 
 // Set Mapbox access token from config
 mapboxgl.accessToken = MAPBOX_CONFIG.accessToken;
@@ -73,7 +74,7 @@ const getKotoLayerIcon = (layer: (typeof kotoLayers)[0]): React.ReactNode => {
 };
 
 const SHELTER_KOTO_LAYER_IDS = kotoLayers
-  .filter((layer) => /Evacuation/i.test(layer.label))
+  .filter((layer) => /Designated Evacuation Centers/i.test(layer.label))
   .map((layer) => `koto-layer-${layer.id}`);
 
 const MEASURE_CIRCLE_SOURCE_ID = "measure-circle-source";
@@ -134,6 +135,7 @@ export function MapView({
   const shelterLayerVisibilityRef = useRef<Record<string, string>>({});
   const lastMeasureTriggerRef = useRef<number>(0);
   const measureStatusRef = useRef<MeasureStatus>("idle");
+  const lastMeasureRequestRef = useRef<number>(0);
 
 const [measureState, setMeasureState] = useState<{
   status: MeasureStatus;
@@ -248,7 +250,7 @@ const [measureState, setMeasureState] = useState<{
   }, [removeMeasurementArtifacts, restoreShelterLayers]);
 
   const updateShelterMarkers = useCallback(
-    (features: mapboxgl.MapboxGeoJSONFeature[]) => {
+    (shelters: POI[]) => {
       const m = map.current;
       if (!m) return;
 
@@ -262,11 +264,15 @@ const [measureState, setMeasureState] = useState<{
         m.removeLayer(MEASURE_SHELTERS_LAYER_ID);
       }
 
-      const pointFeatures = features.filter(
-        (feature) => feature.geometry.type === "Point",
+      const validShelters = shelters.filter(
+        (shelter) =>
+          typeof shelter.lng === "number" &&
+          typeof shelter.lat === "number" &&
+          Number.isFinite(shelter.lng) &&
+          Number.isFinite(shelter.lat),
       );
 
-      if (!pointFeatures.length) {
+      if (!validShelters.length) {
         if (m.getSource(MEASURE_SHELTERS_SOURCE_ID)) {
           m.removeSource(MEASURE_SHELTERS_SOURCE_ID);
         }
@@ -275,15 +281,14 @@ const [measureState, setMeasureState] = useState<{
 
       const featureCollection = {
         type: "FeatureCollection",
-        features: pointFeatures.map((feature) => ({
+        features: validShelters.map((shelter) => ({
           type: "Feature",
-          geometry: feature.geometry,
+          geometry: {
+            type: "Point",
+            coordinates: [shelter.lng, shelter.lat],
+          },
           properties: {
-            name:
-              (feature.properties?.["Landmark name (EN)"] as string) ||
-              (feature.properties?.["Landmark name (JP)"] as string) ||
-              (feature.properties?.["name"] as string) ||
-              "Shelter",
+            name: shelter.name || "Shelter",
           },
         })),
       } as const;
@@ -334,9 +339,12 @@ const [measureState, setMeasureState] = useState<{
   );
 
   const updateCircle = useCallback(
-    (center: { lng: number; lat: number }, radius: number) => {
+    async (center: { lng: number; lat: number }, radius: number) => {
       const m = map.current;
       if (!m) return;
+
+      const requestId = Date.now();
+      lastMeasureRequestRef.current = requestId;
 
       const circleFeature = turfCircle([center.lng, center.lat], radius / 1000, {
         steps: 64,
@@ -373,42 +381,58 @@ const [measureState, setMeasureState] = useState<{
         });
       }
 
-      const shelterFeatures = m.queryRenderedFeatures(undefined, {
-        layers: SHELTER_KOTO_LAYER_IDS,
-      });
+      try {
+        const radiusKm = Math.max(0, radius) / 1000;
+        const shelters = await fetchDesignatedShelterPOIs(
+          { lat: center.lat, lng: center.lng },
+          radiusKm,
+          { limit: 50 },
+        );
 
-      const inside = shelterFeatures.filter((feature) => {
-        if (feature.geometry.type !== "Point") return false;
-        const coords = feature.geometry.coordinates as [number, number];
-        if (!coords) return false;
-        return booleanPointInPolygon(turfPoint(coords), circleFeature);
-      });
+        if (lastMeasureRequestRef.current !== requestId) {
+          return;
+        }
 
-      const insideNames = inside
-        .map((feature) => {
-          const props = feature.properties || {};
-          return (
-            (props["Landmark name (EN)"] as string) ||
-            (props["Landmark name (JP)"] as string) ||
-            (props["name"] as string) ||
-            "Shelter"
-          );
-        })
-        .filter(Boolean);
+        updateShelterMarkers(shelters);
+        hideShelterLayers();
 
-      updateShelterMarkers(inside);
-      hideShelterLayers();
+        const shelterNames = shelters
+          .map((shelter) => shelter.name)
+          .filter((name): name is string => Boolean(name));
 
-      setMeasureState((prev) => ({
-        ...prev,
-        status: "active",
-        center,
-        radius,
-        count: inside.length,
-        shelterNames: insideNames,
-      }));
+        setMeasureState((prev) => ({
+          ...prev,
+          status: "active",
+          center,
+          radius,
+          count: shelters.length,
+          shelterNames,
+        }));
+      } catch (error) {
+        if (lastMeasureRequestRef.current !== requestId) {
+          return;
+        }
+
+        console.warn(
+          "[Measure] Failed to fetch designated shelters via tilequery:",
+          error,
+        );
+        toast.error(
+          "Unable to load designated shelters for this radius. Try again.",
+        );
+        updateShelterMarkers([]);
+        restoreShelterLayers();
+        setMeasureState((prev) => ({
+          ...prev,
+          status: "active",
+          center,
+          radius,
+          count: 0,
+          shelterNames: [],
+        }));
+      }
     },
-    [hideShelterLayers, updateShelterMarkers],
+    [hideShelterLayers, restoreShelterLayers, updateShelterMarkers],
   );
 
   const beginAdjustRadius = useCallback(() => {

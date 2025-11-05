@@ -9,17 +9,21 @@ import { TerminalScreen } from "./components/TerminalScreen";
 import { Toaster } from "./components/ui/sonner";
 import { toast } from "sonner@2.0.3";
 import {
-  mockPOIs,
   mockQuestions,
   mockTriviaQuestions,
   mockPlayers,
   Player,
+  POI,
 } from "./data/mockData";
 import { defaultCityContext } from "./data/cityContext";
 import {
   LIGHTNING_DURATION_MINUTES,
   LIGHTNING_RADIUS_KM,
 } from "./config/runtime";
+import {
+  fetchDesignatedShelterPOIs,
+  selectLightningShelter,
+} from "./utils/lightningSelection";
 
 type GameState =
   | "intro"
@@ -30,6 +34,8 @@ type GameState =
   | "ended";
 
 type GameMode = "lightning" | "citywide";
+
+const INITIAL_SHELTER_RADIUS_KM = 5;
 
 export default function App() {
   const [gameState, setGameState] = useState<GameState>("intro");
@@ -57,6 +63,7 @@ export default function App() {
   const [modeProcessing, setModeProcessing] = useState(false);
   const [lockSecretShelter, setLockSecretShelter] = useState(false);
   const [lockShelterOptions, setLockShelterOptions] = useState(false);
+  const [designatedShelters, setDesignatedShelters] = useState<POI[]>([]);
 
   // Timer countdown
   useEffect(() => {
@@ -98,6 +105,35 @@ export default function App() {
     },
     [lockShelterOptions],
   );
+
+  const loadDesignatedShelters = useCallback(
+    async (center: { lat: number; lng: number }, radiusKm: number) => {
+      try {
+        const shelters = await fetchDesignatedShelterPOIs(center, radiusKm);
+        setDesignatedShelters(shelters);
+        return shelters;
+      } catch (error) {
+        console.error(
+          "[Lightning] Failed to load designated shelters from Mapbox:",
+          error,
+        );
+        throw error;
+      }
+    },
+    [],
+  );
+
+  useEffect(() => {
+    const initialCenter = defaultCityContext.mapConfig.startLocation;
+    loadDesignatedShelters(initialCenter, INITIAL_SHELTER_RADIUS_KM).catch(
+      (error) => {
+        console.warn(
+          "[Lightning] Initial designated shelter preload failed:",
+          error,
+        );
+      },
+    );
+  }, [loadDesignatedShelters]);
 
   const resetGameContext = () => {
     setTimeRemaining(1800);
@@ -269,27 +305,6 @@ export default function App() {
     setGameState("onboarding");
   };
 
-  const getDistanceKm = (
-    a: { lat: number; lng: number },
-    b: { lat: number; lng: number },
-  ) => {
-    const toRad = (value: number) => (value * Math.PI) / 180;
-    const R = 6371;
-    const dLat = toRad(b.lat - a.lat);
-    const dLng = toRad(b.lng - a.lng);
-    const lat1 = toRad(a.lat);
-    const lat2 = toRad(b.lat);
-
-    const hav =
-      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-      Math.sin(dLng / 2) *
-        Math.sin(dLng / 2) *
-        Math.cos(lat1) *
-        Math.cos(lat2);
-    const c = 2 * Math.atan2(Math.sqrt(hav), Math.sqrt(1 - hav));
-    return R * c;
-  };
-
   const requestUserLocation = () =>
     new Promise<{ lat: number; lng: number }>((resolve, reject) => {
       if (!("geolocation" in navigator)) {
@@ -330,35 +345,45 @@ export default function App() {
 
     try {
       const coords = await requestUserLocation();
-      const eligibleShelters = mockPOIs
-        .filter((poi) => poi.type === "shelter")
-        .filter((shelter) => {
-          const distance = getDistanceKm(coords, {
-            lat: shelter.lat,
-            lng: shelter.lng,
-          });
-          return distance <= radiusKm;
-        })
-        .map((shelter) => ({
-          id: shelter.id,
-          name: shelter.name,
-        }));
+      const shelterPool = await loadDesignatedShelters(coords, radiusKm);
 
-      if (!eligibleShelters.length) {
-        toast.error(
-          `No shelters within ${radiusKm} km. Try moving closer to another area.`,
-        );
-        return;
-      }
+      const { eligibleShelters, secretShelter } = selectLightningShelter(
+        shelterPool,
+        coords,
+        radiusKm,
+      );
 
-      const secret =
-        eligibleShelters[Math.floor(Math.random() * eligibleShelters.length)];
+      const options = eligibleShelters.map((shelter) => ({
+        id: shelter.id,
+        name: shelter.name,
+      }));
+
+      const shelterNames = eligibleShelters.map((shelter) => shelter.name);
+      console.log({
+        message: "[Lightning] Eligible designated shelters",
+        source: "mapbox.designated-ec",
+        radiusKm,
+        shelters: shelterNames,
+      });
+
+      const secret = {
+        id: secretShelter.id,
+        name: secretShelter.name,
+      };
+
+      const isSecretInOptions = shelterNames.includes(secretShelter.name);
+      console.log(
+        "[Lightning] Secret shelter in eligible list?",
+        isSecretInOptions ? "Yes" : "No",
+        "-",
+        secretShelter.name,
+      );
 
       startSoloMatch({
         mode: "lightning",
         timerSeconds: durationMinutes * 60,
         secret,
-        options: eligibleShelters,
+        options,
         playerCoords: coords,
         lockSecret: true,
         lockOptions: true,
@@ -366,6 +391,20 @@ export default function App() {
       setLockSecretShelter(true);
       setLockShelterOptions(true);
     } catch (error: unknown) {
+      if (error instanceof Error && /No shelters/.test(error.message)) {
+        toast.error(
+          `No shelters within ${radiusKm} km. Try moving closer to another area.`,
+        );
+        return;
+      }
+
+      if (error instanceof Error && /tilequery/i.test(error.message)) {
+        toast.error(
+          "Unable to load designated shelters right now. Please try again.",
+        );
+        return;
+      }
+
       let message = "Unable to access your location. Please try again.";
 
       if (
@@ -449,7 +488,7 @@ export default function App() {
 
         {gameState === "playing" && (
           <GameScreen
-            pois={mockPOIs}
+            pois={designatedShelters}
             questions={mockQuestions}
             triviaQuestions={mockTriviaQuestions}
             playerLocation={playerLocation}
