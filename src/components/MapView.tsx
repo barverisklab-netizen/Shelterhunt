@@ -23,7 +23,6 @@ import { defaultCityContext } from "../data/cityContext";
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
 import { toast } from "sonner@2.0.3"
-import { circle as turfCircle } from "@turf/turf";
 import { fetchDesignatedShelterPOIs } from "@/utils/lightningSelection";
 
 // Set Mapbox access token from config
@@ -36,6 +35,37 @@ mapboxgl.accessToken = MAPBOX_CONFIG.accessToken;
 // Replace the whole function with this
 const sanitizeToBauhausColor = (color?: string): string => {
   return (color ?? "#000000").trim();
+};
+
+const createCircleFeature = (
+  center: { lng: number; lat: number },
+  radiusMeters: number,
+  steps = 64,
+) => {
+  const coordinates: [number, number][] = [];
+  const earthRadius = 6378137;
+  const latRad = (center.lat * Math.PI) / 180;
+
+  for (let i = 0; i <= steps; i += 1) {
+    const angle = (i / steps) * Math.PI * 2;
+    const dx = radiusMeters * Math.cos(angle);
+    const dy = radiusMeters * Math.sin(angle);
+
+    const latOffset = (dy / earthRadius) * (180 / Math.PI);
+    const lngOffset =
+      (dx / (earthRadius * Math.cos(latRad))) * (180 / Math.PI);
+
+    coordinates.push([center.lng + lngOffset, center.lat + latOffset]);
+  }
+
+  return {
+    type: "Feature" as const,
+    geometry: {
+      type: "Polygon" as const,
+      coordinates: [coordinates],
+    },
+    properties: {},
+  };
 };
 
 
@@ -129,7 +159,7 @@ export function MapView({
   const infoPopup = useRef<mapboxgl.Popup | null>(null);
   const hasSelectedShelter = useRef(false);
   const hasEmittedShelterOptions = useRef(false);
-  const measureMarkerRef = useRef<mapboxgl.Marker | null>(null);
+const measureMarkerRef = useRef<mapboxgl.Marker | null>(null);
   const measureShelterMarkersRef = useRef<mapboxgl.Marker[]>([]);
   const measurePopupRef = useRef<mapboxgl.Popup | null>(null);
   const shelterLayerVisibilityRef = useRef<Record<string, string>>({});
@@ -346,10 +376,7 @@ const [measureState, setMeasureState] = useState<{
       const requestId = Date.now();
       lastMeasureRequestRef.current = requestId;
 
-      const circleFeature = turfCircle([center.lng, center.lat], radius / 1000, {
-        steps: 64,
-        units: "kilometers",
-      });
+      const circleFeature = createCircleFeature(center, radius);
 
       if (m.getSource(MEASURE_CIRCLE_SOURCE_ID)) {
         (m.getSource(MEASURE_CIRCLE_SOURCE_ID) as mapboxgl.GeoJSONSource).setData(

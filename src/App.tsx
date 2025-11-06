@@ -371,14 +371,6 @@ export default function App() {
         name: secretShelter.name,
       };
 
-      const isSecretInOptions = shelterNames.includes(secretShelter.name);
-      console.log(
-        "[Lightning] Secret shelter in eligible list?",
-        isSecretInOptions ? "Yes" : "No",
-        "-",
-        secretShelter.name,
-      );
-
       startSoloMatch({
         mode: "lightning",
         timerSeconds: durationMinutes * 60,

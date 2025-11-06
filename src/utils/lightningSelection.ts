@@ -82,6 +82,11 @@ interface TileQueryFeature {
 
 interface TileQueryResponse {
   features?: TileQueryFeature[];
+  unique?: {
+    [attribute: string]: {
+      values: Array<{ value: string | number | boolean; count: number }>;
+    };
+  };
 }
 
 export interface FetchDesignatedShelterOptions {
@@ -188,9 +193,15 @@ export const fetchDesignatedShelterPOIs = async (
   const payload = (await response.json()) as TileQueryResponse;
   const features = payload.features ?? [];
 
+  console.log("[Tilequery] raw feature count:", features.length, {
+    radiusKm: clampedRadiusKm,
+    center,
+  });
+
   const seenNames = new Set<string>();
   const seenIds = new Set<string>();
   const shelters: POI[] = [];
+  const categoryHistogram: Record<string, number> = {};
 
   features.forEach((feature) => {
     if (!feature || feature.geometry?.type !== "Point") {
@@ -198,6 +209,9 @@ export const fetchDesignatedShelterPOIs = async (
     }
     const props = feature.properties ?? {};
     const category = (props["Category"] as string | undefined)?.trim();
+    if (category) {
+      categoryHistogram[category] = (categoryHistogram[category] || 0) + 1;
+    }
     if (category !== DESIGNATED_CATEGORY) {
       return;
     }
@@ -232,6 +246,17 @@ export const fetchDesignatedShelterPOIs = async (
       lng,
       type: "shelter",
     });
+  });
+
+  const uniqueCategories =
+    payload.unique?.Category?.values?.map((entry) => ({
+      value: entry.value,
+      count: entry.count,
+    })) ?? null;
+
+  console.log("[Tilequery] filtered designated shelters:", shelters.length, {
+    categories: categoryHistogram,
+    uniqueCategories,
   });
 
   return shelters;
