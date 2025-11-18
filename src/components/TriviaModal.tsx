@@ -1,7 +1,7 @@
 import { motion, AnimatePresence } from 'motion/react';
 import { X, CheckCircle, XCircle, Sparkles } from 'lucide-react';
 import { Button } from './ui/button';
-import { TriviaQuestion } from '../data/mockData';
+import { TriviaQuestion } from "@/types/game";
 import { useState } from 'react';
 
 interface TriviaModalProps {

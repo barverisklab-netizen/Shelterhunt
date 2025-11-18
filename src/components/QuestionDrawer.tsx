@@ -10,7 +10,7 @@ import {
   ArrowLeft,
 } from "lucide-react";
 import { Button } from "./ui/button";
-import { Question } from "../data/mockData";
+import { Question } from "@/types/game";
 import { QuestionCategory } from "../data/cityContext";
 import { useState } from "react";
 

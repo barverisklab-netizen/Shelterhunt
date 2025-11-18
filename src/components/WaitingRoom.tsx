@@ -1,7 +1,7 @@
 import { motion } from 'motion/react';
 import { User, Check, X, Copy, Crown } from 'lucide-react';
 import { Button } from './ui/button';
-import { Player } from '../data/mockData';
+import { Player } from "@/types/game";
 import { useState } from 'react';
 
 interface WaitingRoomProps {

@@ -41,7 +41,7 @@ Secret Shelter is an interactive location-based deduction game where players rac
 │   ├── config/
 │   │   └── mapbox.ts             # Mapbox configuration (username, tilesets)
 │   ├── data/
-│   │   ├── mockData.ts           # Game data (POIs, questions, etc.)
+│   │   ├── gameContent.ts        # Default questions, trivia, and player data
 │   │   └── cityContext.ts        # City-specific configuration
 │   ├── cityContext/
 │   │   └── koto/

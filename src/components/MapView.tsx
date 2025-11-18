@@ -16,14 +16,15 @@ import {
   ChevronDown,
   ChevronUp,
 } from "lucide-react";
-import { POI } from "../data/mockData";
+import { POI } from "@/types/game";
 import { kotoLayers } from "@/cityContext/koto/layers";
 import { MAPBOX_CONFIG, getTilesetUrl } from "../config/mapbox";
 import { defaultCityContext } from "../data/cityContext";
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
 import { toast } from "sonner@2.0.3"
-import { fetchDesignatedShelterPOIs } from "@/utils/lightningSelection";
+import { haversineDistanceKm } from "@/utils/lightningSelection";
+import { getLocalShelters } from "@/services/mapLayerQueryService";
 
 // Set Mapbox access token from config
 mapboxgl.accessToken = MAPBOX_CONFIG.accessToken;
@@ -369,7 +370,7 @@ const [measureState, setMeasureState] = useState<{
   );
 
   const updateCircle = useCallback(
-    async (center: { lng: number; lat: number }, radius: number) => {
+    (center: { lng: number; lat: number }, radius: number) => {
       const m = map.current;
       if (!m) return;
 
@@ -408,56 +409,53 @@ const [measureState, setMeasureState] = useState<{
         });
       }
 
-      try {
-        const radiusKm = Math.max(0, radius) / 1000;
-        const shelters = await fetchDesignatedShelterPOIs(
-          { lat: center.lat, lng: center.lng },
-          radiusKm,
-          { limit: 50 },
-        );
-
-        if (lastMeasureRequestRef.current !== requestId) {
-          return;
-        }
-
-        updateShelterMarkers(shelters);
-        hideShelterLayers();
-
-        const shelterNames = shelters
-          .map((shelter) => shelter.name)
-          .filter((name): name is string => Boolean(name));
-
-        setMeasureState((prev) => ({
-          ...prev,
-          status: "active",
-          center,
-          radius,
-          count: shelters.length,
-          shelterNames,
+      const radiusKm = Math.max(0, radius) / 1000;
+      const origin = { lat: center.lat, lng: center.lng };
+      const shelters = getLocalShelters()
+        .filter(
+          (poi) =>
+            poi.category?.toLowerCase() === "designated ec" &&
+            haversineDistanceKm(origin, { lat: poi.lat, lng: poi.lng }) <= radiusKm,
+        )
+        .map<POI>((poi) => ({
+          id: poi.id,
+          name: poi.name,
+          lat: poi.lat,
+          lng: poi.lng,
+          type: "shelter",
         }));
-      } catch (error) {
-        if (lastMeasureRequestRef.current !== requestId) {
-          return;
-        }
 
-        console.warn(
-          "[Measure] Failed to fetch designated shelters via tilequery:",
-          error,
-        );
-        toast.error(
-          "Unable to load designated shelters for this radius. Try again.",
-        );
-        updateShelterMarkers([]);
-        restoreShelterLayers();
-        setMeasureState((prev) => ({
-          ...prev,
-          status: "active",
-          center,
-          radius,
-          count: 0,
-          shelterNames: [],
-        }));
+      if (lastMeasureRequestRef.current !== requestId) {
+        return;
       }
+
+      updateShelterMarkers(shelters);
+      hideShelterLayers();
+
+      const shelterNames = shelters
+        .map((shelter) => shelter.name)
+        .filter((name): name is string => Boolean(name));
+
+      console.log("[Measure] shelters within radius", {
+        center,
+        radiusMeters: radius,
+        total: shelters.length,
+        shelters: shelters.map((shelter) => ({
+          id: shelter.id,
+          name: shelter.name,
+          lat: shelter.lat,
+          lng: shelter.lng,
+        })),
+      });
+
+      setMeasureState((prev) => ({
+        ...prev,
+        status: "active",
+        center,
+        radius,
+        count: shelters.length,
+        shelterNames,
+      }));
     },
     [hideShelterLayers, restoreShelterLayers, updateShelterMarkers],
   );
@@ -611,47 +609,29 @@ const [measureState, setMeasureState] = useState<{
     toast.success("Radius applied. Shelters in range highlighted.");
   }, [measureState.center, measureState.radius, updateCircle]);
 
-  const selectShelterFromTiles = useCallback(() => {
-    if (hasSelectedShelter.current || !map.current) {
+  const selectShelterFromLocalData = useCallback(() => {
+    if (hasSelectedShelter.current) {
       return;
     }
 
     try {
-      const features = map.current.querySourceFeatures(
-        "koto-source-8sbllw5a",
-        {
-          sourceLayer: "ihi_evacuation_centers_all-c2o5a5",
-          filter: ["==", ["get", "Category"], "Designated EC"],
-        },
+      const allShelters = getLocalShelters();
+      const designated = allShelters.filter(
+        (poi) => poi.category?.toLowerCase() === "designated ec",
       );
 
       const options: { id: string; name: string }[] = [];
       const seenNames = new Set<string>();
       const seenIds = new Set<string>();
 
-      features.forEach((feature) => {
-        const properties = (feature.properties || {}) as Record<
-          string,
-          unknown
-        >;
-        const rawName =
-          (properties["Landmark name (EN)"] as string | undefined) ??
-          (properties["Landmark name (JP)"] as string | undefined) ??
-          (properties.name as string | undefined) ??
-          "";
-        const name = rawName?.trim();
+      designated.forEach((poi) => {
+        const name = poi.name?.trim();
         if (!name) return;
         const key = name.toLowerCase();
         if (seenNames.has(key)) return;
         seenNames.add(key);
 
-        let resolvedId =
-          (properties["OBJECTID"] != null
-            ? String(properties["OBJECTID"])
-            : feature.id != null
-              ? String(feature.id)
-              : name) ?? name;
-
+        let resolvedId = poi.id ?? key;
         if (seenIds.has(resolvedId)) {
           let suffix = 1;
           while (seenIds.has(`${resolvedId}-${suffix}`)) {
@@ -664,7 +644,10 @@ const [measureState, setMeasureState] = useState<{
         options.push({ id: resolvedId, name });
       });
 
-      if (onShelterOptionsChange && (options.length || !hasEmittedShelterOptions.current)) {
+      if (
+        onShelterOptionsChange &&
+        (options.length || !hasEmittedShelterOptions.current)
+      ) {
         const sorted = [...options].sort((a, b) => a.name.localeCompare(b.name));
         onShelterOptionsChange(sorted);
         hasEmittedShelterOptions.current = true;
@@ -674,14 +657,13 @@ const [measureState, setMeasureState] = useState<{
         return;
       }
 
-      const chosen =
-        options[Math.floor(Math.random() * options.length)];
+      const chosen = options[Math.floor(Math.random() * options.length)];
 
       hasSelectedShelter.current = true;
       onSecretShelterChange({ id: chosen.id, name: chosen.name });
-      map.current.off("idle", selectShelterFromTiles);
+      map.current?.off("idle", selectShelterFromLocalData);
     } catch (error) {
-      console.warn("[mapbox] Unable to select shelter from tiles:", error);
+      console.warn("[mapbox] Unable to select shelter from local data:", error);
     }
   }, [onSecretShelterChange, onShelterOptionsChange]);
   const [layersVisible, setLayersVisible] = useState({
@@ -728,7 +710,7 @@ const [measureState, setMeasureState] = useState<{
 
         if (onSecretShelterChange) {
           hasSelectedShelter.current = false;
-          map.current?.on("idle", selectShelterFromTiles);
+          map.current?.on("idle", selectShelterFromLocalData);
         }
 
         if (!geolocateControl.current) {
@@ -770,7 +752,7 @@ const [measureState, setMeasureState] = useState<{
           infoPopup.current = null;
         }
         if (onSecretShelterChange) {
-          map.current.off("idle", selectShelterFromTiles);
+          map.current.off("idle", selectShelterFromLocalData);
         }
         if (geolocateControl.current) {
           map.current.removeControl(geolocateControl.current);
@@ -782,7 +764,7 @@ const [measureState, setMeasureState] = useState<{
         hasEmittedShelterOptions.current = false;
       }
     };
-  }, [basemapUrl, onSecretShelterChange, onShelterOptionsChange, selectShelterFromTiles]);
+  }, [basemapUrl, onSecretShelterChange, onShelterOptionsChange, selectShelterFromLocalData]);
 
   // Recenter camera when playerLocation changes (no reinit)
   useEffect(() => {

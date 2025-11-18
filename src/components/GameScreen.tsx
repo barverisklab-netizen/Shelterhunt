@@ -7,7 +7,7 @@ import { TriviaModal } from './TriviaModal';
 import { GuessConfirmScreen } from './GuessConfirmScreen';
 import { ShelterVictoryScreen } from './ShelterVictoryScreen';
 import { ShelterPenaltyScreen } from './ShelterPenaltyScreen';
-import { POI, Question, TriviaQuestion, Clue } from '../data/mockData';
+import { POI, Question, TriviaQuestion, Clue } from "@/types/game";
 import { defaultCityContext } from '../data/cityContext';
 import { useEffect, useState } from 'react';
 import { toast } from "sonner@2.0.3";

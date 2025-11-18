@@ -1,4 +1,4 @@
-import type { POI } from "@/data/mockData";
+import type { POI } from "@/types/game";
 import { MAPBOX_CONFIG } from "@/config/mapbox";
 import { kotoLayers } from "@/cityContext/koto/layers";
 
@@ -193,10 +193,14 @@ export const fetchDesignatedShelterPOIs = async (
   const payload = (await response.json()) as TileQueryResponse;
   const features = payload.features ?? [];
 
-  console.log("[Tilequery] raw feature count:", features.length, {
-    radiusKm: clampedRadiusKm,
-    center,
-  });
+  console.log(
+    "[ShelterFetch] Mapbox tilequery feature count:",
+    features.length,
+    {
+      radiusKm: clampedRadiusKm,
+      center,
+    },
+  );
 
   const seenNames = new Set<string>();
   const seenIds = new Set<string>();
@@ -254,10 +258,14 @@ export const fetchDesignatedShelterPOIs = async (
       count: entry.count,
     })) ?? null;
 
-  console.log("[Tilequery] filtered designated shelters:", shelters.length, {
-    categories: categoryHistogram,
-    uniqueCategories,
-  });
+  console.log(
+    "[ShelterFetch] designated shelters after filtering:",
+    shelters.length,
+    {
+      categories: categoryHistogram,
+      uniqueCategories,
+    },
+  );
 
   return shelters;
 };

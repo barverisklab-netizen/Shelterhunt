@@ -7,7 +7,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "./ui/accordion";
-import { Clue } from "../data/mockData";
+import { Clue } from "@/types/game";
 
 interface GameplayPanelProps {
   isOpen: boolean;

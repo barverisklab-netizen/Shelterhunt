@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { POI } from "@/data/mockData";
+import type { POI } from "@/types/game";
 import {
   haversineDistanceKm,
   listSheltersWithinRadius,

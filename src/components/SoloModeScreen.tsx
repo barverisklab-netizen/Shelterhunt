@@ -55,40 +55,46 @@ export function SoloModeScreen({
         </div>
 
         <MenuHeader title="ShelterSearch" subtitle="Solo Play" />
-        <motion.div
-          className="space-y-4"
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.45, ease: "easeOut", delay: 0.2 }}
-        >
-          <button
-            type="button"
-            disabled={isProcessing}
-            onClick={() => setSelection("lightning")}
-            className="w-full bg-background text-black border-4 border-black hover:shadow-[4px_4px_0_black] transition-all py-6 px-5 flex flex-col items-center gap-2 cursor-pointer text-center"
-          >
-            <span className="flex items-center gap-3 text-lg font-bold uppercase tracking-wide">
-              <Zap className="h-5 w-5" /> Lightning Hunt
-            </span>
-            <span className="text-xs font-medium uppercase tracking-[0.2em] text-neutral-600">
-              Timed hunt · requires location access
-            </span>
-          </button>
+        <AnimatePresence>
+          {selection !== "lightning" && (
+            <motion.div
+              key="mode-options"
+              className="space-y-4"
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 16 }}
+              transition={{ duration: 0.45, ease: "easeOut", delay: 0.2 }}
+            >
+              <button
+                type="button"
+                disabled={isProcessing}
+                onClick={() => setSelection("lightning")}
+                className="w-full bg-background text-black border-4 border-black hover:shadow-[4px_4px_0_black] transition-all py-6 px-5 flex flex-col items-center gap-2 cursor-pointer text-center"
+              >
+                <span className="flex items-center gap-3 text-lg font-bold uppercase tracking-wide">
+                  <Zap className="h-5 w-5" /> Lightning Hunt
+                </span>
+                <span className="text-xs font-medium uppercase tracking-[0.2em] text-neutral-600">
+                  Timed hunt · requires location access
+                </span>
+              </button>
 
-          <button
-            type="button"
-            disabled={isProcessing}
-            onClick={onSelectCitywide}
-            className="w-full bg-background text-black border-4 border-black hover:shadow-[4px_4px_0_black] transition-all py-6 px-5 flex flex-col items-center gap-2 cursor-pointer text-center"
-          >
-            <span className="flex items-center gap-3 text-md font-bold uppercase tracking-wide">
-              <Map className="h-5 w-5" /> Citywide Search
-            </span>
-            <span className="text-xs font-medium uppercase tracking-[0.2em] text-neutral-600">
-              No timer · roam freely
-            </span>
-          </button>
-        </motion.div>
+              <button
+                type="button"
+                disabled={isProcessing}
+                onClick={onSelectCitywide}
+                className="w-full bg-background text-black border-4 border-black hover:shadow-[4px_4px_0_black] transition-all py-6 px-5 flex flex-col items-center gap-2 cursor-pointer text-center"
+              >
+                <span className="flex items-center gap-3 text-md font-bold uppercase tracking-wide">
+                  <Map className="h-5 w-5" /> Citywide Search
+                </span>
+                <span className="text-xs font-medium uppercase tracking-[0.2em] text-neutral-600">
+                  No timer · roam freely
+                </span>
+              </button>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         <AnimatePresence>
           {selection === "lightning" && (
@@ -99,7 +105,7 @@ export function SoloModeScreen({
               transition={{ duration: 0.45, ease: "easeOut" }}
               className="space-y-4 rounded-3xl border-4 border-black bg-white p-6 shadow-[8px_8px_0_black]"
             >
-              <div className="space-y-2 text-left">
+              <div className="space-y-2 text-center">
                 <h2 className="text-lg font-black uppercase tracking-wide">
                   Ready for the lightning hunt?
                 </h2>
@@ -114,14 +120,15 @@ export function SoloModeScreen({
                 </p>
               </div>
 
-              <button
-                type="button"
-                disabled={isProcessing}
-                onClick={onSelectLightning}
-                className="w-full bg-red-600 text-black border-4 border-black hover:shadow-[6px_6px_0_black] transition-all py-4 text-base font-bold uppercase tracking-wide"
-              >
-                Start lightning hunt
-              </button>
+              <div className="flex justify-center">
+                <button
+                  type="button"
+                  disabled={isProcessing}
+                  onClick={onSelectLightning}
+                  className="w-full max-w-xs border border-black bg-white text-black transition-colors hover:bg-neutral-200 hover:text-black hover:border-black active:bg-black active:text-white active:border-black disabled:bg-neutral-200 disabled:text-neutral-500 disabled:border-neutral-400 disabled:opacity-100">
+                  Start lightning hunt
+                </button>
+              </div>
             </motion.div>
           )}
         </AnimatePresence>

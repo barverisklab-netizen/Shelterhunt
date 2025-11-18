@@ -5,8 +5,8 @@
 
   ## Project Overview
 
-  - **Structure**: `src/App.tsx` orchestrates the end-to-end flow (Onboarding → Waiting Room → Gameplay) and injects mock data from `src/data`.
-  - **Data**: Static POIs, trivia, question templates, and player states are defined in `src/data/mockData.ts`. City-specific map defaults and question categories live in `src/data/cityContext.ts`.
+  - **Structure**: `src/App.tsx` orchestrates the end-to-end flow (Onboarding → Waiting Room → Gameplay) and injects the default game content from `src/data`.
+  - **Data**: Static POIs, trivia, question templates, and player states are defined in `src/data/gameContent.ts`. City-specific map defaults and question categories live in `src/data/cityContext.ts`.
   - **Design System**: Bauhaus-inspired utilities, typography, and color tokens are centralized in `src/styles/globals.css`. The Tailwind entry point is `src/index.css`.
   - **Maps**: `Mapbox GL` powers the interactive map via `src/components/MapView.tsx`. Tokens and tileset IDs are configured through environment variables (`.env.local` and `src/config/mapbox.ts`).
   - **Releases**: Follow the workflow in `docs/release-process.md` to publish versioned builds and GitHub releases.
@@ -14,7 +14,7 @@
   ## Main Screens & Interactions
 
   - **Onboarding Screen** (`src/components/OnboardingScreen.tsx`): Presents bold, Bauhaus-styled cards that let players host, join, or start a solo round. Help and toast notifications surface onboarding tips.
-  - **Waiting Room** (`src/components/WaitingRoom.tsx`): Displays the lobby roster, host controls, and readiness toggles using the mock player list. Transition logic is handled in `App.tsx`.
+  - **Waiting Room** (`src/components/WaitingRoom.tsx`): Displays the lobby roster, host controls, and readiness toggles using the default player list. Transition logic is handled in `App.tsx`.
   - **Game Screen** (`src/components/GameScreen.tsx`): Anchors the live session with a Mapbox canvas, floating action buttons, and animated overlays for clues, trivia, and end-game states. Time tracking, guessing, and clue tally all originate here.
 
   ## Core UI Modules

@@ -8,22 +8,22 @@ import { HelpModal } from "./components/HelpModal";
 import { TerminalScreen } from "./components/TerminalScreen";
 import { Toaster } from "./components/ui/sonner";
 import { toast } from "sonner@2.0.3";
+import type { Player, POI } from "@/types/game";
 import {
-  mockQuestions,
-  mockTriviaQuestions,
-  mockPlayers,
-  Player,
-  POI,
-} from "./data/mockData";
+  defaultPlayers,
+  defaultQuestions,
+  defaultTriviaQuestions,
+} from "@/data/gameContent";
 import { defaultCityContext } from "./data/cityContext";
 import {
   LIGHTNING_DURATION_MINUTES,
   LIGHTNING_RADIUS_KM,
 } from "./config/runtime";
 import {
-  fetchDesignatedShelterPOIs,
+  haversineDistanceKm,
   selectLightningShelter,
 } from "./utils/lightningSelection";
+import { getLocalShelters } from "@/services/mapLayerQueryService";
 
 type GameState =
   | "intro"
@@ -36,12 +36,40 @@ type GameState =
 type GameMode = "lightning" | "citywide";
 
 const INITIAL_SHELTER_RADIUS_KM = 5;
+const DESIGNATED_CATEGORY = "designated ec";
+
+const buildLocalDesignatedShelters = (
+  center: { lat: number; lng: number },
+  radiusKm: number,
+): POI[] => {
+  const normalizedRadius = Math.max(0, radiusKm);
+  const origin = { lat: center.lat, lng: center.lng };
+  return getLocalShelters()
+    .filter(
+      (poi) =>
+        poi.category?.toLowerCase() === DESIGNATED_CATEGORY &&
+        Number.isFinite(poi.lat) &&
+        Number.isFinite(poi.lng),
+    )
+    .filter(
+      (poi) =>
+        haversineDistanceKm(origin, { lat: poi.lat, lng: poi.lng }) <=
+        normalizedRadius,
+    )
+    .map<POI>((poi) => ({
+      id: poi.id,
+      name: poi.name,
+      lat: poi.lat,
+      lng: poi.lng,
+      type: "shelter",
+    }));
+};
 
 export default function App() {
   const [gameState, setGameState] = useState<GameState>("intro");
   const [gameCode, setGameCode] = useState("");
   const [isHost, setIsHost] = useState(false);
-  const [players, setPlayers] = useState<Player[]>(mockPlayers);
+  const [players, setPlayers] = useState<Player[]>(defaultPlayers);
   const [currentUserId] = useState("p1"); // Simulated user
   const [timeRemaining, setTimeRemaining] = useState(1800); // 30 minutes
   const [showHelp, setShowHelp] = useState(false);
@@ -109,12 +137,12 @@ export default function App() {
   const loadDesignatedShelters = useCallback(
     async (center: { lat: number; lng: number }, radiusKm: number) => {
       try {
-        const shelters = await fetchDesignatedShelterPOIs(center, radiusKm);
+        const shelters = buildLocalDesignatedShelters(center, radiusKm);
         setDesignatedShelters(shelters);
         return shelters;
       } catch (error) {
         console.error(
-          "[Lightning] Failed to load designated shelters from Mapbox:",
+          "[Lightning] Failed to load designated shelters from local data:",
           error,
         );
         throw error;
@@ -261,7 +289,7 @@ export default function App() {
   const handleLeaveGame = () => {
     setGameState("onboarding");
     setGameCode("");
-    setPlayers(mockPlayers);
+    setPlayers(defaultPlayers);
     setTimeRemaining(1800);
     setShelterOptions([]);
     setIsTimerCritical(false);
@@ -481,8 +509,8 @@ export default function App() {
         {gameState === "playing" && (
           <GameScreen
             pois={designatedShelters}
-            questions={mockQuestions}
-            triviaQuestions={mockTriviaQuestions}
+            questions={defaultQuestions}
+            triviaQuestions={defaultTriviaQuestions}
             playerLocation={playerLocation}
             teamColor={teamColor}
             timeRemaining={timeRemaining}
