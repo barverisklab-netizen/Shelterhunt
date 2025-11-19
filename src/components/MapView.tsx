@@ -409,53 +409,58 @@ const [measureState, setMeasureState] = useState<{
         });
       }
 
-      const radiusKm = Math.max(0, radius) / 1000;
-      const origin = { lat: center.lat, lng: center.lng };
-      const shelters = getLocalShelters()
-        .filter(
-          (poi) =>
-            poi.category?.toLowerCase() === "designated ec" &&
-            haversineDistanceKm(origin, { lat: poi.lat, lng: poi.lng }) <= radiusKm,
-        )
-        .map<POI>((poi) => ({
-          id: poi.id,
-          name: poi.name,
-          lat: poi.lat,
-          lng: poi.lng,
-          type: "shelter",
+      (async () => {
+        const radiusKm = Math.max(0, radius) / 1000;
+        const origin = { lat: center.lat, lng: center.lng };
+        const allShelters = await getLocalShelters();
+        const shelters = allShelters
+          .filter(
+            (poi) =>
+              poi.category?.toLowerCase() === "designated ec" &&
+              haversineDistanceKm(origin, { lat: poi.lat, lng: poi.lng }) <= radiusKm,
+          )
+          .map<POI>((poi) => ({
+            id: poi.id,
+            name: poi.name,
+            lat: poi.lat,
+            lng: poi.lng,
+            type: "shelter",
+          }));
+
+        if (lastMeasureRequestRef.current !== requestId) {
+          return;
+        }
+
+        updateShelterMarkers(shelters);
+        hideShelterLayers();
+
+        const shelterNames = shelters
+          .map((shelter) => shelter.name)
+          .filter((name): name is string => Boolean(name));
+
+        console.log("[Measure] shelters within radius", {
+          center,
+          radiusMeters: radius,
+          total: shelters.length,
+          shelters: shelters.map((shelter) => ({
+            id: shelter.id,
+            name: shelter.name,
+            lat: shelter.lat,
+            lng: shelter.lng,
+          })),
+        });
+
+        setMeasureState((prev) => ({
+          ...prev,
+          status: "active",
+          center,
+          radius,
+          count: shelters.length,
+          shelterNames,
         }));
-
-      if (lastMeasureRequestRef.current !== requestId) {
-        return;
-      }
-
-      updateShelterMarkers(shelters);
-      hideShelterLayers();
-
-      const shelterNames = shelters
-        .map((shelter) => shelter.name)
-        .filter((name): name is string => Boolean(name));
-
-      console.log("[Measure] shelters within radius", {
-        center,
-        radiusMeters: radius,
-        total: shelters.length,
-        shelters: shelters.map((shelter) => ({
-          id: shelter.id,
-          name: shelter.name,
-          lat: shelter.lat,
-          lng: shelter.lng,
-        })),
+      })().catch((error) => {
+        console.error("[Measure] Failed to load shelters", error);
       });
-
-      setMeasureState((prev) => ({
-        ...prev,
-        status: "active",
-        center,
-        radius,
-        count: shelters.length,
-        shelterNames,
-      }));
     },
     [hideShelterLayers, restoreShelterLayers, updateShelterMarkers],
   );
@@ -614,57 +619,59 @@ const [measureState, setMeasureState] = useState<{
       return;
     }
 
-    try {
-      const allShelters = getLocalShelters();
-      const designated = allShelters.filter(
-        (poi) => poi.category?.toLowerCase() === "designated ec",
-      );
+    (async () => {
+      try {
+        const allShelters = await getLocalShelters();
+        const designated = allShelters.filter(
+          (poi) => poi.category?.toLowerCase() === "designated ec",
+        );
 
-      const options: { id: string; name: string }[] = [];
-      const seenNames = new Set<string>();
-      const seenIds = new Set<string>();
+        const options: { id: string; name: string }[] = [];
+        const seenNames = new Set<string>();
+        const seenIds = new Set<string>();
 
-      designated.forEach((poi) => {
-        const name = poi.name?.trim();
-        if (!name) return;
-        const key = name.toLowerCase();
-        if (seenNames.has(key)) return;
-        seenNames.add(key);
+        designated.forEach((poi) => {
+          const name = poi.name?.trim();
+          if (!name) return;
+          const key = name.toLowerCase();
+          if (seenNames.has(key)) return;
+          seenNames.add(key);
 
-        let resolvedId = poi.id ?? key;
-        if (seenIds.has(resolvedId)) {
-          let suffix = 1;
-          while (seenIds.has(`${resolvedId}-${suffix}`)) {
-            suffix += 1;
+          let resolvedId = poi.id ?? key;
+          if (seenIds.has(resolvedId)) {
+            let suffix = 1;
+            while (seenIds.has(`${resolvedId}-${suffix}`)) {
+              suffix += 1;
+            }
+            resolvedId = `${resolvedId}-${suffix}`;
           }
-          resolvedId = `${resolvedId}-${suffix}`;
+          seenIds.add(resolvedId);
+
+          options.push({ id: resolvedId, name });
+        });
+
+        if (
+          onShelterOptionsChange &&
+          (options.length || !hasEmittedShelterOptions.current)
+        ) {
+          const sorted = [...options].sort((a, b) => a.name.localeCompare(b.name));
+          onShelterOptionsChange(sorted);
+          hasEmittedShelterOptions.current = true;
         }
-        seenIds.add(resolvedId);
 
-        options.push({ id: resolvedId, name });
-      });
+        if (!options.length || !onSecretShelterChange) {
+          return;
+        }
 
-      if (
-        onShelterOptionsChange &&
-        (options.length || !hasEmittedShelterOptions.current)
-      ) {
-        const sorted = [...options].sort((a, b) => a.name.localeCompare(b.name));
-        onShelterOptionsChange(sorted);
-        hasEmittedShelterOptions.current = true;
+        const chosen = options[Math.floor(Math.random() * options.length)];
+
+        hasSelectedShelter.current = true;
+        onSecretShelterChange({ id: chosen.id, name: chosen.name });
+        map.current?.off("idle", selectShelterFromLocalData);
+      } catch (error) {
+        console.warn("[mapbox] Unable to select shelter from local data:", error);
       }
-
-      if (!options.length || !onSecretShelterChange) {
-        return;
-      }
-
-      const chosen = options[Math.floor(Math.random() * options.length)];
-
-      hasSelectedShelter.current = true;
-      onSecretShelterChange({ id: chosen.id, name: chosen.name });
-      map.current?.off("idle", selectShelterFromLocalData);
-    } catch (error) {
-      console.warn("[mapbox] Unable to select shelter from local data:", error);
-    }
+    })();
   }, [onSecretShelterChange, onShelterOptionsChange]);
   const [layersVisible, setLayersVisible] = useState({
     floods: true,

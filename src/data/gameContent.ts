@@ -91,9 +91,4 @@ export const defaultTriviaQuestions: TriviaQuestion[] = [
   },
 ];
 
-export const defaultPlayers: Player[] = [
-  { id: "p1", name: "Alex Storm", team: "red", avatar: "🌟", ready: true },
-  { id: "p2", name: "Jordan Rain", team: "red", avatar: "⚡", ready: true },
-  { id: "p3", name: "Casey Wind", team: "blue", avatar: "🔥", ready: false },
-  { id: "p4", name: "Morgan Sky", team: "blue", avatar: "💎", ready: true },
-];
+export const defaultPlayers: Player[] = [];

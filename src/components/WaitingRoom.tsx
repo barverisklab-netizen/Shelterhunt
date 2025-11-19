@@ -1,14 +1,14 @@
-import { motion } from 'motion/react';
-import { User, Check, X, Copy, Crown } from 'lucide-react';
-import { Button } from './ui/button';
-import { Player } from "@/types/game";
-import { useState } from 'react';
+import { useMemo, useState } from "react";
+import { motion } from "motion/react";
+import { User, Check, X, Copy, Crown } from "lucide-react";
+import type { Player } from "@/types/game";
 
 interface WaitingRoomProps {
   gameCode: string;
   players: Player[];
   isHost: boolean;
   currentUserId: string;
+  hostId?: string | null;
   onToggleReady: () => void;
   onStartGame: () => void;
   onLeaveGame: () => void;
@@ -19,30 +19,35 @@ export function WaitingRoom({
   players,
   isHost,
   currentUserId,
+  hostId,
   onToggleReady,
   onStartGame,
-  onLeaveGame
+  onLeaveGame,
 }: WaitingRoomProps) {
-  const currentPlayer = players.find(p => p.id === currentUserId);
-  const redTeam = players.filter(p => p.team === 'red');
-  const blueTeam = players.filter(p => p.team === 'blue');
-  const allReady = players.every(p => p.ready);
+  const currentPlayer = players.find((p) => p.id === currentUserId);
+  const allReady = players.every((p) => p.ready);
   const [copied, setCopied] = useState(false);
+  const orderedPlayers = useMemo(() => {
+    return [...players].sort((a, b) => {
+      if (a.id === hostId) return -1;
+      if (b.id === hostId) return 1;
+      return a.name.localeCompare(b.name);
+    });
+  }, [players, hostId]);
 
   const copyGameCode = async () => {
     try {
       await navigator.clipboard.writeText(gameCode);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
-    } catch (error) {
-      // Fallback: Create a temporary input element
-      const input = document.createElement('input');
+    } catch {
+      const input = document.createElement("input");
       input.value = gameCode;
-      input.style.position = 'fixed';
-      input.style.opacity = '0';
+      input.style.position = "fixed";
+      input.style.opacity = "0";
       document.body.appendChild(input);
       input.select();
-      document.execCommand('copy');
+      document.execCommand("copy");
       document.body.removeChild(input);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
@@ -50,200 +55,134 @@ export function WaitingRoom({
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-[85] flex items-center justify-center bg-background px-4 py-6">
       <motion.div
-        className="w-full max-w-2xl space-y-6"
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
+        className="w-full max-w-4xl space-y-8 rounded-3xl border-4 border-black bg-white p-8 text-black shadow-[14px_14px_0_rgba(0,0,0,0.85)]"
+        initial={{ opacity: 0, scale: 0.96 }}
+        animate={{ opacity: 1, scale: 1 }}
       >
-        {/* Header */}
         <div className="text-center space-y-4">
           <motion.h1
-            className="text-4xl text-black"
+            className="text-3xl font-black uppercase tracking-wide"
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
           >
             Waiting Room
           </motion.h1>
 
-          {/* Game Code */}
           <motion.div
-            className="bg-background border-4 border-black p-4 inline-block"
+            className="mx-auto inline-flex items-center gap-4 rounded-2xl border-2 border-black bg-neutral-100 px-6 py-4"
             whileHover={{ scale: 1.02 }}
           >
-            <div className="text-sm text-black/70 mb-1 font-bold uppercase">Game Code</div>
-            <div className="flex items-center gap-3">
-              <div className="text-3xl tracking-widest text-black font-bold">
-                {gameCode}
-              </div>
-              <Button
-                onClick={copyGameCode}
-                size="sm"
-                variant={copied ? "outline" : "outline"}
-                className={copied ? 'border-red-600 text-red-600' : ''}
-              >
-                {copied ? (
-                  <Check className="w-4 h-4" />
-                ) : (
-                  <Copy className="w-4 h-4" />
-                )}
-              </Button>
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.3em] text-black/70">
+                Shelter Code
+              </p>
+              <p className="text-3xl font-black uppercase tracking-[0.4em]">{gameCode}</p>
             </div>
-          </motion.div>
-        </div>
-
-        {/* Teams */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {/* Red Team */}
-          <motion.div
-            className="bg-background border-4 border-black p-6 space-y-4"
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.2 }}
-          >
-            <div className="flex items-center gap-2 mb-4">
-              <div className="w-4 h-4 bg-red-600" />
-              <h3 className="text-xl text-black font-bold uppercase">Red</h3>
-            </div>
-            <div className="space-y-2">
-              {redTeam.map((player, index) => (
-                <motion.div
-                  key={player.id}
-                  className="bg-background border-3 border-black p-3 flex items-center justify-between"
-                  initial={{ opacity: 0, x: -10 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.3 + index * 0.1 }}
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="text-2xl">{player.avatar}</div>
-                    <div>
-                      <div className="text-black flex items-center gap-2 font-bold">
-                        {player.name}
-                        {isHost && player.id === currentUserId && (
-                          <Crown className="w-4 h-4 text-black" />
-                        )}
-                      </div>
-                      <div className="text-xs text-black/70">
-                        {player.id === currentUserId ? 'You' : 'Player'}
-                      </div>
-                    </div>
-                  </div>
-                  {player.ready ? (
-                    <Check className="w-5 h-5 text-red-600" />
-                  ) : (
-                    <X className="w-5 h-5 text-black" />
-                  )}
-                </motion.div>
-              ))}
-              {redTeam.length === 0 && (
-                <div className="text-center text-black/70 py-4">Waiting for players...</div>
-              )}
-            </div>
-          </motion.div>
-
-          {/* Blue Team */}
-          <motion.div
-            className="bg-background border-4 border-black p-6 space-y-4"
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.2 }}
-          >
-            <div className="flex items-center gap-2 mb-4">
-              <div className="w-4 h-4 bg-black" />
-              <h3 className="text-xl text-black font-bold uppercase">Blue Team</h3>
-            </div>
-            <div className="space-y-2">
-              {blueTeam.map((player, index) => (
-                <motion.div
-                  key={player.id}
-                  className="bg-background border-3 border-black p-3 flex items-center justify-between"
-                  initial={{ opacity: 0, x: 10 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.3 + index * 0.1 }}
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="text-2xl">{player.avatar}</div>
-                    <div>
-                      <div className="text-black flex items-center gap-2 font-bold">
-                        {player.name}
-                        {isHost && player.id === currentUserId && (
-                          <Crown className="w-4 h-4 text-black" />
-                        )}
-                      </div>
-                      <div className="text-xs text-black/70">
-                        {player.id === currentUserId ? 'You' : 'Player'}
-                      </div>
-                    </div>
-                  </div>
-                  {player.ready ? (
-                    <Check className="w-5 h-5 text-red-600" />
-                  ) : (
-                    <X className="w-5 h-5 text-black" />
-                  )}
-                </motion.div>
-              ))}
-              {blueTeam.length === 0 && (
-                <div className="text-center text-black/70 py-4">Waiting for players...</div>
-              )}
-            </div>
-          </motion.div>
-        </div>
-
-        {/* Action Buttons */}
-        <motion.div
-          className="space-y-3"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5 }}
-        >
-          {isHost ? (
-            <Button
-              onClick={onStartGame}
-              disabled={!allReady || players.length < 1}
-              variant="destructive"
-              size="lg"
-              className="w-full"
+            <button
+              type="button"
+              onClick={copyGameCode}
+              className={`rounded-full border-2 border-black p-2 transition hover:bg-black hover:text-white ${
+                copied ? "bg-black text-white" : "bg-white"
+              }`}
             >
-              {allReady && players.length >= 1 ? 'Start Game' : 'Waiting for players to be ready...'}
-            </Button>
-          ) : (
-            <Button
+              {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+            </button>
+          </motion.div>
+        </div>
+
+        <div className="grid gap-6 md:grid-cols-[1.6fr_1fr]">
+          <motion.div
+            className="space-y-3 rounded-2xl bg-background p-5"
+            initial={{ opacity: 0, x: -12 }}
+            animate={{ opacity: 1, x: 0 }}
+          >
+            <div className="mb-2 flex items-center gap-2">
+              <User className="h-4 w-4" />
+              <h3 className="text-xl font-black uppercase tracking-wide">Players</h3>
+            </div>
+            {orderedPlayers.length === 0 ? (
+              <div className="py-8 text-center text-sm font-semibold uppercase tracking-wide text-black/60">
+                Waiting for players…
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {orderedPlayers.map((player, index) => (
+                  <motion.div
+                    key={player.id}
+                    className="flex items-center justify-between rounded-xl px-4 py-3"
+                    initial={{ opacity: 0, x: 6 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.15 + index * 0.05 }}
+                  >
+                    <div className="flex items-center gap-3 text-sm font-black uppercase tracking-wide">
+                      <span>{player.name || "Player"}</span>
+                      {player.id === hostId && <Crown className="h-4 w-4 text-black" />}
+                      {player.id === currentUserId && (
+                        <span className="rounded-full px-2 py-0.5 text-[10px]">
+                          You
+                        </span>
+                      )}
+                    </div>
+                    
+                  </motion.div>
+                ))}
+              </div>
+            )}
+          </motion.div>
+
+          <motion.div
+            className="space-y-4 rounded-2xl border-2 border-black bg-white p-5"
+            initial={{ opacity: 0, x: 12 }}
+            animate={{ opacity: 1, x: 0 }}
+          >
+            <button
+              type="button"
               onClick={onToggleReady}
-              variant={currentPlayer?.ready ? "default" : "outline"}
-              size="lg"
-              className="w-full"
+              className={`w-full rounded-xl border-2 border-black px-4 py-3 text-sm font-black uppercase tracking-wide transition hover:-translate-y-0.5 hover:shadow-[4px_4px_0_rgba(0,0,0,0.9)] ${
+                currentPlayer?.ready ? "bg-red-500 text-black" : "bg-white text-black"
+              }`}
             >
               {currentPlayer?.ready ? (
-                <>
-                  <Check className="w-5 h-5 mr-2" />
+                <span className="flex items-center justify-center gap-2">
+                  <Check className="h-5 w-5" />
                   Ready!
-                </>
+                </span>
               ) : (
-                'Mark as Ready'
+                "Mark as Ready"
               )}
-            </Button>
-          )}
+            </button>
 
-          <Button
-            onClick={onLeaveGame}
-            variant="outline"
-            size="lg"
-            className="w-full"
-          >
-            Leave Game
-          </Button>
-        </motion.div>
+            {isHost ? (
+              <button
+                type="button"
+                onClick={onStartGame}
+                disabled={!allReady || players.length < 1}
+                className="w-full rounded-xl border-2 border-black bg-red-500 px-4 py-3 text-sm font-black uppercase tracking-wide text-black transition hover:-translate-y-0.5 hover:shadow-[4px_4px_0_rgba(0,0,0,0.9)] disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {allReady && players.length >= 1 ? "Start Game" : "Waiting for everyone…"}
+              </button>
+            ) : (
+              <p className="text-center text-[11px] font-semibold uppercase tracking-[0.3em] text-black/60">
+                Waiting for host to start the race
+              </p>
+            )}
 
-        {/* Player Count */}
-        <motion.div
-          className="text-center text-black/60 text-sm"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.6 }}
-        >
-          <User className="w-4 h-4 inline mr-1" />
-          {players.length} player{players.length !== 1 ? 's' : ''} in lobby
-        </motion.div>
+            <button
+              type="button"
+              onClick={onLeaveGame}
+              className="w-full rounded-xl border-2 border-black px-4 py-3 text-sm font-black uppercase tracking-wide text-black transition hover:-translate-y-0.5 hover:shadow-[4px_4px_0_rgba(0,0,0,0.9)]"
+            >
+              Leave Game
+            </button>
+
+            <div className="text-center text-xs font-semibold uppercase tracking-[0.3em] text-black/60">
+              <User className="mr-1 inline h-3.5 w-3.5" />
+              {players.length} player{players.length !== 1 ? "s" : ""} in lobby
+            </div>
+          </motion.div>
+        </div>
       </motion.div>
     </div>
   );

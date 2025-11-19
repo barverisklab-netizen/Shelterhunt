@@ -28,8 +28,6 @@ export interface TriviaQuestion {
 export interface Player {
   id: string;
   name: string;
-  team: "red" | "blue";
-  avatar: string;
   ready: boolean;
 }
 

@@ -1,5 +1,5 @@
 {
-      "name": "Location-Based Deduction Game",
+      "name": "shelterhunt",
       "version": "0.1.0",
       "private": true,
       "dependencies": {
@@ -55,11 +55,14 @@
             "@types/react": "^19.2.6",
             "@types/react-dom": "^19.2.3",
             "@vitejs/plugin-react-swc": "^3.10.2",
+            "npm-run-all": "^4.1.5",
             "vite": "6.3.5",
             "vitest": "^1.6.0"
       },
       "scripts": {
-            "dev": "vite",
+            "dev": "run-p dev:frontend dev:api",
+            "dev:frontend": "vite",
+            "dev:api": "npm run dev --prefix api",
             "build": "vite build",
             "start": "vite preview --host 0.0.0.0 --port ${PORT:-4173}",
             "test": "vitest run"

@@ -11,6 +11,37 @@
   - **Maps**: `Mapbox GL` powers the interactive map via `src/components/MapView.tsx`. Tokens and tileset IDs are configured through environment variables (`.env.local` and `src/config/mapbox.ts`).
   - **Releases**: Follow the workflow in `docs/release-process.md` to publish versioned builds and GitHub releases.
 
+  ## Multiplayer API (Render/Supabase)
+
+  The `/api` directory houses a Fastify-based web service that manages multiplayer sessions end-to-end:
+
+  - Connects to Supabase Postgres using the `DATABASE_URL` env var.
+  - Provides REST endpoints for creating/joining sessions, toggling readiness, starting/finishing races, and fetching lobby snapshots.
+  - Issues JWTs scoped to a session/player combination; the frontend (see `src/services/multiplayerSessionService.ts`) consumes these endpoints.
+  - Ships with a WebSocket stream per session for lobby events plus a cron endpoint for Render jobs to close expired sessions.
+
+  To run it locally:
+
+  ```bash
+  cd api
+  npm install
+  npm run dev
+  ```
+
+  Configure `.env` using the template in `api/.env.example` before booting the service.
+
+  ### Multiplayer data seeding
+
+  The GeoJSON file in `src/assets/Data/ihi_shelters.geojson` does **not** include multiplayer share codes. Those codes are generated and stored in Supabase when you run the seeding script. After setting up your Supabase project:
+
+  ```bash
+  cd api
+  psql "$DATABASE_URL" -f sql/001_init_sessions.sql   # create/alter tables
+  npm run seed:shelters                               # import GeoJSON + share codes
+  ```
+
+  The importer assigns a random six-character `share_code` to every shelter and upserts the records into Supabase. The frontend and API read these codes from the database, so the GeoJSON never needs to be modified locally.
+
   ## Main Screens & Interactions
 
   - **Onboarding Screen** (`src/components/OnboardingScreen.tsx`): Presents bold, Bauhaus-styled cards that let players host, join, or start a solo round. Help and toast notifications surface onboarding tips.
