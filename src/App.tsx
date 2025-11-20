@@ -89,6 +89,11 @@ const buildLocalDesignatedShelters = async (
   const normalizedRadius = Math.max(0, radiusKm);
   const origin = { lat: center.lat, lng: center.lng };
   const shelters = await getLocalShelters();
+  console.log("[Multiplayer] Filtering shelters", {
+    total: shelters.length,
+    center,
+    radiusKm: normalizedRadius,
+  });
   return shelters
     .filter(
       (poi) =>
@@ -281,24 +286,89 @@ export default function App() {
     [sessionContext],
   );
 
+  const requestUserLocation = useCallback(
+    () =>
+      new Promise<{ lat: number; lng: number }>((resolve, reject) => {
+        if (!("geolocation" in navigator)) {
+          reject(new Error("Geolocation is unavailable on this device."));
+          return;
+        }
+
+        navigator.geolocation.getCurrentPosition(
+          (pos) => {
+            resolve({
+              lat: pos.coords.latitude,
+              lng: pos.coords.longitude,
+            });
+          },
+          (err) => {
+            reject(err);
+          },
+          {
+            enableHighAccuracy: true,
+            timeout: 10000,
+            maximumAge: 0,
+          },
+        );
+      }),
+    [],
+  );
+
   const beginMultiplayerRace = useCallback(() => {
     if (!currentShelter) {
       return;
     }
+
     const label =
       currentShelter.nameEn ??
       currentShelter.nameJp ??
       currentShelter.code;
-    setSecretShelter({ id: currentShelter.code, name: label });
-    setShelterOptions([{ id: currentShelter.code, name: label }]);
-    setLockSecretShelter(true);
-    setLockShelterOptions(true);
-    setGameMode("lightning");
-    setTimeRemaining(MULTIPLAYER_DURATION_MINUTES * 60);
-    setTimerEnabled(true);
-    setIsTimerCritical(false);
-    setGameState("playing");
-  }, [currentShelter]);
+
+    const finishSetup = (options: { id: string; name: string }[], coords?: { lat: number; lng: number }) => {
+      setSecretShelter({ id: currentShelter.code, name: label });
+      setShelterOptions(options);
+      setLockSecretShelter(true);
+      setLockShelterOptions(true);
+      setGameMode("lightning");
+      setTimeRemaining(MULTIPLAYER_DURATION_MINUTES * 60);
+      setTimerEnabled(true);
+      setIsTimerCritical(false);
+      if (coords) {
+        setPlayerLocation(coords);
+      }
+      setGameState("playing");
+    };
+
+    const useFallback = () => {
+      console.warn("[Multiplayer] Fallback to selected shelter only");
+      finishSetup([{ id: currentShelter.code, name: label }]);
+    };
+
+    const seedFromCoords = async () => {
+      try {
+        const coords = await requestUserLocation();
+        const nearby = await buildLocalDesignatedShelters(coords, MULTIPLAYER_RADIUS_KM);
+        if (!nearby.length) {
+          useFallback();
+          return;
+        }
+        const options = nearby.map((shelter) => ({
+          id: shelter.id,
+          name: shelter.name,
+        }));
+        finishSetup(options, coords);
+      } catch (error) {
+        console.warn("[Multiplayer] Unable to seed nearby shelters:", error);
+        useFallback();
+      }
+    };
+
+    if (sessionContext) {
+      void seedFromCoords();
+    } else {
+      useFallback();
+    }
+  }, [currentShelter, sessionContext, requestUserLocation]);
 
   const bootstrapSession = useCallback(
     async (
@@ -432,31 +502,6 @@ export default function App() {
     setGameState("onboarding");
   };
 
-  const requestUserLocation = () =>
-    new Promise<{ lat: number; lng: number }>((resolve, reject) => {
-      if (!("geolocation" in navigator)) {
-        reject(new Error("Geolocation is unavailable on this device."));
-        return;
-      }
-
-      navigator.geolocation.getCurrentPosition(
-        (pos) => {
-          resolve({
-            lat: pos.coords.latitude,
-            lng: pos.coords.longitude,
-          });
-        },
-        (err) => {
-          reject(err);
-        },
-        {
-          enableHighAccuracy: true,
-          timeout: 10000,
-          maximumAge: 0,
-        },
-      );
-    });
-
   useEffect(() => {
     if (typeof window === "undefined") return;
     const trimmed = profileName.trim();
@@ -473,10 +518,15 @@ export default function App() {
     await disconnectSession();
     try {
       const coords = await requestUserLocation();
+      console.log("[Multiplayer] Host location acquired", coords);
       const nearby = await buildLocalDesignatedShelters(
         coords,
         MULTIPLAYER_RADIUS_KM,
       );
+      console.log("[Multiplayer] Nearby shelters", {
+        count: nearby.length,
+        radiusKm: MULTIPLAYER_RADIUS_KM,
+      });
       if (!nearby.length) {
         throw new Error(
           `No shelters within ${MULTIPLAYER_RADIUS_KM} km. Move closer to the city.`,
@@ -487,6 +537,10 @@ export default function App() {
         coords,
         MULTIPLAYER_RADIUS_KM,
       );
+      console.log("[Multiplayer] Selected shelter candidate", {
+        id: secretShelter.id,
+        name: secretShelter.name,
+      });
       const shareCode = secretShelter.id;
       const resolved = await getShelterByShareCode(shareCode);
       if (!resolved) {
@@ -494,11 +548,20 @@ export default function App() {
       }
       const displayName =
         overrideName?.trim() || profileName.trim() || "Navigator";
+      console.log("[Multiplayer] Creating session", {
+        shareCode,
+        displayName,
+        ttlMinutes: MULTIPLAYER_DURATION_MINUTES,
+      });
       const response = await createMultiplayerSession({
         shelterCode: shareCode,
         hostId: currentUserId,
         displayName,
         ttlMinutes: MULTIPLAYER_DURATION_MINUTES,
+      });
+      console.log("[Multiplayer] Session created", {
+        sessionId: response.session.id,
+        hostPlayerId: response.player.id,
       });
       await bootstrapSession(response, "host", { shelter: resolved });
       setPlayerLocation(coords);
