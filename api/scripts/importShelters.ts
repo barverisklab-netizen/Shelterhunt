@@ -18,10 +18,7 @@ interface GeoJSONCollection {
   features?: GeoJSONFeature[];
 }
 
-const GEOJSON_PATH = path.resolve(
-  process.cwd(),
-  "../src/assets/Data/ihi_shelters.geojson",
-);
+const GEOJSON_PATH = path.resolve(process.cwd(), "assets/ihi_shelters.geojson");
 
 const normalizeText = (value: unknown) => {
   if (typeof value !== "string") {

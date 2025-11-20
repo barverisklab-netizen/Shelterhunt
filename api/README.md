@@ -44,7 +44,7 @@ cd api
 npm run seed:shelters
 ```
 
-This script reads `src/assets/Data/ihi_shelters.geojson`, generates deterministic shelter codes, and upserts the records into Supabase.
+This script reads `api/assets/ihi_shelters.geojson`, generates deterministic shelter codes, and upserts the records into Supabase.
 
 ## Key endpoints
 
