@@ -18,7 +18,8 @@ export function buildServer() {
   const sessionHub = new SessionHub();
 
   fastify.register(cors, {
-    origin: true,
+    origin: env.CORS_ORIGIN ?? true,
+    credentials: true,
   });
 
   fastify.addContentTypeParser("application/json", { parseAs: "string" }, (request, body, done) => {
