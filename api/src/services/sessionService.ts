@@ -43,11 +43,26 @@ async function fetchShelterByShareCode(client: PoolClient, code: string): Promis
     `select id,
             code,
             share_code,
+            external_id,
+            sequence_no,
             name_en,
             name_jp,
+            address,
+            address_en,
+            address_jp,
             category,
+            category_jp,
+            flood_depth_rank,
+            flood_depth,
+            storm_surge_depth_rank,
+            storm_surge_depth,
+            flood_duration_rank,
+            flood_duration,
+            inland_waters_depth_rank,
+            inland_waters_depth,
             latitude,
-            longitude
+            longitude,
+            created_at
      from public.shelters
      where share_code = $1
      limit 1`,
