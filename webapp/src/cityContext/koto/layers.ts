@@ -9,7 +9,7 @@ export const kotoLayers: KotoLayer[] = [
     metadata: {
       query: {
         template:
-          "Name: <b>{{Landmark Name (EN)}}</b> | {{Landmark Name (JP)}}<br>Category: <b>{{Category}}</b><br>Address: <b>{{Address}}</b>",
+          "Name: <b>{{Landmark Name (EN)}}</b> | {{Landmark Name (JP)}}<br>Category: <b>{{Category}}</b><br>Address: <b>{{Address (JP)}}</b>",
       },
       loadOnInit: true,
       legendItems: [
@@ -53,7 +53,7 @@ export const kotoLayers: KotoLayer[] = [
     metadata: {
       query: {
         template:
-          "Name: <b>{{Landmark Name (EN)}}</b> | {{Landmark Name (JP)}}<br>Category: <b>{{Category}}</b><br>Address: <b>{{Address}}</b>",
+          "Name: <b>{{Landmark Name (EN)}}</b> | {{Landmark Name (JP)}}<br>Category: <b>{{Category}}</b><br>Address: <b>{{Address (JP)}}</b>",
       },
       loadOnInit: false,
       legendItems: [
@@ -97,7 +97,7 @@ export const kotoLayers: KotoLayer[] = [
     metadata: {
       query: {
         template:
-          "Name: <b>{{Landmark name (EN)}}</b> | {{Landmark name (JP)}}<br>Category: <b>{{Category}}</b><br>Address: <b>{{Address}}</b>",
+          "Name: <b>{{Landmark name (EN)}}</b> | {{Landmark name (JP)}}<br>Category: <b>{{Category}}</b><br>Address: <b>{{Address (JP)}}</b>",
       },
       loadOnInit: false,
       legendItems: [
@@ -157,7 +157,7 @@ export const kotoLayers: KotoLayer[] = [
     metadata: {
       query: {
         template:
-          "Name: <b>{{Landmark name (EN)}}</b> | {{Landmark name (JP)}}<br>Category: <b>{{Category}}</b><br>Address: <b>{{Address}}</b>",
+          "Name: <b>{{Landmark name (EN)}}</b> | {{Landmark name (JP)}}<br>Category: <b>{{Category}}</b><br>Address: <b>{{Address (JP)}}</b>",
       },
       loadOnInit: false,
       legendItems: [
@@ -201,7 +201,7 @@ export const kotoLayers: KotoLayer[] = [
     metadata: {
       query: {
         template:
-          "Name: <b>{{Landmark name (EN)}}</b> | {{Landmark name (JP)}}<br>Category: <b>{{Category}}</b><br>Address: <b>{{Address}}</b>",
+          "Name: <b>{{Landmark name (EN)}}</b> | {{Landmark name (JP)}}<br>Category: <b>{{Category}}</b><br>Address: <b>{{Address (JP)}}</b>",
       },
       loadOnInit: false,
       legendItems: [
@@ -312,7 +312,7 @@ export const kotoLayers: KotoLayer[] = [
     metadata: {
       query: {
         template:
-          "Name: <b>{{Landmark name (EN)}}</b> | {{Landmark name (JP)}}<br>Category: <b>{{Category}}</b><br>Address: <b>{{Address}}</b>",
+          "Name: <b>{{Landmark name (EN)}}</b> | {{Landmark name (JP)}}<br>Category: <b>{{Category}}</b><br>Address: <b>{{Address (JP)}}</b>",
       },
       loadOnInit: false,
       legendItems: [
@@ -374,7 +374,7 @@ export const kotoLayers: KotoLayer[] = [
     metadata: {
       query: {
         template:
-          "Name: <b>{{Landmark name (EN)}}</b> | {{Landmark name (JP)}}<br>Category: <b>{{Category}}</b><br>Address: <b>{{Address}}</b>",
+          "Name: <b>{{Landmark name (EN)}}</b> | {{Landmark name (JP)}}<br>Category: <b>{{Category}}</b><br>Address: <b>{{Address (JP)}}</b>",
       },
       loadOnInit: false,
       legendItems: [
@@ -436,7 +436,7 @@ export const kotoLayers: KotoLayer[] = [
     metadata: {
       query: {
         template:
-          "Name: <b>{{Landmark name (EN)}}</b> | {{Landmark name (JP)}}<br>Category: <b>{{Category}}</b><br>Address: <b>{{Address}}</b>",
+          "Name: <b>{{Landmark name (EN)}}</b> | {{Landmark name (JP)}}<br>Category: <b>{{Category}}</b><br>Address: <b>{{Address (JP)}}</b>",
       },
       loadOnInit: false,
       legendItems: [
@@ -498,7 +498,7 @@ export const kotoLayers: KotoLayer[] = [
     metadata: {
       query: {
         template:
-          "Name: <b>{{Landmark name (EN)}}</b> | {{Landmark name (JP)}}<br>Category: <b>{{Category}}</b><br>Address: <b>{{Address}}</b>",
+          "Name: <b>{{Landmark name (EN)}}</b> | {{Landmark name (JP)}}<br>Category: <b>{{Category}}</b><br>Address: <b>{{Address (JP)}}</b>",
       },
       loadOnInit: false,
       legendItems: [
@@ -560,7 +560,7 @@ export const kotoLayers: KotoLayer[] = [
     metadata: {
       query: {
         template:
-          "Name: <b>{{Landmark name (EN)}}</b> | {{Landmark name (JP)}}<br>Category: <b>{{Category}}</b><br>Address: <b>{{Address}}</b>",
+          "Name: <b>{{Landmark name (EN)}}</b> | {{Landmark name (JP)}}<br>Category: <b>{{Category}}</b><br>Address: <b>{{Address (JP)}}</b>",
       },
       loadOnInit: false,
       legendItems: [
