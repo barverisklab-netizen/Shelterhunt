@@ -10,7 +10,8 @@ pnpm-debug.log*
 **/build/
 *.local
 
-# Environment variables (keep .env for Replit)
+# Environment variables 
+**/.env
 **/.env.local
 **/.env.production.local
 **/.env.development.local

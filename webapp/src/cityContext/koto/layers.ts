@@ -9,7 +9,7 @@ export const kotoLayers: KotoLayer[] = [
     metadata: {
       query: {
         template:
-          "Name: <b>{{Landmark name (EN)}}</b> | {{Landmark name (JP)}}<br>Category: <b>{{Category}}</b><br>Address: <b>{{Address}}</b>",
+          "Name: <b>{{Landmark Name (EN)}}</b> | {{Landmark Name (JP)}}<br>Category: <b>{{Category}}</b><br>Address: <b>{{Address}}</b>",
       },
       loadOnInit: true,
       legendItems: [
@@ -39,7 +39,7 @@ export const kotoLayers: KotoLayer[] = [
         "text-font": ["Roboto Bold"],
         "text-size": 10,
         "icon-image": ["match", ["get", "Category"], "Designated EC", "ihi_dec", ""],
-        "text-field": ["match", ["get", "Category"], "Designated EC", ["get", "Landmark name (EN)"], ""],
+        "text-field": ["match", ["get", "Category"], "Designated EC", ["get", "Landmark Name (EN)"], ""],
         "text-anchor": "top",
         "text-offset": [0, 2.5],
         "icon-allow-overlap": true,
@@ -53,7 +53,7 @@ export const kotoLayers: KotoLayer[] = [
     metadata: {
       query: {
         template:
-          "Name: <b>{{Landmark name (EN)}}</b> | {{Landmark name (JP)}}<br>Category: <b>{{Category}}</b><br>Address: <b>{{Address}}</b>",
+          "Name: <b>{{Landmark Name (EN)}}</b> | {{Landmark Name (JP)}}<br>Category: <b>{{Category}}</b><br>Address: <b>{{Address}}</b>",
       },
       loadOnInit: false,
       legendItems: [
