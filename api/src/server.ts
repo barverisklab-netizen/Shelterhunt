@@ -22,12 +22,13 @@ export function buildServer() {
   });
 
   fastify.addContentTypeParser("application/json", { parseAs: "string" }, (request, body, done) => {
-    if (!body || body.trim() === "") {
+    const text = typeof body === "string" ? body : body?.toString("utf8") ?? "";
+    if (!text.trim()) {
       done(null, {});
       return;
     }
     try {
-      const json = JSON.parse(body);
+      const json = JSON.parse(text);
       done(null, json);
     } catch (error) {
       done(error as Error);
