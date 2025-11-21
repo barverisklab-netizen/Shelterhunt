@@ -16,10 +16,16 @@ export function IntroScreen({ onContinue }: IntroScreenProps) {
   ];
 
   return (
-    <div className="min-h-screen bg-white text-black relative">
-      <div className="h-16 sm:h-24" />
-        <div className="mx-auto flex min-h-screen w-full max-w-[420px] flex-col items-center justify-center gap-8 px-6 py-12 sm:gap-10 sm:px-8 sm:py-16">
-    {/* TITLE */}
+    <div className="min-h-screen bg-white text-black relative flex items-center justify-center px-4 py-10">
+      <div className="absolute inset-0 pointer-events-none">
+        <div className="absolute -top-8 -left-8 h-40 w-40 rounded-full bg-red-500/20 blur-3xl" />
+        <div className="absolute bottom-4 right-6 h-44 w-44 rounded-full bg-black/10 blur-3xl" />
+      </div>
+
+      <div
+        className="relative space-y-8 sm:space-y-10 bg-white/90 border-4 border-black rounded-3xl px-6 py-8 sm:px-8 sm:py-10 shadow-[10px_10px_0_#000] mx-auto"
+        style={{ width: "min(100%, 420px)" }}
+      >
         <motion.h1
           className="text-center text-3xl font-black tracking-[0.28em] sm:text-4xl"
           initial={{ opacity: 0, y: 12 }}
@@ -29,15 +35,13 @@ export function IntroScreen({ onContinue }: IntroScreenProps) {
           {t("intro.title")}
         </motion.h1>
 
-        {/* IMAGE */}
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, ease: "easeOut", delay: 0.1 }}
           className="flex justify-center"
         >
-          {/* Parent fixed-size box */}
-          <div className="w-[260px] h-[260px] mx-auto bg-white rounded-3xl border-4 border-black overflow-hidden shadow-[8px_8px_0_#000] flex justify-center items-center">
+          <div className="w-[240px] h-[240px] sm:w-[260px] sm:h-[260px] bg-white rounded-3xl border-4 border-black overflow-hidden shadow-[8px_8px_0_#000] flex justify-center items-center">
             <img
               src={bosaiSensei}
               alt="Bosai-Sensei welcomes players"
@@ -49,28 +53,22 @@ export function IntroScreen({ onContinue }: IntroScreenProps) {
           </div>
         </motion.div>
 
-        {/* PARAGRAPHS */}
-        {/* PARAGRAPHS */}
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, ease: "easeOut", delay: 0.2 }}
-          className="mx-auto max-w-[36rem] space-y-5 text-center text-base leading-7 sm:text-lg sm:leading-8"
+          className="space-y-5 text-center text-base leading-7 sm:text-lg sm:leading-8 w-full max-w-[320px] sm:max-w-[360px] mx-auto"
         >
           {paragraphs.map((paragraph, index) => (
             <p key={index}>{paragraph}</p>
           ))}
         </motion.div>
 
-        {/* spacer */}
-        <div className="h-6 sm:h-4" />
-
-        {/* PLAY BUTTON */}
         <motion.div
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, ease: "easeOut", delay: 0.3 }}
-          className="flex justify-center pt-2 m-16"
+          className="flex justify-center pt-2"
         >
           <Button
             onClick={onContinue}
@@ -79,9 +77,6 @@ export function IntroScreen({ onContinue }: IntroScreenProps) {
             {t("intro.play")}
           </Button>
         </motion.div>
-
-        {/* spacer */}
-        <div className="h-16 sm:h-24" />
       </div>
     </div>
   );
