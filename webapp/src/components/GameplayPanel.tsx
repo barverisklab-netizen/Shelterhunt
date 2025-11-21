@@ -8,6 +8,8 @@ import {
   AccordionTrigger,
 } from "./ui/accordion";
 import { Clue } from "@/types/game";
+import { useI18n } from "@/i18n";
+import { LanguageToggle } from "./LanguageToggle";
 
 interface GameplayPanelProps {
   isOpen: boolean;
@@ -34,6 +36,7 @@ export function GameplayPanel({
   onStartMeasure,
   isMeasureActive = false,
 }: GameplayPanelProps) {
+  const { t } = useI18n();
   return (
     <AnimatePresence>
       {isOpen && (
@@ -60,9 +63,14 @@ export function GameplayPanel({
                     <Lightbulb className="h-12 w-12 text-black" />
                   </div>
                   <div>
-                    <h3 className="text-2xl font-bold uppercase">Mission Control</h3>
+                    <h3 className="text-2xl font-bold uppercase">{t("gameplay.missionControl")}</h3>
                     <p className="text-sm text-black/70">
-                      {clues.length} clue{clues.length === 1 ? "" : "s"}
+                      {t("gameplay.clueCount", {
+                        replacements: {
+                          count: clues.length,
+                          suffix: clues.length === 1 ? "" : "s",
+                        },
+                      })}
                     </p>
                   </div>
                 </div>
@@ -71,7 +79,7 @@ export function GameplayPanel({
                   variant="outline"
                   size="icon"
                   onClick={onClose}
-                  aria-label="Close gameplay panel"
+                  aria-label={t("gameplay.closePanel")}
                   className="px-0"
                 >
                   <X className="h-5 w-5" />
@@ -87,16 +95,15 @@ export function GameplayPanel({
                 >
                   <AccordionTrigger className="px-4 text-black">
                     <div className="flex w-full items-center justify-between text-sm font-bold uppercase tracking-wide">
-                      <span>Clues</span>
+                      <span>{t("gameplay.clues")}</span>
                       <span className="text-xs font-semibold text-black/60">
-                        {clues.length} logged
+                        {t("gameplay.logged", { replacements: { count: clues.length } })}
                       </span>
                     </div>
                   </AccordionTrigger>
                   <AccordionContent className="px-6 py-6">
                     <p className="mb-4 text-xs text-black/70">
-                      Each clue narrows the possible shelters. Compare green
-                      confirmations against red denials to deduce the right location.
+                      {t("gameplay.clueHint")}
                     </p>
                     {clues.length === 0 ? (
                       <motion.div
@@ -109,11 +116,10 @@ export function GameplayPanel({
                         </div>
                         <div>
                           <div className="mb-2 text-xl font-bold uppercase">
-                            No clues yet
+                            {t("gameplay.noCluesTitle")}
                           </div>
                           <p className="text-sm text-black/70">
-                            Visit locations and answer trivia questions to unlock
-                            intelligence about the secret shelter.
+                            {t("gameplay.noCluesSubtitle")}
                           </p>
                         </div>
                       </motion.div>
@@ -170,11 +176,13 @@ export function GameplayPanel({
                   <div className="flex items-start gap-3 text-black">
                     <Lightbulb className="mt-0.5 h-5 w-5 flex-shrink-0" />
                     <div>
-                      <div className="text-sm font-bold uppercase">Strategy Tips</div>
+                      <div className="text-sm font-bold uppercase">
+                        {t("gameplay.strategyTitle")}
+                      </div>
                       <div className="space-y-1 text-xs text-black/70">
-                        <p>• Use green clue markers to confirm correct attributes</p>
-                        <p>• Red clue markers help you rule out bad candidates</p>
-                        <p>• Stack multiple hints before locking in a guess</p>
+                        <p>• {t("gameplay.strategyTip1")}</p>
+                        <p>• {t("gameplay.strategyTip2")}</p>
+                        <p>• {t("gameplay.strategyTip3")}</p>
                       </div>
                     </div>
                   </div>
@@ -189,20 +197,21 @@ export function GameplayPanel({
                 >
                   <AccordionTrigger className="px-4 text-black">
                     <div className="flex w-full items-center justify-between text-sm font-bold uppercase tracking-wide">
-                      <span>Tools</span>
+                      <span>{t("gameplay.tools.title")}</span>
                       <span
                         className={`text-[10px] font-semibold uppercase ${
                           isMeasureActive ? "text-red-600" : "text-black/40"
                         }`}
                       >
-                        {isMeasureActive ? "Active" : "Idle"}
+                        {isMeasureActive
+                          ? t("gameplay.tools.active")
+                          : t("gameplay.tools.idle")}
                       </span>
                     </div>
                   </AccordionTrigger>
                   <AccordionContent className="px-6 py-6">
                     <p className="mb-3 text-xs text-black/70">
-                      Draw a search radius to inspect which shelters fall within a
-                      chosen distance.
+                      {t("gameplay.tools.copy")}
                     </p>
                     <Button
                       type="button"
@@ -214,7 +223,9 @@ export function GameplayPanel({
                       className="w-full border border-black bg-white text-xs tracking-wide text-black transition-colors hover:bg-neutral-200 hover:text-black hover:border-black active:bg-black active:text-white active:border-black disabled:border-neutral-400 disabled:text-neutral-500 disabled:bg-neutral-200"
                       disabled={isMeasureActive}
                     >
-                      {isMeasureActive ? "Measurement Active" : "Measure Shelters Radius"}
+                      {isMeasureActive
+                        ? t("gameplay.tools.activeButton")
+                        : t("gameplay.tools.trigger")}
                     </Button>
                   </AccordionContent>
                 </AccordionItem>
@@ -226,16 +237,16 @@ export function GameplayPanel({
                 >
                   <AccordionTrigger className="px-4  text-black">
                     <div className="flex w-full items-center justify-between text-sm font-bold uppercase tracking-wide">
-                      <span>Final Decision</span>
+                      <span>{t("gameplay.finalDecision")}</span>
                       <span className="text-[10px] font-semibold uppercase text-black/60">
-                        Final step
+                        {t("gameplay.finalStep")}
                       </span>
                     </div>
                   </AccordionTrigger>
                   <AccordionContent className="space-y-3 px-6 py-6">
                     <div className="space-y-2">
                       <label className="text-s font-semibold uppercase text-black/70 font-bold ">
-                        Select target shelter
+                        {t("gameplay.selectShelter")}
                       </label>
                       <select
                         value={selectedShelterId ?? ""}
@@ -243,7 +254,7 @@ export function GameplayPanel({
                         className="w-full rounded border border-neutral-700 bg-background p-2 text-sm font-semibold uppercase text-neutral-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-neutral-500"
                       >
                         <option value="" disabled hidden>
-                          Select a shelter
+                          {t("gameplay.selectPlaceholder")}
                         </option>
                         {shelterOptions.map((option) => (
                           <option key={option.id} value={option.id}>
@@ -253,8 +264,7 @@ export function GameplayPanel({
                       </select>
                     </div>
                     <p className="text-[11px] text-black/60">
-                      Wrong guesses reset the timer to <strong>10 minutes</strong>. Make
-                      sure your clues line up before submitting.
+                      {t("gameplay.guessWarning")}
                     </p>
                     <Button
                       onClick={onGuessRequest}
@@ -263,20 +273,24 @@ export function GameplayPanel({
                         isGuessDisabled || !selectedShelterId || !shelterOptions.length
                       }
                     >
-                      Submit Guess
+                      {t("gameplay.submitGuess")}
                     </Button>
                   </AccordionContent>
                 </AccordionItem>
               </Accordion>
 
+              <div className="mt-2 flex items-center justify-between gap-3">
+                <LanguageToggle inline />
               <Button
-                onClick={onClose}
-                variant="outline"
-                size="default"
-                className="w-full font-semibold uppercase"
-              >
-                Return to Map
-              </Button>
+                  onClick={onClose}
+                  variant="outline"
+                  size="default"
+                  className="border border-black text-black transition-colors hover:bg-neutral-200 hover:text-black hover:border-black active:bg-black active:text-white active:border-black disabled:bg-neutral-200 disabled:text-neutral-500 disabled:border-neutral-400 disabled:opacity-100"
+                >
+                  {t("gameplay.returnToMap")}
+                </Button>
+                
+              </div>
             </div>
           </motion.div>
         </>

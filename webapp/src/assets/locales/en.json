@@ -1,0 +1,330 @@
+{
+  "common": {
+    "appName": "ShelterSearch",
+    "back": "Back",
+    "cancel": "Cancel",
+    "close": "Close",
+    "continue": "Continue",
+    "copy": "Copy",
+    "you": "You",
+    "languageLabel": "Language",
+    "language": {
+      "en": "English",
+      "ja": "Japanese"
+    },
+    "default": "Default",
+    "setDefault": "Set Default",
+    "defaultLanguage": "Default: {language}"
+  },
+  "intro": {
+    "title": "ShelterSearch",
+    "paragraph1": "Ah, welcome, heroes! I'm Bosai-Sensei, your disaster-preparedness guide. A powerful hurricane is approaching Koto City--and our beloved mascot, Koto-chan, has taken shelter somewhere safe... but we've lost contact!",
+    "paragraph2": "Your mission is to help me locate which shelter Koto-chan is in before the storm arrives. To do that, you'll need to explore the city, complete disaster-preparedness challenges, and collect clues.",
+    "paragraph3": "Each correct answer brings us one step closer to Koto-chan--and helps you learn how to stay safe during real emergencies! Ready your team, check your surroundings, and remember: preparedness is the best superpower!",
+    "play": "Play"
+  },
+  "onboarding": {
+    "title": "ShelterSearch",
+    "tagline": "Find the shelter before the storm!",
+    "playSolo": "Play Solo",
+    "joinGame": "Join Game",
+    "hostGame": "Host Multiplayer",
+    "howToPlay": "How to Play"
+  },
+  "solo": {
+    "soloPlay": "Solo Play",
+    "lightningHunt": "Lightning Hunt",
+    "lightningMeta": "Timed hunt · requires location access",
+    "citywideSearch": "Citywide Search",
+    "citywideMeta": "No timer · roam freely",
+    "lightningPrompt": "Ready for the lightning hunt?",
+    "lightningDetails": "{minutes}-minute countdown · radius {radius} km",
+    "lightningDescription": "We’ll lock onto shelters within range once your location is confirmed. If none are nearby, you’ll be prompted to reposition before starting.",
+    "startLightning": "Start lightning hunt"
+  },
+  "waiting": {
+    "title": "Waiting Room",
+    "shelterCode": "Shelter Code",
+    "players": "Players",
+    "waitingForPlayers": "Waiting for players…",
+    "player": "Player",
+    "you": "You",
+    "ready": "Ready!",
+    "markReady": "Mark as Ready",
+    "startGame": "Start Game",
+    "waitingForEveryone": "Waiting for everyone…",
+    "waitingForHost": "Waiting for host to start the race",
+    "leaveGame": "Leave Game",
+    "playerCount": "{count} player{suffix} in lobby"
+  },
+  "profile": {
+    "defaultTitle": "Introduce Yourself",
+    "defaultSubtitle": "Set your callsign before entering multiplayer.",
+    "defaultLabel": "Display Name",
+    "defaultSubmit": "Save Name",
+    "defaultPlaceholder": "e.g. Sky Scout",
+    "setCallsignTitle": "Set Your Callsign",
+    "setCallsignSubtitle": "Add a display name before joining a multiplayer session.",
+    "createSessionTitle": "Create Multiplayer Session",
+    "createSessionSubtitle": "Enter a callsign before hosting for your team.",
+    "joinGameTitle": "Join Multiplayer Game",
+    "joinGameSubtitle": "Enter the shelter code shared by your host.",
+    "callsignPlaceholder": "e.g. Sky Scout",
+    "submitContinue": "Continue",
+    "submitStart": "Start Hosting",
+    "submitJoin": "Join Game",
+    "joining": "Joining...",
+    "codeLabel": "Shelter Code",
+    "codePlaceholder": "e.g. 9F2X"
+  },
+  "hostShare": {
+    "title": "Session Ready",
+    "subtitle": "Share this shelter code with your squad to let them join.",
+    "copyCode": "Copy Code"
+  },
+  "terminal": {
+    "title": "Time's Up",
+    "message": "Try harder next time, and return when you are ready.",
+    "back": "Back to Onboarding"
+  },
+  "help": {
+    "title": "How to Play",
+    "subtitle": "Master the art of urban deduction",
+    "overviewTitle": "Game Overview",
+    "overviewBody": "A hurricane is approaching! Your team must find the secret emergency shelter hidden in the city. Visit various locations, answer trivia questions about disaster preparedness, and collect clues to deduce which shelter is the secret one. The first team to find it wins!",
+    "stepLabel": "Step {number}",
+    "steps": {
+      "visit": "Visit Locations",
+      "visitDesc": "Move around the city to visit Points of Interest (POIs) marked on the map.",
+      "answer": "Answer Trivia",
+      "answerDesc": "When near a POI, ask questions and answer trivia challenges to unlock clues.",
+      "collect": "Collect Clues",
+      "collectDesc": "Use correct answers to gather clues about the secret shelter's location and characteristics.",
+      "find": "Find the Shelter",
+      "findDesc": "Use your clues to deduce which shelter is the secret one, then visit it to win!"
+    },
+    "proTips": "Pro Tips",
+    "tips": {
+      "greenRed": "Green clues tell you what the shelter HAS, red clues tell you what it DOESN'T have",
+      "cooldown": "Wrong trivia answers lock that question for 2 minutes - answer carefully!",
+      "visitPoi": "Visit different types of POIs to unlock more question categories",
+      "oneGuess": "You only get ONE guess - make sure you're confident before submitting!",
+      "teamwork": "Work with your team to cover more ground and share clues"
+    }
+  },
+  "app": {
+    "defaults": {
+      "navigator": "Navigator",
+      "soloPlayer": "Solo Player"
+    },
+    "errors": {
+      "invalidCode": "Enter a valid shelter code.",
+      "callsignRequired": "Callsign cannot be empty.",
+      "readyStatus": "Unable to update ready status.",
+      "startRace": "Unable to start race. Try again.",
+      "noSheltersNearby": "No shelters within {radius} km. Try moving closer to another area.",
+      "loadShelters": "Unable to load designated shelters right now. Please try again.",
+      "locationAccess": "Unable to access your location. Please try again.",
+      "locationDenied": "Location permission denied. Allow access to start a lightning hunt.",
+      "locationUnknown": "Unable to determine location. Please try again.",
+      "shelterUnavailable": "Selected shelter is unavailable. Try again.",
+      "startMultiplayer": "Unable to start multiplayer session",
+      "joinSession": "Unable to join session"
+    },
+    "toasts": {
+      "timeUp": "Time's up! Game over.",
+      "raceFinished": "Shelter reached! Race finished.",
+      "joinedGame": "Joined game {code}",
+      "lightningReady": "Lightning hunt ready! Stay sharp.",
+      "citywideReady": "Citywide mode active! Explore at your pace.",
+      "gameStarted": "Game started! Find the secret shelter!",
+      "leftGame": "Left the game"
+    },
+    "processing": {
+      "title": "Preparing multiplayer session…",
+      "subtitle": "Checking your location & locking a nearby shelter"
+    }
+  },
+  "guess": {
+    "confirmTitle": "Confirm Guess",
+    "confirmPrompt": "Are you sure you want to lock in this shelter?",
+    "confirmWarning": "A wrong selection will reset your timer to 10 minutes and turn it red. Make sure you have gathered enough clues before you commit.",
+    "lockIn": "Lock In Guess",
+    "backToClues": "Back to Clues"
+  },
+  "victory": {
+    "title": "Victory! 🎉",
+    "subtitle": "You found the secret shelter! {shelter}",
+    "clues": "Clues Collected",
+    "visited": "Locations Visited",
+    "playAgain": "Play Again"
+  },
+  "penalty": {
+    "first": {
+      "title": "Not Quite There",
+      "message": "That wasn't the secret shelter. Your timer has been reset to 10 minutes—make every clue count."
+    },
+    "second": {
+      "title": "Pressure Rising",
+      "message": "Another miss. The timer now drops to 5 minutes. You will get one last chance, choose wisely."
+    },
+    "third": {
+      "title": "Game Over",
+      "message": "You've used all three guesses. Time to regroup and start again."
+    },
+    "keepPlaying": "Keep Playing"
+  },
+  "gameplay": {
+    "missionControl": "Mission Control",
+    "clueCount": "{count} clue{suffix}",
+    "closePanel": "Close gameplay panel",
+    "clues": "Clues",
+    "logged": "{count} logged",
+    "clueHint": "Each clue narrows the possible shelters. Compare green confirmations against red denials to deduce the right location.",
+    "noCluesTitle": "No clues yet",
+    "noCluesSubtitle": "Visit locations and answer trivia questions to unlock intelligence about the secret shelter.",
+    "strategyTitle": "Strategy Tips",
+    "strategyTip1": "Use green clue markers to confirm correct attributes",
+    "strategyTip2": "Red clue markers help you rule out bad candidates",
+    "strategyTip3": "Stack multiple hints before locking in a guess",
+    "tools": {
+      "title": "Tools",
+      "active": "Active",
+      "idle": "Idle",
+      "copy": "Draw a search radius to inspect which shelters fall within a chosen distance.",
+      "trigger": "Measure Shelters Radius",
+      "activeButton": "Measurement Active"
+    },
+    "finalDecision": "Final Decision",
+    "finalStep": "Final step",
+    "selectShelter": "Select target shelter",
+    "selectPlaceholder": "Select a shelter",
+    "guessWarning": "Wrong guesses reset the timer to 10 minutes. Make sure your clues line up before submitting.",
+    "submitGuess": "Submit Guess",
+    "returnToMap": "Return to Map"
+  },
+  "questions": {
+    "ask": "Ask a Question",
+    "inRange": "In Range",
+    "inRangeCopy": "You can ask questions at this location",
+    "outOfRange": "Out of Range",
+    "outOfRangeCopy": "Visit a POI to unlock questions",
+    "chooseCategory": "Choose a Category",
+    "availableCount": "{count} question{suffix} available",
+    "locked": "Locked - Answer Cooldown",
+    "askNow": "Ask Now",
+    "selectParam": "Select parameter and visit location",
+    "cooldown": "Try again in 2 minutes after a wrong answer",
+    "categories": {
+      "location": {
+        "name": "Location Details",
+        "description": "Ask about surge inundation and environmental factors"
+      },
+      "facility": {
+        "name": "Facility Type",
+        "description": "Ask about the type and purpose of this facility"
+      },
+      "nearby": {
+        "name": "Nearby Amenities",
+        "description": "Ask about facilities and services in the area"
+      },
+      "capacity": {
+        "name": "Capacity & Resources",
+        "description": "Ask about the shelter's capacity and resources"
+      }
+    },
+    "q1": {
+      "text": "Is the surge inundation rank {param}?"
+    },
+    "q2": {
+      "text": "Is the shelter type a {param}?",
+      "options": {
+        "library": "library",
+        "school": "school",
+        "community_center": "community center",
+        "hospital": "hospital"
+      }
+    },
+    "q3": {
+      "text": "Are there more than {param} parks within 250m?"
+    },
+    "q4": {
+      "text": "Can the shelter accommodate more than {param} people?"
+    }
+  },
+  "trivia": {
+    "challengeTitle": "Trivia Challenge",
+    "challengeSubtitle": "Answer correctly to unlock a clue",
+    "close": "Close trivia",
+    "correct": "Correct! 🎉",
+    "unlockedClue": "You unlocked a clue!",
+    "incorrect": "Incorrect",
+    "locked": "This question is locked for 2 minutes",
+    "submit": "Submit Answer",
+    "t1": {
+      "question": "What year was the Great Boston Fire?",
+      "answers": ["1872", "1905", "1845", "1889"]
+    },
+    "t2": {
+      "question": "What is the recommended emergency water supply per person per day?",
+      "answers": ["1 liter", "2 liters", "3 liters", "4 liters"]
+    },
+    "t3": {
+      "question": "Which hurricane category indicates sustained winds of 111-129 mph?",
+      "answers": ["Category 2", "Category 3", "Category 4", "Category 5"]
+    },
+    "t4": {
+      "question": "What does FEMA stand for?",
+      "answers": [
+        "Federal Emergency Management Agency",
+        "Fire and Emergency Management Authority",
+        "Federal Environmental Monitoring Agency",
+        "First Emergency Medical Aid"
+      ]
+    },
+    "t5": {
+      "question": "How long can a person typically survive without water?",
+      "answers": ["1 day", "3 days", "7 days", "14 days"]
+    },
+    "t6": {
+      "question": "What is the universal emergency number in the United States?",
+      "answers": ["999", "111", "911", "112"]
+    },
+    "t7": {
+      "question": "Which floor is generally safest during a hurricane?",
+      "answers": ["Basement", "Ground floor", "Second floor", "Top floor"]
+    },
+    "t8": {
+      "question": "What percentage of the human body is water?",
+      "answers": ["50%", "60%", "70%", "80%"]
+    }
+  },
+  "game": {
+    "exitTitle": "Exit to main menu",
+    "secretShelter": "Secret Shelter",
+    "secretShelterName": "Secret shelter name",
+    "tapToAsk": "Tap to ask questions",
+    "toasts": {
+      "selectShelterFirst": "Select a shelter before submitting a guess.",
+      "shelterPreparing": "The secret shelter is still being prepared. Try again in a moment.",
+      "submitError": "Unable to submit your guess right now. Please try again.",
+      "correctShelter": "You found the correct shelter!",
+      "finalGuess": "That was your final guess. Game over.",
+      "penaltyFirst": "Wrong guess! Timer set to 10 minutes.",
+      "penaltySecond": "Wrong guess! Timer set to 5 minutes."
+    },
+    "clues": {
+      "surgeRank": "Surge rank is {rank}",
+      "capacity": "Capacity is {capacity}+ people",
+      "notFireStation": "Not a fire station",
+      "parks": "Has {parks}+ nearby parks",
+      "notSurgeRankFour": "Not in surge rank 4",
+      "categories": {
+        "location": "Location",
+        "capacity": "Capacity",
+        "facility": "Facility",
+        "nearby": "Nearby"
+      }
+    }
+  }
+}

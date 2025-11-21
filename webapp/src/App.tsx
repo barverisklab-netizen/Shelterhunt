@@ -42,6 +42,8 @@ import {
   getShelterByShareCode,
   type Shelter,
 } from "./services/shelterDataService";
+import { useI18n } from "./i18n";
+import { LanguageToggle } from "./components/LanguageToggle";
 
 type GameState =
   | "intro"
@@ -116,6 +118,7 @@ const buildLocalDesignatedShelters = async (
 };
 
 export default function App() {
+  const { t } = useI18n();
   const [gameState, setGameState] = useState<GameState>("intro");
   const [gameCode, setGameCode] = useState("");
   const [isHost, setIsHost] = useState(false);
@@ -157,6 +160,8 @@ export default function App() {
   const [joinCodeScreenOpen, setJoinCodeScreenOpen] = useState(false);
   const [joinSubmitting, setJoinSubmitting] = useState(false);
   const [joinError, setJoinError] = useState<string | null>(null);
+  const defaultNavigatorName = t("app.defaults.navigator", { fallback: "Navigator" });
+  const defaultSoloName = t("app.defaults.soloPlayer", { fallback: "Solo Player" });
 
   // Timer countdown
   useEffect(() => {
@@ -173,7 +178,7 @@ export default function App() {
             setShelterOptions([]);
             setIsTimerCritical(false);
             setTimerEnabled(false);
-            toast.error("Time's up! Game over.");
+            toast.error(t("app.toasts.timeUp", { fallback: "Time's up! Game over." }));
             return 0;
           }
           return prev - 1;
@@ -431,7 +436,11 @@ export default function App() {
           break;
         case "race_finished":
           setGameState("ended");
-          toast.success("Shelter reached! Race finished.");
+          toast.success(
+            t("app.toasts.raceFinished", {
+              fallback: "Shelter reached! Race finished.",
+            }),
+          );
           break;
         default:
           break;
@@ -544,10 +553,14 @@ export default function App() {
       const shareCode = secretShelter.id;
       const resolved = await getShelterByShareCode(shareCode);
       if (!resolved) {
-        throw new Error("Selected shelter is unavailable. Try again.");
+        throw new Error(
+          t("app.errors.shelterUnavailable", {
+            fallback: "Selected shelter is unavailable. Try again.",
+          }),
+        );
       }
       const displayName =
-        overrideName?.trim() || profileName.trim() || "Navigator";
+        overrideName?.trim() || profileName.trim() || defaultNavigatorName;
       console.log("[Multiplayer] Creating session", {
         shareCode,
         displayName,
@@ -572,7 +585,9 @@ export default function App() {
       toast.error(
         error instanceof Error
           ? error.message
-          : "Unable to start multiplayer session",
+          : t("app.errors.startMultiplayer", {
+              fallback: "Unable to start multiplayer session",
+            }),
       );
     } finally {
       setModeProcessing(false);
@@ -623,14 +638,14 @@ export default function App() {
     if (joinSubmitting) return;
     const sanitized = code.trim().toUpperCase();
     if (!sanitized) {
-      setJoinError("Enter a valid shelter code.");
+      setJoinError(t("app.errors.invalidCode", { fallback: "Enter a valid shelter code." }));
       return;
     }
     setJoinSubmitting(true);
     setJoinError(null);
     await disconnectSession();
     try {
-      const displayName = profileName.trim() || "Navigator";
+      const displayName = profileName.trim() || defaultNavigatorName;
       const response = await joinMultiplayerSession({
         shelterCode: sanitized,
         userId: currentUserId,
@@ -639,12 +654,19 @@ export default function App() {
       const role: SessionRole =
         response.session.host_id === response.player.user_id ? "host" : "player";
       await bootstrapSession(response, role);
-      toast.success(`Joined game ${response.session.shelter_code}`);
+      toast.success(
+        t("app.toasts.joinedGame", {
+          replacements: { code: response.session.shelter_code },
+          fallback: `Joined game ${response.session.shelter_code}`,
+        }),
+      );
       setJoinCodeScreenOpen(false);
       setJoinError(null);
     } catch (error) {
       const message =
-        error instanceof Error ? error.message : "Unable to join session";
+        error instanceof Error
+          ? error.message
+          : t("app.errors.joinSession", { fallback: "Unable to join session" });
       setJoinError(message);
     } finally {
       setJoinSubmitting(false);
@@ -654,7 +676,9 @@ export default function App() {
   const handleJoinNameSubmit = (value: string) => {
     const trimmed = value.trim();
     if (!trimmed) {
-      toast.error("Callsign cannot be empty.");
+      toast.error(
+        t("app.errors.callsignRequired", { fallback: "Callsign cannot be empty." }),
+      );
       return;
     }
     setProfileName(trimmed);
@@ -666,7 +690,9 @@ export default function App() {
   const handleHostSetupSubmit = (value: string) => {
     const trimmed = value.trim();
     if (!trimmed) {
-      toast.error("Callsign cannot be empty.");
+      toast.error(
+        t("app.errors.callsignRequired", { fallback: "Callsign cannot be empty." }),
+      );
       return;
     }
     setProfileName(trimmed);
@@ -694,7 +720,7 @@ export default function App() {
     void disconnectSession();
     const soloPlayer: Player = {
       id: currentUserId,
-      name: profileName.trim() || "Solo Player",
+      name: profileName.trim() || defaultSoloName,
       ready: true,
     };
     setPlayers([soloPlayer]);
@@ -734,8 +760,12 @@ export default function App() {
     setGameState("playing");
     toast.success(
       mode === "lightning"
-        ? "Lightning hunt ready! Stay sharp."
-        : "Citywide mode active! Explore at your pace.",
+        ? t("app.toasts.lightningReady", {
+            fallback: "Lightning hunt ready! Stay sharp.",
+          })
+        : t("app.toasts.citywideReady", {
+            fallback: "Citywide mode active! Explore at your pace.",
+          }),
     );
   };
 
@@ -748,7 +778,9 @@ export default function App() {
       toggleReadyState(sessionContext.sessionId, sessionContext.token, nextReady)
         .catch((error) => {
           console.warn("[Multiplayer] Failed to toggle ready:", error);
-          toast.error("Unable to update ready status.");
+          toast.error(
+            t("app.errors.readyStatus", { fallback: "Unable to update ready status." }),
+          );
         });
       return;
     }
@@ -765,7 +797,9 @@ export default function App() {
       startMultiplayerRace(sessionContext.sessionId, sessionContext.token).catch(
         (error) => {
           console.warn("[Multiplayer] Failed to start race:", error);
-          toast.error("Unable to start race. Try again.");
+          toast.error(
+            t("app.errors.startRace", { fallback: "Unable to start race. Try again." }),
+          );
         },
       );
       return;
@@ -778,7 +812,11 @@ export default function App() {
     setWrongGuessCount(0);
     setTimerEnabled(true);
     setGameState("playing");
-    toast.success("Game started! Find the secret shelter!");
+    toast.success(
+      t("app.toasts.gameStarted", {
+        fallback: "Game started! Find the secret shelter!",
+      }),
+    );
   };
 
   const handleLeaveGame = () => {
@@ -802,7 +840,7 @@ export default function App() {
     setHostShareCode(null);
     setHostSetupModalOpen(false);
     setJoinNameModalOpen(false);
-    toast.info("Left the game");
+    toast.info(t("app.toasts.leftGame", { fallback: "Left the game" }));
   };
 
   const handleWrongGuessPenalty = (): WrongGuessStage => {
@@ -893,19 +931,26 @@ export default function App() {
     } catch (error: unknown) {
       if (error instanceof Error && /No shelters/.test(error.message)) {
         toast.error(
-          `No shelters within ${radiusKm} km. Try moving closer to another area.`,
+          t("app.errors.noSheltersNearby", {
+            replacements: { radius: radiusKm },
+            fallback: `No shelters within ${radiusKm} km. Try moving closer to another area.`,
+          }),
         );
         return;
       }
 
       if (error instanceof Error && /tilequery/i.test(error.message)) {
         toast.error(
-          "Unable to load designated shelters right now. Please try again.",
+          t("app.errors.loadShelters", {
+            fallback: "Unable to load designated shelters right now. Please try again.",
+          }),
         );
         return;
       }
 
-      let message = "Unable to access your location. Please try again.";
+      let message = t("app.errors.locationAccess", {
+        fallback: "Unable to access your location. Please try again.",
+      });
 
       if (
         typeof error === "object" &&
@@ -916,9 +961,13 @@ export default function App() {
         const geoError = error as GeolocationPositionError;
         if (geoError.code === geoError.PERMISSION_DENIED) {
           message =
-            "Location permission denied. Allow access to start a lightning hunt.";
+            t("app.errors.locationDenied", {
+              fallback: "Location permission denied. Allow access to start a lightning hunt.",
+            });
         } else {
-          message = "Unable to determine location. Please try again.";
+          message = t("app.errors.locationUnknown", {
+            fallback: "Unable to determine location. Please try again.",
+          });
         }
       }
 
@@ -956,6 +1005,7 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-background relative overflow-hidden">
+      {gameState !== "playing" && <LanguageToggle />}
       {/* Main Content */}
       <div className="relative z-10">
         {gameState === "intro" && <IntroScreen onContinue={handleSkipIntro} />}
@@ -1033,10 +1083,10 @@ export default function App() {
           <ProfileNameModal
             open={joinNameModalOpen}
             initialValue={profileName}
-            title="Set Your Callsign"
-            subtitle="Add a display name before joining a multiplayer session."
-            placeholder="e.g. Sky Scout"
-            submitLabel="Continue"
+            title={t("profile.setCallsignTitle")}
+            subtitle={t("profile.setCallsignSubtitle")}
+            placeholder={t("profile.callsignPlaceholder")}
+            submitLabel={t("profile.submitContinue")}
             variant="screen"
             onSubmit={handleJoinNameSubmit}
             onClose={() => setJoinNameModalOpen(false)}
@@ -1045,10 +1095,10 @@ export default function App() {
           <ProfileNameModal
             open={hostSetupModalOpen}
             initialValue={profileName}
-            title="Create Multiplayer Session"
-            subtitle="Enter a callsign before hosting for your team."
-            placeholder="e.g. Sky Scout"
-            submitLabel="Start Hosting"
+            title={t("profile.createSessionTitle")}
+            subtitle={t("profile.createSessionSubtitle")}
+            placeholder={t("profile.callsignPlaceholder")}
+            submitLabel={t("profile.submitStart")}
             variant="screen"
             onSubmit={handleHostSetupSubmit}
             onClose={() => setHostSetupModalOpen(false)}
@@ -1057,11 +1107,15 @@ export default function App() {
           <ProfileNameModal
             open={joinCodeScreenOpen}
             initialValue=""
-            title="Join Multiplayer Game"
-            subtitle="Enter the shelter code shared by your host."
-            placeholder="e.g. 9F2X"
-            submitLabel={joinSubmitting ? "Joining..." : "Join Game"}
-            label="Shelter Code"
+            title={t("profile.joinGameTitle")}
+            subtitle={t("profile.joinGameSubtitle")}
+            placeholder={t("profile.codePlaceholder")}
+            submitLabel={
+              joinSubmitting
+                ? t("profile.joining")
+                : t("profile.submitJoin")
+            }
+            label={t("profile.codeLabel")}
             variant="screen"
             submitting={joinSubmitting}
             error={joinError}
@@ -1084,7 +1138,9 @@ export default function App() {
       {modeProcessing && (
         <div className="fixed inset-0 z-[70] flex flex-col items-center justify-center bg-black/80 text-white">
           <div className="mb-4 flex items-center gap-3 text-lg font-black uppercase tracking-[0.3em]">
-            Preparing multiplayer session…
+            {t("app.processing.title", {
+              fallback: "Preparing multiplayer session…",
+            })}
           </div>
           <div className="flex gap-2">
             {[0, 1, 2].map((index) => (
@@ -1096,7 +1152,9 @@ export default function App() {
             ))}
           </div>
           <p className="mt-4 text-xs font-semibold uppercase tracking-widest text-neutral-300">
-            Checking your location & locking a nearby shelter
+            {t("app.processing.subtitle", {
+              fallback: "Checking your location & locking a nearby shelter",
+            })}
           </p>
         </div>
       )}

@@ -6,6 +6,7 @@ import {
   LIGHTNING_RADIUS_KM,
 } from "../config/runtime";
 import { MenuHeader } from "./MenuHeader";
+import { useI18n } from "@/i18n";
 
 interface SoloModeScreenProps {
   onBack: () => void;
@@ -20,6 +21,7 @@ export function SoloModeScreen({
   onSelectCitywide,
   isProcessing,
 }: SoloModeScreenProps) {
+  const { t } = useI18n();
   const [selection, setSelection] = useState<"lightning" | null>(null);
 
   return (
@@ -50,11 +52,11 @@ export function SoloModeScreen({
             className="inline-flex items-center gap-2 rounded-full border-4 border-black bg-white px-4 py-2 text-xs font-bold uppercase tracking-wide transition-all hover:-translate-x-1 hover:bg-neutral-900 hover:text-white"
           >
             <ArrowLeft className="h-4 w-4" />
-            Back
+            {t("common.back")}
           </button>
         </div>
 
-        <MenuHeader title="ShelterSearch" subtitle="Solo Play" />
+        <MenuHeader title={t("common.appName")} subtitle={t("solo.soloPlay")} />
         <AnimatePresence>
           {selection !== "lightning" && (
             <motion.div
@@ -72,10 +74,10 @@ export function SoloModeScreen({
                 className="w-full bg-background text-black border-4 border-black hover:shadow-[4px_4px_0_black] transition-all py-6 px-5 flex flex-col items-center gap-2 cursor-pointer text-center"
               >
                 <span className="flex items-center gap-3 text-lg font-bold uppercase tracking-wide">
-                  <Zap className="h-5 w-5" /> Lightning Hunt
+                  <Zap className="h-5 w-5" /> {t("solo.lightningHunt")}
                 </span>
                 <span className="text-xs font-medium uppercase tracking-[0.2em] text-neutral-600">
-                  Timed hunt · requires location access
+                  {t("solo.lightningMeta")}
                 </span>
               </button>
 
@@ -86,10 +88,10 @@ export function SoloModeScreen({
                 className="w-full bg-background text-black border-4 border-black hover:shadow-[4px_4px_0_black] transition-all py-6 px-5 flex flex-col items-center gap-2 cursor-pointer text-center"
               >
                 <span className="flex items-center gap-3 text-md font-bold uppercase tracking-wide">
-                  <Map className="h-5 w-5" /> Citywide Search
+                  <Map className="h-5 w-5" /> {t("solo.citywideSearch")}
                 </span>
                 <span className="text-xs font-medium uppercase tracking-[0.2em] text-neutral-600">
-                  No timer · roam freely
+                  {t("solo.citywideMeta")}
                 </span>
               </button>
             </motion.div>
@@ -107,16 +109,18 @@ export function SoloModeScreen({
             >
               <div className="space-y-2 text-center">
                 <h2 className="text-lg font-black uppercase tracking-wide">
-                  Ready for the lightning hunt?
+                  {t("solo.lightningPrompt")}
                 </h2>
                 <p className="text-xs font-medium uppercase tracking-[0.2em] text-neutral-600">
-                  {LIGHTNING_DURATION_MINUTES}-minute countdown · radius{" "}
-                  {LIGHTNING_RADIUS_KM} km
+                  {t("solo.lightningDetails", {
+                    replacements: {
+                      minutes: LIGHTNING_DURATION_MINUTES,
+                      radius: LIGHTNING_RADIUS_KM,
+                    },
+                  })}
                 </p>
                 <p className="text-sm font-medium text-neutral-700 normal-case">
-                  We’ll lock onto shelters within range once your location is
-                  confirmed. If none are nearby, you’ll be prompted to
-                  reposition before starting.
+                  {t("solo.lightningDescription")}
                 </p>
               </div>
 
@@ -126,7 +130,7 @@ export function SoloModeScreen({
                   disabled={isProcessing}
                   onClick={onSelectLightning}
                   className="w-full max-w-xs border border-black bg-white text-black transition-colors hover:bg-neutral-200 hover:text-black hover:border-black active:bg-black active:text-white active:border-black disabled:bg-neutral-200 disabled:text-neutral-500 disabled:border-neutral-400 disabled:opacity-100">
-                  Start lightning hunt
+                  {t("solo.startLightning")}
                 </button>
               </div>
             </motion.div>

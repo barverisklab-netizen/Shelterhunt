@@ -1,6 +1,7 @@
 import { motion } from "motion/react";
 import { Frown } from "lucide-react";
 import { Button } from "./ui/button";
+import { useI18n } from "@/i18n";
 
 type PenaltyStage = "first" | "second" | "third";
 
@@ -9,28 +10,25 @@ interface ShelterPenaltyScreenProps {
   onContinue: () => void;
 }
 
-const penaltyCopy: Record<PenaltyStage, { title: string; message: string }> = {
-  first: {
-    title: "Not Quite There",
-    message:
-      "That wasn't the secret shelter. Your timer has been reset to 10 minutes—make every clue count.",
-  },
-  second: {
-    title: "Pressure Rising",
-    message:
-      "Another miss. The timer now drops to 5 minutes. You will get one last chance, choose wisely.",
-  },
-  third: {
-    title: "Game Over",
-    message:
-      "You've used all three guesses. time to regroup and start again.",
-  },
-};
-
 export function ShelterPenaltyScreen({
   stage,
   onContinue,
 }: ShelterPenaltyScreenProps) {
+  const { t } = useI18n();
+  const penaltyCopy: Record<PenaltyStage, { title: string; message: string }> = {
+    first: {
+      title: t("penalty.first.title"),
+      message: t("penalty.first.message"),
+    },
+    second: {
+      title: t("penalty.second.title"),
+      message: t("penalty.second.message"),
+    },
+    third: {
+      title: t("penalty.third.title"),
+      message: t("penalty.third.message"),
+    },
+  };
   const { title, message } = penaltyCopy[stage];
   const showContinue = stage !== "third";
 
@@ -58,7 +56,7 @@ export function ShelterPenaltyScreen({
               onClick={onContinue}
               className="w-full bg-black text-black border hover:bg-neutral-900 hover:text-white"
             >
-              Keep Playing
+              {t("penalty.keepPlaying")}
             </Button>
           )}
         </div>

@@ -12,6 +12,7 @@ import { defaultCityContext } from '../data/cityContext';
 import { useEffect, useState } from 'react';
 import { toast } from "sonner@2.0.3";
 import { BlurReveal } from './ui/blur-reveal';
+import { useI18n } from "@/i18n";
 
 
 const ENABLE_SECRET_SHELTER_BLUR = true;
@@ -54,6 +55,7 @@ export function GameScreen({
   onSecretShelterChange,
   onShelterOptionsChange,
 }: GameScreenProps) {
+  const { t } = useI18n();
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [cluesOpen, setCluesOpen] = useState(false);
   const [triviaOpen, setTriviaOpen] = useState(false);
@@ -118,11 +120,40 @@ export function GameScreen({
     if (isCorrect) {
       // Generate a clue based on the secret shelter
       const clueTexts = [
-        { text: `Surge rank is ${secretPOI?.surgeRank || 2}`, answer: true, category: 'Location' },
-        { text: `Capacity is ${secretPOI?.capacity || 100}+ people`, answer: true, category: 'Capacity' },
-        { text: `Not a fire station`, answer: false, category: 'Facility' },
-        { text: `Has ${secretPOI?.nearbyParks || 2}+ nearby parks`, answer: true, category: 'Nearby' },
-        { text: `Not in surge rank 4`, answer: false, category: 'Location' },
+        {
+          text: t("game.clues.surgeRank", {
+            replacements: { rank: secretPOI?.surgeRank || 2 },
+            fallback: `Surge rank is ${secretPOI?.surgeRank || 2}`,
+          }),
+          answer: true,
+          category: t("game.clues.categories.location", { fallback: "Location" }),
+        },
+        {
+          text: t("game.clues.capacity", {
+            replacements: { capacity: secretPOI?.capacity || 100 },
+            fallback: `Capacity is ${secretPOI?.capacity || 100}+ people`,
+          }),
+          answer: true,
+          category: t("game.clues.categories.capacity", { fallback: "Capacity" }),
+        },
+        {
+          text: t("game.clues.notFireStation", { fallback: "Not a fire station" }),
+          answer: false,
+          category: t("game.clues.categories.facility", { fallback: "Facility" }),
+        },
+        {
+          text: t("game.clues.parks", {
+            replacements: { parks: secretPOI?.nearbyParks || 2 },
+            fallback: `Has ${secretPOI?.nearbyParks || 2}+ nearby parks`,
+          }),
+          answer: true,
+          category: t("game.clues.categories.nearby", { fallback: "Nearby" }),
+        },
+        {
+          text: t("game.clues.notSurgeRankFour", { fallback: "Not in surge rank 4" }),
+          answer: false,
+          category: t("game.clues.categories.location", { fallback: "Location" }),
+        },
       ];
       
       const unusedClues = clueTexts.filter(
@@ -169,12 +200,20 @@ export function GameScreen({
     }
 
     if (!selectedShelterOption) {
-      toast.warning("Select a shelter before submitting a guess.");
+      toast.warning(
+        t("game.toasts.selectShelterFirst", {
+          fallback: "Select a shelter before submitting a guess.",
+        }),
+      );
       return;
     }
 
     if (!secretShelter) {
-      toast.error("The secret shelter is still being prepared. Try again in a moment.");
+      toast.error(
+        t("game.toasts.shelterPreparing", {
+          fallback: "The secret shelter is still being prepared. Try again in a moment.",
+        }),
+      );
       return;
     }
 
@@ -185,7 +224,11 @@ export function GameScreen({
     setConfirmGuessOpen(false);
 
     if (!selectedShelterOption || !secretShelter) {
-      toast.error("Unable to submit your guess right now. Please try again.");
+      toast.error(
+        t("game.toasts.submitError", {
+          fallback: "Unable to submit your guess right now. Please try again.",
+        }),
+      );
       return;
     }
 
@@ -198,21 +241,33 @@ export function GameScreen({
     setSelectedShelterId(null);
 
     if (matches) {
-      toast.success(`🎉 Bravo! You found the correct shelter!`);
+      toast.success(
+        t("game.toasts.correctShelter", {
+          fallback: "You found the correct shelter!",
+        }),
+      );
       setPenaltyStage(null);
       setOutcome('win');
     } else {
       const stage = onApplyPenalty();
       if (stage === 'third') {
-        toast.error('That was your final guess. Game over.');
+        toast.error(
+          t("game.toasts.finalGuess", {
+            fallback: "That was your final guess. Game over.",
+          }),
+        );
         setPenaltyStage(null);
         onEndGame();
         return;
       }
 
       const penaltyMessage = stage === 'first'
-        ? 'Wrong guess! Timer set to 10 minutes.'
-        : 'Wrong guess! Timer set to 5 minutes.';
+        ? t("game.toasts.penaltyFirst", {
+            fallback: "Wrong guess! Timer set to 10 minutes.",
+          })
+        : t("game.toasts.penaltySecond", {
+            fallback: "Wrong guess! Timer set to 5 minutes.",
+          });
 
       toast.error(penaltyMessage);
       setPenaltyStage(stage);
@@ -248,17 +303,19 @@ export function GameScreen({
             <button
               onClick={onEndGame}
               className="rounded border-4 border-black bg-red-500 p-4 text-black shadow-sm transition-colors hover:bg-red-600"
-              title="Exit to main menu"
+              title={t("game.exitTitle")}
             >
               <X className="w-15 h-15" />
             </button>
             <div className="flex flex-col">
-              <h1 className="text-xl font-bold text-black uppercase">Secret Shelter</h1>
+              <h1 className="text-xl font-bold text-black uppercase">
+                {t("game.secretShelter")}
+              </h1>
               {secretShelter?.name ? (
                 ENABLE_SECRET_SHELTER_BLUR ? (
                   <BlurReveal
                     className="text-sm font-semibold text-black/90"
-                    aria-label="Secret shelter name"
+                    aria-label={t("game.secretShelterName")}
                   >
                     {secretShelter.name}
                   </BlurReveal>
@@ -318,17 +375,19 @@ export function GameScreen({
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
           >
-            <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-full border border-neutral-900 bg-neutral-100">
-                <MapPin className="w-5 h-5 text-neutral-800" />
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-full border border-neutral-900 bg-neutral-100">
+                  <MapPin className="w-5 h-5 text-neutral-800" />
+                </div>
+                <div>
+                  <div className="text-neutral-900 font-semibold">{nearbyPOI.name}</div>
+                  <div className="text-xs text-neutral-600 font-medium">
+                    {t("game.tapToAsk")}
+                  </div>
+                </div>
               </div>
-              <div>
-                <div className="text-neutral-900 font-semibold">{nearbyPOI.name}</div>
-                <div className="text-xs text-neutral-600 font-medium">Tap to ask questions</div>
-              </div>
-            </div>
-          </motion.div>
-        )}
+            </motion.div>
+          )}
       </div>
   
       {/* Question Drawer */}

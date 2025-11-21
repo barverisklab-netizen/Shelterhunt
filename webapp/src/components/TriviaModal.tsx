@@ -3,6 +3,7 @@ import { X, CheckCircle, XCircle, Sparkles } from 'lucide-react';
 import { Button } from './ui/button';
 import { TriviaQuestion } from "@/types/game";
 import { useState } from 'react';
+import { useI18n } from "@/i18n";
 
 interface TriviaModalProps {
   isOpen: boolean;
@@ -12,6 +13,7 @@ interface TriviaModalProps {
 }
 
 export function TriviaModal({ isOpen, trivia, onClose, onSubmit }: TriviaModalProps) {
+  const { t } = useI18n();
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
   const [showResult, setShowResult] = useState(false);
   const [isCorrect, setIsCorrect] = useState(false);
@@ -37,6 +39,7 @@ export function TriviaModal({ isOpen, trivia, onClose, onSubmit }: TriviaModalPr
   };
 
   if (!trivia) return null;
+  const translatedQuestion = t(`trivia.${trivia.id}.question`, { fallback: trivia.question });
 
   return (
     <AnimatePresence>
@@ -68,8 +71,10 @@ export function TriviaModal({ isOpen, trivia, onClose, onSubmit }: TriviaModalPr
                       <Sparkles className="w-6 h-6 text-white" />
                     </div>
                     <div>
-                      <h3 className="text-2xl text-black font-bold uppercase">Trivia Challenge</h3>
-                      <p className="text-sm text-black/70">Answer correctly to unlock a clue</p>
+                      <h3 className="text-2xl text-black font-bold uppercase">
+                        {t("trivia.challengeTitle")}
+                      </h3>
+                      <p className="text-sm text-black/70">{t("trivia.challengeSubtitle")}</p>
                     </div>
                   </div>
                   <Button
@@ -77,7 +82,7 @@ export function TriviaModal({ isOpen, trivia, onClose, onSubmit }: TriviaModalPr
                     variant="outline"
                     size="icon"
                     className="hover:bg-black/5 transition-colors"
-                    aria-label="Close trivia"
+                    aria-label={t("trivia.close")}
                   >
                     <X className="w-5 h-5 text-black" />
                   </Button>
@@ -91,7 +96,7 @@ export function TriviaModal({ isOpen, trivia, onClose, onSubmit }: TriviaModalPr
                   transition={{ delay: 0.1 }}
                 >
                   <div className="text-lg text-black leading-relaxed font-bold">
-                    {trivia.question}
+                    {translatedQuestion}
                   </div>
                 </motion.div>
 
@@ -101,6 +106,9 @@ export function TriviaModal({ isOpen, trivia, onClose, onSubmit }: TriviaModalPr
                     const isSelected = selectedAnswer === index;
                     const showCorrect = showResult && index === trivia.correctIndex;
                     const showWrong = showResult && isSelected && index !== trivia.correctIndex;
+                    const answerText = t(`trivia.${trivia.id}.answers.${index}`, {
+                      fallback: answer,
+                    });
 
                     return (
                       <motion.button
@@ -123,7 +131,7 @@ export function TriviaModal({ isOpen, trivia, onClose, onSubmit }: TriviaModalPr
                         whileTap={!showResult ? { scale: 0.99 } : {}}
                       >
                         <div className="flex items-center justify-between">
-                          <span className={showCorrect || showWrong ? 'text-black' : ''}>{answer}</span>
+                          <span className={showCorrect || showWrong ? 'text-black' : ''}>{answerText}</span>
                           {showCorrect && <CheckCircle className="w-5 h-5 text-red-600" />}
                           {showWrong && <XCircle className="w-5 h-5 text-black" />}
                         </div>
@@ -150,16 +158,24 @@ export function TriviaModal({ isOpen, trivia, onClose, onSubmit }: TriviaModalPr
                           <>
                             <CheckCircle className="w-6 h-6 text-red-600" />
                             <div>
-                              <div className="text-black font-bold uppercase">Correct! 🎉</div>
-                              <div className="text-sm text-black/70">You unlocked a clue!</div>
+                              <div className="text-black font-bold uppercase">
+                                {t("trivia.correct")}
+                              </div>
+                              <div className="text-sm text-black/70">
+                                {t("trivia.unlockedClue")}
+                              </div>
                             </div>
                           </>
                         ) : (
                           <>
                             <XCircle className="w-6 h-6 text-black" />
                             <div>
-                              <div className="text-black font-bold uppercase">Incorrect</div>
-                              <div className="text-sm text-black/70">This question is locked for 2 minutes</div>
+                              <div className="text-black font-bold uppercase">
+                                {t("trivia.incorrect")}
+                              </div>
+                              <div className="text-sm text-black/70">
+                                {t("trivia.locked")}
+                              </div>
                             </div>
                           </>
                         )}
@@ -171,15 +187,15 @@ export function TriviaModal({ isOpen, trivia, onClose, onSubmit }: TriviaModalPr
                 {/* Submit Button */}
                 {!showResult && (
                   <Button
-                    onClick={handleSubmit}
-                    disabled={selectedAnswer === null}
-                    variant="destructive"
-                    size="lg"
-                    className="w-full"
-                  >
-                    Submit Answer
-                  </Button>
-                )}
+                  onClick={handleSubmit}
+                  disabled={selectedAnswer === null}
+                  variant="destructive"
+                  size="lg"
+                  className="w-full"
+                >
+                  {t("trivia.submit")}
+                </Button>
+              )}
               </div>
 
               {/* Confetti Effect for Correct Answer */}

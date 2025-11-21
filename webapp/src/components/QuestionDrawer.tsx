@@ -13,6 +13,7 @@ import { Button } from "./ui/button";
 import { Question } from "@/types/game";
 import { QuestionCategory } from "../data/cityContext";
 import { useState } from "react";
+import { useI18n } from "@/i18n";
 
 interface QuestionDrawerProps {
   questions: Question[];
@@ -40,10 +41,29 @@ export function QuestionDrawer({
   nearbyPOI,
   lockedQuestions,
 }: QuestionDrawerProps) {
+  const { t } = useI18n();
   const [selectedParams, setSelectedParams] = useState<
     Record<string, string | number>
   >({});
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+
+  const translateCategory = (category: QuestionCategory) => ({
+    name: t(`questions.categories.${category.id}.name`, {
+      fallback: category.name,
+    }),
+    description: t(`questions.categories.${category.id}.description`, {
+      fallback: category.description,
+    }),
+  });
+
+  const translateQuestionText = (question: Question) =>
+    t(`questions.${question.id}.text`, { fallback: question.text });
+
+  const translateQuestionOption = (questionId: string, option: string | number) => {
+    if (typeof option === "number") return option;
+    const optionKey = option.toString().replace(/\s+/g, "_").toLowerCase();
+    return t(`questions.${questionId}.options.${optionKey}`, { fallback: option });
+  };
 
   const isQuestionEligible = (question: Question) => {
     return nearbyPOI !== null && !lockedQuestions.includes(question.id);
@@ -72,7 +92,7 @@ export function QuestionDrawer({
           <div className="w-12 h-1 bg-background" />
           <div className="flex items-center gap-2 text-black">
             <MapPin className="w-5 h-5" />
-            <span className="text-lg font-bold uppercase">Ask a Question</span>
+            <span className="text-lg font-bold uppercase">{t("questions.ask")}</span>
             <motion.div
               animate={{ rotate: isOpen ? 180 : 0 }}
               transition={{ duration: 0.3 }}
@@ -107,10 +127,10 @@ export function QuestionDrawer({
                       <Unlock className="w-5 h-5 text-red-600" />
                       <div>
                         <div className="text-black font-bold uppercase">
-                          In Range
+                          {t("questions.inRange")}
                         </div>
                         <div className="text-sm text-black/70">
-                          You can ask questions at this location
+                          {t("questions.inRangeCopy")}
                         </div>
                       </div>
                     </>
@@ -119,10 +139,10 @@ export function QuestionDrawer({
                       <Lock className="w-5 h-5 text-black" />
                       <div>
                         <div className="text-black font-bold uppercase">
-                          Out of Range
+                          {t("questions.outOfRange")}
                         </div>
                         <div className="text-sm text-black/70">
-                          Visit a POI to unlock questions
+                          {t("questions.outOfRangeCopy")}
                         </div>
                       </div>
                     </>
@@ -135,13 +155,14 @@ export function QuestionDrawer({
                 // Show Categories
                 <div className="space-y-3">
                   <h3 className="text-black font-bold text-lg mb-3 uppercase">
-                    Choose a Category
+                    {t("questions.chooseCategory")}
                   </h3>
                   {availableCategories.map((category, index) => {
                     const IconComponent = CATEGORY_ICONS[category.id];
                     const questionsInCategory = questions.filter(
                       (q) => q.category === category.id,
                     );
+                    const translatedCategory = translateCategory(category);
 
                     return (
                       <motion.button
@@ -159,15 +180,18 @@ export function QuestionDrawer({
                           </div>
                           <div className="flex-1">
                             <div className="text-black font-bold mb-1 uppercase">
-                              {category.name}
+                              {translatedCategory.name}
                             </div>
                             <div className="text-sm text-black/70 mb-2">
-                              {category.description}
+                              {translatedCategory.description}
                             </div>
                             <div className="text-xs text-black font-bold">
-                              {questionsInCategory.length} question
-                              {questionsInCategory.length !== 1 ? "s" : ""}{" "}
-                              available
+                              {t("questions.availableCount", {
+                                replacements: {
+                                  count: questionsInCategory.length,
+                                  suffix: questionsInCategory.length !== 1 ? "s" : "",
+                                },
+                              })}
                             </div>
                           </div>
                         </div>
@@ -189,11 +213,11 @@ export function QuestionDrawer({
                       <ArrowLeft className="w-5 h-5 text-black" />
                     </button>
                     <h3 className="text-black font-bold text-lg uppercase">
-                      {
-                        availableCategories.find(
-                          (c) => c.id === selectedCategory,
-                        )?.name
-                      }
+                      {availableCategories.find((c) => c.id === selectedCategory)
+                        ? translateCategory(
+                            availableCategories.find((c) => c.id === selectedCategory)!,
+                          ).name
+                        : ""}
                     </h3>
                   </div>
 
@@ -216,7 +240,7 @@ export function QuestionDrawer({
                         <div className="flex items-start justify-between gap-3">
                           <div className="flex-1">
                             <div className="text-black">
-                              {question.text.replace("{param}", "___")}
+                              {translateQuestionText(question).replace("{param}", "___")}
                             </div>
                           </div>
                           {isLocked && (
@@ -243,7 +267,7 @@ export function QuestionDrawer({
                                     : "bg-background text-black border-black hover:bg-black/5"
                                 } disabled:opacity-50 disabled:cursor-not-allowed`}
                               >
-                                {option}
+                                {translateQuestionOption(question.id, option)}
                               </button>
                             ))}
                           </div>
@@ -264,20 +288,20 @@ export function QuestionDrawer({
                           }
                         >
                           {isLocked ? (
-                            "Locked - Answer Cooldown"
+                            t("questions.locked")
                           ) : isEligible && selectedParam ? (
                             <>
                               <Unlock className="w-4 h-4 mr-2" />
-                              Ask Now
+                              {t("questions.askNow")}
                             </>
                           ) : (
-                            "Select parameter and visit location"
+                            t("questions.selectParam")
                           )}
                         </Button>
 
                         {isLocked && (
                           <div className="text-xs text-center text-red-600 font-bold">
-                            Try again in 2 minutes after a wrong answer
+                            {t("questions.cooldown")}
                           </div>
                         )}
                       </motion.div>

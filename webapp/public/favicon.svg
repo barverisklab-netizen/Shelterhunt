@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Shelterhunt icon">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ef4444"/>
+      <stop offset="100%" stop-color="#111827"/>
+    </linearGradient>
+  </defs>
+  <rect width="64" height="64" rx="14" ry="14" fill="url(#bg)" stroke="#000" stroke-width="3"/>
+  <g fill="none" stroke="#000" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" transform="translate(16 12)">
+    <path d="M16 0C10.477 0 6 4.477 6 10c0 7.5 10 18 10 18s10-10.5 10-18c0-5.523-4.477-10-10-10Z" fill="#fff"/>
+    <circle cx="16" cy="10" r="4" fill="#ef4444"/>
+  </g>
+  <path d="M12 48h40" stroke="#000" stroke-width="4" stroke-linecap="round"/>
+  <path d="M22 44h20" stroke="#fff" stroke-width="3" stroke-linecap="round"/>
+</svg>

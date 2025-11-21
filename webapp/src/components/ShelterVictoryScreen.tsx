@@ -1,6 +1,7 @@
 import { motion } from "motion/react";
 import { Trophy } from "lucide-react";
 import { Button } from "./ui/button";
+import { useI18n } from "@/i18n";
 
 interface ShelterVictoryScreenProps {
   shelterName?: string;
@@ -15,6 +16,7 @@ export function ShelterVictoryScreen({
   visitedCount,
   onPlayAgain,
 }: ShelterVictoryScreenProps) {
+  const { t } = useI18n();
   return (
     <motion.div
       className="fixed inset-0 z-50 bg-background flex items-center justify-center p-6"
@@ -34,21 +36,26 @@ export function ShelterVictoryScreen({
 
         <div>
           <h2 className="text-4xl text-black mb-2 font-bold uppercase">
-            Victory! 🎉
+            {t("victory.title")}
           </h2>
           <p className="text-black font-bold text-lg uppercase">
-            You found the secret shelter!! </p><p>
+            {t("victory.subtitle", {
+              replacements: { shelter: shelterName ?? "" },
+              fallback: "You found the secret shelter!",
+            })}
+          </p>
+          <p>
             {shelterName ? ` ${shelterName}` : ""}
           </p>
         </div>
 
         <div className="rounded border border-neutral-900 bg-background p-4 space-y-2 text-left">
           <div className="flex justify-between text-black font-semibold uppercase">
-            <span>Clues Collected</span>
+            <span>{t("victory.clues")}</span>
             <span>{clueCount}</span>
           </div>
           <div className="flex justify-between text-black font-semibold uppercase">
-            <span>Locations Visited</span>
+            <span>{t("victory.visited")}</span>
             <span>{visitedCount}</span>
           </div>
         </div>
@@ -57,7 +64,7 @@ export function ShelterVictoryScreen({
           onClick={onPlayAgain}
           className="w-full"
         >
-          Play Again
+          {t("victory.playAgain")}
         </Button>
       </div>
     </motion.div>

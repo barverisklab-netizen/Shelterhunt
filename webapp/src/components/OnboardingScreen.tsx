@@ -2,6 +2,7 @@ import { Users, Info, User } from 'lucide-react';
 import { motion } from 'motion/react';
 import packageInfo from '../../package.json';
 import { MenuHeader } from './MenuHeader';
+import { useI18n } from "@/i18n";
 
 interface OnboardingScreenProps {
   onJoinGame: () => void;
@@ -16,6 +17,7 @@ export function OnboardingScreen({
   onPlaySolo,
   onShowHelp,
 }: OnboardingScreenProps) {
+  const { t } = useI18n();
   const buttonBaseDelay = 1.1;
   const featureBaseDelay = 1.7; // currently unused
 
@@ -41,8 +43,8 @@ export function OnboardingScreen({
 
       <div className="relative z-10 w-full max-w-md space-y-6">
         <MenuHeader
-          title="ShelterSearch"
-          subtitle="Find the shelter before the storm!"
+          title={t("onboarding.title")}
+          subtitle={t("onboarding.tagline")}
           versionLabel={`v${packageInfo.version}`}
         />
 
@@ -57,7 +59,7 @@ export function OnboardingScreen({
             transition={{ delay: buttonBaseDelay, duration: 0.45, ease: 'easeOut' }}
           >
             <User className="w-5 h-5" />
-            <span className="text-lg font-bold uppercase tracking-wide">Play Solo</span>
+            <span className="text-lg font-bold uppercase tracking-wide">{t("onboarding.playSolo")}</span>
           </motion.button>
 
           <motion.button
@@ -69,7 +71,7 @@ export function OnboardingScreen({
             transition={{ delay: buttonBaseDelay + 0.12, duration: 0.45, ease: 'easeOut' }}
           >
             <Users className="w-5 h-5 text-black" />
-            <span className="text-lg font-bold uppercase tracking-wide text-black">Join Game</span>
+            <span className="text-lg font-bold uppercase tracking-wide text-black">{t("onboarding.joinGame")}</span>
           </motion.button>
 
           <motion.button
@@ -81,7 +83,7 @@ export function OnboardingScreen({
             transition={{ delay: buttonBaseDelay + 0.24, duration: 0.45, ease: 'easeOut' }}
           >
             <Users className="w-5 h-5 text-black" />
-            <span className="text-lg font-bold uppercase tracking-wide text-black">Host Multiplayer</span>
+            <span className="text-lg font-bold uppercase tracking-wide text-black">{t("onboarding.hostGame")}</span>
           </motion.button>
 
           <motion.button
@@ -93,7 +95,7 @@ export function OnboardingScreen({
             transition={{ delay: buttonBaseDelay + 0.36, duration: 0.45, ease: 'easeOut' }}
           >
             <Info className="w-5 h-5" />
-            <span className="text-base font-bold uppercase tracking-wide">How to Play</span>
+            <span className="text-base font-bold uppercase tracking-wide">{t("onboarding.howToPlay")}</span>
           </motion.button>
         </div>
       </div>

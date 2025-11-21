@@ -1,14 +1,16 @@
 import { motion } from "motion/react";
 import { AlertTriangle } from "lucide-react";
 import { Button } from "./ui/button";
+import { useI18n } from "@/i18n";
 
 interface TerminalScreenProps {
   onRestart: () => void;
 }
 
 export function TerminalScreen({ onRestart }: TerminalScreenProps) {
+  const { t } = useI18n();
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-6">
+    <div className="min-h-screen bg-background flex items-center justify-center p-6 relative">
       <motion.div
         className="w-full max-w-lg space-y-6 rounded-lg border-4 border-black bg-background p-8 text-center shadow-xl"
         initial={{ opacity: 0, scale: 0.85, y: 40 }}
@@ -22,18 +24,17 @@ export function TerminalScreen({ onRestart }: TerminalScreenProps) {
         </div>
         <div className="space-y-3">
           <h2 className="text-3xl font-black uppercase text-black">
-            Time's Up
+            {t("terminal.title")}
           </h2>
           <p className="text-black font-semibold">
-            Try harder next time, and
-            return when you are ready.
+            {t("terminal.message")}
           </p>
         </div>
         <Button
           onClick={onRestart}
           className="w-full rounded border-4 border-black bg-red-500 py-4 text-sm font-bold uppercase text-white transition-colors hover:bg-red-600"
         >
-          Back to Onboarding
+          {t("terminal.back")}
         </Button>
       </motion.div>
     </div>

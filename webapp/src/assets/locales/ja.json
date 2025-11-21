@@ -1,0 +1,330 @@
+{
+  "common": {
+    "appName": "シェルターサーチ",
+    "back": "戻る",
+    "cancel": "キャンセル",
+    "close": "閉じる",
+    "continue": "続ける",
+    "copy": "コピー",
+    "you": "あなた",
+    "languageLabel": "言語",
+    "language": {
+      "en": "英語",
+      "ja": "日本語"
+    },
+    "default": "デフォルト",
+    "setDefault": "デフォルトに設定",
+    "defaultLanguage": "デフォルト: {language}"
+  },
+  "intro": {
+    "title": "シェルターサーチ",
+    "paragraph1": "ようこそ、ヒーローのみなさん！防災先生の登場です。強いハリケーンが江東区に近づいています——マスコットのコトちゃんが安全な場所に避難したようですが、連絡がつかなくなってしまいました！",
+    "paragraph2": "嵐が来る前に、コトちゃんがいる避難所を見つけるのがあなたたちの任務です。街を歩き回り、防災チャレンジに取り組み、手がかりを集めてください。",
+    "paragraph3": "正解を重ねるごとに、コトちゃんに近づくだけでなく、本当の災害への備えも身につきます！チームを整え、周囲を確認して出発しましょう。備えこそ最高の superpower！",
+    "play": "プレイ"
+  },
+  "onboarding": {
+    "title": "シェルターサーチ",
+    "tagline": "嵐が来る前に避難所を見つけよう！",
+    "playSolo": "ソロで遊ぶ",
+    "joinGame": "ゲームに参加",
+    "hostGame": "マルチをホスト",
+    "howToPlay": "遊び方"
+  },
+  "solo": {
+    "soloPlay": "ソロプレイ",
+    "lightningHunt": "ライトニングハント",
+    "lightningMeta": "時間制限・位置情報が必要",
+    "citywideSearch": "シティワイド探索",
+    "citywideMeta": "タイマーなし・自由に移動",
+    "lightningPrompt": "ライトニングハントを始める？",
+    "lightningDetails": "{minutes}分カウントダウン · 半径{radius}km",
+    "lightningDescription": "位置情報が確認でき次第、範囲内の避難所をロックします。近くに無い場合は移動をお願いします。",
+    "startLightning": "ライトニングハント開始"
+  },
+  "waiting": {
+    "title": "待機ルーム",
+    "shelterCode": "シェルターコード",
+    "players": "プレイヤー",
+    "waitingForPlayers": "参加者を待っています…",
+    "player": "プレイヤー",
+    "you": "あなた",
+    "ready": "準備完了！",
+    "markReady": "準備OKにする",
+    "startGame": "ゲーム開始",
+    "waitingForEveryone": "全員の準備を待っています…",
+    "waitingForHost": "ホストがレースを開始するのを待っています",
+    "leaveGame": "ゲームを離れる",
+    "playerCount": "ロビーに{count}人"
+  },
+  "profile": {
+    "defaultTitle": "自己紹介",
+    "defaultSubtitle": "マルチプレイに入る前にコールサインを設定。",
+    "defaultLabel": "表示名",
+    "defaultSubmit": "名前を保存",
+    "defaultPlaceholder": "例: スカイスカウト",
+    "setCallsignTitle": "コールサインを設定",
+    "setCallsignSubtitle": "マルチプレイ参加前に表示名を追加してください。",
+    "createSessionTitle": "マルチプレイを作成",
+    "createSessionSubtitle": "チームをホストする前にコールサインを入力。",
+    "joinGameTitle": "マルチプレイに参加",
+    "joinGameSubtitle": "ホストから共有されたシェルターコードを入力してください。",
+    "callsignPlaceholder": "例: スカイスカウト",
+    "submitContinue": "続ける",
+    "submitStart": "ホスト開始",
+    "submitJoin": "参加する",
+    "joining": "参加中...",
+    "codeLabel": "シェルターコード",
+    "codePlaceholder": "例: 9F2X"
+  },
+  "hostShare": {
+    "title": "セッション準備完了",
+    "subtitle": "このシェルターコードをチームに共有して参加してもらいましょう。",
+    "copyCode": "コードをコピー"
+  },
+  "terminal": {
+    "title": "時間切れ",
+    "message": "次はもっと頑張って、準備ができたら戻ってきてください。",
+    "back": "タイトルに戻る"
+  },
+  "help": {
+    "title": "遊び方",
+    "subtitle": "都市推理の達人になろう",
+    "overviewTitle": "ゲーム概要",
+    "overviewBody": "ハリケーンが接近中！チームで街に隠された秘密の避難所を探します。いろいろな場所を訪れ、防災のトリビアに答えて手がかりを集め、どの避難所が正解か推理しましょう。最初に見つけたチームの勝ちです！",
+    "stepLabel": "ステップ {number}",
+    "steps": {
+      "visit": "場所を訪れる",
+      "visitDesc": "地図に記されたPOI（地点）を巡りましょう。",
+      "answer": "トリビアに回答",
+      "answerDesc": "POI付近で質問を選び、トリビアに答えて手がかりを解放します。",
+      "collect": "手がかりを集める",
+      "collectDesc": "正解で得た情報を使って、秘密の避難所の特徴を絞り込みます。",
+      "find": "避難所を突き止める",
+      "findDesc": "手がかりを基に正しい避難所を推理し、現地に行けば勝利！"
+    },
+    "proTips": "プロからのヒント",
+    "tips": {
+      "greenRed": "緑は「ある」、赤は「ない」を示します",
+      "cooldown": "誤答するとその質問は2分ロックされます。慎重に！",
+      "visitPoi": "違う種類のPOIを巡って質問カテゴリーを増やそう",
+      "oneGuess": "推理チャンスは一度きり。自信を持ってから提出！",
+      "teamwork": "チームで手分けして移動し、手がかりを共有しよう"
+    }
+  },
+  "app": {
+    "defaults": {
+      "navigator": "ナビゲーター",
+      "soloPlayer": "ソロプレイヤー"
+    },
+    "errors": {
+      "invalidCode": "有効なシェルターコードを入力してください。",
+      "callsignRequired": "コールサインは必須です。",
+      "readyStatus": "準備状況を更新できませんでした。",
+      "startRace": "レースを開始できません。もう一度お試しください。",
+      "noSheltersNearby": "半径{radius}km内に避難所がありません。別の場所へ移動してください。",
+      "loadShelters": "避難所データを読み込めませんでした。時間をおいて再試行してください。",
+      "locationAccess": "位置情報にアクセスできません。再試行してください。",
+      "locationDenied": "位置情報の権限がありません。ライトニングハントを始めるには許可が必要です。",
+      "locationUnknown": "位置情報を特定できませんでした。再試行してください。",
+      "shelterUnavailable": "選択した避難所が利用できません。再度お試しください。",
+      "startMultiplayer": "マルチプレイセッションを開始できませんでした。",
+      "joinSession": "セッションに参加できませんでした。"
+    },
+    "toasts": {
+      "timeUp": "時間切れです。ゲームオーバー。",
+      "raceFinished": "避難所に到達！レース終了。",
+      "joinedGame": "{code}のゲームに参加しました",
+      "lightningReady": "ライトニングハント準備完了！",
+      "citywideReady": "シティワイドモード開始！自由に探索しよう。",
+      "gameStarted": "ゲーム開始！秘密の避難所を見つけよう！",
+      "leftGame": "ゲームから退出しました"
+    },
+    "processing": {
+      "title": "マルチプレイを準備中…",
+      "subtitle": "位置情報を確認し、近くの避難所をロックしています"
+    }
+  },
+  "guess": {
+    "confirmTitle": "推理の確定",
+    "confirmPrompt": "この避難所で確定してよいですか？",
+    "confirmWarning": "間違えるとタイマーが10分に戻り、赤色になります。十分に手がかりを集めてから確定してください。",
+    "lockIn": "この避難所で確定",
+    "backToClues": "手がかり一覧へ戻る"
+  },
+  "victory": {
+    "title": "勝利！ 🎉",
+    "subtitle": "秘密の避難所を見つけました！ {shelter}",
+    "clues": "集めた手がかり",
+    "visited": "訪問した場所",
+    "playAgain": "もう一度プレイ"
+  },
+  "penalty": {
+    "first": {
+      "title": "あと少し",
+      "message": "ここは秘密の避難所ではありません。タイマーは10分にリセットされました。手がかりを活用しよう。"
+    },
+    "second": {
+      "title": "プレッシャー上昇",
+      "message": "再び不正解。タイマーは5分に。ラストチャンス、慎重に選んでください。"
+    },
+    "third": {
+      "title": "ゲームオーバー",
+      "message": "3回の推理を使い切りました。立て直して再挑戦しましょう。"
+    },
+    "keepPlaying": "続行する"
+  },
+  "gameplay": {
+    "missionControl": "ミッションコントロール",
+    "clueCount": "手がかり{count}件",
+    "closePanel": "パネルを閉じる",
+    "clues": "手がかり",
+    "logged": "{count}件記録",
+    "clueHint": "手がかりが増えるほど候補が絞れます。緑の肯定と赤の否定を見比べて正解を推理しましょう。",
+    "noCluesTitle": "まだ手がかりなし",
+    "noCluesSubtitle": "場所を訪れてトリビアに答えると秘密の避難所の情報が得られます。",
+    "strategyTitle": "攻略のヒント",
+    "strategyTip1": "緑の印は正しい特徴を示します",
+    "strategyTip2": "赤の印は候補から外す材料になります",
+    "strategyTip3": "複数のヒントを重ねてから推理を確定しよう",
+    "tools": {
+      "title": "ツール",
+      "active": "稼働中",
+      "idle": "待機中",
+      "copy": "検索半径を描き、範囲内の避難所を確認します。",
+      "trigger": "半径を計測",
+      "activeButton": "計測中"
+    },
+    "finalDecision": "最終決定",
+    "finalStep": "最後のステップ",
+    "selectShelter": "避難所を選択",
+    "selectPlaceholder": "避難所を選んでください",
+    "guessWarning": "間違えるとタイマーが10分に戻ります。手がかりを確認してから提出しましょう。",
+    "submitGuess": "推理を送信",
+    "returnToMap": "マップに戻る"
+  },
+  "questions": {
+    "ask": "質問する",
+    "inRange": "範囲内",
+    "inRangeCopy": "この場所で質問できます",
+    "outOfRange": "範囲外",
+    "outOfRangeCopy": "POIに移動すると質問が解放されます",
+    "chooseCategory": "カテゴリーを選ぶ",
+    "availableCount": "質問{count}件利用可能",
+    "locked": "ロック中 - クールダウン",
+    "askNow": "今すぐ質問",
+    "selectParam": "パラメーターを選んで現地へ",
+    "cooldown": "間違えた場合は2分後に再挑戦できます",
+    "categories": {
+      "location": {
+        "name": "場所の詳細",
+        "description": "高潮浸水や周辺環境について聞く"
+      },
+      "facility": {
+        "name": "施設の種類",
+        "description": "施設の種類や目的について聞く"
+      },
+      "nearby": {
+        "name": "周辺設備",
+        "description": "近隣の施設やサービスについて聞く"
+      },
+      "capacity": {
+        "name": "収容・資源",
+        "description": "避難所の収容人数や備えについて聞く"
+      }
+    },
+    "q1": {
+      "text": "高潮浸水ランクは{param}ですか？"
+    },
+    "q2": {
+      "text": "避難所の種類は{param}ですか？",
+      "options": {
+        "library": "図書館",
+        "school": "学校",
+        "community_center": "コミュニティセンター",
+        "hospital": "病院"
+      }
+    },
+    "q3": {
+      "text": "250m以内に{param}以上の公園がありますか？"
+    },
+    "q4": {
+      "text": "この避難所は{param}人以上収容できますか？"
+    }
+  },
+  "trivia": {
+    "challengeTitle": "トリビアチャレンジ",
+    "challengeSubtitle": "正解すると手がかりを獲得",
+    "close": "トリビアを閉じる",
+    "correct": "正解！ 🎉",
+    "unlockedClue": "手がかりを獲得しました",
+    "incorrect": "不正解",
+    "locked": "この質問は2分間ロックされます",
+    "submit": "回答を送信",
+    "t1": {
+      "question": "ボストン大火は何年？",
+      "answers": ["1872年", "1905年", "1845年", "1889年"]
+    },
+    "t2": {
+      "question": "1日1人あたり推奨される飲料水の量は？",
+      "answers": ["1リットル", "2リットル", "3リットル", "4リットル"]
+    },
+    "t3": {
+      "question": "風速111-129mphに相当するハリケーン階級は？",
+      "answers": ["カテゴリ2", "カテゴリ3", "カテゴリ4", "カテゴリ5"]
+    },
+    "t4": {
+      "question": "FEMAの正式名称は？",
+      "answers": [
+        "連邦緊急事態管理庁",
+        "消防・防災庁",
+        "連邦環境監視庁",
+        "第一救急医療支援"
+      ]
+    },
+    "t5": {
+      "question": "水なしで人が生存できる期間は？",
+      "answers": ["1日", "3日", "7日", "14日"]
+    },
+    "t6": {
+      "question": "米国の緊急通報番号は？",
+      "answers": ["999", "111", "911", "112"]
+    },
+    "t7": {
+      "question": "ハリケーン時に比較的安全な階は？",
+      "answers": ["地下", "1階", "2階", "最上階"]
+    },
+    "t8": {
+      "question": "人間の体の約何％が水でできている？",
+      "answers": ["50%", "60%", "70%", "80%"]
+    }
+  },
+  "game": {
+    "exitTitle": "メインメニューに戻る",
+    "secretShelter": "秘密の避難所",
+    "secretShelterName": "秘密の避難所名",
+    "tapToAsk": "質問するにはタップ",
+    "toasts": {
+      "selectShelterFirst": "推理を送信する前に避難所を選択してください。",
+      "shelterPreparing": "秘密の避難所を準備中です。少し待ってから再試行してください。",
+      "submitError": "推理を送信できません。再試行してください。",
+      "correctShelter": "正しい避難所を見つけました！",
+      "finalGuess": "最後の推理でした。ゲームオーバー。",
+      "penaltyFirst": "不正解！タイマーを10分にリセットしました。",
+      "penaltySecond": "不正解！タイマーを5分にリセットしました。"
+    },
+    "clues": {
+      "surgeRank": "高潮浸水ランクは{rank}",
+      "capacity": "収容人数は{capacity}人以上",
+      "notFireStation": "消防署ではない",
+      "parks": "{parks}以上の公園が近くにある",
+      "notSurgeRankFour": "浸水ランク4ではない",
+      "categories": {
+        "location": "位置",
+        "capacity": "収容",
+        "facility": "施設",
+        "nearby": "周辺"
+      }
+    }
+  }
+}

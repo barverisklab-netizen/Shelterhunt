@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { motion } from "motion/react";
 import { User, Check, X, Copy, Crown } from "lucide-react";
 import type { Player } from "@/types/game";
+import { useI18n } from "@/i18n";
 
 interface WaitingRoomProps {
   gameCode: string;
@@ -24,6 +25,7 @@ export function WaitingRoom({
   onStartGame,
   onLeaveGame,
 }: WaitingRoomProps) {
+  const { t } = useI18n();
   const currentPlayer = players.find((p) => p.id === currentUserId);
   const allReady = players.every((p) => p.ready);
   const [copied, setCopied] = useState(false);
@@ -67,7 +69,7 @@ export function WaitingRoom({
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
           >
-            Waiting Room
+            {t("waiting.title")}
           </motion.h1>
 
           <motion.div
@@ -76,7 +78,7 @@ export function WaitingRoom({
           >
             <div>
               <p className="text-xs font-semibold uppercase tracking-[0.3em] text-black/70">
-                Shelter Code
+                {t("waiting.shelterCode")}
               </p>
               <p className="text-3xl font-black uppercase tracking-[0.4em]">{gameCode}</p>
             </div>
@@ -100,11 +102,13 @@ export function WaitingRoom({
           >
             <div className="mb-2 flex items-center gap-2">
               <User className="h-4 w-4" />
-              <h3 className="text-xl font-black uppercase tracking-wide">Players</h3>
+              <h3 className="text-xl font-black uppercase tracking-wide">
+                {t("waiting.players")}
+              </h3>
             </div>
             {orderedPlayers.length === 0 ? (
               <div className="py-8 text-center text-sm font-semibold uppercase tracking-wide text-black/60">
-                Waiting for players…
+                {t("waiting.waitingForPlayers")}
               </div>
             ) : (
               <div className="space-y-2">
@@ -117,11 +121,11 @@ export function WaitingRoom({
                     transition={{ delay: 0.15 + index * 0.05 }}
                   >
                     <div className="flex items-center gap-3 text-sm font-black uppercase tracking-wide">
-                      <span>{player.name || "Player"}</span>
+                      <span>{player.name || t("waiting.player")}</span>
                       {player.id === hostId && <Crown className="h-4 w-4 text-black" />}
                       {player.id === currentUserId && (
                         <span className="rounded-full px-2 py-0.5 text-[10px]">
-                          You
+                          {t("waiting.you")}
                         </span>
                       )}
                     </div>
@@ -147,10 +151,10 @@ export function WaitingRoom({
               {currentPlayer?.ready ? (
                 <span className="flex items-center justify-center gap-2">
                   <Check className="h-5 w-5" />
-                  Ready!
+                  {t("waiting.ready")}
                 </span>
               ) : (
-                "Mark as Ready"
+                t("waiting.markReady")
               )}
             </button>
 
@@ -161,11 +165,13 @@ export function WaitingRoom({
                 disabled={!allReady || players.length < 1}
                 className="w-full rounded-xl border-2 border-black bg-red-500 px-4 py-3 text-sm font-black uppercase tracking-wide text-black transition hover:-translate-y-0.5 hover:shadow-[4px_4px_0_rgba(0,0,0,0.9)] disabled:cursor-not-allowed disabled:opacity-50"
               >
-                {allReady && players.length >= 1 ? "Start Game" : "Waiting for everyone…"}
+                {allReady && players.length >= 1
+                  ? t("waiting.startGame")
+                  : t("waiting.waitingForEveryone")}
               </button>
             ) : (
               <p className="text-center text-[11px] font-semibold uppercase tracking-[0.3em] text-black/60">
-                Waiting for host to start the race
+                {t("waiting.waitingForHost")}
               </p>
             )}
 
@@ -174,12 +180,17 @@ export function WaitingRoom({
               onClick={onLeaveGame}
               className="w-full rounded-xl border-2 border-black px-4 py-3 text-sm font-black uppercase tracking-wide text-black transition hover:-translate-y-0.5 hover:shadow-[4px_4px_0_rgba(0,0,0,0.9)]"
             >
-              Leave Game
+              {t("waiting.leaveGame")}
             </button>
 
             <div className="text-center text-xs font-semibold uppercase tracking-[0.3em] text-black/60">
               <User className="mr-1 inline h-3.5 w-3.5" />
-              {players.length} player{players.length !== 1 ? "s" : ""} in lobby
+              {t("waiting.playerCount", {
+                replacements: {
+                  count: players.length,
+                  suffix: players.length !== 1 ? "s" : "",
+                },
+              })}
             </div>
           </motion.div>
         </div>

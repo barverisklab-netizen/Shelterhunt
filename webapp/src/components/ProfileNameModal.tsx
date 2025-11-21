@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { useI18n } from "@/i18n";
 
 interface ProfileNameModalProps {
   open: boolean;
@@ -20,15 +21,16 @@ export function ProfileNameModal({
   initialValue,
   onSubmit,
   onClose,
-  title = "Introduce Yourself",
-  subtitle = "Set your callsign before entering multiplayer.",
-  placeholder = "e.g. Sky Scout",
-  submitLabel = "Save Name",
-  label = "Display Name",
+  title,
+  subtitle,
+  placeholder,
+  submitLabel,
+  label,
   variant = "modal",
   submitting = false,
   error = null,
 }: ProfileNameModalProps) {
+  const { t } = useI18n();
   const [value, setValue] = useState(initialValue);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -63,15 +65,15 @@ export function ProfileNameModal({
       className="w-full max-w-sm rounded-3xl border-4 border-black bg-white p-6 shadow-[8px_8px_0_rgba(0,0,0,0.9)]"
     >
       <h2 className="text-2xl font-black uppercase tracking-wide text-black">
-        {title}
+        {title ?? t("profile.defaultTitle")}
       </h2>
       <p className="mt-1 text-xs font-semibold uppercase tracking-wide text-neutral-600">
-        {subtitle}
+        {subtitle ?? t("profile.defaultSubtitle")}
       </p>
 
       <div className="mt-4">
         <label className="text-xs font-bold uppercase tracking-wide text-black">
-          {label}
+          {label ?? t("profile.defaultLabel")}
         </label>
         <input
           ref={inputRef}
@@ -79,7 +81,7 @@ export function ProfileNameModal({
           value={value}
           onChange={(event) => setValue(event.target.value)}
           maxLength={32}
-          placeholder={placeholder}
+          placeholder={placeholder ?? t("profile.defaultPlaceholder")}
           className="mt-2 w-full rounded-xl border-2 border-black px-4 py-2 text-sm font-semibold uppercase tracking-wide text-black outline-none focus:ring-2 focus:ring-red-500"
           disabled={submitting}
         />
@@ -98,14 +100,14 @@ export function ProfileNameModal({
           disabled={submitting}
           className="flex-1 rounded-xl border-2 border-black px-4 py-2 text-sm font-bold uppercase tracking-wide text-black transition hover:bg-black hover:text-white disabled:opacity-50"
         >
-          Cancel
+          {t("common.cancel")}
         </button>
         <button
           type="submit"
           disabled={!value.trim() || submitting}
           className="flex-1 rounded-xl border-2 border-black bg-red-600 px-4 py-2 text-sm font-bold uppercase tracking-wide text-black transition hover:-translate-y-0.5 hover:shadow-[4px_4px_0_rgba(0,0,0,0.9)] disabled:opacity-50"
         >
-          {submitLabel}
+          {submitLabel ?? t("profile.defaultSubmit")}
         </button>
       </div>
     </form>
