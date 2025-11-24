@@ -44,7 +44,7 @@ export function HostShareModal({ open, code, onClose }: HostShareModalProps) {
           <button
             type="button"
             onClick={handleCopyCode}
-            className="flex-1 rounded-xl border-2 border-black px-4 py-2 text-sm font-bold uppercase tracking-wide text-black transition hover:bg-black hover:text-white"
+            className="flex-1 rounded-xl border-2 border-black px-4 py-2 text-sm font-bold uppercase tracking-wide text-black transition hover:bg-neutral-200 hover:text-black"
           >
             {t("hostShare.copyCode")}
           </button>

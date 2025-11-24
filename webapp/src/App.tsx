@@ -1005,7 +1005,6 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-background relative overflow-hidden">
-      {gameState !== "playing" && <LanguageToggle />}
       {/* Main Content */}
       <div className="relative z-10">
         {gameState === "intro" && <IntroScreen onContinue={handleSkipIntro} />}
@@ -1158,6 +1157,7 @@ export default function App() {
           </p>
         </div>
       )}
+      <LanguageToggle />
     </div>
   );
 }

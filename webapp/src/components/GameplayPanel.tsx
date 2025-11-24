@@ -220,7 +220,7 @@ export function GameplayPanel({
                         onClose();
                         onStartMeasure();
                       }}
-                      className="w-full border border-black bg-white text-xs tracking-wide text-black transition-colors hover:bg-neutral-200 hover:text-black hover:border-black active:bg-black active:text-white active:border-black disabled:border-neutral-400 disabled:text-neutral-500 disabled:bg-neutral-200"
+                      className="w-full border border-black bg-white text-xs tracking-wide text-black transition-colors hover:bg-neutral-200 hover:text-black hover:border-black active:bg-neutral-800 active:text-black active:border-black disabled:border-neutral-400 disabled:text-black-40 disabled:bg-neutral-200"
                       disabled={isMeasureActive}
                     >
                       {isMeasureActive
@@ -268,7 +268,7 @@ export function GameplayPanel({
                     </p>
                     <Button
                       onClick={onGuessRequest}
-                      className="w-full border border-black bg-white text-black transition-colors hover:bg-neutral-200 hover:text-black hover:border-black active:bg-black active:text-white active:border-black disabled:bg-neutral-200 disabled:text-neutral-500 disabled:border-neutral-400 disabled:opacity-100"
+                      className="w-full border border-black bg-white text-black transition-colors hover:bg-neutral-200 hover:text-black hover:border-black active:bg-neutral-800 active:text-black active:border-black disabled:bg-neutral-200 disabled:text-black-40 disabled:border-neutral-400 disabled:opacity-100"
                       disabled={
                         isGuessDisabled || !selectedShelterId || !shelterOptions.length
                       }
@@ -285,7 +285,7 @@ export function GameplayPanel({
                   onClick={onClose}
                   variant="outline"
                   size="default"
-                  className="border border-black text-black transition-colors hover:bg-neutral-200 hover:text-black hover:border-black active:bg-black active:text-white active:border-black disabled:bg-neutral-200 disabled:text-neutral-500 disabled:border-neutral-400 disabled:opacity-100"
+                  className="border border-black text-black transition-colors hover:bg-neutral-200 hover:text-black hover:border-black active:bg-neutral-800 active:text-black active:border-black disabled:bg-neutral-200 disabled:text-black-40 disabled:border-neutral-400 disabled:opacity-100"
                 >
                   {t("gameplay.returnToMap")}
                 </Button>

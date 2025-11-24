@@ -98,7 +98,7 @@ export function ProfileNameModal({
           type="button"
           onClick={onClose}
           disabled={submitting}
-          className="flex-1 rounded-xl border-2 border-black px-4 py-2 text-sm font-bold uppercase tracking-wide text-black transition hover:bg-black hover:text-white disabled:opacity-50"
+          className="flex-1 rounded-xl border-2 border-black px-4 py-2 text-sm font-bold uppercase tracking-wide text-black transition hover:bg-neutral-200 hover:text-black disabled:opacity-50"
         >
           {t("common.cancel")}
         </button>

@@ -49,7 +49,7 @@ export function SoloModeScreen({
           <button
             type="button"
             onClick={onBack}
-            className="inline-flex items-center gap-2 rounded-full border-4 border-black bg-white px-4 py-2 text-xs font-bold uppercase tracking-wide transition-all hover:-translate-x-1 hover:bg-neutral-900 hover:text-white"
+            className="inline-flex items-center gap-2 rounded-full border-4 border-black bg-white px-4 py-2 text-xs font-bold uppercase tracking-wide transition-all hover:-translate-x-1 hover:bg-neutral-200 hover:text-black"
           >
             <ArrowLeft className="h-4 w-4" />
             {t("common.back")}
@@ -129,7 +129,7 @@ export function SoloModeScreen({
                   type="button"
                   disabled={isProcessing}
                   onClick={onSelectLightning}
-                  className="w-full max-w-xs border border-black bg-white text-black transition-colors hover:bg-neutral-200 hover:text-black hover:border-black active:bg-black active:text-white active:border-black disabled:bg-neutral-200 disabled:text-neutral-500 disabled:border-neutral-400 disabled:opacity-100">
+                  className="w-full max-w-xs border border-black bg-white text-black transition-colors hover:bg-neutral-200 hover:text-black hover:border-black active:bg-neutral-800 active:text-black active:border-black disabled:bg-neutral-200 disabled:text-black-40 disabled:border-neutral-400 disabled:opacity-100">
                   {t("solo.startLightning")}
                 </button>
               </div>
