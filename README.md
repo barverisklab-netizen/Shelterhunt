@@ -90,15 +90,15 @@ The helper scripts use `npm --prefix` under the hood, so you can still run `npm 
 
 ### Multiplayer data seeding
 
-Two copies of the GeoJSON dataset are now stored under `webapp/src/assets/Data/ihi_shelters.geojson` (for local visualization) and `api/assets/ihi_shelters.geojson` (for seeding). After setting up your Supabase project:
+The GeoJSON dataset now lives in a separate data repo (not shipped or deployed with the app). Point the importer at that copy via `SHELTER_DATA_PATH` or by cloning the data repo alongside this one (e.g., `../shelterhunt-data/geojson/ihi_shelters.geojson`). After setting up your Supabase project:
 
 ```bash
 cd api
 psql "$DATABASE_URL" -f sql/001_init_sessions.sql   # create/alter tables
-npm run seed:shelters                               # import GeoJSON + share codes
+SHELTER_DATA_PATH=../shelterhunt-data/geojson/ihi_shelters.geojson npm run seed:shelters
 ```
 
-The importer assigns a random six-character `share_code` to every shelter and upserts the records into Supabase. The frontend and API read these codes from the database, so the GeoJSON never needs manual edits.
+The importer assigns a random six-character `share_code` to every shelter and upserts the records into Supabase. The frontend and API read these codes from the database; the raw GeoJSON should remain versioned only in the data repo (see `data/` for helper scripts to export/import).
 
 ### Key endpoints
 

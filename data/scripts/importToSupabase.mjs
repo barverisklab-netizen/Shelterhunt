@@ -1,49 +1,21 @@
+import "dotenv/config";
 import fs from "node:fs/promises";
 import path from "node:path";
+import process from "node:process";
 import crypto from "node:crypto";
-import { pool } from "../src/db/pool.js";
-import type { ShelterRecord } from "../src/types/shelter.js";
+import { Client } from "pg";
 
-interface GeoJSONFeature {
-  type: string;
-  properties?: Record<string, any>;
-  geometry?: {
-    type?: string;
-    coordinates?: [number, number];
-  };
+const databaseUrl = process.env.DATABASE_URL;
+const geojsonPath = path.resolve(
+  process.env.SHELTER_DATA_PATH ?? path.join(process.cwd(), "geojson/ihi_shelters.geojson"),
+);
+
+if (!databaseUrl) {
+  console.error("[Data] DATABASE_URL is required to import shelters.");
+  process.exit(1);
 }
 
-interface GeoJSONCollection {
-  type: string;
-  features?: GeoJSONFeature[];
-}
-
-const GEOJSON_CANDIDATE_PATHS = [
-  process.env.SHELTER_DATA_PATH,
-  path.resolve(process.cwd(), "../data/geojson/ihi_shelters.geojson"),
-  path.resolve(process.cwd(), "assets/ihi_shelters.geojson"),
-].filter((value): value is string => Boolean(value));
-
-const resolveGeojsonPath = async (): Promise<string> => {
-  for (const candidate of GEOJSON_CANDIDATE_PATHS) {
-    try {
-      await fs.access(candidate);
-      return candidate;
-    } catch {
-      // continue
-    }
-  }
-
-  throw new Error(
-    [
-      "GeoJSON file not found.",
-      "Set SHELTER_DATA_PATH to the dataset in your data repo (e.g. ../shelterhunt-data/geojson/ihi_shelters.geojson),",
-      "or place the file under api/assets/.",
-    ].join(" "),
-  );
-};
-
-const normalizeText = (value: unknown) => {
+const normalizeText = (value) => {
   if (typeof value !== "string") {
     return null;
   }
@@ -51,12 +23,12 @@ const normalizeText = (value: unknown) => {
   return trimmed.length ? trimmed : null;
 };
 
-const toNumber = (value: unknown) => {
+const toNumber = (value) => {
   const num = typeof value === "number" ? value : Number(value);
   return Number.isFinite(num) ? num : null;
 };
 
-const generateCode = (source: string, used: Set<string>): string => {
+const generateCode = (source, used) => {
   const base = source.trim().toUpperCase();
   if (base && base.length >= 4 && !used.has(base)) {
     used.add(base);
@@ -79,7 +51,7 @@ const generateCode = (source: string, used: Set<string>): string => {
   throw new Error(`Unable to generate unique code for source: ${source}`);
 };
 
-const generateShareCode = (used: Set<string>) => {
+const generateShareCode = (used) => {
   for (let attempt = 0; attempt < 50; attempt += 1) {
     const candidate = crypto.randomBytes(4).toString("hex").slice(0, 6).toUpperCase();
     if (!used.has(candidate)) {
@@ -91,19 +63,16 @@ const generateShareCode = (used: Set<string>) => {
 };
 
 const parseFeatures = async () => {
-  const geojsonPath = await resolveGeojsonPath();
-  console.log("[Shelters] Using GeoJSON:", geojsonPath);
-
   const raw = await fs.readFile(geojsonPath, "utf-8");
-  const data = JSON.parse(raw) as GeoJSONCollection;
-  const features = data.features ?? [];
-  const usedCodes = new Set<string>();
-  const usedShareCodes = new Set<string>();
+  const data = JSON.parse(raw);
+  const features = Array.isArray(data?.features) ? data.features : [];
+  const usedCodes = new Set();
+  const usedShareCodes = new Set();
 
   return features
     .map((feature, index) => {
-      const props = feature.properties ?? {};
-      const coords = feature.geometry?.coordinates;
+      const props = feature?.properties ?? {};
+      const coords = feature?.geometry?.coordinates;
       let lng = toNumber(coords?.[0]);
       let lat = toNumber(coords?.[1]);
 
@@ -134,12 +103,15 @@ const parseFeatures = async () => {
       const externalId =
         normalizeText(props["共通ID"]) ??
         normalizeText(props["id"]) ??
-        normalizeText(props["ID"]);
+        normalizeText(props["ID"]) ??
+        normalizeText(props["external_id"]);
       const sequenceNo =
-        toNumber(props["NO"]) ?? toNumber(props["No"]) ?? index + 1;
-      const nameEn = normalizeText(props["Landmark Name (EN)"]);
+        toNumber(props["NO"]) ?? toNumber(props["No"]) ?? toNumber(props["sequence_no"]) ?? index + 1;
+      const nameEn = normalizeText(props["Landmark Name (EN)"]) ?? normalizeText(props["name_en"]);
       const nameJp =
-        normalizeText(props["Landmark Name (JP)"]) ?? normalizeText(props["name"]);
+        normalizeText(props["Landmark Name (JP)"]) ??
+        normalizeText(props["name"]) ??
+        normalizeText(props["name_jp"]);
       const addressEn =
         normalizeText(props["Address (EN)"]) ??
         normalizeText(props["住所（英語）"]) ??
@@ -167,10 +139,14 @@ const parseFeatures = async () => {
       const inlandWatersDepthRank = toNumber(props["InlandWaters_Depth_Rank"]);
       const inlandWatersDepth = normalizeText(props["InlandWaters_Depth"]);
       const codeSource =
+        normalizeText(props["code"]) ??
         externalId ??
         (typeof sequenceNo === "number" ? `SEQ-${sequenceNo}` : `${lat}-${lng}`);
-      const code = generateCode(codeSource, usedCodes);
-      const shareCode = generateShareCode(usedShareCodes);
+      const code = generateCode(codeSource ?? `${lat}-${lng}`, usedCodes);
+      const shareCode =
+        normalizeText(props["share_code"]) ??
+        (typeof props["share_code"] === "string" ? props["share_code"] : null) ??
+        generateShareCode(usedShareCodes);
 
       return {
         code,
@@ -194,18 +170,19 @@ const parseFeatures = async () => {
         inland_waters_depth: inlandWatersDepth,
         latitude: Number(lat),
         longitude: Number(lng),
-      } satisfies Omit<ShelterRecord, "id" | "created_at">;
+      };
     })
-    .filter((item): item is Omit<ShelterRecord, "id" | "created_at"> => Boolean(item));
+    .filter((item) => Boolean(item));
 };
 
-const insertShelters = async (rows: Omit<ShelterRecord, "id" | "created_at">[]) => {
+const insertShelters = async (rows) => {
   if (!rows.length) {
-    console.log("[Shelters] No rows to insert");
+    console.log("[Data] No rows to insert");
     return;
   }
 
-  const client = await pool.connect();
+  const client = new Client({ connectionString: databaseUrl });
+  await client.connect();
   try {
     await client.query("BEGIN");
     for (const row of rows) {
@@ -265,24 +242,22 @@ const insertShelters = async (rows: Omit<ShelterRecord, "id" | "created_at">[]) 
       );
     }
     await client.query("COMMIT");
-    console.log(`[Shelters] Inserted/updated ${rows.length} shelters`);
+    console.log(`[Data] Inserted/updated ${rows.length} shelters`);
   } catch (error) {
     await client.query("ROLLBACK");
     throw error;
   } finally {
-    client.release();
-    await pool.end();
+    await client.end();
   }
 };
 
-async function main() {
-  try {
-    const rows = await parseFeatures();
-    await insertShelters(rows);
-  } catch (error) {
-    console.error("[Shelters] Import failed:", error);
-    process.exitCode = 1;
-  }
-}
+const main = async () => {
+  console.log("[Data] Importing from", geojsonPath);
+  const rows = await parseFeatures();
+  await insertShelters(rows);
+};
 
-await main();
+main().catch((error) => {
+  console.error("[Data] Import failed:", error);
+  process.exitCode = 1;
+});

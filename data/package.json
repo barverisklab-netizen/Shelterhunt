@@ -1,0 +1,13 @@
+{
+  "name": "shelterhunt-data",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "export:api": "node ./scripts/exportFromApi.mjs",
+    "seed:db": "node ./scripts/importToSupabase.mjs"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.5",
+    "pg": "^8.11.5"
+  }
+}

@@ -40,3 +40,12 @@ logs
 # Temporary files
 *.tmp
 .cache/
+
+# Data repo env
+data/.env
+
+# External data repo (GeoJSON fixtures)
+# Keep the canonical dataset tracked; ignore other dumps/archives.
+data/geojson/*.zip
+data/geojson/*.tar.gz
+data/geojson/*.tmp

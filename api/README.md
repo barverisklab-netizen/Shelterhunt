@@ -41,10 +41,10 @@ After the tables exist, import the GeoJSON dataset:
 
 ```bash
 cd api
-npm run seed:shelters
+SHELTER_DATA_PATH=../shelterhunt-data/geojson/ihi_shelters.geojson npm run seed:shelters
 ```
 
-This script reads `api/assets/ihi_shelters.geojson`, generates deterministic shelter codes, and upserts the records into Supabase.
+The GeoJSON is intentionally kept in a separate data repo (not deployed with the API). Point `SHELTER_DATA_PATH` to that file (or the local `../data/geojson/ihi_shelters.geojson`). The script generates deterministic shelter codes and upserts the records into Supabase. You can also seed from the data repo itself via `cd data && npm run seed:db` with the same `DATABASE_URL`.
 
 ## Key endpoints
 
