@@ -55,21 +55,35 @@ export function LanguageToggle({ inline = false, className }: LanguageToggleProp
         initial={false}
         className="bg-background backdrop-blur border-2 border-black shadow-lg overflow-hidden pointer-events-auto"
         style={{ borderRadius: 20 }}
-        transition={{ type: "spring", stiffness: 120, damping: 15, mass: 1.2 }}
+        transition={{ type: "spring", stiffness: 260, damping: 18, mass: 0.9 }}
       >
-        <AnimatePresence mode="wait" initial={false}>
+        <div className="flex items-center">
+          <motion.button
+            key="toggle"
+            initial={{ scale: 0.95, rotate: -3 }}
+            animate={{ scale: 1, rotate: 0 }}
+            whileTap={{ scale: 0.94 }}
+            transition={{
+              type: "spring",
+              stiffness: 360,
+              damping: 20,
+              mass: 0.7,
+            }}
+            onClick={() => setOpen((prev) => !prev)}
+            className="p-3 flex items-center justify-center hover:bg-neutral-100 transition-colors cursor-pointer"
+          >
+            <Languages className="h-5 w-5 text-black pointer-events-none" />
+          </motion.button>
+        </div>
+
+        <AnimatePresence initial={false}>
           {open ? (
             <motion.div
               key="options"
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.8 }}
-              transition={{ 
-                type: "spring", 
-                stiffness: 120, 
-                damping: 15,
-                mass: 1.2
-              }}
+              initial={{ opacity: 0, scale: 0.98, y: -4 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.98, y: -4 }}
+              transition={{ type: "tween", duration: 0.16, ease: "easeOut" }}
               className="p-2 flex flex-col gap-1 min-w-[140px]"
             >
               {options.map((option: { value: string; label: string }) => (
@@ -84,29 +98,13 @@ export function LanguageToggle({ inline = false, className }: LanguageToggleProp
                       ? "bg-black text-black-40"
                       : "hover:bg-neutral-100 text-black"
                   }`}
+                  style={{ transitionDuration: "120ms" }}
                 >
                   {option.label}
                 </button>
               ))}
             </motion.div>
-          ) : (
-            <motion.button
-              key="toggle"
-              initial={{ scale: 0.8 }}
-              animate={{ scale: 1 }}
-              exit={{ scale: 0.8 }}
-              transition={{ 
-                type: "spring", 
-                stiffness: 120, 
-                damping: 15,
-                mass: 1.2
-              }}
-              onClick={() => setOpen(true)}
-              className="p-3 flex items-center justify-center hover:bg-neutral-100 transition-colors cursor-pointer"
-            >
-              <Languages className="h-5 w-5 text-black pointer-events-none" />
-            </motion.button>
-          )}
+          ) : null}
         </AnimatePresence>
       </motion.div>
     </div>
