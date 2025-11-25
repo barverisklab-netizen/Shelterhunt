@@ -1,6 +1,6 @@
 import { motion } from "motion/react";
 import { Button } from "./ui/button";
-import introLoop from "../assets/loopedbosaisensai.webm";
+import introLoop from "../assets/loopedbosaisensi.gif";
 import { useI18n } from "@/i18n";
 
 interface ShelterVictoryScreenProps {
@@ -32,16 +32,11 @@ export function ShelterVictoryScreen({
           animate={{ scale: 1, opacity: 1 }}
           transition={{ delay: 0.2, duration: 0.5 }}
         >
-          <video
+          <img
             className="block h-full w-full object-cover"
             src={introLoop}
-            autoPlay
-            muted
-            loop
-            playsInline
-          >
-            <track kind="captions" />
-          </video>
+            alt={t("victory.imageAlt", { fallback: "Bosai Sensei celebration" })}
+          />
         </motion.div>
 
         <div>

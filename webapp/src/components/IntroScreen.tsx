@@ -1,7 +1,7 @@
 import { motion } from "motion/react";
 import { Button } from "./ui/button";
 import { useI18n } from "@/i18n";
-import introLoop from "../assets/loopedbosaisensai.webm";
+import introLoop from "../assets/loopedbosaisensi.gif";
 
 interface IntroScreenProps {
   onContinue: () => void;
@@ -42,16 +42,11 @@ export function IntroScreen({ onContinue }: IntroScreenProps) {
           className="flex justify-center"
         >
           <div className="w-[240px] h-[240px] sm:w-[260px] sm:h-[260px] bg-white rounded-3xl border-4 border-black overflow-hidden shadow-[8px_8px_0_#000] flex justify-center items-center">
-            <video
+            <img
               className="block h-full w-full object-cover"
               src={introLoop}
-              autoPlay
-              muted
-              loop
-              playsInline
-            >
-              <track kind="captions" />
-            </video>
+              alt={t("intro.imageAlt", { fallback: "Bosai Sensei animation" })}
+            />
           </div>
         </motion.div>
 
