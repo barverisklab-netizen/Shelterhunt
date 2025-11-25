@@ -1,6 +1,6 @@
 import { motion } from "motion/react";
-import { Trophy } from "lucide-react";
 import { Button } from "./ui/button";
+import introLoop from "../assets/loopedbosaisensai.webm";
 import { useI18n } from "@/i18n";
 
 interface ShelterVictoryScreenProps {
@@ -25,17 +25,27 @@ export function ShelterVictoryScreen({
       exit={{ opacity: 0, scale: 0.85, y: 40 }}
       transition={{ type: "spring", damping: 18, stiffness: 240 }}
     >
-      <div className="w-full max-w-lg text-center space-y-6 rounded-lg bg-red-500/10 p-10 shadow-xl">
+      <div className="w-full max-w-lg text-center space-y-6 rounded-lg bg-green-500/10 p-10 shadow-xl border-4 border-black">
         <motion.div
-          className="inline-block rounded-full bg-red-500/20 p-6"
-          animate={{ rotate: [0, 8, -8, 8, 0], scale: [1, 1.1, 1] }}
-          transition={{ duration: 0.6, repeat: 1 }}
+          className="mx-auto w-[140px] h-[140px] bg-white rounded-2xl border-4 border-black overflow-hidden shadow-[6px_6px_0_#000] flex justify-center items-center"
+          initial={{ scale: 0.8, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ delay: 0.2, duration: 0.5 }}
         >
-          <Trophy className="w-16 h-16 text-black" />
+          <video
+            className="block h-full w-full object-cover"
+            src={introLoop}
+            autoPlay
+            muted
+            loop
+            playsInline
+          >
+            <track kind="captions" />
+          </video>
         </motion.div>
 
         <div>
-          <h2 className="text-4xl text-black mb-2 font-bold uppercase">
+          <h2 className="text-4xl text-green-600 mb-2 font-black tracking-widest uppercase drop-shadow-sm">
             {t("victory.title")}
           </h2>
           <p className="text-black font-bold text-lg uppercase">
