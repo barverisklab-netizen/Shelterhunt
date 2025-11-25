@@ -29,6 +29,11 @@ npm run dev          # Vite dev server
 
 Create `webapp/.env.local` with at least `VITE_MAPBOX_TOKEN` and point `VITE_API_BASE_URL` at your API deployment. For detailed Mapbox setup guidance, see `src/MAPBOX_SETUP.md`.
 
+Optional webapp env toggles:
+
+- `VITE_LIGHTNING_RADIUS_KM` (default `2`)
+- `VITE_MULTIPLAYER_RADIUS_KM` (default `2`) — max km radius used when selecting or auto-falling back to a nearby shelter in multiplayer
+
 If you want the production build:
 
 ```bash
@@ -67,7 +72,12 @@ npm install
 npm run dev          # Fastify + TSX watch
 ```
 
-Configure `.env` using the template in `api/.env.example` before booting the service.
+Configure `.env` using the template in `api/.env.example` before booting the service. Key vars:
+
+- `DATABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `JWT_SECRET`
+- `SESSION_TTL_MINUTES` (default `20`)
+- `SESSION_MAX_PLAYERS` (default `8`)
+- `SESSION_MAX_DISTANCE_KM` (default `2`) — max km radius for auto-selected fallback shelters when the requested shelter is already active
 
 To build/start the compiled server (mirrors production):
 
@@ -116,4 +126,4 @@ Subscribe to `ws://…/sessions/:id/stream?token=…` using the returned JWT tok
 
 ## Deployment
 
-Deploy **webapp** as a Render Static Site (build: `npm install && npm run build` from `webapp/`, publish directory `dist/`). Deploy **api** as a Render Web Service (build: `npm install && npm run build` from `api/`, start: `npm run start`). Set `VITE_API_BASE_URL` in the webapp environment to the URL Render assigns to the API.
+Deploy **webapp** as a Render Static Site (build: `npm install && npm run build` from `webapp/`, publish directory `dist/`). Deploy **api** as a Render Web Service (build: `npm install && npm run build` from `api/`, start: `npm run start`). Set `VITE_API_BASE_URL` in the webapp environment to the URL Render assigns to the API, and configure `SESSION_MAX_DISTANCE_KM` on the API if you need a different multiplayer fallback radius.

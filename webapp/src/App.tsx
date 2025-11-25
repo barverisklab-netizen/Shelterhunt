@@ -18,6 +18,7 @@ import { defaultCityContext } from "./data/cityContext";
 import {
   LIGHTNING_DURATION_MINUTES,
   LIGHTNING_RADIUS_KM,
+  MULTIPLAYER_RADIUS_KM,
 } from "./config/runtime";
 import {
   haversineDistanceKm,
@@ -31,6 +32,7 @@ import {
   finishMultiplayerRace,
   heartbeatSession,
   joinMultiplayerSession,
+  leaveMultiplayerSession,
   startMultiplayerRace,
   toggleReadyState,
   type Player as SessionPlayer,
@@ -58,7 +60,6 @@ type GameMode = "lightning" | "citywide";
 
 const INITIAL_SHELTER_RADIUS_KM = 5;
 const DESIGNATED_CATEGORY = "designated ec";
-const MULTIPLAYER_RADIUS_KM = 2;
 const MULTIPLAYER_DURATION_MINUTES = 60;
 
 type SessionRole = "host" | "player";
@@ -91,7 +92,15 @@ const buildLocalDesignatedShelters = async (
 ): Promise<POI[]> => {
   const normalizedRadius = Math.max(0, radiusKm);
   const origin = { lat: center.lat, lng: center.lng };
-  const shelters = await getLocalShelters();
+  let shelters;
+  try {
+    shelters = await getLocalShelters();
+  } catch (error) {
+    console.warn("[Multiplayer] Failed to load local shelters:", error);
+    throw new Error(
+      "Unable to load nearby shelters right now. Check your connection and try again.",
+    );
+  }
   console.log("[Multiplayer] Filtering shelters", {
     total: shelters.length,
     center,
@@ -255,31 +264,21 @@ export default function App() {
     setLockShelterOptions(false);
   };
 
-  const refreshSessionPlayers = useCallback(
-    async (sessionId: string, token: string) => {
-      try {
-        const snapshot = await fetchSessionSnapshot(sessionId, token);
-        setPlayers(
-          mapSessionPlayersToUI(
-            snapshot.players,
-            snapshot.session.host_id,
-          ),
-        );
-        setSessionHostId(snapshot.session.host_id);
-      } catch (error) {
-        console.warn("[Multiplayer] Failed to refresh session snapshot:", error);
-      }
-    },
-    [],
-  );
-
   const disconnectSession = useCallback(
     async (options?: { finish?: boolean }) => {
-      if (sessionContext && options?.finish && sessionContext.role === "host") {
-        try {
-          await finishMultiplayerRace(sessionContext.sessionId, sessionContext.token);
-        } catch (error) {
-          console.warn("[Multiplayer] Failed to finish session:", error);
+      if (sessionContext) {
+        if (options?.finish && sessionContext.role === "host") {
+          try {
+            await finishMultiplayerRace(sessionContext.sessionId, sessionContext.token);
+          } catch (error) {
+            console.warn("[Multiplayer] Failed to finish session:", error);
+          }
+        } else {
+          try {
+            await leaveMultiplayerSession(sessionContext.sessionId, sessionContext.token);
+          } catch (error) {
+            console.warn("[Multiplayer] Failed to leave session:", error);
+          }
         }
       }
       if (sessionSocketRef.current) {
@@ -291,6 +290,126 @@ export default function App() {
       setSessionHostId(null);
     },
     [sessionContext],
+  );
+
+  const performSessionReset = useCallback(
+    (options?: { toastMessage?: string; skipToast?: boolean; targetState?: GameState }) => {
+      void disconnectSession();
+      setGameState(options?.targetState ?? "onboarding");
+      setGameCode("");
+      setPlayers(defaultPlayers);
+      setTimeRemaining(1800);
+      setShelterOptions([]);
+      setIsTimerCritical(false);
+      setSecretShelter(null);
+      setWrongGuessCount(0);
+      setTimerEnabled(true);
+      setGameMode(null);
+      setLockSecretShelter(false);
+      setLockShelterOptions(false);
+      setModeProcessing(false);
+      setJoinCodeScreenOpen(false);
+      setJoinError(null);
+      setHostShareModalOpen(false);
+      setHostShareCode(null);
+      setHostSetupModalOpen(false);
+      setJoinNameModalOpen(false);
+
+      if (!options?.skipToast) {
+        toast.info(
+          options?.toastMessage ??
+            t("app.toasts.leftGame", { fallback: "Left the game" }),
+        );
+      }
+    },
+    [disconnectSession, t],
+  );
+
+  const refreshSessionPlayers = useCallback(
+    async (
+      sessionId: string,
+      token: string,
+      options?: { announceDeparture?: boolean; departedUserId?: string },
+    ) => {
+      try {
+        const snapshot = await fetchSessionSnapshot(sessionId, token);
+        const nextPlayers = mapSessionPlayersToUI(
+          snapshot.players,
+          snapshot.session.host_id,
+        );
+
+        let promotedHostId: string | null = null;
+
+        setPlayers((previous) => {
+          const removed = previous.filter(
+            (player) => !nextPlayers.some((next) => next.id === player.id),
+          );
+
+          const hostDeparted =
+            Boolean(sessionHostId) &&
+            (removed.some((player) => player.id === sessionHostId) ||
+              options?.departedUserId === sessionHostId);
+
+          if (hostDeparted) {
+            if (gameState === "playing") {
+              performSessionReset({
+                toastMessage: t("app.toasts.hostLeft", {
+                  fallback: "Host left the game. Returning to lobby.",
+                }),
+                targetState: "ended",
+              });
+              return nextPlayers;
+            }
+
+            if (nextPlayers.length > 0) {
+              promotedHostId = nextPlayers[0].id;
+              console.info("[Multiplayer] Host left lobby, promoting new host", {
+                previousHost: sessionHostId,
+                newHost: promotedHostId,
+              });
+              if (promotedHostId === currentUserId) {
+                setIsHost(true);
+              } else {
+                setIsHost(false);
+              }
+              toast.info(
+                t("app.toasts.hostPromoted", {
+                  replacements: { name: nextPlayers[0].name ?? "New host" },
+                  fallback: `${nextPlayers[0].name ?? "A player"} is now the host.`,
+                }),
+              );
+              return mapSessionPlayersToUI(snapshot.players, promotedHostId);
+            }
+          }
+
+          if (
+            removed.length &&
+            (options?.announceDeparture || gameState === "playing")
+          ) {
+            removed.forEach((player) => {
+              const name =
+                player.name ||
+                t("waiting.player", { fallback: "A player" });
+              toast.info(
+                t("app.toasts.playerLeft", {
+                  replacements: { name },
+                  fallback: `${name} left the game.`,
+                }),
+              );
+            });
+          }
+
+          return nextPlayers;
+        });
+
+        const nextHostId = promotedHostId ?? snapshot.session.host_id;
+        setSessionHostId(nextHostId);
+        setIsHost(nextHostId === currentUserId);
+      } catch (error) {
+        console.warn("[Multiplayer] Failed to refresh session snapshot:", error);
+      }
+    },
+    [currentUserId, gameState, performSessionReset, sessionHostId, t],
   );
 
   const requestUserLocation = useCallback(
@@ -426,12 +545,30 @@ export default function App() {
   );
 
   const handleSessionEvent = useCallback(
-    (message: { type?: string }) => {
+    (message: { type?: string; player_id?: string; user_id?: string }) => {
       if (!sessionContext) return;
       switch (message.type) {
         case "player_joined":
         case "ready_updated":
           refreshSessionPlayers(sessionContext.sessionId, sessionContext.token);
+          break;
+        case "player_left":
+        case "player_disconnected":
+          refreshSessionPlayers(sessionContext.sessionId, sessionContext.token, {
+            announceDeparture: true,
+            departedUserId: message.player_id ?? message.user_id,
+          });
+          break;
+        case "session_closed":
+          toast.error(
+            t("app.toasts.hostLeft", {
+              fallback: "Host left the game. Returning to lobby.",
+            }),
+          );
+          performSessionReset({
+            skipToast: true,
+            targetState: gameState === "playing" ? "ended" : "onboarding",
+          });
           break;
         case "race_started":
           beginMultiplayerRace();
@@ -448,7 +585,7 @@ export default function App() {
           break;
       }
     },
-    [beginMultiplayerRace, refreshSessionPlayers, sessionContext],
+    [beginMultiplayerRace, gameState, performSessionReset, refreshSessionPlayers, sessionContext, t],
   );
 
   useEffect(() => {
@@ -573,6 +710,9 @@ export default function App() {
         hostId: currentUserId,
         displayName,
         ttlMinutes: MULTIPLAYER_DURATION_MINUTES,
+        hostLat: coords.lat,
+        hostLng: coords.lng,
+        maxDistanceKm: MULTIPLAYER_RADIUS_KM,
       });
       console.log("[Multiplayer] Session created", {
         sessionId: response.session.id,
@@ -822,27 +962,7 @@ export default function App() {
   };
 
   const handleLeaveGame = () => {
-    void disconnectSession();
-    setGameState("onboarding");
-    setGameCode("");
-    setPlayers(defaultPlayers);
-    setTimeRemaining(1800);
-    setShelterOptions([]);
-    setIsTimerCritical(false);
-    setSecretShelter(null);
-    setWrongGuessCount(0);
-    setTimerEnabled(true);
-    setGameMode(null);
-    setLockSecretShelter(false);
-    setLockShelterOptions(false);
-    setModeProcessing(false);
-    setJoinCodeScreenOpen(false);
-    setJoinError(null);
-    setHostShareModalOpen(false);
-    setHostShareCode(null);
-    setHostSetupModalOpen(false);
-    setJoinNameModalOpen(false);
-    toast.info(t("app.toasts.leftGame", { fallback: "Left the game" }));
+    performSessionReset();
   };
 
   const handleWrongGuessPenalty = (): WrongGuessStage => {

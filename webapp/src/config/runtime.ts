@@ -17,6 +17,11 @@ export const LIGHTNING_RADIUS_KM = toNumber(
   2,
 );
 
+export const MULTIPLAYER_RADIUS_KM = toNumber(
+  import.meta.env.VITE_MULTIPLAYER_RADIUS_KM,
+  2,
+);
+
 export const API_BASE_URL = toString(
   import.meta.env.VITE_API_BASE_URL,
   "http://localhost:4000",

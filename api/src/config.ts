@@ -10,6 +10,7 @@ const envSchema = z.object({
   PORT: z.coerce.number().default(4000),
   SESSION_TTL_MINUTES: z.coerce.number().positive().default(20),
   SESSION_MAX_PLAYERS: z.coerce.number().min(2).default(8),
+  SESSION_MAX_DISTANCE_KM: z.coerce.number().positive().default(2),
   CORS_ORIGIN: z.string().optional(),
 });
 
@@ -20,10 +21,12 @@ export const env = envSchema.parse({
   PORT: process.env.PORT,
   SESSION_TTL_MINUTES: process.env.SESSION_TTL_MINUTES,
   SESSION_MAX_PLAYERS: process.env.SESSION_MAX_PLAYERS,
+  SESSION_MAX_DISTANCE_KM: process.env.SESSION_MAX_DISTANCE_KM,
   CORS_ORIGIN: process.env.CORS_ORIGIN,
 });
 
 export const sessionDefaults = {
   ttlMinutes: env.SESSION_TTL_MINUTES,
   maxPlayers: env.SESSION_MAX_PLAYERS,
+  maxDistanceKm: env.SESSION_MAX_DISTANCE_KM,
 };

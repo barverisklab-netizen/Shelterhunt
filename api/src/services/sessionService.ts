@@ -82,6 +82,9 @@ interface CreateSessionInput {
   displayName?: string;
   maxPlayers?: number;
   ttlMinutes?: number;
+  hostLat?: number;
+  hostLng?: number;
+  maxDistanceKm?: number;
 }
 
 interface JoinSessionInput {
@@ -95,27 +98,194 @@ export interface SessionWithPlayers {
   players: PlayerRecord[];
 }
 
+async function findAvailableShelter(
+  client: PoolClient,
+  options?: {
+    excludeShelterId?: string;
+    center?: { lat: number; lng: number };
+    maxDistanceKm?: number;
+  },
+): Promise<ShelterRecord | null> {
+  const { excludeShelterId, center, maxDistanceKm } = options ?? {};
+
+  const toRadians = (degrees: number) => (degrees * Math.PI) / 180;
+  const haversineKm = (a: { lat: number; lng: number }, b: { lat: number; lng: number }) => {
+    const R = 6371;
+    const dLat = toRadians(b.lat - a.lat);
+    const dLng = toRadians(b.lng - a.lng);
+    const lat1 = toRadians(a.lat);
+    const lat2 = toRadians(b.lat);
+    const hav =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.sin(dLng / 2) * Math.sin(dLng / 2) * Math.cos(lat1) * Math.cos(lat2);
+    const c = 2 * Math.atan2(Math.sqrt(hav), Math.sqrt(1 - hav));
+    return R * c;
+  };
+
+  const limit = center && maxDistanceKm ? 200 : 50;
+
+  const result = await client.query<ShelterRecord>(
+    `select s.*
+     from public.shelters s
+     where not exists (
+       select 1
+       from public.sessions sess
+       where sess.shelter_id = s.id
+         and sess.state = any($1)
+         and sess.expires_at > now()
+     )
+     ${excludeShelterId ? "and s.id <> $2" : ""}
+     order by s.created_at asc
+     limit ${limit}`,
+    excludeShelterId ? [ACTIVE_STATES, excludeShelterId] : [ACTIVE_STATES],
+  );
+
+  const candidates = result.rows;
+
+  if (center && maxDistanceKm && Number.isFinite(maxDistanceKm)) {
+    const filtered = candidates.filter((shelter) => {
+      if (!Number.isFinite(shelter.latitude) || !Number.isFinite(shelter.longitude)) {
+        return false;
+      }
+      const distance = haversineKm(center, {
+        lat: Number(shelter.latitude),
+        lng: Number(shelter.longitude),
+      });
+      return distance <= maxDistanceKm;
+    });
+    return filtered[0] ?? null;
+  }
+
+  return candidates[0] ?? null;
+}
+
+export async function leaveSession(
+  sessionId: string,
+  userId: string,
+): Promise<{
+  session: SessionRecord;
+  departedPlayer: PlayerRecord;
+  promotedHostId: string | null;
+}> {
+  const client = await pool.connect();
+  try {
+    await client.query("BEGIN");
+
+    const sessionResult = await client.query<SessionRecord>(
+      "select * from public.sessions where id = $1 for update",
+      [sessionId],
+    );
+    const session = sessionResult.rows[0];
+    if (!session) {
+      throw new ApiError(404, "Session not found");
+    }
+
+    const deleteResult = await client.query<PlayerRecord>(
+      `delete from public.players
+       where session_id = $1 and user_id = $2
+       returning *`,
+      [sessionId, userId],
+    );
+    const departed = deleteResult.rows[0];
+    if (!departed) {
+      throw new ApiError(404, "Player not found in session");
+    }
+
+    const remainingPlayers = await client.query<PlayerRecord>(
+      `select * from public.players
+       where session_id = $1
+       order by joined_at asc`,
+      [sessionId],
+    );
+
+    let promotedHostId: string | null = null;
+    let updatedSession = session;
+
+    if (session.host_id === userId) {
+      if (remainingPlayers.rowCount > 0) {
+        promotedHostId = remainingPlayers.rows[0].user_id;
+        const updateResult = await client.query<SessionRecord>(
+          `update public.sessions
+           set host_id = $2
+           where id = $1
+           returning *`,
+          [sessionId, promotedHostId],
+        );
+        updatedSession = updateResult.rows[0];
+      } else {
+        const closeResult = await client.query<SessionRecord>(
+          `update public.sessions
+           set state = 'closed',
+               ended_at = coalesce(ended_at, now())
+           where id = $1
+           returning *`,
+          [sessionId],
+        );
+        updatedSession = closeResult.rows[0];
+      }
+    }
+
+    await client.query("COMMIT");
+    return {
+      session: updatedSession,
+      departedPlayer: departed,
+      promotedHostId,
+    };
+  } catch (error) {
+    await client.query("ROLLBACK");
+    throw error;
+  } finally {
+    client.release();
+  }
+}
+
 export async function createSession({
   shelterCode,
   hostId,
   displayName,
   maxPlayers = sessionDefaults.maxPlayers,
   ttlMinutes = sessionDefaults.ttlMinutes,
+  hostLat,
+  hostLng,
+  maxDistanceKm,
 }: CreateSessionInput): Promise<{ session: SessionRecord; player: PlayerRecord; releasedSessions: string[] }> {
   const client = await pool.connect();
   try {
     await client.query("BEGIN");
-    const shelter = await fetchShelterByShareCode(client, shelterCode);
+    const distanceLimit =
+      maxDistanceKm !== undefined && Number.isFinite(maxDistanceKm)
+        ? maxDistanceKm
+        : sessionDefaults.maxDistanceKm;
+
+    let shelter = await fetchShelterByShareCode(client, shelterCode);
     const releasedSessions = await closeInactiveSessionsForShelter(client, shelter.id);
 
-    const existing = await client.query<SessionRecord>(
-      `select * from public.sessions
-       where shelter_id = $1
-         and state = any($2)
-         and expires_at > now()
-       limit 1`,
-      [shelter.id, ACTIVE_STATES],
-    );
+    const hasActiveSession = async (shelterId: string) =>
+      client.query<SessionRecord>(
+        `select * from public.sessions
+         where shelter_id = $1
+           and state = any($2)
+           and expires_at > now()
+         limit 1`,
+        [shelterId, ACTIVE_STATES],
+      );
+
+    let existing = await hasActiveSession(shelter.id);
+
+    if (existing.rowCount) {
+      const alternative = await findAvailableShelter(client, {
+        excludeShelterId: shelter.id,
+        center:
+          hostLat !== undefined && hostLng !== undefined
+            ? { lat: hostLat, lng: hostLng }
+            : undefined,
+        maxDistanceKm: distanceLimit,
+      });
+      if (alternative) {
+        shelter = alternative;
+        existing = await hasActiveSession(shelter.id);
+      }
+    }
 
     if (existing.rowCount) {
       throw new ApiError(409, "Shelter already in an active race");
@@ -143,6 +313,35 @@ export async function createSession({
   } catch (error) {
     await client.query("ROLLBACK");
     if (isUniqueViolation(error)) {
+      // Retry once with any other available shelter to keep host flow moving.
+      await client.query("BEGIN");
+      const fallbackShelter = await findAvailableShelter(client, {
+        center:
+          hostLat !== undefined && hostLng !== undefined
+            ? { lat: hostLat, lng: hostLng }
+            : undefined,
+        maxDistanceKm: distanceLimit,
+      });
+      if (fallbackShelter) {
+        const expiresAt = new Date(Date.now() + ttlMinutes * 60 * 1000);
+        const sessionInsert = await client.query<SessionRecord>(
+          `insert into public.sessions (shelter_id, shelter_code, host_id, max_players, expires_at)
+           values ($1, $2, $3, $4, $5)
+           returning *`,
+          [fallbackShelter.id, fallbackShelter.share_code, hostId, maxPlayers, expiresAt],
+        );
+
+        const session = sessionInsert.rows[0];
+        const playerInsert = await client.query<PlayerRecord>(
+          `insert into public.players (session_id, user_id, display_name, ready, last_seen)
+           values ($1, $2, $3, $4, now())
+           returning *`,
+          [session.id, hostId, displayName ?? null, false],
+        );
+        await client.query("COMMIT");
+        return { session, player: playerInsert.rows[0], releasedSessions: [] };
+      }
+      await client.query("ROLLBACK");
       throw new ApiError(409, "Shelter already in an active race");
     }
     throw error;

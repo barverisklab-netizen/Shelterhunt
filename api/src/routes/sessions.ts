@@ -7,6 +7,7 @@ import {
   getSessionWithPlayers,
   heartbeatPlayer,
   joinSession,
+  leaveSession,
   startSession,
   toggleReady,
 } from "../services/sessionService.js";
@@ -22,6 +23,9 @@ const createSessionSchema = z.object({
   displayName: z.string().min(1).max(80).optional(),
   maxPlayers: z.number().int().min(2).max(16).optional(),
   ttlMinutes: z.number().int().min(5).max(180).optional(),
+  hostLat: z.number().optional(),
+  hostLng: z.number().optional(),
+  maxDistanceKm: z.number().optional(),
 });
 
 const joinSessionSchema = z.object({
@@ -164,6 +168,42 @@ const sessionRoutes: FastifyPluginAsync<{ sessionHub: SessionHub }> = async (fas
       });
 
       reply.send({ session });
+    },
+  );
+
+  fastify.post(
+    "/sessions/:id/leave",
+    { preHandler: fastify.authenticate },
+    async (request, reply) => {
+      const params = paramsSchema.parse(request.params);
+      ensureSessionAccess(request.user.sessionId, params.id);
+
+      const result = await leaveSession(params.id, request.user.userId);
+
+      sessionHub.broadcast(params.id, {
+        type: "player_left",
+        payload: {
+          user_id: request.user.userId,
+          player_id: result.departedPlayer.id,
+        },
+      });
+
+      if (result.promotedHostId) {
+        sessionHub.broadcast(params.id, {
+          type: "host_promoted",
+          payload: { user_id: result.promotedHostId },
+        });
+      }
+
+      if (result.session.state === "closed") {
+        sessionHub.broadcast(params.id, {
+          type: "session_closed",
+          payload: {},
+        });
+        sessionHub.close(params.id);
+      }
+
+      reply.code(204).send();
     },
   );
 

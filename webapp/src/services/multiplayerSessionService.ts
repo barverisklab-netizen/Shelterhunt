@@ -69,6 +69,9 @@ export function createMultiplayerSession(payload: {
   displayName?: string;
   maxPlayers?: number;
   ttlMinutes?: number;
+  hostLat?: number;
+  hostLng?: number;
+  maxDistanceKm?: number;
 }) {
   return apiFetch<SessionResponse>("/sessions", {
     method: "POST",
@@ -118,6 +121,14 @@ export function fetchSessionSnapshot(sessionId: string, token: string) {
 
 export function heartbeatSession(sessionId: string, token: string) {
   return apiFetch<void>(`/sessions/${sessionId}/heartbeat`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${token}` },
+    body: JSON.stringify({}),
+  });
+}
+
+export function leaveMultiplayerSession(sessionId: string, token: string) {
+  return apiFetch<void>(`/sessions/${sessionId}/leave`, {
     method: "POST",
     headers: { Authorization: `Bearer ${token}` },
     body: JSON.stringify({}),

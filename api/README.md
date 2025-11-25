@@ -26,6 +26,12 @@ This service powers the multiplayer MVP described in the work plan. It exposes R
 
 4. The server listens on `PORT` (default `4000`).
 
+Environment variables of note:
+
+- `SESSION_TTL_MINUTES` (default `20`)
+- `SESSION_MAX_PLAYERS` (default `8`)
+- `SESSION_MAX_DISTANCE_KM` (default `2`) — max km radius for auto-selected fallback shelters when the requested shelter is already in an active race
+
 ## Database schema
 
 The SQL in `api/sql/001_init_sessions.sql` creates the required `sessions`/`players` tables and `session_state` enum (including a partial unique index so only one active race exists per shelter). Run it once against your Supabase project using their SQL editor or CLI:
@@ -63,7 +69,7 @@ Subscribe to `ws://.../sessions/:id/stream?token=...` using the returned JWT tok
 ## Deployment (Render)
 
 1. Create a Render Web Service, point to this `api` folder.
-2. Set environment variables (`DATABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `JWT_SECRET`, `SESSION_TTL_MINUTES`, `SESSION_MAX_PLAYERS`).
+2. Set environment variables (`DATABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `JWT_SECRET`, `SESSION_TTL_MINUTES`, `SESSION_MAX_PLAYERS`, `SESSION_MAX_DISTANCE_KM`).
 3. Configure a deploy hook or Docker image (`render.yaml` optional) and ensure migrations are run (via Supabase SQL).
 4. Optionally create a Render cron job hitting `/tasks/expire-sessions` with header `x-cron-key: <SUPABASE_SERVICE_ROLE_KEY>` for cleanup.
 

@@ -162,12 +162,16 @@ export function WaitingRoom({
               <button
                 type="button"
                 onClick={onStartGame}
-                disabled={!allReady || players.length < 1}
+                disabled={!allReady || players.length < 2}
                 className="w-full rounded-xl border-2 border-black bg-red-500 px-4 py-3 text-sm font-black uppercase tracking-wide text-black transition hover:-translate-y-0.5 hover:shadow-[4px_4px_0_rgba(0,0,0,0.9)] disabled:cursor-not-allowed disabled:opacity-50"
               >
-                {allReady && players.length >= 1
-                  ? t("waiting.startGame")
-                  : t("waiting.waitingForEveryone")}
+                {players.length < 2
+                  ? t("waiting.waitingForOthers", {
+                      fallback: "Waiting for other players",
+                    })
+                  : allReady
+                    ? t("waiting.startGame")
+                    : t("waiting.waitingForEveryone")}
               </button>
             ) : (
               <p className="text-center text-[11px] font-semibold uppercase tracking-[0.3em] text-black/60">
