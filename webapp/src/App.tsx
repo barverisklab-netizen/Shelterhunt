@@ -43,6 +43,7 @@ import {
   type Shelter,
 } from "./services/shelterDataService";
 import { useI18n } from "./i18n";
+import { LanguageToggle } from "./components/LanguageToggle";
 import { Clock } from "lucide-react";
 
 type GameState =
@@ -998,7 +999,6 @@ export default function App() {
   };
 
   const currentPlayer = players.find((p) => p.id === currentUserId);
-  const teamColor: "red" | "blue" = "red";
 
   const profilePromptActive =
     gameState === "onboarding" &&
@@ -1022,6 +1022,7 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-background relative overflow-hidden">
+      {gameState !== "playing" && <LanguageToggle />}
       {/* Main Content */}
       <div className="relative z-10">
         {gameState === "intro" && <IntroScreen onContinue={handleSkipIntro} />}
@@ -1063,7 +1064,6 @@ export default function App() {
             questions={defaultQuestions}
             triviaQuestions={defaultTriviaQuestions}
             playerLocation={playerLocation}
-            teamColor={teamColor}
             timeRemaining={timeRemaining}
             secretShelter={secretShelter}
             shelterOptions={shelterOptions}

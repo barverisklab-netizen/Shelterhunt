@@ -25,7 +25,6 @@ interface GameScreenProps {
   questions: Question[];
   triviaQuestions: TriviaQuestion[];
   playerLocation: { lat: number; lng: number };
-  teamColor: 'red' | 'blue';
   timeRemaining: number;
   secretShelter?: { id: string; name: string } | null;
   shelterOptions: { id: string; name: string }[];
@@ -43,7 +42,6 @@ export function GameScreen({
   questions,
   triviaQuestions,
   playerLocation,
-  teamColor,
   timeRemaining,
   secretShelter,
   shelterOptions,
@@ -85,7 +83,7 @@ export function GameScreen({
       )
     : undefined;
 
-  // Check if player is near a POI (simplified for demo)
+  // Check if player is near a POI (simplified for dem #ToFix)
   const checkNearbyPOI = () => {
     const nearPOI = pois.find(poi => {
       const distance = Math.sqrt(
@@ -290,11 +288,7 @@ export function GameScreen({
     <div className="fixed inset-0 flex flex-col bg-neutral-950">
       {/* Top Bar */}
       <motion.div
-        className={`bg-background text-neutral-900 p-4 border-b border-neutral-900 ${
-          teamColor === 'red'
-            ? 'border-l-4 border-l-neutral-500'
-            : 'border-l-4 border-l-neutral-900'
-        }`}
+        className="bg-background text-neutral-900 p-4 border-b border-neutral-900"
         initial={{ y: -50, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
       >

@@ -1,6 +1,7 @@
 import { AnimatePresence, motion } from "motion/react";
 import { X, Lightbulb, CheckCircle, XCircle, Sparkles } from "lucide-react";
 import { Button } from "./ui/button";
+import { LanguageToggle } from "./LanguageToggle";
 import {
   Accordion,
   AccordionContent,
@@ -9,7 +10,6 @@ import {
 } from "./ui/accordion";
 import { Clue } from "@/types/game";
 import { useI18n } from "@/i18n";
-import { LanguageToggle } from "./LanguageToggle";
 
 interface GameplayPanelProps {
   isOpen: boolean;
@@ -281,7 +281,7 @@ export function GameplayPanel({
 
               <div className="mt-2 flex items-center justify-between gap-3">
                 <LanguageToggle inline />
-              <Button
+                <Button
                   onClick={onClose}
                   variant="outline"
                   size="default"
