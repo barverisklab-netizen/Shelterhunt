@@ -202,7 +202,8 @@ export async function leaveSession(
     let updatedSession = session;
 
     if (session.host_id === userId) {
-      if (remainingPlayers.rowCount > 0) {
+      const remainingCount = remainingPlayers.rowCount ?? 0;
+      if (remainingCount > 0) {
         promotedHostId = remainingPlayers.rows[0].user_id;
         const updateResult = await client.query<SessionRecord>(
           `update public.sessions
@@ -249,14 +250,13 @@ export async function createSession({
   hostLng,
   maxDistanceKm,
 }: CreateSessionInput): Promise<{ session: SessionRecord; player: PlayerRecord; releasedSessions: string[] }> {
+  const distanceLimit =
+    maxDistanceKm !== undefined && Number.isFinite(maxDistanceKm)
+      ? maxDistanceKm
+      : sessionDefaults.maxDistanceKm;
   const client = await pool.connect();
   try {
     await client.query("BEGIN");
-    const distanceLimit =
-      maxDistanceKm !== undefined && Number.isFinite(maxDistanceKm)
-        ? maxDistanceKm
-        : sessionDefaults.maxDistanceKm;
-
     let shelter = await fetchShelterByShareCode(client, shelterCode);
     const releasedSessions = await closeInactiveSessionsForShelter(client, shelter.id);
 
