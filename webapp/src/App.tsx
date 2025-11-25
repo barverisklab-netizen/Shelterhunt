@@ -43,7 +43,6 @@ import {
   type Shelter,
 } from "./services/shelterDataService";
 import { useI18n } from "./i18n";
-import { LanguageToggle } from "./components/LanguageToggle";
 import { Clock } from "lucide-react";
 
 type GameState =
@@ -1174,7 +1173,6 @@ export default function App() {
           </div>
         </div>
       )}
-      <LanguageToggle />
     </div>
   );
 }
