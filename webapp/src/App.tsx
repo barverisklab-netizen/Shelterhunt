@@ -44,6 +44,7 @@ import {
 } from "./services/shelterDataService";
 import { useI18n } from "./i18n";
 import { LanguageToggle } from "./components/LanguageToggle";
+import { Clock } from "lucide-react";
 
 type GameState =
   | "intro"
@@ -150,6 +151,7 @@ export default function App() {
   const [timerEnabled, setTimerEnabled] = useState(true);
   const [gameMode, setGameMode] = useState<GameMode | null>(null);
   const [modeProcessing, setModeProcessing] = useState(false);
+  const [sessionBootstrapLoading, setSessionBootstrapLoading] = useState(false);
   const [lockSecretShelter, setLockSecretShelter] = useState(false);
   const [lockShelterOptions, setLockShelterOptions] = useState(false);
   const [designatedShelters, setDesignatedShelters] = useState<POI[]>([]);
@@ -1003,13 +1005,29 @@ export default function App() {
     gameState === "onboarding" &&
     (joinNameModalOpen || hostSetupModalOpen || joinCodeScreenOpen);
 
+  const showLoadingOverlay = modeProcessing || sessionBootstrapLoading;
+  const loadingTitle = sessionBootstrapLoading
+    ? t("app.processing.connecting", {
+        fallback: "Connecting to your lobby…",
+      })
+    : t("app.processing.title", {
+        fallback: "Preparing multiplayer session…",
+      });
+  const loadingSubtitle = sessionBootstrapLoading
+    ? t("app.processing.connectingSubtitle", {
+        fallback: "Setting up your waiting room and pulling players in",
+      })
+    : t("app.processing.subtitle", {
+        fallback: "Checking your location & locking a nearby shelter",
+      });
+
   return (
     <div className="min-h-screen bg-background relative overflow-hidden">
       {/* Main Content */}
       <div className="relative z-10">
         {gameState === "intro" && <IntroScreen onContinue={handleSkipIntro} />}
 
-        {gameState === "onboarding" && !profilePromptActive && (
+        {gameState === "onboarding" && !profilePromptActive && !showLoadingOverlay && (
           <OnboardingScreen
             onJoinGame={handleJoinGameRequest}
             onHostGame={handleHostGame}
@@ -1134,27 +1152,26 @@ export default function App() {
         onClose={() => setHostShareModalOpen(false)}
       />
 
-      {modeProcessing && (
-        <div className="fixed inset-0 z-[70] flex flex-col items-center justify-center bg-black/80 text-white">
-          <div className="mb-4 flex items-center gap-3 text-lg font-black uppercase tracking-[0.3em]">
-            {t("app.processing.title", {
-              fallback: "Preparing multiplayer session…",
-            })}
+      {showLoadingOverlay && (
+        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/80 text-black">
+          <div className="w-full max-w-[320px] text-center px-6 py-8 rounded-2xl border-4 border-black bg-white shadow-[8px_8px_0_#000]">
+            <div className="mb-4 flex items-center justify-center gap-3 text-lg font-black uppercase tracking-[0.3em]">
+              <Clock className="h-5 w-5" />
+              {loadingTitle}
+            </div>
+            <div className="flex justify-center gap-2">
+              {[0, 1, 2].map((index) => (
+                <div
+                  key={index}
+                  className="h-4 w-4 animate-bounce rounded-full bg-white"
+                  style={{ animationDelay: `${index * 0.15}s` }}
+                />
+              ))}
+            </div>
+            <p className="mt-4 text-xs font-semibold uppercase tracking-widest text-neutral-300">
+              {loadingSubtitle}
+            </p>
           </div>
-          <div className="flex gap-2">
-            {[0, 1, 2].map((index) => (
-              <div
-                key={index}
-                className="h-4 w-4 animate-bounce rounded-full bg-white"
-                style={{ animationDelay: `${index * 0.15}s` }}
-              />
-            ))}
-          </div>
-          <p className="mt-4 text-xs font-semibold uppercase tracking-widest text-neutral-300">
-            {t("app.processing.subtitle", {
-              fallback: "Checking your location & locking a nearby shelter",
-            })}
-          </p>
         </div>
       )}
       <LanguageToggle />
