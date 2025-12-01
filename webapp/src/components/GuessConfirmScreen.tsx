@@ -2,6 +2,7 @@ import { motion } from "motion/react";
 import { AlertTriangle } from "lucide-react";
 import { Button } from "./ui/button";
 import { useI18n } from "@/i18n";
+import catPlaying from "../assets/graphics/cat_playing.svg";
 
 interface GuessConfirmScreenProps {
   shelterName: string;
@@ -42,6 +43,15 @@ export function GuessConfirmScreen({
       </div>
 
       <div className="flex-1 flex flex-col items-center justify-center px-6 text-center space-y-6 bg-background">
+        <div className="flex justify-center">
+          <img
+            src={catPlaying}
+            alt={t("guess.confirmImageAlt", { fallback: "Cat playing illustration" })}
+            className="h-max object-contain"
+            style={{ width: 200, height: 200 }}
+          />
+        </div>
+
         <div className="space-y-3 max-w-md">
           <p className="text-lg uppercase font-semibold text-black/70">
             {t("guess.confirmPrompt")}
@@ -63,7 +73,7 @@ export function GuessConfirmScreen({
           </Button>
           <Button
             variant="outline"
-            className="w-full rounded border border-black bg-background py-4 text-sm font-bold uppercase text-black transition-colors hover:bg-neutral-900"
+            className="w-full rounded border border-black bg-background py-4 text-sm font-bold uppercase text-black transition-colors hover:bg-neutral-900 hover:text-white"
             onClick={onCancel}
           >
             {t("guess.backToClues")}

@@ -2,6 +2,7 @@ import { Users, Info, User } from 'lucide-react';
 import { motion } from 'motion/react';
 import packageInfo from '../../package.json';
 import { MenuHeader } from './MenuHeader';
+import { AcknowledgementFooter } from './AcknowledgementFooter';
 import { useI18n } from "@/i18n";
 
 interface OnboardingScreenProps {
@@ -26,7 +27,7 @@ export function OnboardingScreen({
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.6, ease: 'easeOut' }}
-      className="min-h-screen bg-background relative overflow-hidden flex items-center justify-center p-6"
+      className="min-h-screen bg-background relative overflow-hidden flex flex-col items-center justify-between px-6 py-10"
     >
       <motion.div
         className="absolute top-12 left-16 w-32 h-32 bg-red-600"
@@ -41,7 +42,7 @@ export function OnboardingScreen({
         transition={{ delay: 0.28, duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
       />
 
-      <div className="relative z-10 w-full max-w-md space-y-6">
+      <div className="relative z-10 w-full max-w-md space-y-6 flex-1 flex flex-col justify-center">
         <MenuHeader
           title={t("onboarding.title")}
           subtitle={t("onboarding.tagline")}
@@ -99,6 +100,7 @@ export function OnboardingScreen({
           </motion.button>
         </div>
       </div>
+      <AcknowledgementFooter />
     </motion.div>
   );
 }

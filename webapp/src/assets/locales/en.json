@@ -31,6 +31,10 @@
     "hostGame": "Host Multiplayer",
     "howToPlay": "How to Play"
   },
+  "footer": {
+    "madeBy": "Made by MIT Urban Risk Lab",
+    "support": "Support from IHI Corporation"
+  },
   "solo": {
     "soloPlay": "Solo Play",
     "lightningHunt": "Lightning Hunt",
@@ -158,6 +162,11 @@
     "clues": "Clues Collected",
     "visited": "Locations Visited",
     "playAgain": "Play Again"
+  },
+  "defeat": {
+    "title": "Wrong Shelter",
+    "subtitle": "That was your final guess. Try again with a new hunt.",
+    "imageAlt": "Sad cat illustration"
   },
   "penalty": {
     "first": {

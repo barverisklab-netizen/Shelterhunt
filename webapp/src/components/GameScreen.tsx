@@ -64,7 +64,7 @@ export function GameScreen({
   const [nearbyPOI, setNearbyPOI] = useState<POI | null>(null);
   const [selectedShelterId, setSelectedShelterId] = useState<string | null>(null);
   const [confirmGuessOpen, setConfirmGuessOpen] = useState(false);
-  const [outcome, setOutcome] = useState<'none' | 'win' | 'penalty'>('none');
+  const [outcome, setOutcome] = useState<'none' | 'win' | 'penalty' | 'lose'>('none');
   const [measureTrigger, setMeasureTrigger] = useState(0);
   const [isMeasureActive, setIsMeasureActive] = useState(false);
   const [penaltyStage, setPenaltyStage] = useState<WrongGuessStage | null>(null);
@@ -249,13 +249,8 @@ export function GameScreen({
     } else {
       const stage = onApplyPenalty();
       if (stage === 'third') {
-        toast.error(
-          t("game.toasts.finalGuess", {
-            fallback: "That was your final guess. Game over.",
-          }),
-        );
         setPenaltyStage(null);
-        onEndGame();
+        setOutcome('lose');
         return;
       }
 
@@ -337,7 +332,7 @@ export function GameScreen({
           pois={pois}
           playerLocation={playerLocation}
           visitedPOIs={visitedPOIs}
-          gameEnded={outcome === 'win'}
+          gameEnded={outcome === 'win' || outcome === 'lose'}
           onPOIClick={simulateMove}
           onSecretShelterChange={onSecretShelterChange}
           onShelterOptionsChange={onShelterOptionsChange}
@@ -363,7 +358,7 @@ export function GameScreen({
         </div>
 
         {/* Location Status */}
-        {nearbyPOI && outcome !== 'win' && (
+        {nearbyPOI && outcome !== 'win' && outcome !== 'lose' && (
           <motion.div
             className="absolute top-4 left-4 max-w-xs rounded-xl border border-neutral-900 bg-background p-4 shadow-md"
             initial={{ opacity: 0, x: -20 }}
@@ -438,6 +433,17 @@ export function GameScreen({
             clueCount={clues.length}
             visitedCount={visitedPOIs.length}
             onPlayAgain={onEndGame}
+            result="win"
+          />
+        )}
+        {outcome === 'lose' && (
+          <ShelterVictoryScreen
+            key="defeat"
+            shelterName={secretShelter?.name}
+            clueCount={clues.length}
+            visitedCount={visitedPOIs.length}
+            onPlayAgain={onEndGame}
+            result="lose"
           />
         )}
       </AnimatePresence>

@@ -47,7 +47,7 @@ import {
 import { useI18n } from "./i18n";
 import { LanguageToggle } from "./components/LanguageToggle";
 import { Clock } from "lucide-react";
-import loadingCat from "./assets/Loading Cat.gif";
+import loadingCat from "./assets/graphics/Loading Cat.gif";
 
 type GameState =
   | "intro"

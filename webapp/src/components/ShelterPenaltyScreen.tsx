@@ -1,7 +1,7 @@
 import { motion } from "motion/react";
-import { Frown } from "lucide-react";
 import { Button } from "./ui/button";
 import { useI18n } from "@/i18n";
+import catCrying from "../assets/graphics/cat_crying.svg";
 
 type PenaltyStage = "first" | "second" | "third";
 
@@ -41,8 +41,13 @@ export function ShelterPenaltyScreen({
       transition={{ type: "spring", damping: 20, stiffness: 220 }}
     >
       <div className="w-full max-w-lg text-center space-y-6 rounded-lg bg-background p-10 shadow-xl">
-        <div className="inline-block rounded-full bg-black p-6">
-          <Frown className="w-16 h-16" color="#ef4444" strokeWidth={1.8} />
+        <div className="inline-flex items-center justify-center rounded-full bg-black p-4">
+          <img
+            src={catCrying}
+            alt={t("penalty.imageAlt", { fallback: "Sad cat illustration for wrong answer" })}
+            className="h-max w-full object-contain"
+            style={{ width: 200, height: 200 }}
+          />
         </div>
         <div className="space-y-2">
           <h2 className="text-3xl text-black font-bold uppercase">

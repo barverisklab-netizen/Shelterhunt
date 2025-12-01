@@ -31,6 +31,10 @@
     "hostGame": "マルチをホスト",
     "howToPlay": "遊び方"
   },
+  "footer": {
+    "madeBy": "MITアーバンリスク研究室による制作",
+    "support": "IHI株式会社の支援"
+  },
   "solo": {
     "soloPlay": "ソロプレイ",
     "lightningHunt": "ライトニングハント",
@@ -158,6 +162,11 @@
     "clues": "集めた手がかり",
     "visited": "訪問した場所",
     "playAgain": "もう一度プレイ"
+  },
+  "defeat": {
+    "title": "不正解の避難所",
+    "subtitle": "最後の回答でした。新しいゲームで再挑戦してください。",
+    "imageAlt": "悲しい猫のイラスト"
   },
   "penalty": {
     "first": {
