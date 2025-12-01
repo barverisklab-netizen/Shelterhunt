@@ -47,6 +47,7 @@ import {
 import { useI18n } from "./i18n";
 import { LanguageToggle } from "./components/LanguageToggle";
 import { Clock } from "lucide-react";
+import loadingCat from "./assets/Loading Cat.gif";
 
 type GameState =
   | "intro"
@@ -1274,6 +1275,15 @@ export default function App() {
       {showLoadingOverlay && (
         <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/80 text-black">
           <div className="w-full max-w-[320px] text-center px-6 py-8 rounded-2xl border-4 border-black bg-white shadow-[8px_8px_0_#000]">
+            <div className="mb-4 flex justify-center">
+              <img
+                src={loadingCat}
+                alt={t("app.processing.loadingCatAlt", {
+                  fallback: "Cat animation showing the game is loading",
+                })}
+                className="h-28 w-28 object-contain"
+              />
+            </div>
             <div className="mb-4 flex items-center justify-center gap-3 text-lg font-black uppercase tracking-[0.3em]">
               <Clock className="h-5 w-5" />
               {loadingTitle}

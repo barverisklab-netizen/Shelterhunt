@@ -1,6 +1,6 @@
 import { motion } from "motion/react";
 import { Button } from "./ui/button";
-import introLoop from "../assets/loopedbosaisensi.gif";
+import introIllustration from "../assets/bosaisensai.svg";
 import { useI18n } from "@/i18n";
 
 interface ShelterVictoryScreenProps {
@@ -34,8 +34,8 @@ export function ShelterVictoryScreen({
         >
           <img
             className="block h-full w-full object-cover"
-            src={introLoop}
-            alt={t("victory.imageAlt", { fallback: "Bosai Sensei celebration" })}
+            src={introIllustration}
+            alt={t("victory.imageAlt", { fallback: "Bosai Sensei illustration" })}
           />
         </motion.div>
 
