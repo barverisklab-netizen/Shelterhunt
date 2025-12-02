@@ -17,15 +17,16 @@ export function buildServer() {
 
   const sessionHub = new SessionHub();
 
-  const corsOriginOption: FastifyCorsOptions["origin"] = corsOrigins
-    ? (origin, callback) => {
+  const corsOriginOption: FastifyCorsOptions["origin"] =
+    corsOrigins.length > 0
+      ? (origin, callback) => {
         if (!origin || corsOrigins.includes(origin)) {
           callback(null, true);
           return;
         }
         callback(new Error("Not allowed by CORS"), false);
       }
-    : true;
+      : true;
 
   fastify.register(cors, {
     origin: corsOriginOption,
