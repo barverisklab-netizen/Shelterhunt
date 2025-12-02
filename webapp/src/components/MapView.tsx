@@ -115,7 +115,8 @@ const MEASURE_SHELTERS_SOURCE_ID = "measure-shelters-source";
 const MEASURE_SHELTERS_LAYER_ID = "measure-shelters-layer";
 const MEASURE_SHELTERS_LABEL_LAYER_ID = "measure-shelters-label-layer";
 
-type MeasureStatus = "idle" | "placing" | "configuring" | "active";
+type MeasureStatus = "idle" | "placing" | "active";
+const FIXED_MEASURE_RADIUS_METERS = 250;
 
 interface MapViewProps {
   pois: POI[];
@@ -176,7 +177,7 @@ const [measureState, setMeasureState] = useState<{
   shelterNames: string[];
 }>({
   status: "idle",
-  radius: 250,
+  radius: FIXED_MEASURE_RADIUS_METERS,
   count: 0,
   center: null,
   shelterNames: [],
@@ -271,13 +272,13 @@ const [measureState, setMeasureState] = useState<{
       measureMarkerRef.current.remove();
       measureMarkerRef.current = null;
     }
-  setMeasureState({
-    status: "idle",
-    radius: 250,
-    count: 0,
-    center: null,
-    shelterNames: [],
-  });
+    setMeasureState({
+      status: "idle",
+      radius: FIXED_MEASURE_RADIUS_METERS,
+      count: 0,
+      center: null,
+      shelterNames: [],
+    });
   }, [removeMeasurementArtifacts, restoreShelterLayers]);
 
   const updateShelterMarkers = useCallback(
@@ -465,18 +466,6 @@ const [measureState, setMeasureState] = useState<{
     [hideShelterLayers, restoreShelterLayers, updateShelterMarkers],
   );
 
-  const beginAdjustRadius = useCallback(() => {
-    removeMeasurementCircle();
-    updateShelterMarkers([]);
-    restoreShelterLayers();
-    setMeasureState((prev) => ({
-      ...prev,
-      status: prev.center ? "configuring" : "placing",
-      count: 0,
-      shelterNames: [],
-    }));
-  }, [removeMeasurementCircle, restoreShelterLayers, updateShelterMarkers]);
-
   const beginMoveCenter = useCallback(() => {
     removeMeasurementArtifacts();
     restoreShelterLayers();
@@ -486,7 +475,7 @@ const [measureState, setMeasureState] = useState<{
     }
     setMeasureState((prev) => ({
       status: "placing",
-      radius: prev.radius ?? 250,
+      radius: FIXED_MEASURE_RADIUS_METERS,
       count: 0,
       center: null,
       shelterNames: [],
@@ -511,7 +500,6 @@ const [measureState, setMeasureState] = useState<{
       .setLngLat([measureState.center.lng, measureState.center.lat])
       .setHTML(`
         <div class="measure-popup">
-          <button type="button" data-action="adjust">Adjust radius</button>
           <button type="button" data-action="move">Move center</button>
           <button type="button" data-action="delete" class="danger">Delete</button>
         </div>
@@ -532,10 +520,6 @@ const [measureState, setMeasureState] = useState<{
       );
     };
 
-    bindAction('[data-action="adjust"]', () => {
-      closeMeasurePopup();
-      beginAdjustRadius();
-    });
     bindAction('[data-action="move"]', () => {
       closeMeasurePopup();
       beginMoveCenter();
@@ -544,13 +528,7 @@ const [measureState, setMeasureState] = useState<{
       closeMeasurePopup();
       clearMeasurement();
     });
-  }, [
-    beginAdjustRadius,
-    beginMoveCenter,
-    clearMeasurement,
-    closeMeasurePopup,
-    measureState.center,
-  ]);
+  }, [beginMoveCenter, clearMeasurement, closeMeasurePopup, measureState.center]);
 
   const placeMeasureMarker = useCallback(
     (lng: number, lat: number) => {
@@ -579,40 +557,34 @@ const [measureState, setMeasureState] = useState<{
         measureMarkerRef.current.on("dragend", () => {
           const updated = measureMarkerRef.current?.getLngLat();
           if (!updated) return;
-        removeMeasurementArtifacts();
-        restoreShelterLayers();
-        setMeasureState((prev) => ({
-          ...prev,
-          status: "configuring",
-          center: { lng: updated.lng, lat: updated.lat },
-          count: 0,
-          shelterNames: [],
-        }));
-          toast.info("Set a radius and draw the circle.");
+          removeMeasurementArtifacts();
+          restoreShelterLayers();
+          setMeasureState((prev) => ({
+            ...prev,
+            status: "active",
+            center: { lng: updated.lng, lat: updated.lat },
+            radius: FIXED_MEASURE_RADIUS_METERS,
+            count: 0,
+            shelterNames: [],
+          }));
+          updateCircle(
+            { lng: updated.lng, lat: updated.lat },
+            FIXED_MEASURE_RADIUS_METERS,
+          );
+          toast.success("Measuring 250m radius around your point.");
         });
       }
 
       measureMarkerRef.current?.setLngLat([lng, lat]);
     },
-    [closeMeasurePopup, removeMeasurementArtifacts, restoreShelterLayers, showMarkerMenu],
+    [
+      closeMeasurePopup,
+      removeMeasurementArtifacts,
+      restoreShelterLayers,
+      showMarkerMenu,
+      updateCircle,
+    ],
   );
-
-  const handleRadiusValueChange = useCallback((value: number) => {
-    setMeasureState((prev) => ({
-      ...prev,
-      radius: value,
-    }));
-  }, []);
-
-  const handleDrawCircle = useCallback(() => {
-    if (!measureState.center) {
-      toast.warning("Choose a point on the map first.");
-      return;
-    }
-
-    updateCircle(measureState.center, measureState.radius);
-    toast.success("Radius applied. Shelters in range highlighted.");
-  }, [measureState.center, measureState.radius, updateCircle]);
 
   const selectShelterFromLocalData = useCallback(() => {
     if (hasSelectedShelter.current) {
@@ -833,12 +805,14 @@ const [measureState, setMeasureState] = useState<{
       placeMeasureMarker(lng, lat);
       setMeasureState((prev) => ({
         ...prev,
-        status: "configuring",
+        status: "active",
         center: { lng, lat },
+        radius: FIXED_MEASURE_RADIUS_METERS,
         count: 0,
         shelterNames: [],
       }));
-      toast.info("Set a radius and draw the circle.");
+      updateCircle({ lng, lat }, FIXED_MEASURE_RADIUS_METERS);
+      toast.success("Measuring 250m radius around your point.");
     };
 
     m.on("click", handleMapClick);
@@ -846,7 +820,7 @@ const [measureState, setMeasureState] = useState<{
     return () => {
       m.off("click", handleMapClick);
     };
-  }, [placeMeasureMarker]);
+  }, [placeMeasureMarker, updateCircle]);
 
 
   // Handle location picker mode (minimal changes, adds console log)
@@ -1104,18 +1078,12 @@ const [measureState, setMeasureState] = useState<{
     measureState.status === "active" && measureState.shelterNames.length > 0;
 
   const headerTitle =
-    measureState.status === "active"
-      ? "Shelters Nearby"
-      : measureState.status === "configuring"
-        ? "Set Radius"
-        : "Measure Shelters";
+    measureState.status === "active" ? "Shelters Nearby" : "Measure Shelters";
 
   const headerSubtitle =
     measureState.status === "active"
       ? `${measureState.count} shelter${measureState.count === 1 ? "" : "s"} within ${measureState.radius} meters`
-      : measureState.status === "configuring"
-        ? "Adjust the measurement radius"
-        : "Drop a center point to begin";
+      : "Drop a center point to begin";
 
   return (
     <div className="relative w-full h-full min-h-[500px] z-0">
@@ -1391,64 +1359,17 @@ const [measureState, setMeasureState] = useState<{
                     </>
                   )}
 
-                  {measureState.status === "configuring" && (
-                    <>
-                      <div className="flex items-center justify-between">
-                        <p className="text-xs text-black/70">
-                          Choose a radius in 10&nbsp;m increments (100&nbsp;m – 1,000&nbsp;m).
-                        </p>
-                        <span className="text-lg font-bold text-black">
-                          {measureState.radius}m
-                        </span>
-                      </div>
-                      <input
-                        type="range"
-                        min={100}
-                        max={2000}
-                        step={10}
-                        value={measureState.radius}
-                        onChange={(event) =>
-                          handleRadiusValueChange(Number(event.target.value))
-                        }
-                        className="w-full accent-black"
-                      />
-                      <div className="flex flex-col gap-2 sm:flex-row sm:justify-end">
-                        <button
-                          type="button"
-                          onClick={clearMeasurement}
-                          className="w-full sm:w-auto rounded border border-black px-3 py-2 text-xs font-semibold uppercase tracking-wide hover:bg-neutral-100"
-                        >
-                          Cancel
-                        </button>
-                        <button
-                          type="button"
-                          onClick={handleDrawCircle}
-                          className="w-full sm:w-auto rounded border border-black bg-background px-3 py-2 text-xs font-bold uppercase tracking-wide text-black hover:bg-neutral-100"
-                        >
-                          Draw Circle
-                        </button>
-                      </div>
-                    </>
-                  )}
-
                   {measureState.status === "active" && (
                     <>
+                      <p className="text-xs text-black/70">
+                        Radius fixed at {measureState.radius}m.
+                      </p>
                       {measureState.shelterNames.length === 0 && (
                         <p className="text-xs text-black/50 italic">
                           No shelters detected in this radius.
                         </p>
                       )}
                       <div className="grid gap-2 pb-1 sm:grid-cols-3">
-                        <button
-                          type="button"
-                          onClick={() => {
-                            closeMeasurePopup();
-                            beginAdjustRadius();
-                          }}
-                          className="rounded border border-black px-3 py-2 text-xs font-semibold uppercase tracking-wide hover:bg-neutral-100"
-                        >
-                          Adjust Radius
-                        </button>
                         <button
                           type="button"
                           onClick={() => {
