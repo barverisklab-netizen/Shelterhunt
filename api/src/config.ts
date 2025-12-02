@@ -25,6 +25,14 @@ export const env = envSchema.parse({
   CORS_ORIGIN: process.env.CORS_ORIGIN,
 });
 
+const parseOrigins = (raw?: string) =>
+  raw
+    ?.split(",")
+    .map((value) => value.trim())
+    .filter((value): value is string => value.length > 0) ?? null;
+
+export const corsOrigins = parseOrigins(env.CORS_ORIGIN);
+
 export const sessionDefaults = {
   ttlMinutes: env.SESSION_TTL_MINUTES,
   maxPlayers: env.SESSION_MAX_PLAYERS,
