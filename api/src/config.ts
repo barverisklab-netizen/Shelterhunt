@@ -25,12 +25,12 @@ export const env = envSchema.parse({
   CORS_ORIGIN: process.env.CORS_ORIGIN,
 });
 
-const parseOrigins = (raw?: string | null): string[] | undefined => {
+const parseOrigins = (raw?: string | null): string[] => {
   const values = raw
     ?.split(",")
     .map((value) => value.trim())
     .filter((value): value is string => value.length > 0);
-  return values && values.length > 0 ? values : undefined;
+  return values && values.length > 0 ? values : [];
 };
 
 export const corsOrigins = parseOrigins(env.CORS_ORIGIN);
