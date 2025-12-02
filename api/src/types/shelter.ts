@@ -19,6 +19,17 @@ export interface ShelterRecord {
   flood_duration: string | null;
   inland_waters_depth_rank: number | null;
   inland_waters_depth: string | null;
+  facility_type: string | null;
+  shelter_capacity: number | null;
+  water_station_250m: boolean | null;
+  hospital_250m: boolean | null;
+  aed_250m: number | null;
+  emergency_supply_storage_250m: number | null;
+  community_center_250m: number | null;
+  train_station_250m: boolean | null;
+  shrine_temple_250m: number | null;
+  floodgate_250m: boolean | null;
+  bridge_250m: number | null;
   latitude: number;
   longitude: number;
   created_at: string;

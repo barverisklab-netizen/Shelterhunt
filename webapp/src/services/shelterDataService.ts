@@ -21,6 +21,17 @@ export interface Shelter {
   floodDuration: string | null;
   inlandWatersDepthRank: number | null;
   inlandWatersDepth: string | null;
+  facilityType: string | null;
+  shelterCapacity: number | null;
+  waterStation250m: boolean | null;
+  hospital250m: boolean | null;
+  aed250m: number | null;
+  emergencySupplyStorage250m: number | null;
+  communityCenter250m: number | null;
+  trainStation250m: boolean | null;
+  shrineTemple250m: number | null;
+  floodgate250m: boolean | null;
+  bridge250m: number | null;
   latitude: number;
   longitude: number;
 }
@@ -46,6 +57,17 @@ interface ApiShelter {
   flood_duration: string | null;
   inland_waters_depth_rank: number | null;
   inland_waters_depth: string | null;
+  facility_type: string | null;
+  shelter_capacity: number | null;
+  water_station_250m: boolean | null;
+  hospital_250m: boolean | null;
+  aed_250m: number | null;
+  emergency_supply_storage_250m: number | null;
+  community_center_250m: number | null;
+  train_station_250m: boolean | null;
+  shrine_temple_250m: number | null;
+  floodgate_250m: boolean | null;
+  bridge_250m: number | null;
   latitude: number;
   longitude: number;
 }
@@ -73,6 +95,17 @@ const mapShelter = (item: ApiShelter): Shelter => ({
   floodDuration: item.flood_duration,
   inlandWatersDepthRank: item.inland_waters_depth_rank,
   inlandWatersDepth: item.inland_waters_depth,
+  facilityType: item.facility_type,
+  shelterCapacity: item.shelter_capacity,
+  waterStation250m: item.water_station_250m,
+  hospital250m: item.hospital_250m,
+  aed250m: item.aed_250m,
+  emergencySupplyStorage250m: item.emergency_supply_storage_250m,
+  communityCenter250m: item.community_center_250m,
+  trainStation250m: item.train_station_250m,
+  shrineTemple250m: item.shrine_temple_250m,
+  floodgate250m: item.floodgate_250m,
+  bridge250m: item.bridge_250m,
   latitude: item.latitude,
   longitude: item.longitude,
 });

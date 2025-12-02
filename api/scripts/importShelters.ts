@@ -56,6 +56,25 @@ const toNumber = (value: unknown) => {
   return Number.isFinite(num) ? num : null;
 };
 
+const toBoolean = (value: unknown) => {
+  if (typeof value === "boolean") {
+    return value;
+  }
+  if (typeof value === "number") {
+    return value !== 0;
+  }
+  if (typeof value === "string") {
+    const normalized = value.trim().toLowerCase();
+    if (["true", "t", "yes", "y", "1"].includes(normalized)) {
+      return true;
+    }
+    if (["false", "f", "no", "n", "0"].includes(normalized)) {
+      return false;
+    }
+  }
+  return null;
+};
+
 const generateCode = (source: string, used: Set<string>): string => {
   const base = source.trim().toUpperCase();
   if (base && base.length >= 4 && !used.has(base)) {
@@ -166,6 +185,17 @@ const parseFeatures = async () => {
       const floodDuration = normalizeText(props["Flood_Duration"]);
       const inlandWatersDepthRank = toNumber(props["InlandWaters_Depth_Rank"]);
       const inlandWatersDepth = normalizeText(props["InlandWaters_Depth"]);
+      const facilityType = normalizeText(props["Facility_Type"]);
+      const shelterCapacity = toNumber(props["Shelter_Capacity"]);
+      const waterStation250m = toBoolean(props["250m_Water_Station"]);
+      const hospital250m = toBoolean(props["250m_Hospital"]);
+      const aed250m = toNumber(props["250m_AED"]);
+      const emergencySupplyStorage250m = toNumber(props["250m_Emergency_Supply_Storage"]);
+      const communityCenter250m = toNumber(props["250m_Community_Center"]);
+      const trainStation250m = toBoolean(props["250m_Train_Station"]);
+      const shrineTemple250m = toNumber(props["250m_Shrine_Temple"]);
+      const floodgate250m = toBoolean(props["250m_Floodgate"]);
+      const bridge250m = toNumber(props["250m_Bridge"]);
       const codeSource =
         externalId ??
         (typeof sequenceNo === "number" ? `SEQ-${sequenceNo}` : `${lat}-${lng}`);
@@ -192,6 +222,18 @@ const parseFeatures = async () => {
         flood_duration: floodDuration,
         inland_waters_depth_rank: typeof inlandWatersDepthRank === "number" ? inlandWatersDepthRank : null,
         inland_waters_depth: inlandWatersDepth,
+        facility_type: facilityType,
+        shelter_capacity: typeof shelterCapacity === "number" ? shelterCapacity : null,
+        water_station_250m: typeof waterStation250m === "boolean" ? waterStation250m : null,
+        hospital_250m: typeof hospital250m === "boolean" ? hospital250m : null,
+        aed_250m: typeof aed250m === "number" ? aed250m : null,
+        emergency_supply_storage_250m:
+          typeof emergencySupplyStorage250m === "number" ? emergencySupplyStorage250m : null,
+        community_center_250m: typeof communityCenter250m === "number" ? communityCenter250m : null,
+        train_station_250m: typeof trainStation250m === "boolean" ? trainStation250m : null,
+        shrine_temple_250m: typeof shrineTemple250m === "number" ? shrineTemple250m : null,
+        floodgate_250m: typeof floodgate250m === "boolean" ? floodgate250m : null,
+        bridge_250m: typeof bridge250m === "number" ? bridge250m : null,
         latitude: Number(lat),
         longitude: Number(lng),
       } satisfies Omit<ShelterRecord, "id" | "created_at">;
@@ -213,11 +255,17 @@ const insertShelters = async (rows: Omit<ShelterRecord, "id" | "created_at">[]) 
         `insert into public.shelters
            (code, share_code, external_id, sequence_no, name_en, name_jp, address, address_en, address_jp, category, category_jp,
             flood_depth_rank, flood_depth, storm_surge_depth_rank, storm_surge_depth,
-            flood_duration_rank, flood_duration, inland_waters_depth_rank, inland_waters_depth, latitude, longitude)
+            flood_duration_rank, flood_duration, inland_waters_depth_rank, inland_waters_depth,
+            facility_type, shelter_capacity, water_station_250m, hospital_250m, aed_250m, emergency_supply_storage_250m,
+            community_center_250m, train_station_250m, shrine_temple_250m, floodgate_250m, bridge_250m,
+            latitude, longitude)
          values
            ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11,
             $12, $13, $14, $15,
-            $16, $17, $18, $19, $20, $21)
+            $16, $17, $18, $19,
+            $20, $21, $22, $23, $24, $25,
+            $26, $27, $28, $29, $30,
+            $31, $32)
          on conflict (code) do update set
            share_code = excluded.share_code,
            external_id = excluded.external_id,
@@ -237,6 +285,17 @@ const insertShelters = async (rows: Omit<ShelterRecord, "id" | "created_at">[]) 
            flood_duration = excluded.flood_duration,
            inland_waters_depth_rank = excluded.inland_waters_depth_rank,
            inland_waters_depth = excluded.inland_waters_depth,
+           facility_type = excluded.facility_type,
+           shelter_capacity = excluded.shelter_capacity,
+           water_station_250m = excluded.water_station_250m,
+           hospital_250m = excluded.hospital_250m,
+           aed_250m = excluded.aed_250m,
+           emergency_supply_storage_250m = excluded.emergency_supply_storage_250m,
+           community_center_250m = excluded.community_center_250m,
+           train_station_250m = excluded.train_station_250m,
+           shrine_temple_250m = excluded.shrine_temple_250m,
+           floodgate_250m = excluded.floodgate_250m,
+           bridge_250m = excluded.bridge_250m,
            latitude = excluded.latitude,
            longitude = excluded.longitude`,
         [
@@ -259,6 +318,17 @@ const insertShelters = async (rows: Omit<ShelterRecord, "id" | "created_at">[]) 
           row.flood_duration,
           row.inland_waters_depth_rank,
           row.inland_waters_depth,
+          row.facility_type,
+          row.shelter_capacity,
+          row.water_station_250m,
+          row.hospital_250m,
+          row.aed_250m,
+          row.emergency_supply_storage_250m,
+          row.community_center_250m,
+          row.train_station_250m,
+          row.shrine_temple_250m,
+          row.floodgate_250m,
+          row.bridge_250m,
           row.latitude,
           row.longitude,
         ],
