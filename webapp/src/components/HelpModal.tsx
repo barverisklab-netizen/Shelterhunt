@@ -2,6 +2,7 @@ import { motion, AnimatePresence } from "motion/react";
 import { X, MapPin, Brain, Lightbulb, Trophy } from "lucide-react";
 import { Button } from "./ui/button";
 import { useI18n } from "@/i18n";
+import catPlaying from "../assets/graphics/cat_playing.svg";
 
 interface HelpModalProps {
   isOpen: boolean;
@@ -59,7 +60,7 @@ export function HelpModal({ isOpen, onClose }: HelpModalProps) {
               exit={{ opacity: 0, scale: 0.9, y: 20 }}
               transition={{ type: "spring", damping: 10 }}
             >
-              <div className="max-h-[90vh] overflow-y-auto p-6">
+              <div className="max-h-[90vh] overflow-y-auto p-6 flex flex-col gap-6">
                 {/* Header */}
                 <div className="flex items-start justify-between mb-6">
                   <div>
@@ -83,11 +84,19 @@ export function HelpModal({ isOpen, onClose }: HelpModalProps) {
 
                 {/* Game Overview */}
                 <motion.div
-                  className="mb-6 rounded border border-neutral-900 bg-neutral-50 p-6"
+                  className="mb-6 rounded bg-white p-6"
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.1 }}
                 >
+                  <div className="flex justify-center mb-6">
+                    <img
+                      src={catPlaying}
+                      alt={t("help.catImageAlt", { fallback: "Cat playing illustration" })}
+                      className="h-max object-contain"
+                      style={{ width: 200, height: 200 }}
+                    />
+                  </div>
                   <h3 className="text-xl text-black mb-3 font-bold uppercase">
                     {t("help.overviewTitle")}
                   </h3>

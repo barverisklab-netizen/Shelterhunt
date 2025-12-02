@@ -94,6 +94,7 @@
   "help": {
     "title": "How to Play",
     "subtitle": "Master the art of urban deduction",
+    "catImageAlt": "Cat playing illustration",
     "overviewTitle": "Game Overview",
     "overviewBody": "A hurricane is approaching! Your team must find the secret emergency shelter hidden in the city. Visit various locations, answer trivia questions about disaster preparedness, and collect clues to deduce which shelter is the secret one. The first team to find it wins!",
     "stepLabel": "Step {number}",
@@ -157,7 +158,7 @@
     "backToClues": "Back to Clues"
   },
   "victory": {
-    "title": "Victory! 🎉",
+    "title": "Victory!",
     "subtitle": "You found the secret shelter! {shelter}",
     "clues": "Clues Collected",
     "visited": "Locations Visited",
