@@ -23,7 +23,7 @@ export function buildServer() {
           callback(null, true);
           return;
         }
-        callback(new Error("Not allowed by CORS"));
+        callback(new Error("Not allowed by CORS"), false);
       }
     : true;
 
