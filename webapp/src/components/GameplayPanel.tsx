@@ -88,27 +88,25 @@ export function GameplayPanel({
             </header>
 
             <div className="flex-1 overflow-y-auto p-6 space-y-4 ">
-              {clues.length > 0 && (
-                <motion.div
-                  className="rounded border border-neutral-900 bg-neutral-50 p-4"
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                >
-                  <div className="flex items-start gap-3 text-black">
-                    <Lightbulb className="mt-0.5 h-5 w-5 flex-shrink-0" />
-                    <div>
-                      <div className="text-sm font-bold uppercase">
-                        {t("gameplay.strategyTitle")}
-                      </div>
-                      <div className="space-y-1 text-xs text-black/70">
-                        <p>• {t("gameplay.strategyTip1")}</p>
-                        <p>• {t("gameplay.strategyTip2")}</p>
-                        <p>• {t("gameplay.strategyTip3")}</p>
-                      </div>
+              <motion.div
+                className="rounded border border-neutral-900 bg-neutral-50 p-4"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+              >
+                <div className="flex items-start gap-3 text-black">
+                  <Lightbulb className="mt-0.5 h-5 w-5 flex-shrink-0" />
+                  <div>
+                    <div className="text-sm font-bold uppercase">
+                      {t("gameplay.strategyTitle")}
+                    </div>
+                    <div className="space-y-1 text-xs text-black/70">
+                      <p>• {t("gameplay.strategyTip1")}</p>
+                      <p>• {t("gameplay.strategyTip2")}</p>
+                      <p>• {t("gameplay.strategyTip3")}</p>
                     </div>
                   </div>
-                </motion.div>
-              )}
+                </div>
+              </motion.div>
 
               <Accordion type="multiple" defaultValue={["clues"]} className="space-y-4">
                 <AccordionItem

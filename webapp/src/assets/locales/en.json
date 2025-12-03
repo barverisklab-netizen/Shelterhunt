@@ -194,9 +194,9 @@
     "noCluesTitle": "No clues yet",
     "noCluesSubtitle": "Visit locations and answer trivia questions to unlock intelligence about the secret shelter.",
     "strategyTitle": "Strategy Tips",
-    "strategyTip1": "Use green clue markers to confirm correct attributes",
-    "strategyTip2": "Red clue markers help you rule out bad candidates",
-    "strategyTip3": "Stack multiple hints before locking in a guess",
+    "strategyTip1": "Quickly isolate shelters using wide-area layers like flood depth and storm surge zones.",
+    "strategyTip2": "Move around the map to unlock facility questions for anything within 250m of you.",
+    "strategyTip3": "Use layer toggles and the measuring circle in Tools to analyze and zero in on shelters that match your clues.",
     "tools": {
       "title": "Tools",
       "active": "Active",
