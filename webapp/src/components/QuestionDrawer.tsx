@@ -168,7 +168,7 @@ export function QuestionDrawer({
                       <motion.button
                         key={category.id}
                         onClick={() => setSelectedCategory(category.id)}
-                        disabled={!nearbyPOI}
+                        disabled={!nearbyPOI || questionsInCategory.length === 0}
                         className="w-full bg-background border-4 border-black p-4 text-left hover:bg-black/5 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                         initial={{ opacity: 0, x: -20 }}
                         animate={{ opacity: 1, x: 0 }}
@@ -249,7 +249,24 @@ export function QuestionDrawer({
                         </div>
 
                         {/* Parameter Selection */}
-                        {question.options && (
+                        {question.paramType === "number" && (!question.options || !question.options.length) ? (
+                          <div className="flex flex-col gap-2">
+                            <input
+                              type="number"
+                              inputMode="numeric"
+                              className="w-full rounded border-2 border-black px-3 py-2"
+                              placeholder={t("questions.enterNumber", { fallback: "Enter a number" })}
+                              value={selectedParam ?? ""}
+                              onChange={(event) =>
+                                setSelectedParams({
+                                  ...selectedParams,
+                                  [question.id]: event.target.value ? Number(event.target.value) : "",
+                                })
+                              }
+                              disabled={!isEligible || isLocked}
+                            />
+                          </div>
+                        ) : question.options ? (
                           <div className="flex flex-wrap gap-2">
                             {question.options.map((option) => (
                               <button
@@ -271,18 +288,28 @@ export function QuestionDrawer({
                               </button>
                             ))}
                           </div>
-                        )}
+                        ) : null}
 
                         {/* Ask Button */}
                         <Button
                           onClick={() => {
-                            if (selectedParam) {
+                            if (selectedParam !== undefined && selectedParam !== null && selectedParam !== "") {
                               onAskQuestion(question.id, selectedParam);
                             }
                           }}
-                          disabled={!isEligible || !selectedParam || isLocked}
+                          disabled={
+                            !isEligible ||
+                            selectedParam === undefined ||
+                            selectedParam === null ||
+                            selectedParam === "" ||
+                            isLocked
+                          }
                           variant={
-                            isEligible && selectedParam && !isLocked
+                            isEligible &&
+                            selectedParam !== undefined &&
+                            selectedParam !== null &&
+                            selectedParam !== "" &&
+                            !isLocked
                               ? "destructive"
                               : "outline"
                           }

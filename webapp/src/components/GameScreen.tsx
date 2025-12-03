@@ -3,16 +3,16 @@ import { Clock, Lightbulb, MapPin, X} from 'lucide-react';
 import { MapView } from './MapView';
 import { QuestionDrawer } from './QuestionDrawer';
 import { GameplayPanel } from './GameplayPanel';
-import { TriviaModal } from './TriviaModal';
 import { GuessConfirmScreen } from './GuessConfirmScreen';
 import { ShelterVictoryScreen } from './ShelterVictoryScreen';
 import { ShelterPenaltyScreen } from './ShelterPenaltyScreen';
-import { POI, Question, TriviaQuestion, Clue } from "@/types/game";
+import { POI, Question, Clue, QuestionAttribute } from "@/types/game";
 import { defaultCityContext } from '../data/cityContext';
 import { useEffect, useState } from 'react';
 import { toast } from "sonner@2.0.3";
 import { BlurReveal } from './ui/blur-reveal';
 import { useI18n } from "@/i18n";
+import type { Shelter } from "@/services/shelterDataService";
 
 
 const ENABLE_SECRET_SHELTER_BLUR = true;
@@ -22,8 +22,8 @@ export type WrongGuessStage = 'first' | 'second' | 'third';
 
 interface GameScreenProps {
   pois: POI[];
-  questions: Question[];
-  triviaQuestions: TriviaQuestion[];
+  questionAttributes: QuestionAttribute[];
+  shelters: Shelter[];
   playerLocation: { lat: number; lng: number };
   timeRemaining: number;
   secretShelter?: { id: string; name: string } | null;
@@ -39,8 +39,8 @@ interface GameScreenProps {
 
 export function GameScreen({
   pois,
-  questions,
-  triviaQuestions,
+  questionAttributes,
+  shelters,
   playerLocation,
   timeRemaining,
   secretShelter,
@@ -56,11 +56,8 @@ export function GameScreen({
   const { t } = useI18n();
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [cluesOpen, setCluesOpen] = useState(false);
-  const [triviaOpen, setTriviaOpen] = useState(false);
-  const [currentTrivia, setCurrentTrivia] = useState<TriviaQuestion | null>(null);
   const [clues, setClues] = useState<Clue[]>([]);
   const [visitedPOIs, setVisitedPOIs] = useState<string[]>([]);
-  const [lockedQuestions, setLockedQuestions] = useState<string[]>([]);
   const [nearbyPOI, setNearbyPOI] = useState<POI | null>(null);
   const [selectedShelterId, setSelectedShelterId] = useState<string | null>(null);
   const [confirmGuessOpen, setConfirmGuessOpen] = useState(false);
@@ -68,6 +65,7 @@ export function GameScreen({
   const [measureTrigger, setMeasureTrigger] = useState(0);
   const [isMeasureActive, setIsMeasureActive] = useState(false);
   const [penaltyStage, setPenaltyStage] = useState<WrongGuessStage | null>(null);
+  const [solvedQuestions, setSolvedQuestions] = useState<string[]>([]);
 
   useEffect(() => {
     if (isMeasureActive) {
@@ -75,13 +73,95 @@ export function GameScreen({
     }
   }, [isMeasureActive]);
 
+  const attributeCategoryMap: Record<string, Question["category"]> = {
+    floodDepthRank: "location",
+    floodDepth: "location",
+    stormSurgeDepthRank: "location",
+    stormSurgeDepth: "location",
+    floodDurationRank: "location",
+    floodDuration: "location",
+    inlandWatersDepthRank: "location",
+    inlandWatersDepth: "location",
+    facilityType: "facility",
+    shelterCapacity: "capacity",
+    waterStation250m: "nearby",
+    hospital250m: "nearby",
+    aed250m: "nearby",
+    emergencySupplyStorage250m: "nearby",
+    communityCenter250m: "nearby",
+    trainStation250m: "nearby",
+    shrineTemple250m: "nearby",
+    floodgate250m: "nearby",
+    bridge250m: "nearby",
+  };
+
+  const buildQuestionText = (attribute: QuestionAttribute) => {
+    const baseLabel = attribute.label;
+    if (attribute.kind === "number") {
+      if (attribute.id.endsWith("250m")) {
+        return `Are there {param} ${baseLabel}?`;
+      }
+      if (attribute.id.toLowerCase().includes("capacity")) {
+        return `Is the ${baseLabel} {param}?`;
+      }
+      return `Is the ${baseLabel} {param}?`;
+    }
+    return `Is the ${baseLabel} ${"{param}"}?`;
+  };
+
   const normalizeName = (value?: string | null) =>
     (value ?? '').trim().toLowerCase();
-  const secretPOI = secretShelter
-    ? pois.find(
-        (p) => normalizeName(p.name) === normalizeName(secretShelter.name)
+  const secretShelterRecord = secretShelter
+    ? shelters.find(
+        (shelter) =>
+          shelter.shareCode === secretShelter.id ||
+          shelter.code === secretShelter.id ||
+          normalizeName(shelter.nameEn ?? shelter.nameJp ?? shelter.externalId ?? shelter.id) ===
+            normalizeName(secretShelter.name),
       )
     : undefined;
+  const attributeValueLookup: Record<string, (shelter: Shelter) => string | number | null> = {
+    floodDepthRank: (shelter) => shelter.floodDepthRank,
+    floodDepth: (shelter) => shelter.floodDepth,
+    stormSurgeDepthRank: (shelter) => shelter.stormSurgeDepthRank,
+    stormSurgeDepth: (shelter) => shelter.stormSurgeDepth,
+    floodDurationRank: (shelter) => shelter.floodDurationRank,
+    floodDuration: (shelter) => shelter.floodDuration,
+    inlandWatersDepthRank: (shelter) => shelter.inlandWatersDepthRank,
+    inlandWatersDepth: (shelter) => shelter.inlandWatersDepth,
+    facilityType: (shelter) => shelter.facilityType,
+    shelterCapacity: (shelter) => shelter.shelterCapacity,
+    waterStation250m: (shelter) => shelter.waterStation250m,
+    hospital250m: (shelter) => shelter.hospital250m,
+    aed250m: (shelter) => shelter.aed250m,
+    emergencySupplyStorage250m: (shelter) => shelter.emergencySupplyStorage250m,
+    communityCenter250m: (shelter) => shelter.communityCenter250m,
+    trainStation250m: (shelter) => shelter.trainStation250m,
+    shrineTemple250m: (shelter) => shelter.shrineTemple250m,
+    floodgate250m: (shelter) => shelter.floodgate250m,
+    bridge250m: (shelter) => shelter.bridge250m,
+  };
+
+  const getSecretAnswer = (attributeId: string): string | number | null => {
+    if (!secretShelterRecord) return null;
+    const extractor = attributeValueLookup[attributeId];
+    if (!extractor) return null;
+    return extractor(secretShelterRecord);
+  };
+
+  const questions: Question[] = questionAttributes
+    .filter((attribute) => !solvedQuestions.includes(attribute.id))
+    .filter((attribute) => {
+      const value = getSecretAnswer(attribute.id);
+      return value !== null && value !== undefined;
+    })
+    .map((attribute) => ({
+      id: attribute.id,
+      text: buildQuestionText(attribute),
+      category: attributeCategoryMap[attribute.id] ?? "location",
+      paramType: attribute.kind === "number" ? "number" : "select",
+      options: attribute.kind === "select" ? attribute.options : undefined,
+    }));
 
   // Check if player is near a POI (simplified for dem #ToFix)
   const checkNearbyPOI = () => {
@@ -105,74 +185,60 @@ export function GameScreen({
   };
 
   const handleAskQuestion = (questionId: string, param: string | number) => {
-    const randomTrivia = triviaQuestions[Math.floor(Math.random() * triviaQuestions.length)];
-    setCurrentTrivia(randomTrivia);
-    setTriviaOpen(true);
-  };
+    const question = questions.find((q) => q.id === questionId);
+    const expected = getSecretAnswer(questionId);
 
-  const handleTriviaSubmit = (answerIndex: number) => {
-    if (!currentTrivia) return;
-
-    const isCorrect = answerIndex === currentTrivia.correctIndex;
-
-    if (isCorrect) {
-      // Generate a clue based on the secret shelter
-      const clueTexts = [
-        {
-          text: t("game.clues.surgeRank", {
-            replacements: { rank: secretPOI?.surgeRank || 2 },
-            fallback: `Surge rank is ${secretPOI?.surgeRank || 2}`,
-          }),
-          answer: true,
-          category: t("game.clues.categories.location", { fallback: "Location" }),
-        },
-        {
-          text: t("game.clues.capacity", {
-            replacements: { capacity: secretPOI?.capacity || 100 },
-            fallback: `Capacity is ${secretPOI?.capacity || 100}+ people`,
-          }),
-          answer: true,
-          category: t("game.clues.categories.capacity", { fallback: "Capacity" }),
-        },
-        {
-          text: t("game.clues.notFireStation", { fallback: "Not a fire station" }),
-          answer: false,
-          category: t("game.clues.categories.facility", { fallback: "Facility" }),
-        },
-        {
-          text: t("game.clues.parks", {
-            replacements: { parks: secretPOI?.nearbyParks || 2 },
-            fallback: `Has ${secretPOI?.nearbyParks || 2}+ nearby parks`,
-          }),
-          answer: true,
-          category: t("game.clues.categories.nearby", { fallback: "Nearby" }),
-        },
-        {
-          text: t("game.clues.notSurgeRankFour", { fallback: "Not in surge rank 4" }),
-          answer: false,
-          category: t("game.clues.categories.location", { fallback: "Location" }),
-        },
-      ];
-      
-      const unusedClues = clueTexts.filter(
-        c => !clues.some(existing => existing.text === c.text)
+    if (!question || expected === null || expected === undefined) {
+      toast.error(
+        t("game.toasts.submitError", {
+          fallback: "Unable to check this clue right now.",
+        }),
       );
-      
-      if (unusedClues.length > 0) {
-        const newClue: Clue = {
-          id: `clue-${Date.now()}`,
-          ...unusedClues[0],
-          timestamp: Date.now(),
-        };
-        setClues([...clues, newClue]);
-      }
-    } else {
-      // Lock the question for 2 minutes (simplified for demo)
-      setLockedQuestions([...lockedQuestions, currentTrivia.id]);
+      return;
     }
 
-    setTriviaOpen(false);
-    setCurrentTrivia(null);
+    const normalizeVal = (value: string | number | null | undefined) => {
+      if (typeof value === "number") return value;
+      return value ? value.toString().trim().toLowerCase() : "";
+    };
+
+    let isCorrect = false;
+    if (question.paramType === "number") {
+      const numericGuess = Number(param);
+      const numericExpected = Number(expected);
+      isCorrect = Number.isFinite(numericGuess) && numericGuess === numericExpected;
+    } else {
+      isCorrect = normalizeVal(param) === normalizeVal(expected);
+    }
+
+    const clueText = question.text.replace("{param}", `${param}`);
+    const categoryLabel =
+      defaultCityContext.questionCategories.find((cat) => cat.id === question.category)
+        ?.name ?? question.category;
+
+    const newClue: Clue = {
+      id: `clue-${Date.now()}`,
+      text: `${clueText} → ${expected}`,
+      answer: isCorrect,
+      category: categoryLabel,
+      timestamp: Date.now(),
+    };
+
+    setClues((prev) => [...prev, newClue]);
+    if (isCorrect) {
+      setSolvedQuestions((prev) => (prev.includes(questionId) ? prev : [...prev, questionId]));
+      toast.success(
+        t("questions.correct", {
+          fallback: "Correct clue unlocked!",
+        }),
+      );
+    } else {
+      toast.error(
+        t("questions.incorrect", {
+          fallback: "That clue was incorrect. Try another guess.",
+        }),
+      );
+    }
   };
   const selectedShelterOption = selectedShelterId
     ? shelterOptions.find((option) => option.id === selectedShelterId) ?? null
@@ -388,17 +454,9 @@ export function GameScreen({
           onToggle={() => setDrawerOpen(!drawerOpen)}
           onAskQuestion={handleAskQuestion}
           nearbyPOI={nearbyPOI?.id || null}
-          lockedQuestions={lockedQuestions}
+          lockedQuestions={[]}
         />
       )}
-
-      {/* Trivia Modal */}
-      <TriviaModal
-        isOpen={triviaOpen}
-        trivia={currentTrivia}
-        onClose={() => setTriviaOpen(false)}
-        onSubmit={handleTriviaSubmit}
-      />
 
       {/* Gameplay Panel */}
       <GameplayPanel

@@ -114,6 +114,9 @@ const MEASURE_CIRCLE_OUTLINE_LAYER_ID = "measure-circle-outline";
 const MEASURE_SHELTERS_SOURCE_ID = "measure-shelters-source";
 const MEASURE_SHELTERS_LAYER_ID = "measure-shelters-layer";
 const MEASURE_SHELTERS_LABEL_LAYER_ID = "measure-shelters-label-layer";
+const PLAYER_RANGE_SOURCE_ID = "player-range-source";
+const PLAYER_RANGE_FILL_LAYER_ID = "player-range-fill-layer";
+const PLAYER_RANGE_OUTLINE_LAYER_ID = "player-range-outline-layer";
 
 type MeasureStatus = "idle" | "placing" | "active";
 const FIXED_MEASURE_RADIUS_METERS = 250;
@@ -754,6 +757,53 @@ const [measureState, setMeasureState] = useState<{
     m.jumpTo({ center: [playerLocation.lng, playerLocation.lat] });
     // or: m.easeTo({ center: [playerLocation.lng, playerLocation.lat], duration: 350 });
   }, [playerLocation.lng, playerLocation.lat]);
+
+  useEffect(() => {
+    const m = map.current;
+    if (!m) return;
+
+    const applyRange = () => {
+      const feature = createCircleFeature(playerLocation, 250, 96);
+
+      if (m.getSource(PLAYER_RANGE_SOURCE_ID)) {
+        (m.getSource(PLAYER_RANGE_SOURCE_ID) as mapboxgl.GeoJSONSource).setData(
+          feature as any,
+        );
+        return;
+      }
+
+      m.addSource(PLAYER_RANGE_SOURCE_ID, {
+        type: "geojson",
+        data: feature as any,
+      });
+      m.addLayer({
+        id: PLAYER_RANGE_FILL_LAYER_ID,
+        type: "fill",
+        source: PLAYER_RANGE_SOURCE_ID,
+        paint: {
+          "fill-color": "#4da3ff",
+          "fill-opacity": 0.12,
+        },
+      });
+      m.addLayer({
+        id: PLAYER_RANGE_OUTLINE_LAYER_ID,
+        type: "line",
+        source: PLAYER_RANGE_SOURCE_ID,
+        paint: {
+          "line-color": "#4da3ff",
+          "line-width": 2,
+          "line-dasharray": [2, 2],
+        },
+      });
+    };
+
+    if (!m.isStyleLoaded()) {
+      m.once("load", applyRange);
+      return;
+    }
+
+    applyRange();
+  }, [playerLocation.lat, playerLocation.lng]);
 
   useEffect(() => {
     measureStatusRef.current = measureState.status;
