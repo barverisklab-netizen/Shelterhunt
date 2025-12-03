@@ -14,7 +14,7 @@ Unless noted otherwise, all paths in the sections below are relative to their di
 ## Webapp (Vite client)
 
 - **Structure**: `src/App.tsx` orchestrates the end-to-end flow (Onboarding → Waiting Room → Gameplay) and injects the default game content from `src/data`.
-- **Data**: Static POIs, trivia, question templates, and player states live in `src/data/gameContent.ts`. City-specific defaults exist in `src/data/cityContext.ts`.
+- **Data**: Shelters load from the API (`/shelters`). Question templates/clue text are generated dynamically from `question_attributes` (seeded from GeoJSON) and localized strings in `src/assets/locales/*.json`. City-specific defaults (map start, categories) live in `src/data/cityContext.ts`.
 - **Design System**: Bauhaus-inspired utilities, typography, and color tokens are centralized in `src/styles/globals.css`. The Tailwind entry point is `src/index.css`.
 - **Maps**: Mapbox GL powers the interactive map via `src/components/MapView.tsx`. Tokens and tileset IDs are configured through environment variables (`.env.local` and `src/config/mapbox.ts`).
 - **Docs**: Release steps and product notes continue to live under `docs/` (now inside `webapp/`).
@@ -33,6 +33,7 @@ Optional webapp env toggles:
 
 - `VITE_LIGHTNING_RADIUS_KM` (default `2`)
 - `VITE_MULTIPLAYER_RADIUS_KM` (default `2`) — max km radius used when selecting or auto-falling back to a nearby shelter in multiplayer
+- `VITE_ENABLE_PROXIMITY` (default `true`) — set to `false` to bypass proximity gating for local testing
 
 If you want the production build:
 
@@ -46,13 +47,14 @@ npm run preview      # serves dist/ locally
 
 - **Onboarding Screen** (`src/components/OnboardingScreen.tsx`): Presents Bauhaus-styled cards that let players host, join, or start a solo round. Help + toasts surface onboarding tips.
 - **Waiting Room** (`src/components/WaitingRoom.tsx`): Displays the lobby roster, host controls, and readiness toggles. Transition logic is handled in `App.tsx`.
-- **Game Screen** (`src/components/GameScreen.tsx`): Anchors the live session with a Mapbox canvas, floating action buttons, and animated overlays for clues, trivia, and end-game states.
+- **Game Screen** (`src/components/GameScreen.tsx`): Anchors the live session with a Mapbox canvas, floating action buttons, and animated overlays for clues (no trivia flow) and end-game states. Mission Control surfaces dynamic clues logged from correct answers.
 
 ### Core UI Modules
 
-- **MapView** (`src/components/MapView.tsx`): Wraps Mapbox GL, handles POI markers, exposes a location picker mode, and wires in Koto-specific layers (`src/cityContext/koto/layers.ts`).
-- **Question Drawer** (`src/components/QuestionDrawer.tsx`): Bottom sheet that gates question prompts based on proximity and feeds the trivia flow.
-- **Trivia & Gameplay** (`src/components/TriviaModal.tsx`, `src/components/GameplayPanel.tsx`): Modal and side panel overlays that deliver Bauhaus-styled feedback, animated with `motion/react`.
+- **MapView** (`src/components/MapView.tsx`): Wraps Mapbox GL, handles POI markers, draws a 250m user range ring (GeolocateControl-driven), exposes a location picker mode, and wires in Koto-specific layers (`src/cityContext/koto/layers.ts`). Measurement toasts are localized.
+- **Question Drawer** (`src/components/QuestionDrawer.tsx`): Bottom sheet that gates question prompts based on proximity and logs clues on correct answers.
+- **Gameplay Panel** (`src/components/GameplayPanel.tsx`): Side panel for Mission Control, showing logged clues and strategy tips.
+- **Clue Engine**: Questions and clues are driven by `question_attributes` plus locale strings (`questions.dynamic.*`). Clues log only on correct answers; location category is always selectable, other categories require proximity (unless `VITE_ENABLE_PROXIMITY=false` for testing).
 - **UI Primitives** (`src/components/ui/*`): Custom shadcn-derived kit (buttons, drawers, dialogs, etc.) that underpins the interaction model.
 
 ## Multiplayer API (Render/Supabase)
@@ -105,6 +107,7 @@ The GeoJSON dataset now lives in a separate data repo (not shipped or deployed w
 ```bash
 cd api
 psql "$DATABASE_URL" -f sql/001_init_sessions.sql   # create/alter tables
+psql "$DATABASE_URL" -f sql/002_question_attributes.sql   # create question attribute metadata table
 SHELTER_DATA_PATH=../shelterhunt-data/geojson/ihi_shelters.geojson npm run seed:shelters
 ```
 
@@ -121,6 +124,8 @@ The importer assigns a random six-character `share_code` to every shelter and up
 | GET    | `/sessions/:id`          | Fetch lobby snapshot (auth required)      |
 | POST   | `/sessions/:id/finish`   | Mark race finished                        |
 | POST   | `/tasks/expire-sessions` | Cron endpoint to close expired sessions   |
+| GET    | `/shelters`              | List shelters (with hazard/attribute data) |
+| GET    | `/question-attributes`   | List question attribute metadata (kind/options) |
 
 Subscribe to `ws://…/sessions/:id/stream?token=…` using the returned JWT token to receive lobby events (`player_joined`, `ready_updated`, etc.).
 
