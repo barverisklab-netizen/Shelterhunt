@@ -308,7 +308,7 @@ export function QuestionDrawer({
                                   })
                                 }
                                 disabled={!isEligible || isLocked}
-                                className={`px-4 py-2 border-3 text-sm transition-all ${
+                                className={`px-4 py-2 border text-sm transition-all ${
                                   selectedParam === option
                                     ? "bg-neutral-800 text-white border-black" 
                                     : "bg-background text-black border-black hover:bg-black/5"
@@ -327,6 +327,7 @@ export function QuestionDrawer({
                           selectedParam !== "" &&
                           !isLocked && (
                             <Button
+                              className={"w-full border border-black"}
                               onClick={() => onAskQuestion(question.id, selectedParam)}
                               variant="destructive"
                             >
