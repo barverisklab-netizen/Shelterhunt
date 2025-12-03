@@ -223,43 +223,116 @@
     "availableCount": "{count} question{suffix} available",
     "locked": "Locked - Answer Cooldown",
     "askNow": "Ask Now",
-    "selectParam": "Select parameter and visit location",
+    "selectParam": "Select parameter",
+    "selectParamLocation": "Select a parameter",
     "cooldown": "Try again in 2 minutes after a wrong answer",
+    "disabledProximityHint": "Move around the city and questions will unlock when this asset type is within 250m of your location.",
+    "dynamic": {
+      "floodDepthRank": {
+        "question": "Is the flood depth rank {param}?",
+        "clue": "Flood depth rank is {param}"
+      },
+      "floodDepth": {
+        "question": "Is the flood depth {param}?",
+        "clue": "Flood depth is {param}"
+      },
+      "stormSurgeDepthRank": {
+        "question": "Is the storm surge depth rank {param}?",
+        "clue": "Storm surge depth rank is {param}"
+      },
+      "stormSurgeDepth": {
+        "question": "Is the storm surge depth {param}?",
+        "clue": "Storm surge depth is {param}"
+      },
+      "floodDurationRank": {
+        "question": "Is the flood duration rank {param}?",
+        "clue": "Flood duration rank is {param}"
+      },
+      "floodDuration": {
+        "question": "Is the flood duration {param}?",
+        "clue": "Flood duration is {param}"
+      },
+      "inlandWatersDepthRank": {
+        "question": "Is the inland waters depth rank {param}?",
+        "clue": "Inland waters depth rank is {param}"
+      },
+      "inlandWatersDepth": {
+        "question": "Is the inland waters depth {param}?",
+        "clue": "Inland waters depth is {param}"
+      },
+      "facilityType": {
+        "question": "Is the facility type {param}?",
+        "clue": "Facility type is {param}"
+      },
+      "shelterCapacity": {
+        "question": "Is the shelter capacity {param}?",
+        "clue": "Shelter capacity is {param}"
+      },
+      "waterStation250m": {
+        "question": "Are there {param} water stations within 250m?",
+        "clue": "There are {param} water stations within 250m"
+      },
+      "hospital250m": {
+        "question": "Are there {param} hospitals within 250m?",
+        "clue": "There are {param} hospitals within 250m"
+      },
+      "aed250m": {
+        "question": "Are there {param} AEDs within 250m?",
+        "clue": "There are {param} AEDs within 250m"
+      },
+      "emergencySupplyStorage250m": {
+        "question": "Are there {param} emergency supply storages within 250m?",
+        "clue": "There are {param} emergency supply storages within 250m"
+      },
+      "communityCenter250m": {
+        "question": "Are there {param} community centers within 250m?",
+        "clue": "There are {param} community centers within 250m"
+      },
+      "trainStation250m": {
+        "question": "Are there {param} train stations within 250m?",
+        "clue": "There are {param} train stations within 250m"
+      },
+      "shrineTemple250m": {
+        "question": "Are there {param} shrines or temples within 250m?",
+        "clue": "There are {param} shrines or temples within 250m"
+      },
+      "floodgate250m": {
+        "question": "Are there {param} floodgates within 250m?",
+        "clue": "There are {param} floodgates within 250m"
+      },
+      "bridge250m": {
+        "question": "Are there {param} bridges within 250m?",
+        "clue": "There are {param} bridges within 250m"
+      }
+    },
     "categories": {
       "location": {
         "name": "Location Details",
-        "description": "Ask about surge inundation and environmental factors"
+        "description": "Clues about surge inundation and environmental factors"
       },
       "facility": {
         "name": "Facility Type",
-        "description": "Ask about the type and purpose of this facility"
+        "description": "Clues about the type and purpose of this facility"
       },
       "nearby": {
         "name": "Nearby Amenities",
-        "description": "Ask about facilities and services in the area"
+        "description": "Clues about facilities and services in the area"
       },
       "capacity": {
         "name": "Capacity & Resources",
-        "description": "Ask about the shelter's capacity and resources"
+        "description": "Clues about the shelter's capacity and resources"
       }
-    },
-    "q1": {
-      "text": "Is the surge inundation rank {param}?"
-    },
-    "q2": {
-      "text": "Is the shelter type a {param}?",
-      "options": {
-        "library": "library",
-        "school": "school",
-        "community_center": "community center",
-        "hospital": "hospital"
+    }
+  },
+  "map": {
+    "measure": {
+      "placePrompt": "Tap the map to place a new measurement point.",
+      "dropPrompt": "Tap the map to drop a measurement point.",
+      "measuring": "Measuring 250m radius around your point.",
+      "popup": {
+        "move": "Move center",
+        "delete": "Delete"
       }
-    },
-    "q3": {
-      "text": "Are there more than {param} parks within 250m?"
-    },
-    "q4": {
-      "text": "Can the shelter accommodate more than {param} people?"
     }
   },
   "trivia": {

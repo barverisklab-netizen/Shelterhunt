@@ -223,8 +223,88 @@
     "availableCount": "質問{count}件利用可能",
     "locked": "ロック中 - クールダウン",
     "askNow": "今すぐ質問",
-    "selectParam": "パラメーターを選んで現地へ",
+    "selectParam": "パラメーターを選択",
+    "selectParamLocation": "パラメーターを選択",
     "cooldown": "間違えた場合は2分後に再挑戦できます",
+    "disabledProximityHint": "街を移動して、対象の資産タイプが250m以内に入ると質問が解放されます。",
+    "dynamic": {
+      "floodDepthRank": {
+        "question": "浸水深ランクは{param}ですか？",
+        "clue": "浸水深ランクは{param}です"
+      },
+      "floodDepth": {
+        "question": "浸水深は{param}ですか？",
+        "clue": "浸水深は{param}です"
+      },
+      "stormSurgeDepthRank": {
+        "question": "高潮深ランクは{param}ですか？",
+        "clue": "高潮深ランクは{param}です"
+      },
+      "stormSurgeDepth": {
+        "question": "高潮深は{param}ですか？",
+        "clue": "高潮深は{param}です"
+      },
+      "floodDurationRank": {
+        "question": "浸水継続ランクは{param}ですか？",
+        "clue": "浸水継続ランクは{param}です"
+      },
+      "floodDuration": {
+        "question": "浸水継続時間は{param}ですか？",
+        "clue": "浸水継続時間は{param}です"
+      },
+      "inlandWatersDepthRank": {
+        "question": "内水氾濫深ランクは{param}ですか？",
+        "clue": "内水氾濫深ランクは{param}です"
+      },
+      "inlandWatersDepth": {
+        "question": "内水氾濫深は{param}ですか？",
+        "clue": "内水氾濫深は{param}です"
+      },
+      "facilityType": {
+        "question": "施設の種類は{param}ですか？",
+        "clue": "施設の種類は{param}です"
+      },
+      "shelterCapacity": {
+        "question": "収容人数は{param}ですか？",
+        "clue": "収容人数は{param}です"
+      },
+      "waterStation250m": {
+        "question": "250m以内に給水所は{param}か所ありますか？",
+        "clue": "250m以内に給水所が{param}か所あります"
+      },
+      "hospital250m": {
+        "question": "250m以内に病院は{param}か所ありますか？",
+        "clue": "250m以内に病院が{param}か所あります"
+      },
+      "aed250m": {
+        "question": "250m以内にAEDは{param}台ありますか？",
+        "clue": "250m以内にAEDが{param}台あります"
+      },
+      "emergencySupplyStorage250m": {
+        "question": "250m以内に防災備蓄倉庫は{param}か所ありますか？",
+        "clue": "250m以内に防災備蓄倉庫が{param}か所あります"
+      },
+      "communityCenter250m": {
+        "question": "250m以内にコミュニティセンターは{param}か所ありますか？",
+        "clue": "250m以内にコミュニティセンターが{param}か所あります"
+      },
+      "trainStation250m": {
+        "question": "250m以内に駅は{param}か所ありますか？",
+        "clue": "250m以内に駅が{param}か所あります"
+      },
+      "shrineTemple250m": {
+        "question": "250m以内に神社・寺院は{param}か所ありますか？",
+        "clue": "250m以内に神社・寺院が{param}か所あります"
+      },
+      "floodgate250m": {
+        "question": "250m以内に水門は{param}か所ありますか？",
+        "clue": "250m以内に水門が{param}か所あります"
+      },
+      "bridge250m": {
+        "question": "250m以内に橋は{param}か所ありますか？",
+        "clue": "250m以内に橋が{param}か所あります"
+      }
+    },
     "categories": {
       "location": {
         "name": "場所の詳細",
@@ -242,24 +322,17 @@
         "name": "収容・資源",
         "description": "避難所の収容人数や備えについて聞く"
       }
-    },
-    "q1": {
-      "text": "高潮浸水ランクは{param}ですか？"
-    },
-    "q2": {
-      "text": "避難所の種類は{param}ですか？",
-      "options": {
-        "library": "図書館",
-        "school": "学校",
-        "community_center": "コミュニティセンター",
-        "hospital": "病院"
+    }
+  },
+  "map": {
+    "measure": {
+      "placePrompt": "地図をタップして計測ポイントを置いてください。",
+      "dropPrompt": "地図をタップして計測ポイントを置いてください。",
+      "measuring": "250mの半径を計測中です。",
+      "popup": {
+        "move": "中心を移動",
+        "delete": "削除"
       }
-    },
-    "q3": {
-      "text": "250m以内に{param}以上の公園がありますか？"
-    },
-    "q4": {
-      "text": "この避難所は{param}人以上収容できますか？"
     }
   },
   "trivia": {

@@ -117,7 +117,7 @@ export function TriviaModal({ isOpen, trivia, onClose, onSubmit }: TriviaModalPr
                         disabled={showResult}
                         className={`w-full p-4 border-4 text-left transition-all ${
                           showCorrect
-                            ? 'bg-background border-red-600'
+                            ? 'bg-background border-red-400/30'
                             : showWrong
                             ? 'bg-background border-black'
                             : isSelected
@@ -146,7 +146,7 @@ export function TriviaModal({ isOpen, trivia, onClose, onSubmit }: TriviaModalPr
                     <motion.div
                       className={`mb-6 p-4 border-4 ${
                         isCorrect
-                          ? 'bg-background border-red-600'
+                          ? 'bg-background border-red-400/30'
                           : 'bg-background border-black'
                       }`}
                       initial={{ opacity: 0, y: -10 }}

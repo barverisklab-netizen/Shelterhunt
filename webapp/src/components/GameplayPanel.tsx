@@ -88,6 +88,28 @@ export function GameplayPanel({
             </header>
 
             <div className="flex-1 overflow-y-auto p-6 space-y-4 ">
+              {clues.length > 0 && (
+                <motion.div
+                  className="rounded border border-neutral-900 bg-neutral-50 p-4"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                >
+                  <div className="flex items-start gap-3 text-black">
+                    <Lightbulb className="mt-0.5 h-5 w-5 flex-shrink-0" />
+                    <div>
+                      <div className="text-sm font-bold uppercase">
+                        {t("gameplay.strategyTitle")}
+                      </div>
+                      <div className="space-y-1 text-xs text-black/70">
+                        <p>• {t("gameplay.strategyTip1")}</p>
+                        <p>• {t("gameplay.strategyTip2")}</p>
+                        <p>• {t("gameplay.strategyTip3")}</p>
+                      </div>
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+
               <Accordion type="multiple" defaultValue={["clues"]} className="space-y-4">
                 <AccordionItem
                   value="clues"
@@ -128,11 +150,18 @@ export function GameplayPanel({
                         {clues.map((clue, index) => (
                           <motion.div
                             key={clue.id}
-                            className={`rounded border p-4 ${
+                            className="rounded border p-4"
+                            style={
                               clue.answer
-                                ? "border-green-600 bg-background"
-                                : "border-red-500 bg-background"
-                            }`}
+                                ? {
+                                    borderColor: "rgba(22, 163, 74, 0.35)",
+                                    backgroundColor: "rgba(22, 163, 74, 0.08)",
+                                  }
+                                : {
+                                    borderColor: "rgba(239, 68, 68, 0.5)",
+                                    backgroundColor: "rgba(239, 68, 68, 0.08)",
+                                  }
+                            }
                             initial={{ opacity: 0, x: 20 }}
                             animate={{ opacity: 1, x: 0 }}
                             transition={{ delay: index * 0.05 }}
@@ -151,11 +180,18 @@ export function GameplayPanel({
                               </div>
                               <div className="flex-1 text-black">
                                 <div className="mb-1 text-xs font-bold uppercase tracking-wide text-black/70">
-                                  {clue.category}
+                                  {clue.categoryId
+                                    ? t(`questions.categories.${clue.categoryId}.name`, {
+                                        fallback: clue.category,
+                                      })
+                                    : clue.category}
                                 </div>
-                                <div>{clue.text}</div>
-                                <div className="mt-2 text-sm text-black/60">
-                                  {new Date(clue.timestamp).toLocaleTimeString()}
+                                <div>
+                                  {clue.questionId
+                                    ? t(`questions.dynamic.${clue.questionId}.clue`, {
+                                        fallback: clue.text,
+                                      }).replace("{param}", `${clue.paramValue ?? ""}`)
+                                    : clue.text}
                                 </div>
                               </div>
                             </div>
@@ -166,28 +202,6 @@ export function GameplayPanel({
                   </AccordionContent>
                 </AccordionItem>
               </Accordion>
-
-              {clues.length > 0 && (
-                <motion.div
-                  className="rounded border border-neutral-900 bg-neutral-50 p-4"
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                >
-                  <div className="flex items-start gap-3 text-black">
-                    <Lightbulb className="mt-0.5 h-5 w-5 flex-shrink-0" />
-                    <div>
-                      <div className="text-sm font-bold uppercase">
-                        {t("gameplay.strategyTitle")}
-                      </div>
-                      <div className="space-y-1 text-xs text-black/70">
-                        <p>• {t("gameplay.strategyTip1")}</p>
-                        <p>• {t("gameplay.strategyTip2")}</p>
-                        <p>• {t("gameplay.strategyTip3")}</p>
-                      </div>
-                    </div>
-                  </div>
-                </motion.div>
-              )}
 
 {/* Measure tools */}
               <Accordion type="multiple" defaultValue={["tools", "guess"]} className="space-y-4">

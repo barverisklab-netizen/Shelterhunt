@@ -4,6 +4,15 @@ import crypto from "node:crypto";
 import { pool } from "../src/db/pool.js";
 import type { ShelterRecord } from "../src/types/shelter.js";
 
+type AttributeKind = "number" | "select";
+
+interface QuestionAttributeSeed {
+  id: string;
+  label: string;
+  kind: AttributeKind;
+  options: Set<string>;
+}
+
 interface GeoJSONFeature {
   type: string;
   properties?: Record<string, any>;
@@ -59,6 +68,44 @@ const toNumber = (value: unknown) => {
 const toNumberOrZero = (value: unknown) => {
   const num = toNumber(value);
   return typeof num === "number" ? num : 0;
+};
+
+const ATTRIBUTE_CONFIG: Record<string, { label: string; kind: AttributeKind }> = {
+  floodDepthRank: { label: "Flood Depth Rank", kind: "number" },
+  floodDepth: { label: "Flood Depth", kind: "select" },
+  stormSurgeDepthRank: { label: "Storm Surge Depth Rank", kind: "number" },
+  stormSurgeDepth: { label: "Storm Surge Depth", kind: "select" },
+  floodDurationRank: { label: "Flood Duration Rank", kind: "number" },
+  floodDuration: { label: "Flood Duration", kind: "select" },
+  inlandWatersDepthRank: { label: "Inland Waters Depth Rank", kind: "number" },
+  inlandWatersDepth: { label: "Inland Waters Depth", kind: "select" },
+  facilityType: { label: "Facility Type", kind: "select" },
+  shelterCapacity: { label: "Shelter Capacity", kind: "number" },
+  waterStation250m: { label: "Water Stations within 250m", kind: "number" },
+  hospital250m: { label: "Hospitals within 250m", kind: "number" },
+  aed250m: { label: "AEDs within 250m", kind: "number" },
+  emergencySupplyStorage250m: { label: "Emergency Supply Storage within 250m", kind: "number" },
+  communityCenter250m: { label: "Community Centers within 250m", kind: "number" },
+  trainStation250m: { label: "Train Stations within 250m", kind: "number" },
+  shrineTemple250m: { label: "Shrines/Temples within 250m", kind: "number" },
+  floodgate250m: { label: "Floodgates within 250m", kind: "number" },
+  bridge250m: { label: "Bridges within 250m", kind: "number" },
+};
+
+const initQuestionAttributes = (): Record<string, QuestionAttributeSeed> =>
+  Object.entries(ATTRIBUTE_CONFIG).reduce<Record<string, QuestionAttributeSeed>>(
+    (acc, [id, config]) => {
+      acc[id] = { id, label: config.label, kind: config.kind, options: new Set<string>() };
+      return acc;
+    },
+    {},
+  );
+
+const addSelectOption = (seed: Record<string, QuestionAttributeSeed>, id: string, value: unknown) => {
+  if (!value || typeof value !== "string") return;
+  const normalized = value.trim();
+  if (!normalized) return;
+  seed[id]?.options.add(normalized);
 };
 
 const toBoolean = (value: unknown) => {
@@ -123,8 +170,9 @@ const parseFeatures = async () => {
   const features = data.features ?? [];
   const usedCodes = new Set<string>();
   const usedShareCodes = new Set<string>();
+  const questionAttributes = initQuestionAttributes();
 
-  return features
+  const rows = features
     .map((feature, index) => {
       const props = feature.properties ?? {};
       const coords = feature.geometry?.coordinates;
@@ -207,6 +255,12 @@ const parseFeatures = async () => {
       const code = generateCode(codeSource, usedCodes);
       const shareCode = generateShareCode(usedShareCodes);
 
+      addSelectOption(questionAttributes, "floodDepth", floodDepth);
+      addSelectOption(questionAttributes, "stormSurgeDepth", stormSurgeDepth);
+      addSelectOption(questionAttributes, "floodDuration", floodDuration);
+      addSelectOption(questionAttributes, "inlandWatersDepth", inlandWatersDepth);
+      addSelectOption(questionAttributes, "facilityType", facilityType);
+
       return {
         code,
         share_code: shareCode,
@@ -244,20 +298,21 @@ const parseFeatures = async () => {
       } satisfies Omit<ShelterRecord, "id" | "created_at">;
     })
     .filter((item): item is Omit<ShelterRecord, "id" | "created_at"> => Boolean(item));
+
+  const questionAttributeRows = Object.values(questionAttributes).map((entry) => ({
+    id: entry.id,
+    label: entry.label,
+    kind: entry.kind,
+    options: entry.kind === "select" ? Array.from(entry.options).sort() : [],
+  }));
+
+  return { rows, questionAttributeRows };
 };
 
-const insertShelters = async (rows: Omit<ShelterRecord, "id" | "created_at">[]) => {
-  if (!rows.length) {
-    console.log("[Shelters] No rows to insert");
-    return;
-  }
-
-  const client = await pool.connect();
-  try {
-    await client.query("BEGIN");
-    for (const row of rows) {
-      await client.query(
-        `insert into public.shelters
+const insertShelters = async (client: any, rows: Omit<ShelterRecord, "id" | "created_at">[]) => {
+  for (const row of rows) {
+    await client.query(
+      `insert into public.shelters
            (code, share_code, external_id, sequence_no, name_en, name_jp, address, address_en, address_jp, category, category_jp,
             flood_depth_rank, flood_depth, storm_surge_depth_rank, storm_surge_depth,
             flood_duration_rank, flood_duration, inland_waters_depth_rank, inland_waters_depth,
@@ -339,21 +394,48 @@ const insertShelters = async (rows: Omit<ShelterRecord, "id" | "created_at">[]) 
         ],
       );
     }
-    await client.query("COMMIT");
-    console.log(`[Shelters] Inserted/updated ${rows.length} shelters`);
-  } catch (error) {
-    await client.query("ROLLBACK");
-    throw error;
-  } finally {
-    client.release();
-    await pool.end();
+};
+
+const upsertQuestionAttributes = async (
+  client: any,
+  attributes: { id: string; label: string; kind: AttributeKind; options: (string | number)[] }[],
+) => {
+  for (const attribute of attributes) {
+    await client.query(
+      `insert into public.question_attributes (id, label, kind, options)
+       values ($1, $2, $3, $4)
+       on conflict (id) do update set
+         label = excluded.label,
+         kind = excluded.kind,
+         options = excluded.options`,
+      [attribute.id, attribute.label, attribute.kind, JSON.stringify(attribute.options ?? [])],
+    );
   }
+  console.log(`[Shelters] Upserted ${attributes.length} question attribute definitions`);
 };
 
 async function main() {
   try {
-    const rows = await parseFeatures();
-    await insertShelters(rows);
+    const { rows, questionAttributeRows } = await parseFeatures();
+    if (!rows.length) {
+      console.log("[Shelters] No rows to insert");
+      return;
+    }
+
+    const client = await pool.connect();
+    try {
+      await client.query("BEGIN");
+      await insertShelters(client, rows);
+      await upsertQuestionAttributes(client, questionAttributeRows);
+      await client.query("COMMIT");
+      console.log(`[Shelters] Inserted/updated ${rows.length} shelters`);
+    } catch (error) {
+      await client.query("ROLLBACK");
+      throw error;
+    } finally {
+      client.release();
+      await pool.end();
+    }
   } catch (error) {
     console.error("[Shelters] Import failed:", error);
     process.exitCode = 1;

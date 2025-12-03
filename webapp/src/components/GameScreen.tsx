@@ -16,6 +16,8 @@ import type { Shelter } from "@/services/shelterDataService";
 
 
 const ENABLE_SECRET_SHELTER_BLUR = true;
+const PROXIMITY_DISABLED_FOR_TESTING =
+  import.meta.env?.VITE_DISABLE_PROXIMITY === "true";
 
 export type WrongGuessStage = 'first' | 'second' | 'third';
 
@@ -95,18 +97,29 @@ export function GameScreen({
     bridge250m: "nearby",
   };
 
-  const buildQuestionText = (attribute: QuestionAttribute) => {
+  const buildQuestionTexts = (attribute: QuestionAttribute) => {
     const baseLabel = attribute.label;
-    if (attribute.kind === "number") {
-      if (attribute.id.endsWith("250m")) {
-        return `Are there {param} ${baseLabel}?`;
-      }
-      if (attribute.id.toLowerCase().includes("capacity")) {
+    const defaultQuestion = (() => {
+      if (attribute.kind === "number") {
+        if (attribute.id.endsWith("250m")) {
+          return `Are there {param} ${baseLabel}?`;
+        }
         return `Is the ${baseLabel} {param}?`;
       }
       return `Is the ${baseLabel} {param}?`;
-    }
-    return `Is the ${baseLabel} ${"{param}"}?`;
+    })();
+    const defaultClue = attribute.id.endsWith("250m")
+      ? `There are {param} ${baseLabel}`
+      : `The ${baseLabel} is {param}`;
+
+    const questionText = t(`questions.dynamic.${attribute.id}.question`, {
+      fallback: defaultQuestion,
+    });
+    const clueTemplate = t(`questions.dynamic.${attribute.id}.clue`, {
+      fallback: defaultClue,
+    });
+
+    return { questionText, clueTemplate };
   };
 
   const normalizeName = (value?: string | null) =>
@@ -149,19 +162,23 @@ export function GameScreen({
     return extractor(secretShelterRecord);
   };
 
-  const questions: Question[] = questionAttributes
+  const questions: (Question & { clueTemplate?: string })[] = questionAttributes
     .filter((attribute) => !solvedQuestions.includes(attribute.id))
     .filter((attribute) => {
       const value = getSecretAnswer(attribute.id);
       return value !== null && value !== undefined;
     })
-    .map((attribute) => ({
-      id: attribute.id,
-      text: buildQuestionText(attribute),
-      category: attributeCategoryMap[attribute.id] ?? "location",
-      paramType: attribute.kind === "number" ? "number" : "select",
-      options: attribute.kind === "select" ? attribute.options : undefined,
-    }));
+    .map((attribute) => {
+      const { questionText, clueTemplate } = buildQuestionTexts(attribute);
+      return {
+        id: attribute.id,
+        text: questionText,
+        clueTemplate,
+        category: attributeCategoryMap[attribute.id] ?? "location",
+        paramType: attribute.kind === "number" ? "number" : "select",
+        options: attribute.kind === "select" ? attribute.options : undefined,
+      };
+    });
 
   // Check if player is near a POI (simplified for dem #ToFix)
   const checkNearbyPOI = () => {
@@ -211,16 +228,21 @@ export function GameScreen({
       isCorrect = normalizeVal(param) === normalizeVal(expected);
     }
 
-    const clueText = question.text.replace("{param}", `${param}`);
+    const clueTemplate =
+      (question as Question & { clueTemplate?: string }).clueTemplate || question.text;
+    const clueText = clueTemplate.replace("{param}", `${expected}`);
     const categoryLabel =
       defaultCityContext.questionCategories.find((cat) => cat.id === question.category)
         ?.name ?? question.category;
 
     const newClue: Clue = {
       id: `clue-${Date.now()}`,
-      text: `${clueText} → ${expected}`,
+      text: clueText,
       answer: isCorrect,
       category: categoryLabel,
+      categoryId: question.category,
+      questionId: question.id,
+      paramValue: expected,
       timestamp: Date.now(),
     };
 
@@ -247,11 +269,11 @@ export function GameScreen({
   const timerContainerClasses = [
     "flex items-center gap-2 px-4 py-2 border rounded-full",
     isTimerEnabled && isTimerCritical
-      ? "bg-neutral-900 border-red-500 text-white animate-pulse"
-      : "bg-neutral-100 border-neutral-900 text-neutral-900"
+      ? "bg-red-500/50 border-red-400/30 text-red-900 animate-pulse"
+      : "bg-neutral-100 border-neutral-900 text-red-900"
   ].join(" ");
   const timerTextClasses = isTimerEnabled && isTimerCritical
-    ? "tabular-nums font-bold text-white"
+    ? "tabular-nums font-bold text-black"
     : "tabular-nums font-bold text-black";
   const formattedTimer = `${Math.floor(timeRemaining / 60)}:${(timeRemaining % 60)
     .toString()
@@ -424,7 +446,7 @@ export function GameScreen({
         </div>
 
         {/* Location Status */}
-        {nearbyPOI && outcome !== 'win' && outcome !== 'lose' && (
+        {(PROXIMITY_DISABLED_FOR_TESTING || nearbyPOI) && outcome !== 'win' && outcome !== 'lose' && (
           <motion.div
             className="absolute top-4 left-4 max-w-xs rounded-xl border border-neutral-900 bg-background p-4 shadow-md"
             initial={{ opacity: 0, x: -20 }}
@@ -435,7 +457,9 @@ export function GameScreen({
                   <MapPin className="w-5 h-5 text-neutral-800" />
                 </div>
                 <div>
-                  <div className="text-neutral-900 font-semibold">{nearbyPOI.name}</div>
+                  <div className="text-neutral-900 font-semibold">
+                    {nearbyPOI?.name ?? t("questions.inRange")}
+                  </div>
                   <div className="text-xs text-neutral-600 font-medium">
                     {t("game.tapToAsk")}
                   </div>
@@ -453,7 +477,7 @@ export function GameScreen({
           isOpen={drawerOpen}
           onToggle={() => setDrawerOpen(!drawerOpen)}
           onAskQuestion={handleAskQuestion}
-          nearbyPOI={nearbyPOI?.id || null}
+          nearbyPOI={PROXIMITY_DISABLED_FOR_TESTING ? "testing-override" : nearbyPOI?.id || null}
           lockedQuestions={[]}
         />
       )}

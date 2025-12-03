@@ -36,5 +36,17 @@ export interface Clue {
   text: string;
   answer: boolean;
   category: string;
+  categoryId?: string;
+  questionId?: string;
+  paramValue?: string | number | null;
   timestamp: number;
 }
+
+export interface QuestionAttribute {
+  id: string;
+  label: string;
+  kind: "number" | "select";
+  options?: (string | number)[];
+}
+
+export type ShelterAnswerValue = string | number | null;

@@ -25,6 +25,7 @@ import "mapbox-gl/dist/mapbox-gl.css";
 import { toast } from "sonner@2.0.3"
 import { haversineDistanceKm } from "@/utils/lightningSelection";
 import { getLocalShelters } from "@/services/mapLayerQueryService";
+import { useI18n } from "@/i18n";
 
 // Set Mapbox access token from config
 mapboxgl.accessToken = MAPBOX_CONFIG.accessToken;
@@ -156,6 +157,7 @@ export function MapView({
   measureTrigger,
   onMeasurementActiveChange,
 }: MapViewProps) {
+  const { t } = useI18n();
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
   const markers = useRef<{ [key: string]: mapboxgl.Marker }>({});
@@ -171,6 +173,7 @@ const measureMarkerRef = useRef<mapboxgl.Marker | null>(null);
   const lastMeasureTriggerRef = useRef<number>(0);
   const measureStatusRef = useRef<MeasureStatus>("idle");
   const lastMeasureRequestRef = useRef<number>(0);
+  const geolocateHandlerRef = useRef<((event: GeolocationPosition) => void) | null>(null);
 
 const [measureState, setMeasureState] = useState<{
   status: MeasureStatus;
@@ -185,6 +188,11 @@ const [measureState, setMeasureState] = useState<{
   center: null,
   shelterNames: [],
 });
+
+  const [userCircleCenter, setUserCircleCenter] = useState<{
+    lat: number;
+    lng: number;
+  }>({ lat: playerLocation.lat, lng: playerLocation.lng });
 
   const [isMeasurePanelCollapsed, setIsMeasurePanelCollapsed] = useState(false);
 
@@ -483,7 +491,11 @@ const [measureState, setMeasureState] = useState<{
       center: null,
       shelterNames: [],
     }));
-    toast.info("Tap the map to place a new measurement point.");
+    toast.info(
+      t("map.measure.placePrompt", {
+        fallback: "Tap the map to place a new measurement point.",
+      }),
+    );
   }, [removeMeasurementArtifacts, restoreShelterLayers]);
 
   const showMarkerMenu = useCallback(() => {
@@ -503,8 +515,8 @@ const [measureState, setMeasureState] = useState<{
       .setLngLat([measureState.center.lng, measureState.center.lat])
       .setHTML(`
         <div class="measure-popup">
-          <button type="button" data-action="move">Move center</button>
-          <button type="button" data-action="delete" class="danger">Delete</button>
+          <button type="button" data-action="move">${t("map.measure.popup.move", { fallback: "Move center" })}</button>
+          <button type="button" data-action="delete" class="danger">${t("map.measure.popup.delete", { fallback: "Delete" })}</button>
         </div>
       `)
       .addTo(m);
@@ -574,7 +586,11 @@ const [measureState, setMeasureState] = useState<{
             { lng: updated.lng, lat: updated.lat },
             FIXED_MEASURE_RADIUS_METERS,
           );
-          toast.success("Measuring 250m radius around your point.");
+          toast.success(
+            t("map.measure.measuring", {
+              fallback: "Measuring 250m radius around your point.",
+            }),
+          );
         });
       }
 
@@ -705,6 +721,13 @@ const [measureState, setMeasureState] = useState<{
           geolocateControl.current = control;
           map.current?.addControl(control, "bottom-right");
 
+          const handleGeolocate = (event: GeolocationPosition) => {
+            const { latitude, longitude } = event.coords;
+            setUserCircleCenter({ lat: latitude, lng: longitude });
+          };
+          geolocateHandlerRef.current = handleGeolocate;
+          control.on("geolocate", handleGeolocate);
+
           window.requestAnimationFrame(() => {
             try {
               control.trigger();
@@ -737,6 +760,10 @@ const [measureState, setMeasureState] = useState<{
           map.current.off("idle", selectShelterFromLocalData);
         }
         if (geolocateControl.current) {
+          if (geolocateHandlerRef.current) {
+            geolocateControl.current.off("geolocate", geolocateHandlerRef.current);
+            geolocateHandlerRef.current = null;
+          }
           map.current.removeControl(geolocateControl.current);
           geolocateControl.current = null;
         }
@@ -756,6 +783,7 @@ const [measureState, setMeasureState] = useState<{
     // cheap, no-flash update; use easeTo if you want animation
     m.jumpTo({ center: [playerLocation.lng, playerLocation.lat] });
     // or: m.easeTo({ center: [playerLocation.lng, playerLocation.lat], duration: 350 });
+    setUserCircleCenter({ lat: playerLocation.lat, lng: playerLocation.lng });
   }, [playerLocation.lng, playerLocation.lat]);
 
   useEffect(() => {
@@ -763,7 +791,7 @@ const [measureState, setMeasureState] = useState<{
     if (!m) return;
 
     const applyRange = () => {
-      const feature = createCircleFeature(playerLocation, 250, 96);
+      const feature = createCircleFeature(userCircleCenter, 250, 96);
 
       if (m.getSource(PLAYER_RANGE_SOURCE_ID)) {
         (m.getSource(PLAYER_RANGE_SOURCE_ID) as mapboxgl.GeoJSONSource).setData(
@@ -803,7 +831,7 @@ const [measureState, setMeasureState] = useState<{
     }
 
     applyRange();
-  }, [playerLocation.lat, playerLocation.lng]);
+  }, [userCircleCenter.lat, userCircleCenter.lng]);
 
   useEffect(() => {
     measureStatusRef.current = measureState.status;
@@ -833,7 +861,11 @@ const [measureState, setMeasureState] = useState<{
       center: null,
       shelterNames: [],
     });
-    toast.info("Tap the map to drop a measurement point.");
+    toast.info(
+      t("map.measure.dropPrompt", {
+        fallback: "Tap the map to drop a measurement point.",
+      }),
+    );
   }, [
     measureTrigger,
     removeMeasurementArtifacts,
@@ -862,7 +894,11 @@ const [measureState, setMeasureState] = useState<{
         shelterNames: [],
       }));
       updateCircle({ lng, lat }, FIXED_MEASURE_RADIUS_METERS);
-      toast.success("Measuring 250m radius around your point.");
+      toast.success(
+        t("map.measure.measuring", {
+          fallback: "Measuring 250m radius around your point.",
+        }),
+      );
     };
 
     m.on("click", handleMapClick);

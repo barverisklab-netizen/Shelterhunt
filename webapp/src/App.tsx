@@ -8,11 +8,9 @@ import { HelpModal } from "./components/HelpModal";
 import { TerminalScreen } from "./components/TerminalScreen";
 import { Toaster } from "./components/ui/sonner";
 import { toast } from "sonner@2.0.3";
-import type { Player, POI } from "@/types/game";
+import type { Player, POI, QuestionAttribute } from "@/types/game";
 import {
   defaultPlayers,
-  defaultQuestions,
-  defaultTriviaQuestions,
 } from "@/data/gameContent";
 import { defaultCityContext } from "./data/cityContext";
 import {
@@ -42,8 +40,10 @@ import { ProfileNameModal } from "./components/ProfileNameModal";
 import { HostShareModal } from "./components/HostShareModal";
 import {
   getShelterByShareCode,
+  getShelters,
   type Shelter,
 } from "./services/shelterDataService";
+import { getQuestionAttributes } from "./services/questionAttributeService";
 import { useI18n } from "./i18n";
 import { LanguageToggle } from "./components/LanguageToggle";
 import { Clock } from "lucide-react";
@@ -165,6 +165,8 @@ export default function App() {
   const [lockSecretShelter, setLockSecretShelter] = useState(false);
   const [lockShelterOptions, setLockShelterOptions] = useState(false);
   const [designatedShelters, setDesignatedShelters] = useState<POI[]>([]);
+  const [shelters, setShelters] = useState<Shelter[]>([]);
+  const [questionAttributes, setQuestionAttributes] = useState<QuestionAttribute[]>([]);
   const [sessionContext, setSessionContext] = useState<MultiplayerSessionContext | null>(null);
   const sessionSocketRef = useRef<WebSocket | null>(null);
   const [sessionHostId, setSessionHostId] = useState<string | null>(null);
@@ -199,6 +201,15 @@ export default function App() {
       return () => clearInterval(timer);
     }
   }, [gameState, timeRemaining, timerEnabled]);
+
+  useEffect(() => {
+    getShelters()
+      .then(setShelters)
+      .catch((error) => console.warn("[Shelters] Failed to load shelter dataset:", error));
+    getQuestionAttributes()
+      .then(setQuestionAttributes)
+      .catch((error) => console.warn("[Questions] Failed to load question attributes:", error));
+  }, []);
 
   const updateSecretShelter = useCallback(
     (info: { id: string; name: string }) => {
@@ -1182,8 +1193,8 @@ export default function App() {
         {gameState === "playing" && (
           <GameScreen
             pois={designatedShelters}
-            questions={defaultQuestions}
-            triviaQuestions={defaultTriviaQuestions}
+            questionAttributes={questionAttributes}
+            shelters={shelters}
             playerLocation={playerLocation}
             timeRemaining={timeRemaining}
             secretShelter={secretShelter}

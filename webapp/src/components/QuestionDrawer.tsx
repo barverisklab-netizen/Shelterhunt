@@ -66,7 +66,8 @@ export function QuestionDrawer({
   };
 
   const isQuestionEligible = (question: Question) => {
-    return nearbyPOI !== null && !lockedQuestions.includes(question.id);
+    const inRange = nearbyPOI !== null || question.category === "location";
+    return inRange && !lockedQuestions.includes(question.id);
   };
 
   const filteredQuestions = selectedCategory
@@ -115,8 +116,8 @@ export function QuestionDrawer({
               <motion.div
                 className={`mb-4 p-4 border-4 ${
                   nearbyPOI
-                    ? "bg-background border-red-600"
-                    : "bg-background border-red-600"
+                    ? "bg-background border-red-400/50"
+                    : "bg-background border-red-400/50"
                 }`}
                 initial={{ scale: 0.95 }}
                 animate={{ scale: 1 }}
@@ -163,12 +164,16 @@ export function QuestionDrawer({
                       (q) => q.category === category.id,
                     );
                     const translatedCategory = translateCategory(category);
+                    const requireProximity = category.id !== "location";
+                    const isDisabled =
+                      (requireProximity && !nearbyPOI) ||
+                      questionsInCategory.length === 0;
 
                     return (
                       <motion.button
                         key={category.id}
                         onClick={() => setSelectedCategory(category.id)}
-                        disabled={!nearbyPOI || questionsInCategory.length === 0}
+                        disabled={isDisabled}
                         className="w-full bg-background border-4 border-black p-4 text-left hover:bg-black/5 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                         initial={{ opacity: 0, x: -20 }}
                         animate={{ opacity: 1, x: 0 }}
@@ -179,20 +184,43 @@ export function QuestionDrawer({
                             <IconComponent className="w-6 h-6 text-white" />
                           </div>
                           <div className="flex-1">
-                            <div className="text-black font-bold mb-1 uppercase">
+                            <div
+                              className={`mb-1 font-bold uppercase ${
+                                isDisabled ? "text-neutral-500" : "text-black"
+                              }`}
+                            >
                               {translatedCategory.name}
                             </div>
-                            <div className="text-sm text-black/70 mb-2">
-                              {translatedCategory.description}
-                            </div>
-                            <div className="text-xs text-black font-bold">
-                              {t("questions.availableCount", {
-                                replacements: {
-                                  count: questionsInCategory.length,
-                                  suffix: questionsInCategory.length !== 1 ? "s" : "",
-                                },
-                              })}
-                            </div>
+                            {isDisabled ? (
+                              <div className="mt-1 flex items-start gap-3 rounded border border-neutral-300 bg-neutral-100 p-3 text-sm text-neutral-600">
+                                <IconComponent className="w-5 h-5 text-neutral-500 mt-0.5" />
+                                <span>
+                                  {t("questions.disabledProximityHint", {
+                                    fallback:
+                                      "Move around the city and questions will unlock when this asset type is within 250m of your location.",
+                                  })}
+                                </span>
+                              </div>
+                            ) : (
+                              <>
+                                <div className="mt-1 flex items-start gap-3 rounded border border-neutral-300 bg-neutral-100 p-3">
+                                  <IconComponent className="w-5 h-5 text-black mt-0.5" />
+                                  <div className="space-y-1">
+                                    <div className="text-sm text-black/70">
+                                      {translatedCategory.description}
+                                    </div>
+                                    <div className="text-xs text-black font-bold">
+                                      {t("questions.availableCount", {
+                                        replacements: {
+                                          count: questionsInCategory.length,
+                                          suffix: questionsInCategory.length !== 1 ? "s" : "",
+                                        },
+                                      })}
+                                    </div>
+                                  </div>
+                                </div>
+                              </>
+                            )}
                           </div>
                         </div>
                       </motion.button>
@@ -225,6 +253,8 @@ export function QuestionDrawer({
                     const isEligible = isQuestionEligible(question);
                     const isLocked = lockedQuestions.includes(question.id);
                     const selectedParam = selectedParams[question.id];
+                    const outOfRange =
+                      nearbyPOI === null && question.category !== "location";
 
                     return (
                       <motion.div
@@ -280,7 +310,7 @@ export function QuestionDrawer({
                                 disabled={!isEligible || isLocked}
                                 className={`px-4 py-2 border-3 text-sm transition-all ${
                                   selectedParam === option
-                                    ? "bg-black text-white border-black"
+                                    ? "bg-neutral-800 text-white border-black" 
                                     : "bg-background text-black border-black hover:bg-black/5"
                                 } disabled:opacity-50 disabled:cursor-not-allowed`}
                               >
@@ -291,40 +321,19 @@ export function QuestionDrawer({
                         ) : null}
 
                         {/* Ask Button */}
-                        <Button
-                          onClick={() => {
-                            if (selectedParam !== undefined && selectedParam !== null && selectedParam !== "") {
-                              onAskQuestion(question.id, selectedParam);
-                            }
-                          }}
-                          disabled={
-                            !isEligible ||
-                            selectedParam === undefined ||
-                            selectedParam === null ||
-                            selectedParam === "" ||
-                            isLocked
-                          }
-                          variant={
-                            isEligible &&
-                            selectedParam !== undefined &&
-                            selectedParam !== null &&
-                            selectedParam !== "" &&
-                            !isLocked
-                              ? "destructive"
-                              : "outline"
-                          }
-                        >
-                          {isLocked ? (
-                            t("questions.locked")
-                          ) : isEligible && selectedParam ? (
-                            <>
+                        {isEligible &&
+                          selectedParam !== undefined &&
+                          selectedParam !== null &&
+                          selectedParam !== "" &&
+                          !isLocked && (
+                            <Button
+                              onClick={() => onAskQuestion(question.id, selectedParam)}
+                              variant="destructive"
+                            >
                               <Unlock className="w-4 h-4 mr-2" />
                               {t("questions.askNow")}
-                            </>
-                          ) : (
-                            t("questions.selectParam")
+                            </Button>
                           )}
-                        </Button>
 
                         {isLocked && (
                           <div className="text-xs text-center text-red-600 font-bold">
