@@ -56,6 +56,11 @@ const toNumber = (value: unknown) => {
   return Number.isFinite(num) ? num : null;
 };
 
+const toNumberOrZero = (value: unknown) => {
+  const num = toNumber(value);
+  return typeof num === "number" ? num : 0;
+};
+
 const toBoolean = (value: unknown) => {
   if (typeof value === "boolean") {
     return value;
@@ -187,14 +192,14 @@ const parseFeatures = async () => {
       const inlandWatersDepth = normalizeText(props["InlandWaters_Depth"]);
       const facilityType = normalizeText(props["Facility_Type"]);
       const shelterCapacity = toNumber(props["Shelter_Capacity"]);
-      const waterStation250m = toBoolean(props["250m_Water_Station"]);
-      const hospital250m = toBoolean(props["250m_Hospital"]);
+      const waterStation250m = toNumberOrZero(props["250m_Water_Station"]);
+      const hospital250m = toNumberOrZero(props["250m_Hospital"]);
       const aed250m = toNumber(props["250m_AED"]);
       const emergencySupplyStorage250m = toNumber(props["250m_Emergency_Supply_Storage"]);
       const communityCenter250m = toNumber(props["250m_Community_Center"]);
-      const trainStation250m = toBoolean(props["250m_Train_Station"]);
+      const trainStation250m = toNumberOrZero(props["250m_Train_Station"]);
       const shrineTemple250m = toNumber(props["250m_Shrine_Temple"]);
-      const floodgate250m = toBoolean(props["250m_Floodgate"]);
+      const floodgate250m = toNumberOrZero(props["250m_Floodgate"]);
       const bridge250m = toNumber(props["250m_Bridge"]);
       const codeSource =
         externalId ??
@@ -223,17 +228,17 @@ const parseFeatures = async () => {
         inland_waters_depth_rank: typeof inlandWatersDepthRank === "number" ? inlandWatersDepthRank : null,
         inland_waters_depth: inlandWatersDepth,
         facility_type: facilityType,
-        shelter_capacity: typeof shelterCapacity === "number" ? shelterCapacity : null,
-        water_station_250m: typeof waterStation250m === "boolean" ? waterStation250m : null,
-        hospital_250m: typeof hospital250m === "boolean" ? hospital250m : null,
-        aed_250m: typeof aed250m === "number" ? aed250m : null,
+        shelter_capacity: typeof shelterCapacity === "number" ? shelterCapacity : 0,
+        water_station_250m: typeof waterStation250m === "number" ? waterStation250m : 0,
+        hospital_250m: typeof hospital250m === "number" ? hospital250m : 0,
+        aed_250m: typeof aed250m === "number" ? aed250m : 0,
         emergency_supply_storage_250m:
-          typeof emergencySupplyStorage250m === "number" ? emergencySupplyStorage250m : null,
-        community_center_250m: typeof communityCenter250m === "number" ? communityCenter250m : null,
-        train_station_250m: typeof trainStation250m === "boolean" ? trainStation250m : null,
-        shrine_temple_250m: typeof shrineTemple250m === "number" ? shrineTemple250m : null,
-        floodgate_250m: typeof floodgate250m === "boolean" ? floodgate250m : null,
-        bridge_250m: typeof bridge250m === "number" ? bridge250m : null,
+          typeof emergencySupplyStorage250m === "number" ? emergencySupplyStorage250m : 0,
+        community_center_250m: typeof communityCenter250m === "number" ? communityCenter250m : 0,
+        train_station_250m: typeof trainStation250m === "number" ? trainStation250m : 0,
+        shrine_temple_250m: typeof shrineTemple250m === "number" ? shrineTemple250m : 0,
+        floodgate_250m: typeof floodgate250m === "number" ? floodgate250m : 0,
+        bridge_250m: typeof bridge250m === "number" ? bridge250m : 0,
         latitude: Number(lat),
         longitude: Number(lng),
       } satisfies Omit<ShelterRecord, "id" | "created_at">;
