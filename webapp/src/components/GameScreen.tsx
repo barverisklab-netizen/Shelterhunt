@@ -8,7 +8,7 @@ import { ShelterVictoryScreen } from './ShelterVictoryScreen';
 import { ShelterPenaltyScreen } from './ShelterPenaltyScreen';
 import { POI, Question, Clue, QuestionAttribute } from "@/types/game";
 import { defaultCityContext } from '../data/cityContext';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { toast } from "sonner@2.0.3";
 import { BlurReveal } from './ui/blur-reveal';
 import { useI18n } from "@/i18n";
@@ -68,6 +68,7 @@ export function GameScreen({
   const [isMeasureActive, setIsMeasureActive] = useState(false);
   const [penaltyStage, setPenaltyStage] = useState<WrongGuessStage | null>(null);
   const [solvedQuestions, setSolvedQuestions] = useState<string[]>([]);
+  const lastToastPoiId = useRef<string | null>(null);
 
   useEffect(() => {
     if (isMeasureActive) {
@@ -246,8 +247,8 @@ export function GameScreen({
       timestamp: Date.now(),
     };
 
-    setClues((prev) => [...prev, newClue]);
     if (isCorrect) {
+      setClues((prev) => [...prev, newClue]);
       setSolvedQuestions((prev) => (prev.includes(questionId) ? prev : [...prev, questionId]));
       toast.success(
         t("questions.correct", {
@@ -265,6 +266,25 @@ export function GameScreen({
   const selectedShelterOption = selectedShelterId
     ? shelterOptions.find((option) => option.id === selectedShelterId) ?? null
     : null;
+
+  useEffect(() => {
+    if (PROXIMITY_DISABLED_FOR_TESTING) {
+      if (lastToastPoiId.current !== "testing") {
+        toast.info(
+          t("game.tapToAsk", { fallback: "Tap to ask questions." }),
+        );
+        lastToastPoiId.current = "testing";
+      }
+      return;
+    }
+
+    if (nearbyPOI?.id && lastToastPoiId.current !== nearbyPOI.id) {
+      toast.info(
+        t("game.tapToAsk", { fallback: "Tap to ask questions." }),
+      );
+      lastToastPoiId.current = nearbyPOI.id;
+    }
+  }, [nearbyPOI, t]);
 
   const timerContainerClasses = [
     "flex items-center gap-2 px-4 py-2 border rounded-full",
@@ -445,28 +465,6 @@ export function GameScreen({
           </motion.button>
         </div>
 
-        {/* Location Status */}
-        {(PROXIMITY_DISABLED_FOR_TESTING || nearbyPOI) && outcome !== 'win' && outcome !== 'lose' && (
-          <motion.div
-            className="absolute top-4 left-4 max-w-xs rounded-xl border border-neutral-900 bg-background p-4 shadow-md"
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-          >
-              <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-full border border-neutral-900 bg-neutral-100">
-                  <MapPin className="w-5 h-5 text-neutral-800" />
-                </div>
-                <div>
-                  <div className="text-neutral-900 font-semibold">
-                    {nearbyPOI?.name ?? t("questions.inRange")}
-                  </div>
-                  <div className="text-xs text-neutral-600 font-medium">
-                    {t("game.tapToAsk")}
-                  </div>
-                </div>
-              </div>
-            </motion.div>
-          )}
       </div>
   
       {/* Question Drawer */}

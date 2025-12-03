@@ -107,7 +107,7 @@ export function QuestionDrawer({
         <AnimatePresence>
           {isOpen && (
             <motion.div
-              className="max-h-[60vh] overflow-y-auto p-4 bg-background"
+              className="max-h-[60vh] overflow-y-auto p-4 pb-8 bg-background"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}

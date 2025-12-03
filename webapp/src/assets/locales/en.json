@@ -153,7 +153,7 @@
   "guess": {
     "confirmTitle": "Confirm Guess",
     "confirmPrompt": "Are you sure you want to lock in this shelter?",
-    "confirmWarning": "A wrong selection will reset your timer to 10 minutes and turn it red. Make sure you have gathered enough clues before you commit.",
+    "confirmWarning": "A wrong selection will have time panulty. Make sure you have gathered enough clues before you commit.",
     "lockIn": "Lock In Guess",
     "backToClues": "Back to Clues"
   },
@@ -386,7 +386,7 @@
     "exitTitle": "Exit to main menu",
     "secretShelter": "Secret Shelter",
     "secretShelterName": "Secret shelter name",
-    "tapToAsk": "Tap to ask questions",
+    "tapToAsk": "Testing mode active",
     "toasts": {
       "selectShelterFirst": "Select a shelter before submitting a guess.",
       "shelterPreparing": "The secret shelter is still being prepared. Try again in a moment.",
