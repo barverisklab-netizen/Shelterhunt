@@ -17,7 +17,7 @@ import type { Shelter } from "@/services/shelterDataService";
 
 const ENABLE_SECRET_SHELTER_BLUR = true;
 const PROXIMITY_DISABLED_FOR_TESTING =
-  import.meta.env?.VITE_DISABLE_PROXIMITY === "true";
+  import.meta.env?.VITE_ENABLE_PROXIMITY === "false";
 
 export type WrongGuessStage = 'first' | 'second' | 'third';
 
