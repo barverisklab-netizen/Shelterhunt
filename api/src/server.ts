@@ -9,6 +9,7 @@ import sessionRoutes from "./routes/sessions.js";
 import sheltersRoutes from "./routes/shelters.js";
 import { SessionHub } from "./realtime/sessionHub.js";
 import { ApiError } from "./services/errors.js";
+import pkg from "../package.json" assert { type: "json" };
 
 export function buildServer() {
   const fastify = Fastify({
@@ -76,7 +77,7 @@ export function buildServer() {
 
   fastify.get("/health", async () => ({
     status: "ok",
-    version: process.env.COMMIT_SHA ?? process.env.VERSION ?? VERSION,
+    version: process.env.COMMIT_SHA ?? process.env.VERSION ?? pkg.version,
   }));
   fastify.get("/", async (_request, reply) => {
     reply.type("text/html").send(`
@@ -121,7 +122,7 @@ export function buildServer() {
           <h1>API Running</h1>
           <p>The ShelterHunt backend is online.</p>
           <p style="margin-top: 0.5rem; font-size: 0.85rem; color: #808080;">
-            version: ${process.env.COMMIT_SHA ?? process.env.VERSION ?? "dev"}
+            version: ${process.env.COMMIT_SHA ?? process.env.VERSION ?? pkg.version}
           </p>
         </section>
       </body>
