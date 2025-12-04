@@ -74,7 +74,10 @@ export function buildServer() {
     reply.status(500).send({ message: "Internal server error" });
   });
 
-  fastify.get("/health", async () => ({ status: "ok" }));
+  fastify.get("/health", async () => ({
+    status: "ok",
+    version: process.env.COMMIT_SHA ?? process.env.VERSION ?? "dev",
+  }));
   fastify.get("/", async (_request, reply) => {
     reply.type("text/html").send(`
       <!DOCTYPE html>
@@ -117,6 +120,9 @@ export function buildServer() {
         <section class="card">
           <h1>API Running</h1>
           <p>The ShelterHunt backend is online.</p>
+          <p style="margin-top: 0.5rem; font-size: 0.85rem; color: #808080;">
+            version: ${process.env.COMMIT_SHA ?? process.env.VERSION ?? "dev"}
+          </p>
         </section>
       </body>
       </html>
