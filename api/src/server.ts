@@ -76,7 +76,7 @@ export function buildServer() {
 
   fastify.get("/health", async () => ({
     status: "ok",
-    version: process.env.COMMIT_SHA ?? process.env.VERSION ?? "dev",
+    version: process.env.COMMIT_SHA ?? process.env.VERSION ?? VERSION,
   }));
   fastify.get("/", async (_request, reply) => {
     reply.type("text/html").send(`
