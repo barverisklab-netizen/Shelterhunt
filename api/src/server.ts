@@ -9,7 +9,9 @@ import sessionRoutes from "./routes/sessions.js";
 import sheltersRoutes from "./routes/shelters.js";
 import { SessionHub } from "./realtime/sessionHub.js";
 import { ApiError } from "./services/errors.js";
-import pkg from "../package.json" assert { type: "json" };
+import { createRequire } from "node:module";
+const require = createRequire(import.meta.url);
+const pkg = require("../package.json") as { version: string };
 
 export function buildServer() {
   const fastify = Fastify({
