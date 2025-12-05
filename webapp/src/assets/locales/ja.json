@@ -330,6 +330,16 @@
       "placePrompt": "地図をタップして計測ポイントを置いてください。",
       "dropPrompt": "地図をタップして計測ポイントを置いてください。",
       "measuring": "250mの半径を計測中です。",
+      "title": "計測モード",
+      "startSubtitle": "中心点を置いて計測を開始してください",
+      "featuresTitle": "{radius}m以内の地点",
+      "featuresSubtitle": "合計{count}件",
+      "noFeatures": "この範囲に表示中のポイントはありません。",
+      "table": {
+        "featureType": "種類",
+        "count": "件数",
+        "countValue": "{count}件"
+      },
       "popup": {
         "move": "中心を移動",
         "delete": "削除"

@@ -330,6 +330,16 @@
       "placePrompt": "Tap the map to place a new measurement point.",
       "dropPrompt": "Tap the map to drop a measurement point.",
       "measuring": "Measuring 250m radius around your point.",
+      "title": "Measure Radius",
+      "startSubtitle": "Drop a center point to begin",
+      "featuresTitle": "Features within {radius}m",
+      "featuresSubtitle": "{count} features total",
+      "noFeatures": "No visible point-layer features in this radius.",
+      "table": {
+        "featureType": "Feature type",
+        "count": "Count",
+        "countValue": "{count} features"
+      },
       "popup": {
         "move": "Move center",
         "delete": "Delete"

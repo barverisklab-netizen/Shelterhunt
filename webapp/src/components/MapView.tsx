@@ -180,14 +180,27 @@ const [measureState, setMeasureState] = useState<{
   radius: number;
   count: number;
   center: { lng: number; lat: number } | null;
-  shelterNames: string[];
+  featureNames: string[];
+  layerCounts: Record<string, number>;
 }>({
   status: "idle",
   radius: FIXED_MEASURE_RADIUS_METERS,
   count: 0,
   center: null,
-  shelterNames: [],
+  featureNames: [],
+  layerCounts: {},
 });
+
+  // Koto layer visibility state
+  const [kotoLayersVisible, setKotoLayersVisible] = useState<
+    Record<string, boolean>
+  >(() => {
+    const initialState: Record<string, boolean> = {};
+    kotoLayers.forEach((layer) => {
+      initialState[layer.label] = layer.metadata.loadOnInit;
+    });
+    return initialState;
+  });
 
   const [userCircleCenter, setUserCircleCenter] = useState<{
     lat: number;
@@ -195,6 +208,7 @@ const [measureState, setMeasureState] = useState<{
   }>({ lat: playerLocation.lat, lng: playerLocation.lng });
 
   const [isMeasurePanelCollapsed, setIsMeasurePanelCollapsed] = useState(false);
+
 
   useEffect(() => {
     if (measureState.status !== "active") {
@@ -288,7 +302,8 @@ const [measureState, setMeasureState] = useState<{
       radius: FIXED_MEASURE_RADIUS_METERS,
       count: 0,
       center: null,
-      shelterNames: [],
+      featureNames: [],
+      layerCounts: {},
     });
   }, [removeMeasurementArtifacts, restoreShelterLayers]);
 
@@ -424,42 +439,85 @@ const [measureState, setMeasureState] = useState<{
       (async () => {
         const radiusKm = Math.max(0, radius) / 1000;
         const origin = { lat: center.lat, lng: center.lng };
-        const allShelters = await getLocalShelters();
-        const shelters = allShelters
-          .filter(
-            (poi) =>
-              poi.category?.toLowerCase() === "designated ec" &&
-              haversineDistanceKm(origin, { lat: poi.lat, lng: poi.lng }) <= radiusKm,
-          )
-          .map<POI>((poi) => ({
-            id: poi.id,
-            name: poi.name,
-            lat: poi.lat,
-            lng: poi.lng,
+        const m = map.current;
+        if (!m) return;
+
+        const activeSymbolLayers = kotoLayers.filter(
+          (layer) => layer.layerType === "symbol" && kotoLayersVisible[layer.label],
+        );
+        const activeLayerIds = activeSymbolLayers
+          .map((layer) => `koto-layer-${layer.id}`)
+          .filter((layerId) => m.getLayer(layerId));
+
+        const layerLabelById = new Map(
+          activeSymbolLayers.map((layer) => [`koto-layer-${layer.id}`, layer.label]),
+        );
+
+        const rawFeatures =
+          activeLayerIds.length > 0
+            ? (m.queryRenderedFeatures(undefined, {
+                layers: activeLayerIds,
+              }) as mapboxgl.MapboxGeoJSONFeature[])
+            : [];
+
+        const pointFeatures = rawFeatures.filter(
+          (feature) =>
+            (feature.geometry?.type === "Point" ||
+              feature.geometry?.type === "MultiPoint") &&
+            Array.isArray((feature.geometry as any).coordinates),
+        );
+
+        const withinRadius = pointFeatures.filter((feature) => {
+          const coords = (feature.geometry as any).coordinates;
+          if (feature.geometry?.type === "MultiPoint" && Array.isArray(coords)) {
+            return coords.some(([lng, lat]: [number, number]) => haversineDistanceKm(origin, { lat, lng }) <= radiusKm);
+          }
+          const [lng, lat] = coords;
+          return haversineDistanceKm(origin, { lat, lng }) <= radiusKm;
+        });
+
+        const layerCounts: Record<string, number> = {};
+
+        const markers = withinRadius.map<POI>((feature, index) => {
+          const coords = (feature.geometry as any).coordinates;
+          const [lng, lat] = Array.isArray(coords[0]) ? coords[0] : coords;
+          const layerLabel = layerLabelById.get(feature.layer?.id ?? "") ?? feature.layer?.id ?? "Layer";
+          layerCounts[layerLabel] = (layerCounts[layerLabel] ?? 0) + 1;
+
+          const props = feature.properties ?? {};
+          const name =
+            (props["Landmark Name (EN)"] as string) ??
+            (props["Landmark name (EN)"] as string) ??
+            (props["Landmark name (JP)"] as string) ??
+            (props.name as string) ??
+            layerLabel;
+
+          const id =
+            feature.id != null
+              ? String(feature.id)
+              : `${feature.layer?.id ?? "feature"}-${index}`;
+
+          return {
+            id,
+            name,
+            lat: Number(lat),
+            lng: Number(lng),
             type: "shelter",
-          }));
+          };
+        });
 
         if (lastMeasureRequestRef.current !== requestId) {
           return;
         }
 
-        updateShelterMarkers(shelters);
+        updateShelterMarkers(markers);
         hideShelterLayers();
 
-        const shelterNames = shelters
-          .map((shelter) => shelter.name)
-          .filter((name): name is string => Boolean(name));
-
-        console.log("[Measure] shelters within radius", {
+        console.log("[Measure] features within radius", {
           center,
           radiusMeters: radius,
-          total: shelters.length,
-          shelters: shelters.map((shelter) => ({
-            id: shelter.id,
-            name: shelter.name,
-            lat: shelter.lat,
-            lng: shelter.lng,
-          })),
+          total: markers.length,
+          layers: layerCounts,
         });
 
         setMeasureState((prev) => ({
@@ -467,14 +525,17 @@ const [measureState, setMeasureState] = useState<{
           status: "active",
           center,
           radius,
-          count: shelters.length,
-          shelterNames,
+          count: markers.length,
+          featureNames: markers
+            .map((feature) => feature.name)
+            .filter((name): name is string => Boolean(name)),
+          layerCounts,
         }));
       })().catch((error) => {
         console.error("[Measure] Failed to load shelters", error);
       });
     },
-    [hideShelterLayers, restoreShelterLayers, updateShelterMarkers],
+    [hideShelterLayers, restoreShelterLayers, updateShelterMarkers, kotoLayersVisible],
   );
 
   const beginMoveCenter = useCallback(() => {
@@ -489,7 +550,8 @@ const [measureState, setMeasureState] = useState<{
       radius: FIXED_MEASURE_RADIUS_METERS,
       count: 0,
       center: null,
-      shelterNames: [],
+      featureNames: [],
+      layerCounts: {},
     }));
     toast.info(
       t("map.measure.placePrompt", {
@@ -580,7 +642,8 @@ const [measureState, setMeasureState] = useState<{
             center: { lng: updated.lng, lat: updated.lat },
             radius: FIXED_MEASURE_RADIUS_METERS,
             count: 0,
-            shelterNames: [],
+            featureNames: [],
+            layerCounts: {},
           }));
           updateCircle(
             { lng: updated.lng, lat: updated.lat },
@@ -674,17 +737,6 @@ const [measureState, setMeasureState] = useState<{
     libraries: true,
   });
   const [showLayerControl, setShowLayerControl] = useState(false);
-
-  // Koto layer visibility state
-  const [kotoLayersVisible, setKotoLayersVisible] = useState<
-    Record<string, boolean>
-  >(() => {
-    const initialState: Record<string, boolean> = {};
-    kotoLayers.forEach((layer) => {
-      initialState[layer.label] = layer.metadata.loadOnInit;
-    });
-    return initialState;
-  });
 
   // Initialize map
   useEffect(() => {
@@ -859,7 +911,8 @@ const [measureState, setMeasureState] = useState<{
       radius: 250,
       count: 0,
       center: null,
-      shelterNames: [],
+      featureNames: [],
+      layerCounts: {},
     });
     toast.info(
       t("map.measure.dropPrompt", {
@@ -891,7 +944,8 @@ const [measureState, setMeasureState] = useState<{
         center: { lng, lat },
         radius: FIXED_MEASURE_RADIUS_METERS,
         count: 0,
-        shelterNames: [],
+        featureNames: [],
+        layerCounts: {},
       }));
       updateCircle({ lng, lat }, FIXED_MEASURE_RADIUS_METERS);
       toast.success(
@@ -1161,15 +1215,26 @@ const [measureState, setMeasureState] = useState<{
     measureState.status === "active" && isMeasurePanelCollapsed;
 
   const isMeasurementInteractive =
-    measureState.status === "active" && measureState.shelterNames.length > 0;
+    measureState.status === "active" && measureState.featureNames.length > 0;
 
   const headerTitle =
-    measureState.status === "active" ? "Shelters Nearby" : "Measure Shelters";
+    measureState.status === "active"
+      ? t("map.measure.featuresTitle", {
+          replacements: { radius: measureState.radius },
+          fallback: `Features within ${measureState.radius}m`,
+        })
+      : t("map.measure.title", { fallback: "Measure Radius" });
 
   const headerSubtitle =
     measureState.status === "active"
-      ? `${measureState.count} shelter${measureState.count === 1 ? "" : "s"} within ${measureState.radius} meters`
-      : "Drop a center point to begin";
+      ? t("map.measure.featuresSubtitle", {
+          replacements: { count: measureState.count },
+          fallback: `${measureState.count} feature${measureState.count === 1 ? "" : "s"} total`,
+        })
+      : t("map.measure.startSubtitle", { fallback: "Drop a center point to begin" });
+  const sortedLayerCounts = Object.entries(measureState.layerCounts).sort(
+    (a, b) => b[1] - a[1],
+  );
 
   return (
     <div className="relative w-full h-full min-h-[500px] z-0">
@@ -1430,8 +1495,8 @@ const [measureState, setMeasureState] = useState<{
                   {measureState.status === "placing" && (
                     <>
                       <p className="text-xs text-black/70">
-                        Tap anywhere on the map to drop a center point. We’ll help you
-                        count nearby shelters.
+                        Tap anywhere on the map to drop a center point. We’ll show counts
+                        for any visible point layers.
                       </p>
                       <div className="flex flex-col gap-2 sm:flex-row sm:justify-end">
                         <button
@@ -1447,13 +1512,38 @@ const [measureState, setMeasureState] = useState<{
 
                   {measureState.status === "active" && (
                     <>
-                      <p className="text-xs text-black/70">
-                        Radius fixed at {measureState.radius}m.
-                      </p>
-                      {measureState.shelterNames.length === 0 && (
+                      {measureState.featureNames.length === 0 && (
                         <p className="text-xs text-black/50 italic">
-                          No shelters detected in this radius.
+                          {t("map.measure.noFeatures", {
+                            fallback: "No visible point-layer features in this radius.",
+                          })}
                         </p>
+                      )}
+                      {sortedLayerCounts.length > 0 && (
+                        <div className="overflow-hidden rounded border border-black/20 text-xs text-black/80">
+                          <div className="grid grid-cols-2 bg-neutral-100 px-3 py-2 font-semibold uppercase tracking-wide">
+                            <span>
+                              {t("map.measure.table.featureType", { fallback: "Feature type" })}
+                            </span>
+                            <span className="text-right">
+                              {t("map.measure.table.count", { fallback: "Count" })}
+                            </span>
+                          </div>
+                          {sortedLayerCounts.map(([label, count]) => (
+                            <div
+                              key={label}
+                              className="grid grid-cols-2 border-t border-black/10 px-3 py-2"
+                            >
+                              <span className="font-semibold">{label}</span>
+                              <span className="text-right">
+                                {t("map.measure.table.countValue", {
+                                  replacements: { count },
+                                  fallback: `${count} feature${count === 1 ? "" : "s"}`,
+                                })}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
                       )}
                       <div className="grid gap-2 pb-1 sm:grid-cols-3">
                         <button
