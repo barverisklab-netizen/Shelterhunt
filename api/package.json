@@ -1,6 +1,6 @@
 {
   "name": "shelterhunt-api",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Shelterhunt multiplayer session API (MVP)",
   "main": "dist/server.js",
   "type": "module",
