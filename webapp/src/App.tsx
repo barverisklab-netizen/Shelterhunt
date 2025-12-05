@@ -165,6 +165,9 @@ export default function App() {
   const [lockSecretShelter, setLockSecretShelter] = useState(false);
   const [lockShelterOptions, setLockShelterOptions] = useState(false);
   const [designatedShelters, setDesignatedShelters] = useState<POI[]>([]);
+  const [remoteOutcome, setRemoteOutcome] = useState<
+    { result: "win" | "lose"; winnerName?: string } | null
+  >(null);
   const [shelters, setShelters] = useState<Shelter[]>([]);
   const [questionAttributes, setQuestionAttributes] = useState<QuestionAttribute[]>([]);
   const [sessionContext, setSessionContext] = useState<MultiplayerSessionContext | null>(null);
@@ -176,6 +179,12 @@ export default function App() {
   const [joinError, setJoinError] = useState<string | null>(null);
   const defaultNavigatorName = t("app.defaults.navigator", { fallback: "Navigator" });
   const defaultSoloName = t("app.defaults.soloPlayer", { fallback: "Solo Player" });
+  const currentPlayerDisplayName = sessionContext
+    ? players.find((player) => player.id === sessionContext.userId)?.name ||
+      profileName ||
+      defaultNavigatorName
+    : profileName || defaultSoloName;
+  const currentSessionUserId = sessionContext?.userId ?? currentUserId;
 
   // Timer countdown
   useEffect(() => {
@@ -274,6 +283,7 @@ export default function App() {
     setGameMode(null);
     setLockSecretShelter(false);
     setLockShelterOptions(false);
+    setRemoteOutcome(null);
   };
 
   const disconnectSession = useCallback(
@@ -306,6 +316,7 @@ export default function App() {
 
   const performSessionReset = useCallback(
     (options?: { toastMessage?: string; skipToast?: boolean; targetState?: GameState }) => {
+      setRemoteOutcome(null);
       void disconnectSession();
       setGameState(options?.targetState ?? "onboarding");
       setGameCode("");
@@ -557,7 +568,7 @@ export default function App() {
   );
 
   const handleSessionEvent = useCallback(
-    (message: { type?: string; player_id?: string; user_id?: string }) => {
+    (message: any) => {
       if (!sessionContext) return;
       switch (message.type) {
         case "player_joined":
@@ -585,14 +596,29 @@ export default function App() {
         case "race_started":
           beginMultiplayerRace();
           break;
-        case "race_finished":
-          setGameState("ended");
-          toast.success(
-            t("app.toasts.raceFinished", {
-              fallback: "Shelter reached! Race finished.",
-            }),
-          );
+        case "race_finished": {
+          const payload = (message as any)?.payload ?? {};
+          const winner = payload.winner ?? {};
+          console.log("[Multiplayer] race_finished event", payload);
+          const winnerName =
+            winner.display_name ??
+            t("defeat.subtitle", { fallback: "Another team reached the shelter." });
+          if (sessionContext) {
+            const isSelf = winner.user_id === sessionContext.userId;
+            setRemoteOutcome({
+              result: isSelf ? "win" : "lose",
+              winnerName,
+            });
+            if (!isSelf) {
+              toast.error(
+                t("app.toasts.raceFinished", {
+                  fallback: "Another team found the shelter first.",
+                }),
+              );
+            }
+          }
           break;
+        }
         default:
           break;
       }
@@ -1002,8 +1028,33 @@ export default function App() {
     if (sessionContext) {
       void disconnectSession({ finish: sessionContext.role === "host" });
     }
+    setRemoteOutcome(null);
     handleLeaveGame();
   };
+
+  const handleMultiplayerWin = useCallback(
+    (info: { winnerName: string; winnerUserId?: string }) => {
+      if (!sessionContext) {
+        console.log("[Multiplayer] handleMultiplayerWin ignored, no session", { info, sessionContext });
+        return;
+      }
+
+      const winnerUserId = info.winnerUserId ?? sessionContext.userId;
+      console.log("[Multiplayer] Finishing race for winner", {
+        sessionId: sessionContext.sessionId,
+        winnerUserId,
+        winnerDisplayName: info.winnerName,
+      });
+
+      finishMultiplayerRace(sessionContext.sessionId, sessionContext.token, {
+        winnerUserId,
+        winnerDisplayName: info.winnerName,
+      }).catch((error) => {
+        console.warn("[Multiplayer] Failed to finish race:", error);
+      });
+    },
+    [sessionContext],
+  );
 
   const handleModeBack = () => {
     resetGameContext();
@@ -1206,6 +1257,10 @@ export default function App() {
             onLocationChange={setPlayerLocation}
             onSecretShelterChange={updateSecretShelter}
             onShelterOptionsChange={updateShelterOptions}
+            currentPlayerName={currentPlayerDisplayName}
+            currentPlayerId={currentSessionUserId}
+            onMultiplayerWin={sessionContext ? handleMultiplayerWin : undefined}
+            remoteOutcome={remoteOutcome}
           />
         )}
 

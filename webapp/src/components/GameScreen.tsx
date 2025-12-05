@@ -37,6 +37,10 @@ interface GameScreenProps {
   onLocationChange?: (location: { lat: number; lng: number }) => void;
   onSecretShelterChange?: (info: { id: string; name: string }) => void;
   onShelterOptionsChange?: (options: { id: string; name: string }[]) => void;
+  currentPlayerName?: string;
+  currentPlayerId?: string;
+  onMultiplayerWin?: (info: { winnerName: string; winnerUserId?: string }) => void;
+  remoteOutcome?: { result: "win" | "lose"; winnerName?: string } | null;
 }
 
 export function GameScreen({
@@ -54,6 +58,10 @@ export function GameScreen({
   onLocationChange,
   onSecretShelterChange,
   onShelterOptionsChange,
+  currentPlayerName,
+  currentPlayerId,
+  onMultiplayerWin,
+  remoteOutcome,
 }: GameScreenProps) {
   const { t } = useI18n();
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -69,12 +77,20 @@ export function GameScreen({
   const [penaltyStage, setPenaltyStage] = useState<WrongGuessStage | null>(null);
   const [solvedQuestions, setSolvedQuestions] = useState<string[]>([]);
   const lastToastPoiId = useRef<string | null>(null);
+  const [externalWinnerName, setExternalWinnerName] = useState<string | undefined>(undefined);
 
   useEffect(() => {
     if (isMeasureActive) {
       setDrawerOpen(false);
     }
   }, [isMeasureActive]);
+
+  useEffect(() => {
+    if (!remoteOutcome) return;
+    console.log("[GameScreen] remoteOutcome received", remoteOutcome);
+    setOutcome(remoteOutcome.result);
+    setExternalWinnerName(remoteOutcome.winnerName);
+  }, [remoteOutcome]);
 
   const attributeCategoryMap: Record<string, Question["category"]> = {
     floodDepthRank: "location",
@@ -354,6 +370,15 @@ export function GameScreen({
       );
       setPenaltyStage(null);
       setOutcome('win');
+      if (outcome !== "win") {
+        setExternalWinnerName(undefined);
+      }
+      onMultiplayerWin?.({
+        winnerName:
+          currentPlayerName ||
+          t("app.defaults.navigator", { fallback: "Navigator" }),
+        winnerUserId: currentPlayerId,
+      });
     } else {
       const stage = onApplyPenalty();
       if (stage === 'third') {
@@ -524,6 +549,7 @@ export function GameScreen({
             visitedCount={visitedPOIs.length}
             onPlayAgain={onEndGame}
             result="lose"
+            winnerName={externalWinnerName}
           />
         )}
       </AnimatePresence>

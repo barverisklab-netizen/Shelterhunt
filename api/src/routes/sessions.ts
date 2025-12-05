@@ -10,6 +10,7 @@ import {
   leaveSession,
   startSession,
   toggleReady,
+  findPlayerByUserId,
 } from "../services/sessionService.js";
 import type { SessionHub } from "../realtime/sessionHub.js";
 import type { SessionRole, SessionTokenPayload } from "../types/fastify.js";
@@ -37,6 +38,13 @@ const joinSessionSchema = z.object({
 const readySchema = z.object({
   ready: z.boolean(),
 });
+
+const finishSchema = z
+  .object({
+    winnerUserId: z.string().uuid().optional(),
+    winnerDisplayName: z.string().min(1).max(120).optional(),
+  })
+  .optional();
 
 const streamQuerySchema = z.object({
   token: z.string().optional(),
@@ -156,15 +164,26 @@ const sessionRoutes: FastifyPluginAsync<{ sessionHub: SessionHub }> = async (fas
     async (request, reply) => {
       const params = paramsSchema.parse(request.params);
       ensureSessionAccess(request.user.sessionId, params.id);
-      if (request.user.role !== "host") {
-        throw new ApiError(403, "Only host can finish session");
+
+      const body = finishSchema.parse(request.body ?? {});
+      const winnerUserId = body?.winnerUserId ?? request.user.userId;
+      const winnerPlayer = await findPlayerByUserId(params.id, winnerUserId);
+      if (!winnerPlayer) {
+        throw new ApiError(403, "Winner not found in session");
       }
 
       const session = await finishSession(params.id, request.user.userId);
+      const winnerDisplayName = body?.winnerDisplayName ?? winnerPlayer.display_name ?? null;
 
       sessionHub.broadcast(params.id, {
         type: "race_finished",
-        payload: { endedAt: session.ended_at },
+        payload: {
+          endedAt: session.ended_at,
+          winner: {
+            user_id: winnerUserId,
+            display_name: winnerDisplayName,
+          },
+        },
       });
 
       reply.send({ session });
@@ -178,7 +197,16 @@ const sessionRoutes: FastifyPluginAsync<{ sessionHub: SessionHub }> = async (fas
       const params = paramsSchema.parse(request.params);
       ensureSessionAccess(request.user.sessionId, params.id);
 
-      const result = await leaveSession(params.id, request.user.userId);
+      let result;
+      try {
+        result = await leaveSession(params.id, request.user.userId);
+      } catch (error) {
+        if (error instanceof ApiError && error.statusCode === 404 && /Player not found/.test(error.message)) {
+          reply.code(204).send();
+          return;
+        }
+        throw error;
+      }
 
       sessionHub.broadcast(params.id, {
         type: "player_left",

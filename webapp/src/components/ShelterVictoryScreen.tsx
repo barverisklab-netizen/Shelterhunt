@@ -10,6 +10,7 @@ interface ShelterVictoryScreenProps {
   visitedCount: number;
   onPlayAgain: () => void;
   result?: "win" | "lose";
+  winnerName?: string;
 }
 
 export function ShelterVictoryScreen({
@@ -18,6 +19,7 @@ export function ShelterVictoryScreen({
   visitedCount,
   onPlayAgain,
   result = "win",
+  winnerName,
 }: ShelterVictoryScreenProps) {
   const { t } = useI18n();
   const isWin = result === "win";
@@ -29,9 +31,14 @@ export function ShelterVictoryScreen({
         replacements: { shelter: shelterName ?? "" },
         fallback: "You found the secret shelter!",
       })
-    : t("defeat.subtitle", {
-        fallback: "That was your final guess. Try again with a new hunt.",
-      });
+    : winnerName
+      ? t("defeat.subtitleWinner", {
+          replacements: { winner: winnerName },
+          fallback: `${winnerName} found the shelter first.`,
+        })
+      : t("defeat.subtitle", {
+          fallback: "That was your final guess. Try again with a new hunt.",
+        });
   const imageAlt = isWin
     ? t("victory.imageAlt", { fallback: "Celebration cat illustration" })
     : t("defeat.imageAlt", { fallback: "Sad cat illustration" });

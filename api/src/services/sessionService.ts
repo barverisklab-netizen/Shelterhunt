@@ -459,23 +459,53 @@ export async function startSession(sessionId: string, hostId: string): Promise<S
   return result.rows[0];
 }
 
-export async function finishSession(sessionId: string, hostId: string): Promise<SessionRecord> {
-  const result = await pool.query<SessionRecord>(
-    `update public.sessions
-     set state = 'finished',
-         ended_at = now()
-     where id = $1
-       and host_id = $2
-       and state = 'racing'
-     returning *`,
-    [sessionId, hostId],
-  );
+export async function finishSession(sessionId: string, userId: string): Promise<SessionRecord> {
+  const client = await pool.connect();
+  try {
+    await client.query("BEGIN");
 
-  if (!result.rowCount) {
-    throw new ApiError(400, "Unable to finish session");
+    const playerResult = await client.query<PlayerRecord>(
+      `select * from public.players where session_id = $1 and user_id = $2 limit 1 for update`,
+      [sessionId, userId],
+    );
+
+    if (!playerResult.rowCount) {
+      throw new ApiError(403, "Player not found in session");
+    }
+
+    const result = await client.query<SessionRecord>(
+      `update public.sessions
+       set state = 'finished',
+           ended_at = now()
+       where id = $1
+         and state = 'racing'
+       returning *`,
+      [sessionId],
+    );
+
+    if (!result.rowCount) {
+      throw new ApiError(400, "Unable to finish session");
+    }
+
+    await client.query("COMMIT");
+    return result.rows[0];
+  } catch (error) {
+    await client.query("ROLLBACK");
+    throw error;
+  } finally {
+    client.release();
   }
+}
 
-  return result.rows[0];
+export async function findPlayerByUserId(
+  sessionId: string,
+  userId: string,
+): Promise<PlayerRecord | null> {
+  const result = await pool.query<PlayerRecord>(
+    `select * from public.players where session_id = $1 and user_id = $2 limit 1`,
+    [sessionId, userId],
+  );
+  return result.rows[0] ?? null;
 }
 
 export async function getSessionWithPlayers(sessionId: string): Promise<SessionWithPlayers> {

@@ -167,6 +167,7 @@
   "defeat": {
     "title": "Wrong Shelter",
     "subtitle": "That was your final guess. Try again with a new hunt.",
+    "subtitleWinner": "{{winner}} reached the shelter first. Try harder next time!",
     "imageAlt": "Sad cat illustration"
   },
   "penalty": {

@@ -105,10 +105,15 @@ export function startMultiplayerRace(sessionId: string, token: string) {
   });
 }
 
-export function finishMultiplayerRace(sessionId: string, token: string) {
+export function finishMultiplayerRace(
+  sessionId: string,
+  token: string,
+  payload?: { winnerUserId?: string; winnerDisplayName?: string },
+) {
   return apiFetch<{ session: Session }>(`/sessions/${sessionId}/finish`, {
     method: "POST",
     headers: { Authorization: `Bearer ${token}` },
+    body: JSON.stringify(payload ?? {}),
   });
 }
 
