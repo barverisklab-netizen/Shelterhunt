@@ -117,6 +117,9 @@ const MEASURE_SHELTERS_LABEL_LAYER_ID = "measure-shelters-label-layer";
 const PLAYER_RANGE_SOURCE_ID = "player-range-source";
 const PLAYER_RANGE_FILL_LAYER_ID = "player-range-fill-layer";
 const PLAYER_RANGE_OUTLINE_LAYER_ID = "player-range-outline-layer";
+const FILTER_POIS_SOURCE_ID = "filtered-pois-source";
+const FILTER_POIS_LAYER_ID = "filtered-pois-layer";
+const FILTER_POIS_LABEL_LAYER_ID = "filtered-pois-label-layer";
 
 type MeasureStatus = "idle" | "placing" | "active";
 const FIXED_MEASURE_RADIUS_METERS = 250;
@@ -132,6 +135,7 @@ interface MapViewProps {
   onShelterOptionsChange?: (options: { id: string; name: string }[]) => void;
   measureTrigger?: number;
   onMeasurementActiveChange?: (active: boolean) => void;
+  isFiltered?: boolean;
 }
 
 // const POI_ICONS = {
@@ -155,8 +159,9 @@ export function MapView({
   onShelterOptionsChange,
   measureTrigger,
   onMeasurementActiveChange,
+  isFiltered = false,
 }: MapViewProps) {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
   const markers = useRef<{ [key: string]: mapboxgl.Marker }>({});
@@ -207,6 +212,7 @@ const [measureState, setMeasureState] = useState<{
   }>({ lat: playerLocation.lat, lng: playerLocation.lng });
 
   const [isMeasurePanelCollapsed, setIsMeasurePanelCollapsed] = useState(false);
+  const [visiblePois, setVisiblePois] = useState<POI[]>([]);
 
 
   useEffect(() => {
@@ -214,6 +220,14 @@ const [measureState, setMeasureState] = useState<{
       setIsMeasurePanelCollapsed(false);
     }
   }, [measureState.status]);
+
+  useEffect(() => {
+    if (isFiltered) {
+      setVisiblePois(pois);
+    } else {
+      setVisiblePois([]);
+    }
+  }, [isFiltered, pois]);
 
   const closeMeasurePopup = useCallback(() => {
     if (measurePopupRef.current) {
@@ -305,6 +319,83 @@ const [measureState, setMeasureState] = useState<{
       layerCounts: {},
     });
   }, [removeMeasurementArtifacts, restoreShelterLayers]);
+
+  const refreshFilteredPoiLayers = useCallback(
+    (poisToRender: POI[]) => {
+      const m = map.current;
+      if (!m) return;
+
+      if (!poisToRender.length) {
+        if (m.getLayer(FILTER_POIS_LABEL_LAYER_ID)) m.removeLayer(FILTER_POIS_LABEL_LAYER_ID);
+        if (m.getLayer(FILTER_POIS_LAYER_ID)) m.removeLayer(FILTER_POIS_LAYER_ID);
+        if (m.getSource(FILTER_POIS_SOURCE_ID)) m.removeSource(FILTER_POIS_SOURCE_ID);
+        return;
+      }
+
+      const featureCollection = {
+        type: "FeatureCollection",
+        features: poisToRender.map((poi) => ({
+          type: "Feature",
+          geometry: { type: "Point", coordinates: [poi.lng, poi.lat] },
+          properties: {
+            name: poi.name ?? "Shelter",
+            name_en: (poi as any).nameEn ?? poi.name ?? null,
+            name_jp: (poi as any).nameJp ?? poi.name ?? null,
+          },
+        })),
+      } as const;
+
+      if (m.getSource(FILTER_POIS_SOURCE_ID)) {
+        (m.getSource(FILTER_POIS_SOURCE_ID) as mapboxgl.GeoJSONSource).setData(
+          featureCollection as any,
+        );
+      } else {
+        m.addSource(FILTER_POIS_SOURCE_ID, {
+          type: "geojson",
+          data: featureCollection as any,
+        });
+      }
+
+      if (!m.getLayer(FILTER_POIS_LAYER_ID)) {
+        m.addLayer({
+          id: FILTER_POIS_LAYER_ID,
+          type: "circle",
+          source: FILTER_POIS_SOURCE_ID,
+          paint: {
+            "circle-radius": 7,
+            "circle-color": "#0f0f0f",
+            "circle-stroke-color": "#c1272d",
+            "circle-stroke-width": 3,
+          },
+        });
+      }
+
+      if (!m.getLayer(FILTER_POIS_LABEL_LAYER_ID)) {
+        m.addLayer({
+          id: FILTER_POIS_LABEL_LAYER_ID,
+          type: "symbol",
+          source: FILTER_POIS_SOURCE_ID,
+          layout: {
+            "text-field":
+              locale === "ja"
+                ? ["coalesce", ["get", "name_jp"], ["get", "name"], ["get", "name_en"]]
+                : ["coalesce", ["get", "name_en"], ["get", "name"], ["get", "name_jp"]],
+            "text-font": ["Inter Regular", "Arial Unicode MS Regular"],
+            "text-size": 10,
+            "text-anchor": "top",
+            "text-offset": [0, 1.2],
+            "text-allow-overlap": false,
+          },
+          paint: {
+            "text-color": "#0f0f0f",
+            "text-halo-color": "#ffffff",
+            "text-halo-width": 1.2,
+          },
+        });
+      }
+    },
+    [locale],
+  );
 
   const updateShelterMarkers = useCallback(
     (shelters: POI[]) => {
@@ -762,6 +853,9 @@ const [measureState, setMeasureState] = useState<{
           map.current?.on("idle", selectShelterFromLocalData);
         }
 
+        console.log("[POI] Initial marker render", { total: visiblePois.length });
+        refreshFilteredPoiLayers(visiblePois);
+
         if (!geolocateControl.current) {
           const control = new mapboxgl.GeolocateControl({
             positionOptions: { enableHighAccuracy: true },
@@ -923,6 +1017,34 @@ const [measureState, setMeasureState] = useState<{
     removeMeasurementArtifacts,
     restoreShelterLayers,
   ]);
+
+  useEffect(() => {
+    if (!map.current) return;
+    console.log("[POI] Updating filtered markers", { total: visiblePois.length });
+    refreshFilteredPoiLayers(visiblePois);
+  }, [refreshFilteredPoiLayers, visiblePois]);
+
+  useEffect(() => {
+    const m = map.current;
+    if (!m) return;
+    if (!isFiltered) return;
+    if (!visiblePois.length) return;
+
+    const bounds = new mapboxgl.LngLatBounds();
+    visiblePois.forEach((poi) => {
+      if (Number.isFinite(poi.lng) && Number.isFinite(poi.lat)) {
+        bounds.extend([poi.lng, poi.lat]);
+      }
+    });
+
+    if (!bounds.isEmpty()) {
+      console.log("[POI] Fitting map to filtered bounds", {
+        count: visiblePois.length,
+        bounds: bounds.toArray(),
+      });
+      m.fitBounds(bounds, { padding: 40, maxZoom: 16 });
+    }
+  }, [isFiltered, visiblePois]);
 
   useEffect(() => {
     const m = map.current;

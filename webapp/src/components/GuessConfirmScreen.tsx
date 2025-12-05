@@ -2,7 +2,7 @@ import { motion } from "motion/react";
 import { AlertTriangle } from "lucide-react";
 import { Button } from "./ui/button";
 import { useI18n } from "@/i18n";
-import catPlaying from "../assets/graphics/cat_playing.svg";
+import catWaving from "../assets/graphics/cat_waving.svg";
 
 interface GuessConfirmScreenProps {
   shelterName: string;
@@ -45,8 +45,8 @@ export function GuessConfirmScreen({
       <div className="flex-1 flex flex-col items-center justify-center px-6 text-center space-y-6 bg-background">
         <div className="flex justify-center">
           <img
-            src={catPlaying}
-            alt={t("guess.confirmImageAlt", { fallback: "Cat playing illustration" })}
+            src={catWaving}
+            alt={t("guess.confirmImageAlt", { fallback: "Cat waving illustration" })}
             className="h-max object-contain"
             style={{ width: 200, height: 200 }}
           />

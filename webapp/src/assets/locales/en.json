@@ -201,10 +201,15 @@
     "tools": {
       "title": "Tools",
       "active": "Active",
-      "idle": "Idle",
-      "copy": "Draw a search radius to inspect which shelters fall within a chosen distance.",
-      "trigger": "Measure Shelters Radius",
-      "activeButton": "Measurement Active"
+    "idle": "Idle",
+    "copy": "Draw a search radius to inspect which shelters fall within a chosen distance.",
+    "trigger": "Measure Shelters Radius",
+    "activeButton": "Measurement Active",
+      "filterUnavailable": "Unable to filter map for this clue.",
+      "filterNoMatches": "No shelters match this clue.",
+      "showInMap": "Show in map",
+      "clearMapFilter": "Clear all filters",
+      "clear": "Clear"
     },
     "finalDecision": "Final Decision",
     "finalStep": "Final step",

@@ -204,7 +204,12 @@
       "idle": "待機中",
       "copy": "検索半径を描き、範囲内の避難所を確認します。",
       "trigger": "半径を計測",
-      "activeButton": "計測中"
+      "activeButton": "計測中",
+      "filterUnavailable": "この手がかりでは地図を絞り込めません。",
+      "filterNoMatches": "この手がかりに合致する避難所はありません。",
+      "showInMap": "地図で表示",
+      "clearMapFilter": "すべてのフィルターを解除",
+      "clear": "クリア"
     },
     "finalDecision": "最終決定",
     "finalStep": "最後のステップ",

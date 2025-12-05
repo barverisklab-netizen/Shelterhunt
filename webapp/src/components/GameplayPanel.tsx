@@ -22,6 +22,9 @@ interface GameplayPanelProps {
   isGuessDisabled?: boolean;
   onStartMeasure: () => void;
   isMeasureActive?: boolean;
+  onFilterByClue?: (clue: Clue) => void;
+  onClearMapFilter?: () => void;
+  isMapFilterActive?: boolean;
 }
 
 export function GameplayPanel({
@@ -35,6 +38,9 @@ export function GameplayPanel({
   isGuessDisabled = false,
   onStartMeasure,
   isMeasureActive = false,
+  onFilterByClue,
+  onClearMapFilter,
+  isMapFilterActive = false,
 }: GameplayPanelProps) {
   const { t } = useI18n();
   return (
@@ -57,7 +63,7 @@ export function GameplayPanel({
             transition={{ type: "spring", damping: 28, stiffness: 320 }}
           >
             <header className="p-5">
-              <div className="flex items-start justify-between">
+              <div className="flex items-start justify-between gap-2">
                 <div className="flex gap-2 text-black">
                   <div className="bg-black p-3">
                     <Lightbulb className="h-12 w-12 text-black" />
@@ -164,12 +170,12 @@ export function GameplayPanel({
                             animate={{ opacity: 1, x: 0 }}
                             transition={{ delay: index * 0.05 }}
                           >
-                            <div className="flex items-start gap-3">
-                              <div
-                                className={`mt-1 flex-shrink-0 ${
-                                  clue.answer ? "text-green-600" : "text-red-600"
-                                }`}
-                              >
+                        <div className="flex items-start gap-3">
+                          <div
+                            className={`mt-1 flex-shrink-0 ${
+                              clue.answer ? "text-green-600" : "text-red-600"
+                            }`}
+                          >
                                 {clue.answer ? (
                                   <CheckCircle className="h-5 w-5" />
                                 ) : (
@@ -191,6 +197,31 @@ export function GameplayPanel({
                                       }).replace("{param}", `${clue.paramValue ?? ""}`)
                                     : clue.text}
                                 </div>
+                                {clue.answer && onFilterByClue && (
+                                  <div className="mt-2 flex gap-2">
+                                    <Button
+                                      type="button"
+                                      variant="outline"
+                                      className="text-xs font-semibold uppercase tracking-wide border border-black text-black hover:bg-neutral-200"
+                                      onClick={() => {
+                                        onFilterByClue(clue);
+                                        onClose();
+                                      }}
+                                    >
+                                      {t("gameplay.showInMap", { fallback: "Show in map" })}
+                                    </Button>
+                                    {isMapFilterActive && onClearMapFilter && (
+                                      <Button
+                                        type="button"
+                                        variant="outline"
+                                        className="text-xs font-semibold uppercase tracking-wide border border-black text-black hover:bg-neutral-200"
+                                        onClick={onClearMapFilter}
+                                      >
+                                        {t("common.clear", { fallback: "Clear" })}
+                                      </Button>
+                                    )}
+                                  </div>
+                                )}
                               </div>
                             </div>
                           </motion.div>
@@ -292,7 +323,19 @@ export function GameplayPanel({
               </Accordion>
 
               <div className="mt-2 flex items-center justify-between gap-3">
-                <LanguageToggle inline />
+                <div className="flex items-center gap-2">
+                  <LanguageToggle inline />
+                  {isMapFilterActive && onClearMapFilter && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="border border-black text-black text-xs font-semibold uppercase tracking-wide hover:bg-neutral-200"
+                      onClick={onClearMapFilter}
+                    >
+                      {t("gameplay.clearMapFilter", { fallback: "Show all shelters" })}
+                    </Button>
+                  )}
+                </div>
                 <Button
                   onClick={onClose}
                   variant="outline"

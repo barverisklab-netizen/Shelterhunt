@@ -74,6 +74,7 @@ export function GameScreen({
   const [outcome, setOutcome] = useState<'none' | 'win' | 'penalty' | 'lose'>('none');
   const [measureTrigger, setMeasureTrigger] = useState(0);
   const [isMeasureActive, setIsMeasureActive] = useState(false);
+  const [filteredPois, setFilteredPois] = useState<POI[] | null>(null);
   const [penaltyStage, setPenaltyStage] = useState<WrongGuessStage | null>(null);
   const [solvedQuestions, setSolvedQuestions] = useState<string[]>([]);
   const lastToastPoiId = useRef<string | null>(null);
@@ -462,7 +463,7 @@ export function GameScreen({
       {/* Map Container */}
       <div className="flex-1 relative z-0">
         <MapView
-          pois={pois}
+          pois={filteredPois ?? pois}
           playerLocation={playerLocation}
           visitedPOIs={visitedPOIs}
           gameEnded={outcome === 'win' || outcome === 'lose'}
@@ -471,6 +472,7 @@ export function GameScreen({
           onShelterOptionsChange={onShelterOptionsChange}
           measureTrigger={measureTrigger}
           onMeasurementActiveChange={setIsMeasureActive}
+          isFiltered={Boolean(filteredPois)}
         />
 
         {/* Floating Action Buttons */}
@@ -517,6 +519,89 @@ export function GameScreen({
         isGuessDisabled={isGuessDisabled}
         onStartMeasure={handleStartMeasure}
         isMeasureActive={isMeasureActive}
+        onFilterByClue={(clue) => {
+          console.log("[ClueFilter] show in map clicked", clue);
+          const id = clue.questionId;
+          if (!id || clue.paramValue == null) {
+            console.warn("[ClueFilter] Missing questionId or paramValue", { id, clue });
+            toast.error(
+              t("gameplay.filterUnavailable", {
+                fallback: "Unable to filter map for this clue.",
+              }),
+            );
+            return;
+          }
+
+          const extractor = attributeValueLookup[id];
+          if (!extractor) {
+            console.warn("[ClueFilter] No extractor for question", { id });
+            toast.error(
+              t("gameplay.filterUnavailable", {
+                fallback: "Unable to filter map for this clue.",
+              }),
+            );
+            return;
+          }
+
+          const normalize = (value: unknown) =>
+            typeof value === "number" ? String(value) : String(value ?? "").trim().toLowerCase();
+
+          const target = normalize(clue.paramValue);
+          console.log("[ClueFilter] Target value", { target });
+
+          const baseShelters =
+            filteredPois && filteredPois.length
+              ? shelters.filter((shelter) => {
+                  const sid = shelter.shareCode || shelter.code || shelter.id;
+                  return filteredPois.some((poi) => poi.id === sid);
+                })
+              : shelters;
+
+          const matches = baseShelters
+            .filter((shelter) => {
+              const value = extractor(shelter as any);
+              const match = normalize(value) === target;
+              if (match) {
+                console.log("[ClueFilter] Shelter match", {
+                  id: shelter.id,
+                  code: shelter.code,
+                  shareCode: shelter.shareCode,
+                  name: shelter.nameEn || shelter.nameJp,
+                  value,
+                });
+              }
+              return match;
+            })
+            .map<POI>((shelter) => ({
+              id: shelter.shareCode || shelter.code || shelter.id,
+              name: shelter.nameEn || shelter.nameJp || shelter.externalId || shelter.code,
+              // Preserve localized names for map labels
+              ...(shelter.nameEn ? { nameEn: shelter.nameEn } : {}),
+              ...(shelter.nameJp ? { nameJp: shelter.nameJp } : {}),
+              lat: Number(shelter.latitude),
+              lng: Number(shelter.longitude),
+              type: "shelter",
+            }))
+            .filter(
+              (poi) => Number.isFinite(poi.lat) && Number.isFinite(poi.lng) && poi.name,
+            );
+
+          if (!matches.length) {
+            console.warn("[ClueFilter] No matches for clue", { clue, target });
+            toast.error(
+              t("gameplay.filterNoMatches", {
+                fallback: "No shelters match this clue.",
+              }),
+            );
+            return;
+          }
+
+          console.log("[ClueFilter] Applying map filter", { matches: matches.length });
+          setFilteredPois(matches);
+          setCluesOpen(false);
+        }}
+        onClearMapFilter={() => setFilteredPois(null)}
+        isMapFilterActive={Boolean(filteredPois)}
       />
 
       <AnimatePresence>
