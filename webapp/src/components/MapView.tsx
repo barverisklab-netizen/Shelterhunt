@@ -13,8 +13,6 @@ import {
   Building2,
   Cable,
   Train,
-  ChevronDown,
-  ChevronUp,
 } from "lucide-react";
 import { POI } from "@/types/game";
 import { kotoLayers } from "@/cityContext/koto/layers";
@@ -26,6 +24,7 @@ import { toast } from "sonner@2.0.3"
 import { haversineDistanceKm } from "@/utils/lightningSelection";
 import { getLocalShelters } from "@/services/mapLayerQueryService";
 import { useI18n } from "@/i18n";
+import { MeasurePanel } from "./MeasurePanel";
 
 // Set Mapbox access token from config
 mapboxgl.accessToken = MAPBOX_CONFIG.accessToken;
@@ -1214,27 +1213,15 @@ const [measureState, setMeasureState] = useState<{
   const isPanelCollapsed =
     measureState.status === "active" && isMeasurePanelCollapsed;
 
-  const isMeasurementInteractive =
-    measureState.status === "active" && measureState.featureNames.length > 0;
+  const handleMoveMeasurementPoint = useCallback(() => {
+    closeMeasurePopup();
+    beginMoveCenter();
+  }, [beginMoveCenter, closeMeasurePopup]);
 
-  const headerTitle =
-    measureState.status === "active"
-      ? t("map.measure.featuresTitle", {
-          replacements: { radius: measureState.radius },
-          fallback: `Features within ${measureState.radius}m`,
-        })
-      : t("map.measure.title", { fallback: "Measure Radius" });
-
-  const headerSubtitle =
-    measureState.status === "active"
-      ? t("map.measure.featuresSubtitle", {
-          replacements: { count: measureState.count },
-          fallback: `${measureState.count} feature${measureState.count === 1 ? "" : "s"} total`,
-        })
-      : t("map.measure.startSubtitle", { fallback: "Drop a center point to begin" });
-  const sortedLayerCounts = Object.entries(measureState.layerCounts).sort(
-    (a, b) => b[1] - a[1],
-  );
+  const handleDeleteMeasurement = useCallback(() => {
+    closeMeasurePopup();
+    clearMeasurement();
+  }, [clearMeasurement, closeMeasurePopup]);
 
   return (
     <div className="relative w-full h-full min-h-[500px] z-0">
@@ -1447,132 +1434,15 @@ const [measureState, setMeasureState] = useState<{
 
       <AnimatePresence>
         {measureState.status !== "idle" && (
-          <motion.div
-            className="absolute bottom-4 left-1/2 z-30 w-[92vw] max-w-sm -translate-x-1/2 rounded-lg bg-background p-4 shadow-xl"
-            initial={{ opacity: 0, y: 20, scale: 0.96 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 20, scale: 0.96 }}
-          >
-            <button
-              type="button"
-              onClick={() => {
-                if (isMeasurementInteractive) {
-                  setIsMeasurePanelCollapsed((prev) => !prev);
-                }
-              }}
-              className={`w-full rounded px-4 py-3 text-left transition-colors ${
-                isMeasurementInteractive ? "cursor-pointer" : "cursor-default"
-              }`}
-            >
-              <div className="flex items-center justify-between gap-3 pb-1">
-                <div className="space-y-1">
-                  <div className="text-sm font-bold uppercase text-black leading-tight">
-                    {headerTitle}
-                  </div>
-                  <div className="text-xs text-black/70">{headerSubtitle}</div>
-                </div>
-                {isMeasurementInteractive && (
-                  <motion.div
-                    animate={{ rotate: isPanelCollapsed ? 180 : 0 }}
-                    transition={{ duration: 0.2 }}
-                    className="text-black"
-                  >
-                    <ChevronDown className="h-4 w-4 text-black" />
-                  </motion.div>
-                )}
-              </div>
-            </button>
-
-            <AnimatePresence>
-              {!isPanelCollapsed && (
-                <motion.div
-                  key="measurement-panel-details"
-                  className="mt-4 space-y-3 text-black"
-                  initial={{ opacity: 0, y: -6 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -6 }}
-                >
-                  {measureState.status === "placing" && (
-                    <>
-                      <p className="text-xs text-black/70">
-                        Tap anywhere on the map to drop a center point. We’ll show counts
-                        for any visible point layers.
-                      </p>
-                      <div className="flex flex-col gap-2 sm:flex-row sm:justify-end">
-                        <button
-                          type="button"
-                          onClick={clearMeasurement}
-                          className="w-full sm:w-auto rounded border border-black px-3 py-2 text-xs font-semibold uppercase tracking-wide hover:bg-neutral-100"
-                        >
-                          Cancel
-                        </button>
-                      </div>
-                    </>
-                  )}
-
-                  {measureState.status === "active" && (
-                    <>
-                      {measureState.featureNames.length === 0 && (
-                        <p className="text-xs text-black/50 italic">
-                          {t("map.measure.noFeatures", {
-                            fallback: "No visible point-layer features in this radius.",
-                          })}
-                        </p>
-                      )}
-                      {sortedLayerCounts.length > 0 && (
-                        <div className="overflow-hidden rounded border border-black/20 text-xs text-black/80">
-                          <div className="grid grid-cols-2 bg-neutral-100 px-3 py-2 font-semibold uppercase tracking-wide">
-                            <span>
-                              {t("map.measure.table.featureType", { fallback: "Feature type" })}
-                            </span>
-                            <span className="text-right">
-                              {t("map.measure.table.count", { fallback: "Count" })}
-                            </span>
-                          </div>
-                          {sortedLayerCounts.map(([label, count]) => (
-                            <div
-                              key={label}
-                              className="grid grid-cols-2 border-t border-black/10 px-3 py-2"
-                            >
-                              <span className="font-semibold">{label}</span>
-                              <span className="text-right">
-                                {t("map.measure.table.countValue", {
-                                  replacements: { count },
-                                  fallback: `${count} feature${count === 1 ? "" : "s"}`,
-                                })}
-                              </span>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                      <div className="grid gap-2 pb-1 sm:grid-cols-3">
-                        <button
-                          type="button"
-                          onClick={() => {
-                            closeMeasurePopup();
-                            beginMoveCenter();
-                          }}
-                          className="rounded border border-black px-3 py-2 text-xs font-semibold uppercase tracking-wide hover:bg-neutral-100"
-                        >
-                          Move Point
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            closeMeasurePopup();
-                            clearMeasurement();
-                          }}
-                          className="rounded border border-black bg-red-500/20 px-3 py-2 text-xs font-bold uppercase tracking-wide text-black hover:bg-red-600 hover:text-white active:bg-red-600 active:text-white"
-                        >
-                          Delete
-                        </button>
-                      </div>
-                    </>
-                  )}
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </motion.div>
+          <MeasurePanel
+            measureState={measureState}
+            isPanelCollapsed={isPanelCollapsed}
+            onToggleCollapse={() => setIsMeasurePanelCollapsed((prev) => !prev)}
+            onMovePoint={handleMoveMeasurementPoint}
+            onDeleteMeasurement={handleDeleteMeasurement}
+            onCancelPlacement={clearMeasurement}
+            t={t}
+          />
         )}
       </AnimatePresence>
 
