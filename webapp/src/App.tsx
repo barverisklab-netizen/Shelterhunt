@@ -16,7 +16,6 @@ import { defaultCityContext } from "./data/cityContext";
 import {
   LIGHTNING_DURATION_MINUTES,
   LIGHTNING_RADIUS_KM,
-  MULTIPLAYER_RADIUS_KM,
 } from "./config/runtime";
 import {
   haversineDistanceKm,
@@ -89,9 +88,10 @@ const mapSessionPlayersToUI = (
 
 const buildLocalDesignatedShelters = async (
   center: { lat: number; lng: number },
-  radiusKm: number,
+  radiusKm?: number,
 ): Promise<POI[]> => {
-  const normalizedRadius = Math.max(0, radiusKm);
+  const normalizedRadius =
+    radiusKm !== undefined && Number.isFinite(radiusKm) ? Math.max(0, radiusKm) : null;
   const origin = { lat: center.lat, lng: center.lng };
   let shelters;
   try {
@@ -105,7 +105,7 @@ const buildLocalDesignatedShelters = async (
   console.log("[Multiplayer] Filtering shelters", {
     total: shelters.length,
     center,
-    radiusKm: normalizedRadius,
+    radiusKm: normalizedRadius ?? "unbounded",
   });
   return shelters
     .filter(
@@ -114,11 +114,13 @@ const buildLocalDesignatedShelters = async (
         Number.isFinite(poi.lat) &&
         Number.isFinite(poi.lng),
     )
-    .filter(
-      (poi) =>
+    .filter((poi) => {
+      if (normalizedRadius === null) return true;
+      return (
         haversineDistanceKm(origin, { lat: poi.lat, lng: poi.lng }) <=
-        normalizedRadius,
-    )
+        normalizedRadius
+      );
+    })
     .map<POI>((poi) => ({
       id: poi.id,
       name: poi.name,
@@ -493,10 +495,12 @@ export default function App() {
       finishSetup([{ id: currentShelter.code, name: label }]);
     };
 
-    const seedFromCoords = async () => {
+    const seedCitywide = async () => {
       try {
-        const coords = await requestUserLocation();
-        const nearby = await buildLocalDesignatedShelters(coords, MULTIPLAYER_RADIUS_KM);
+        const cityCenter = defaultCityContext.mapConfig.startLocation;
+        const nearby = designatedShelters.length
+          ? designatedShelters
+          : await buildLocalDesignatedShelters(cityCenter);
         if (!nearby.length) {
           useFallback();
           return;
@@ -505,19 +509,19 @@ export default function App() {
           id: shelter.id,
           name: shelter.name,
         }));
-        finishSetup(options, coords);
+        finishSetup(options);
       } catch (error) {
-        console.warn("[Multiplayer] Unable to seed nearby shelters:", error);
+        console.warn("[Multiplayer] Unable to seed citywide shelters:", error);
         useFallback();
       }
     };
 
     if (sessionContext) {
-      void seedFromCoords();
+      void seedCitywide();
     } else {
       useFallback();
     }
-  }, [currentShelter, sessionContext, requestUserLocation]);
+  }, [currentShelter, sessionContext, designatedShelters, buildLocalDesignatedShelters]);
 
   const bootstrapSession = useCallback(
     async (
@@ -696,94 +700,87 @@ export default function App() {
     }
   }, [profileName]);
 
-  const startHostFlow = useCallback(async (overrideName?: string) => {
-    if (modeProcessing) return;
-    setModeProcessing(true);
-    setHostShareModalOpen(false);
-    setHostShareCode(null);
-    await disconnectSession();
-    try {
-      const coords = await requestUserLocation();
-      console.log("[Multiplayer] Host location acquired", coords);
-      const nearby = await buildLocalDesignatedShelters(
-        coords,
-        MULTIPLAYER_RADIUS_KM,
-      );
-      console.log("[Multiplayer] Nearby shelters", {
-        count: nearby.length,
-        radiusKm: MULTIPLAYER_RADIUS_KM,
-      });
-      if (!nearby.length) {
-        throw new Error(
-          `No shelters within ${MULTIPLAYER_RADIUS_KM} km. Move closer to the city.`,
+  const startHostFlow = useCallback(
+    async (overrideName?: string) => {
+      if (modeProcessing) return;
+      setModeProcessing(true);
+      setHostShareModalOpen(false);
+      setHostShareCode(null);
+      await disconnectSession();
+      try {
+        const cityCenter = defaultCityContext.mapConfig.startLocation;
+        const nearby = await buildLocalDesignatedShelters(cityCenter);
+        console.log("[Multiplayer] Citywide shelters available", {
+          count: nearby.length,
+        });
+        if (!nearby.length) {
+          throw new Error(
+            "No shelters available in the dataset. Please try again.",
+          );
+        }
+        const { secretShelter } = selectLightningShelter(
+          nearby,
+          cityCenter,
+          Number.POSITIVE_INFINITY,
         );
-      }
-      const { secretShelter } = selectLightningShelter(
-        nearby,
-        coords,
-        MULTIPLAYER_RADIUS_KM,
-      );
-      console.log("[Multiplayer] Selected shelter candidate", {
-        id: secretShelter.id,
-        name: secretShelter.name,
-      });
-      const shareCode = secretShelter.id;
-      const resolved = await getShelterByShareCode(shareCode);
-      if (!resolved) {
-        throw new Error(
-          t("app.errors.shelterUnavailable", {
-            fallback: "Selected shelter is unavailable. Try again.",
-          }),
-        );
-      }
-      const displayName =
-        overrideName?.trim() || profileName.trim() || defaultNavigatorName;
-      console.log("[Multiplayer] Creating session", {
-        shareCode,
-        displayName,
-        ttlMinutes: MULTIPLAYER_DURATION_MINUTES,
-      });
-      const response = await createMultiplayerSession({
-        shelterCode: shareCode,
-        hostId: currentUserId,
-        displayName,
-        ttlMinutes: MULTIPLAYER_DURATION_MINUTES,
-        hostLat: coords.lat,
-        hostLng: coords.lng,
-        maxDistanceKm: MULTIPLAYER_RADIUS_KM,
-      });
-      console.log("[Multiplayer] Session created", {
-        sessionId: response.session.id,
-        hostPlayerId: response.player.id,
-      });
-      await bootstrapSession(response, "host", { shelter: resolved });
-      setPlayerLocation(coords);
-      setHostShareCode(response.session.shelter_code);
-      setHostShareModalOpen(true);
-    } catch (error) {
-      console.error("[Multiplayer] Host flow failed:", error);
-      toast.error(
-        error instanceof Error
-          ? error.message
-          : t("app.errors.startMultiplayer", {
-              fallback: "Unable to start multiplayer session",
+        console.log("[Multiplayer] Selected shelter candidate", {
+          id: secretShelter.id,
+          name: secretShelter.name,
+        });
+        const shareCode = secretShelter.id;
+        const resolved = await getShelterByShareCode(shareCode);
+        if (!resolved) {
+          throw new Error(
+            t("app.errors.shelterUnavailable", {
+              fallback: "Selected shelter is unavailable. Try again.",
             }),
-      );
-    } finally {
-      setModeProcessing(false);
-    }
-  }, [
-    modeProcessing,
-    disconnectSession,
-    requestUserLocation,
-    buildLocalDesignatedShelters,
-    currentUserId,
-    profileName,
-    bootstrapSession,
-    getShelterByShareCode,
-    createMultiplayerSession,
-    toast,
-  ]);
+          );
+        }
+        const displayName =
+          overrideName?.trim() || profileName.trim() || defaultNavigatorName;
+        console.log("[Multiplayer] Creating session", {
+          shareCode,
+          displayName,
+          ttlMinutes: MULTIPLAYER_DURATION_MINUTES,
+        });
+        const response = await createMultiplayerSession({
+          shelterCode: shareCode,
+          hostId: currentUserId,
+          displayName,
+          ttlMinutes: MULTIPLAYER_DURATION_MINUTES,
+        });
+        console.log("[Multiplayer] Session created", {
+          sessionId: response.session.id,
+          hostPlayerId: response.player.id,
+        });
+        await bootstrapSession(response, "host", { shelter: resolved });
+        setHostShareCode(response.session.shelter_code);
+        setHostShareModalOpen(true);
+      } catch (error) {
+        console.error("[Multiplayer] Host flow failed:", error);
+        toast.error(
+          error instanceof Error
+            ? error.message
+            : t("app.errors.startMultiplayer", {
+                fallback: "Unable to start multiplayer session",
+              }),
+        );
+      } finally {
+        setModeProcessing(false);
+      }
+    },
+    [
+      modeProcessing,
+      disconnectSession,
+      buildLocalDesignatedShelters,
+      currentUserId,
+      profileName,
+      bootstrapSession,
+      getShelterByShareCode,
+      createMultiplayerSession,
+      toast,
+    ],
+  );
 
   const handleJoinGameRequest = () => {
     if (gameState !== "onboarding") {
