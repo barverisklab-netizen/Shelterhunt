@@ -400,6 +400,9 @@
   },
   "game": {
     "exitTitle": "メインメニューに戻る",
+    "exitConfirmTitle": "ゲームを終了しますか？",
+    "exitConfirmBody": "このプレイの進行状況は失われます。",
+    "exitConfirmLeave": "終了",
     "secretShelter": "秘密の避難所",
     "secretShelterName": "秘密の避難所名",
     "tapToAsk": "質問するにはタップ",

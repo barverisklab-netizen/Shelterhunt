@@ -400,6 +400,9 @@
   },
   "game": {
     "exitTitle": "Exit to main menu",
+    "exitConfirmTitle": "Leave the game?",
+    "exitConfirmBody": "Your progress in this match will be lost.",
+    "exitConfirmLeave": "Exit",
     "secretShelter": "Secret Shelter",
     "secretShelterName": "Secret shelter name",
     "tapToAsk": "Testing mode active",

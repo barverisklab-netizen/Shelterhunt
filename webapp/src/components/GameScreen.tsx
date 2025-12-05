@@ -75,6 +75,7 @@ export function GameScreen({
   const [measureTrigger, setMeasureTrigger] = useState(0);
   const [isMeasureActive, setIsMeasureActive] = useState(false);
   const [filteredPois, setFilteredPois] = useState<POI[] | null>(null);
+  const [showExitConfirm, setShowExitConfirm] = useState(false);
   const [penaltyStage, setPenaltyStage] = useState<WrongGuessStage | null>(null);
   const [solvedQuestions, setSolvedQuestions] = useState<string[]>([]);
   const lastToastPoiId = useRef<string | null>(null);
@@ -424,7 +425,7 @@ export function GameScreen({
           <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
             <button
-              onClick={onEndGame}
+              onClick={() => setShowExitConfirm(true)}
               className="rounded border-4 border-black bg-red-500 p-4 text-black shadow-sm transition-colors hover:bg-red-600"
               title={t("game.exitTitle")}
             >
@@ -646,6 +647,50 @@ export function GameScreen({
             stage={penaltyStage}
             onContinue={handlePenaltyContinue}
           />
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {showExitConfirm && (
+          <motion.div
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          >
+            <motion.div
+              className="w-full max-w-sm rounded-lg border-2 border-black bg-background p-6 text-black shadow-xl text-center"
+              initial={{ scale: 0.95, opacity: 0, y: 10 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.95, opacity: 0, y: 10 }}
+            >
+              <h2 className="text-lg font-bold text-black uppercase mb-2">
+                {t("game.exitConfirmTitle", { fallback: "Leave the game?" })}
+              </h2>
+              <p className="text-sm text-black mb-4">
+                {t("game.exitConfirmBody", {
+                  fallback: "Your progress in this match will be lost.",
+                })}
+              </p>
+              <div className="flex justify-center gap-3">
+                <button
+                  className="rounded border border-black px-4 py-2 text-sm font-semibold uppercase tracking-wide hover:bg-neutral-100"
+                  onClick={() => setShowExitConfirm(false)}
+                >
+                  {t("common.cancel", { fallback: "Cancel" })}
+                </button>
+                <button
+                  className="rounded border border-black bg-red-500 px-4 py-2 text-sm font-bold text-black uppercase tracking-wide text-black shadow-sm hover:bg-red-600"
+                  onClick={() => {
+                    setShowExitConfirm(false);
+                    onEndGame();
+                  }}
+                >
+                  {t("game.exitConfirmLeave", { fallback: "Exit" })}
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
         )}
       </AnimatePresence>
 
