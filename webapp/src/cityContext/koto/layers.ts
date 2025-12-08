@@ -4,7 +4,7 @@ import { KotoLayer } from "@/types/kotoLayers";
 export const kotoLayers: KotoLayer[] = [
   // Designated Evacuation Centers
   {
-    id: 2,
+    id: 1,
     label: "Designated Evacuation Centers",
     group: "Shelters",
     metadata: {
@@ -64,7 +64,7 @@ export const kotoLayers: KotoLayer[] = [
   },
   // Voluntary Evacuation Centers
   {
-    id: 5,
+    id: 2,
     label: "Voluntary Evacuation Centers",
     group: "Shelters",
     metadata: {
@@ -124,7 +124,7 @@ export const kotoLayers: KotoLayer[] = [
   },
   // Temporary Evacuation Centers (Corporate/UR)
   {
-    id: 4,
+    id: 3,
     label: "Temporary Evacuation Centers",
     group: "Shelters",
     metadata: {
@@ -188,7 +188,7 @@ export const kotoLayers: KotoLayer[] = [
   },
   // Evacuation Centers (generic EC)
   {
-    id: 18,
+    id: 4,
     label: "Evacuation Centers",
     group: "Shelters",
     metadata: {
@@ -242,7 +242,7 @@ export const kotoLayers: KotoLayer[] = [
   },
   // AED Locations
   {
-    id: 3,
+    id: 5,
     label: "AED Locations",
     group: "Evacuation Support Facilities",
     metadata: {
@@ -298,7 +298,7 @@ export const kotoLayers: KotoLayer[] = [
   },
   // Flood map
   {
-    id: 90,
+    id: 6,
     label: "Flood Depth",
     group: "Hazard Layers",
     metadata: {
@@ -352,7 +352,7 @@ export const kotoLayers: KotoLayer[] = [
   },
   // Flood depth rank
   {
-    id: 91,
+    id: 7,
     label: "Inland Waters Depth Rank",
     group: "Hazard Layers",
     metadata: {
@@ -393,7 +393,7 @@ export const kotoLayers: KotoLayer[] = [
           3,
           "#2a79b9",
           4,
-          "#1C5482FF",
+          "#1C5482",
         ],
         "fill-opacity": 0.6,
       },
@@ -402,7 +402,7 @@ export const kotoLayers: KotoLayer[] = [
   },
   // Flood duration rank
   {
-    id: 92,
+    id: 8,
     label: "Flood Duration Rank",
     group: "Hazard Layers",
     metadata: {
@@ -452,7 +452,7 @@ export const kotoLayers: KotoLayer[] = [
   },
   // Stormsurge
   {
-    id: 93,
+    id: 9,
     label: "Storm Surge",
     group: "Hazard Layers",
     metadata: {
@@ -508,7 +508,7 @@ export const kotoLayers: KotoLayer[] = [
   },
   // Inland water depth
   {
-    id: 94,
+    id: 10,
     label: "Inland Waters Depth",
     group: "Hazard Layers",
     metadata: {
@@ -685,7 +685,7 @@ export const kotoLayers: KotoLayer[] = [
   },
   // Community Centers
   {
-    id: 6,
+    id: 13,
     label: "Community Centers",
     group: "Evacuation Support Facilities",
     metadata: {
@@ -748,7 +748,7 @@ export const kotoLayers: KotoLayer[] = [
   },
   // Flood Gates
   {
-    id: 10,
+    id: 14,
     label: "Flood Gates",
     group: "City Landmarks",
     metadata: {
@@ -811,7 +811,7 @@ export const kotoLayers: KotoLayer[] = [
   },
   // Train Stations
   {
-    id: 13,
+    id: 15,
     label: "Train Stations",
     group: "City Landmarks",
     metadata: {

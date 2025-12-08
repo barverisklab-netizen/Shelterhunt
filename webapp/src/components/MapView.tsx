@@ -71,38 +71,27 @@ const createCircleFeature = (
 };
 
 
-// Helper function to get icons for Koto layers based on ID
+const LAYER_ICON_BY_LABEL: Record<string, React.ReactNode> = {
+  "AED Locations": <Heart className="w-4 h-4" />,
+  "Bridges": <Cable className="w-4 h-4" />,
+  "Shrines/Temples": <Home className="w-4 h-4" />,
+  "Community Centers": <Building2 className="w-4 h-4" />,
+  "Flood Gates": <Cable className="w-4 h-4" />,
+  "Train Stations": <Train className="w-4 h-4" />,
+};
+
+// Helper function to get icons for Koto layers based on label
 const getKotoLayerIcon = (layer: (typeof kotoLayers)[0]): React.ReactNode => {
-  if (!layer?.metadata?.legendItems?.[0]) {
-    return <MapPin className="w-4 h-4 text-black" />;
-  }
+  const icon = LAYER_ICON_BY_LABEL[layer.label];
+  if (icon) return icon;
 
   const rawColor =
-    layer.metadata.legendItems[0].swatchStyle.strokeColor ||
-    layer.metadata.legendItems[0].swatchStyle.fillColor ||
+    layer.metadata?.legendItems?.[0]?.swatchStyle.strokeColor ||
+    layer.metadata?.legendItems?.[0]?.swatchStyle.fillColor ||
     "#000000";
 
-  // Sanitize to Bauhaus-compliant color
   const color = sanitizeToBauhausColor(rawColor);
-
-  switch (layer.id) {
-    case 3: // AED Locations
-      return <Heart className="w-4 h-4" />;
-    case 11: // Bridges
-      return <Cable className="w-4 h-4" />;
-    case 12: // Shrines/Temples
-      return <Home className="w-4 h-4" />;
-    case 9: // Flood Depth
-      return <MapPin className="w-4 h-4" />;
-    case 6: // Community Centers
-      return <Building2 className="w-4 h-4" />;
-    case 10: // Flood Gates
-      return <Cable className="w-4 h-4" />;
-    case 13: // Train Stations
-      return <Train className="w-4 h-4" />;
-    default:
-      return <MapPin className="w-4 h-4" />;
-  }
+  return <MapPin className="w-4 h-4" style={{ color }} />;
 };
 
 const KOTO_LAYER_GROUPS: KotoLayerGroup[] = [
@@ -1140,6 +1129,36 @@ const [measureState, setMeasureState] = useState<{
     }
 
     try {
+      const expectedLayerIds = new Set(
+        kotoLayers.map((layer) => `koto-layer-${layer.id}`),
+      );
+      const expectedSourceIds = new Set(
+        kotoLayers.map((layer) => `koto-source-${layer.sourceData.layerId}`),
+      );
+
+      // Remove stale Koto layers/sources from previous configs
+      const styleLayers = m.getStyle()?.layers ?? [];
+      styleLayers
+        .map((layer) => layer.id)
+        .filter(
+          (id) => id.startsWith("koto-layer-") && !expectedLayerIds.has(id),
+        )
+        .forEach((staleId) => {
+          if (m.getLayer(staleId)) {
+            m.removeLayer(staleId);
+          }
+        });
+
+      Object.keys(m.getStyle()?.sources ?? {})
+        .filter(
+          (id) => id.startsWith("koto-source-") && !expectedSourceIds.has(id),
+        )
+        .forEach((staleSourceId) => {
+          if (m.getSource(staleSourceId)) {
+            m.removeSource(staleSourceId);
+          }
+        });
+
       // Registry to avoid duplicate event bindings across calls
       const boundLayers: Set<string> =
         (m as any).__kotoBoundLayers || ((m as any).__kotoBoundLayers = new Set());
@@ -1153,7 +1172,7 @@ const [measureState, setMeasureState] = useState<{
           label: string;
           legendItems?: (typeof kotoLayers)[number]["metadata"]["legendItems"];
         }
-      > = (m as any).__kotoLayerMeta || ((m as any).__kotoLayerMeta = {});
+      > = ((m as any).__kotoLayerMeta = {});
 
       // Simple, safe HTML escape for interpolated values
       const escapeHtml = (s: string) =>
@@ -1227,95 +1246,95 @@ const [measureState, setMeasureState] = useState<{
         }
       });
 
-      if (!(m as any).__kotoPopupHandler) {
-        const handleCombinedClick = (
-          e: mapboxgl.MapMouseEvent & mapboxgl.EventData,
-        ) => {
-          if (measureStatusRef.current !== "idle") {
-            return;
-          }
-
-          const layerIds = Object.keys(layerMetaRegistry).filter(
-            (id) => layerMetaRegistry[id]?.template,
-          );
-
-          if (!layerIds.length) {
-            return;
-          }
-
-          const features = m.queryRenderedFeatures(e.point, {
-            layers: layerIds,
-          });
-
-          if (!features.length) {
-            if (infoPopup.current) {
-              infoPopup.current.remove();
-              infoPopup.current = null;
-            }
-            return;
-          }
-
-          const sections = features
-            .map((feature) => {
-              const mapLayerId = feature.layer?.id;
-              if (!mapLayerId) return null;
-              const meta = layerMetaRegistry[mapLayerId];
-              if (!meta?.template) return null;
-
-              const legend = meta.legendItems?.[0];
-              const headerHtml = `
-                <div style="padding: 12px;">
-                  <div style="font-weight:700; margin-bottom:6px; font-size:14px;">
-                    ${escapeHtml(legend?.label ?? meta.label)}
-                  </div>
-                  ${
-                    legend?.description
-                      ? `<div style="opacity:0.9; font-size:12px; margin-bottom:8px;">${escapeHtml(legend.description)}</div>`
-                      : ""
-                  }
-                  <div style="font-size:12px;">
-              `;
-              const bodyHtml = renderTemplate(
-                meta.template,
-                feature.properties || {},
-              );
-              const footerHtml = `</div></div>`;
-              return headerHtml + bodyHtml + footerHtml;
-            })
-            .filter((section): section is string => Boolean(section));
-
-          if (!sections.length) {
-            if (infoPopup.current) {
-              infoPopup.current.remove();
-              infoPopup.current = null;
-            }
-            return;
-          }
-
-          const combinedHtml = `
-            <div style="background: rgba(0,0,0,0.85); border-radius: 8px; min-width: 220px; color: #fff;">
-              ${sections.join(
-                `<div style="height:1px; background: rgba(255,255,255,0.2); margin: 0 12px;"></div>`,
-              )}
-            </div>
-          `;
-
-          if (!infoPopup.current) {
-            infoPopup.current = new mapboxgl.Popup({
-              closeButton: true,
-              closeOnClick: true,
-            });
-          }
-
-          infoPopup.current
-            .setLngLat(e.lngLat)
-            .setHTML(combinedHtml)
-            .addTo(m);
-        };
-
-        (m as any).__kotoPopupHandler = handleCombinedClick;
-        m.on("click", handleCombinedClick);
+      const previousPopupHandler = (m as any).__kotoPopupHandler;
+      if (previousPopupHandler) {
+        m.off("click", previousPopupHandler);
       }
+
+      const handleCombinedClick = (
+        e: mapboxgl.MapMouseEvent & mapboxgl.EventData,
+      ) => {
+        if (measureStatusRef.current !== "idle") {
+          return;
+        }
+
+        const layerIds = Object.keys(layerMetaRegistry).filter(
+          (id) => layerMetaRegistry[id]?.template && m.getLayer(id),
+        );
+
+        if (!layerIds.length) {
+          return;
+        }
+
+        const features = m.queryRenderedFeatures(e.point, {
+          layers: layerIds,
+        });
+
+        if (!features.length) {
+          if (infoPopup.current) {
+            infoPopup.current.remove();
+            infoPopup.current = null;
+          }
+          return;
+        }
+
+        const sections = features
+          .map((feature) => {
+            const mapLayerId = feature.layer?.id;
+            if (!mapLayerId) return null;
+            const meta = layerMetaRegistry[mapLayerId];
+            if (!meta?.template) return null;
+
+            const legend = meta.legendItems?.[0];
+            const headerHtml = `
+              <div style="padding: 12px;">
+                <div style="font-weight:700; margin-bottom:6px; font-size:14px;">
+                  ${escapeHtml(legend?.label ?? meta.label)}
+                </div>
+                ${
+                  legend?.description
+                    ? `<div style="opacity:0.9; font-size:12px; margin-bottom:8px;">${escapeHtml(legend.description)}</div>`
+                    : ""
+                }
+                <div style="font-size:12px;">
+            `;
+            const bodyHtml = renderTemplate(
+              meta.template,
+              feature.properties || {},
+            );
+            const footerHtml = `</div></div>`;
+            return headerHtml + bodyHtml + footerHtml;
+          })
+          .filter((section): section is string => Boolean(section));
+
+        if (!sections.length) {
+          if (infoPopup.current) {
+            infoPopup.current.remove();
+            infoPopup.current = null;
+          }
+          return;
+        }
+
+        const combinedHtml = `
+          <div style="background: rgba(0,0,0,0.85); border-radius: 8px; min-width: 220px; color: #fff;">
+            ${sections.join(
+              `<div style="height:1px; background: rgba(255,255,255,0.2); margin: 0 12px;"></div>`,
+            )}
+          </div>
+        `;
+
+        if (!infoPopup.current) {
+          infoPopup.current = new mapboxgl.Popup({
+            closeButton: true,
+            closeOnClick: true,
+          });
+        }
+
+        infoPopup.current.setLngLat(e.lngLat).setHTML(combinedHtml).addTo(m);
+      };
+
+      (m as any).__kotoPopupHandler = handleCombinedClick;
+      m.on("click", handleCombinedClick);
 
       // console.info("[koto] layers initialized");
     } catch (error) {
@@ -1475,12 +1494,12 @@ const [measureState, setMeasureState] = useState<{
       <AnimatePresence>
         {showLayerControl && (
           <motion.div
-            className="absolute top-16 left-4 z-10 w-[320px] max-w-[90vw] min-w-[220px] space-y-3 rounded-lg border border-black bg-background p-4 shadow-lg"
+            className="absolute top-16 left-4 z-10 w-[300px] max-w-[90vw] min-w-[220px] space-y-3 rounded-lg border border-black bg-background p-[5px] shadow-lg"
             initial={{ opacity: 0, y: -10, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -10, scale: 0.95 }}
             style={{
-              width: "320px",
+              width: "300px",
               minWidth: "220px",
               maxWidth: "90vw",
               marginTop: "10px",
