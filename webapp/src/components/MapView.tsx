@@ -1494,7 +1494,7 @@ const [measureState, setMeasureState] = useState<{
       <AnimatePresence>
         {showLayerControl && (
           <motion.div
-            className="absolute top-16 left-4 z-10 w-[300px] max-w-[90vw] min-w-[220px] space-y-3 rounded-lg border border-black bg-background p-[5px] shadow-lg"
+            className="absolute top-16 left-4 z-10 w-[300px] max-w-[90vw] min-w-[220px] space-y-3 rounded-lg border border-black bg-background p-4 shadow-lg"
             initial={{ opacity: 0, y: -10, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -10, scale: 0.95 }}
