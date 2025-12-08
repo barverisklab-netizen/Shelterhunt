@@ -1,6 +1,11 @@
 // Koto, Tokyo map layer type definitions
 
 export type KotoLayerSwatchType = "line" | "fill" | "symbol";
+export type KotoLayerGroup =
+  | "Shelters"
+  | "Evacuation Support Facilities"
+  | "City Landmarks"
+  | "Hazard Layers";
 
 export interface KotoLayerLegendItem {
   label: string;
@@ -37,6 +42,7 @@ export interface KotoLayerStyle {
 export interface KotoLayer {
   id: number;
   label: string;
+  group: KotoLayerGroup;
   metadata: KotoLayerMetadata;
   layerType: "symbol" | "fill" | "line";
   sourceType: "vector";

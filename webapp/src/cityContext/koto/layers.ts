@@ -6,6 +6,7 @@ export const kotoLayers: KotoLayer[] = [
   {
     id: 2,
     label: "Designated Evacuation Centers",
+    group: "Shelters",
     metadata: {
       query: {
         template:
@@ -65,6 +66,7 @@ export const kotoLayers: KotoLayer[] = [
   {
     id: 5,
     label: "Voluntary Evacuation Centers",
+    group: "Shelters",
     metadata: {
       query: {
         template:
@@ -124,6 +126,7 @@ export const kotoLayers: KotoLayer[] = [
   {
     id: 4,
     label: "Temporary Evacuation Centers",
+    group: "Shelters",
     metadata: {
       query: {
         template:
@@ -187,6 +190,7 @@ export const kotoLayers: KotoLayer[] = [
   {
     id: 18,
     label: "Evacuation Centers",
+    group: "Shelters",
     metadata: {
       query: {
         template:
@@ -240,6 +244,7 @@ export const kotoLayers: KotoLayer[] = [
   {
     id: 3,
     label: "AED Locations",
+    group: "Evacuation Support Facilities",
     metadata: {
       query: {
         template:
@@ -295,6 +300,7 @@ export const kotoLayers: KotoLayer[] = [
   {
     id: 90,
     label: "Flood Depth",
+    group: "Hazard Layers",
     metadata: {
       query: {
         template:
@@ -348,6 +354,7 @@ export const kotoLayers: KotoLayer[] = [
   {
     id: 91,
     label: "Inland Waters Depth Rank",
+    group: "Hazard Layers",
     metadata: {
       query: {
         template:
@@ -397,6 +404,7 @@ export const kotoLayers: KotoLayer[] = [
   {
     id: 92,
     label: "Flood Duration Rank",
+    group: "Hazard Layers",
     metadata: {
       query: {
         template:
@@ -446,6 +454,7 @@ export const kotoLayers: KotoLayer[] = [
   {
     id: 93,
     label: "Storm Surge",
+    group: "Hazard Layers",
     metadata: {
       query: {
         template:
@@ -501,6 +510,7 @@ export const kotoLayers: KotoLayer[] = [
   {
     id: 94,
     label: "Inland Waters Depth",
+    group: "Hazard Layers",
     metadata: {
       query: {
         template:
@@ -551,6 +561,7 @@ export const kotoLayers: KotoLayer[] = [
   {
     id: 11,
     label: "Bridges",
+    group: "City Landmarks",
     metadata: {
       query: {
         template:
@@ -613,6 +624,7 @@ export const kotoLayers: KotoLayer[] = [
   {
     id: 12,
     label: "Shrines/Temples",
+    group: "City Landmarks",
     metadata: {
       query: {
         template:
@@ -675,6 +687,7 @@ export const kotoLayers: KotoLayer[] = [
   {
     id: 6,
     label: "Community Centers",
+    group: "Evacuation Support Facilities",
     metadata: {
       query: {
         template:
@@ -737,6 +750,7 @@ export const kotoLayers: KotoLayer[] = [
   {
     id: 10,
     label: "Flood Gates",
+    group: "City Landmarks",
     metadata: {
       query: {
         template:
@@ -799,6 +813,7 @@ export const kotoLayers: KotoLayer[] = [
   {
     id: 13,
     label: "Train Stations",
+    group: "City Landmarks",
     metadata: {
       query: {
         template:

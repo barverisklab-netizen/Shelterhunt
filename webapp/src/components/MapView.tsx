@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { POI } from "@/types/game";
 import { kotoLayers } from "@/cityContext/koto/layers";
+import { KotoLayerGroup } from "@/types/kotoLayers";
 import { MAPBOX_CONFIG, getTilesetUrl } from "../config/mapbox";
 import { defaultCityContext } from "../data/cityContext";
 import mapboxgl from "mapbox-gl";
@@ -103,6 +104,13 @@ const getKotoLayerIcon = (layer: (typeof kotoLayers)[0]): React.ReactNode => {
       return <MapPin className="w-4 h-4" />;
   }
 };
+
+const KOTO_LAYER_GROUPS: KotoLayerGroup[] = [
+  "Shelters",
+  "Evacuation Support Facilities",
+  "City Landmarks",
+  "Hazard Layers",
+];
 
 const SHELTER_KOTO_LAYER_IDS = kotoLayers
   .filter((layer) => /Designated Evacuation Centers/i.test(layer.label))
@@ -205,6 +213,15 @@ const [measureState, setMeasureState] = useState<{
     });
     return initialState;
   });
+
+  const [layerGroupOpenState, setLayerGroupOpenState] = useState<
+    Record<KotoLayerGroup, boolean>
+  >(() =>
+    KOTO_LAYER_GROUPS.reduce(
+      (acc, group) => ({ ...acc, [group]: true }),
+      {} as Record<KotoLayerGroup, boolean>,
+    ),
+  );
 
   const [userCircleCenter, setUserCircleCenter] = useState<{
     lat: number;
@@ -1331,6 +1348,18 @@ const [measureState, setMeasureState] = useState<{
     }
   };
 
+  const toggleLayerGroupOpen = (group: KotoLayerGroup) => {
+    setLayerGroupOpenState((prev) => ({
+      ...prev,
+      [group]: !prev[group],
+    }));
+  };
+
+  const groupedKotoLayers = KOTO_LAYER_GROUPS.map((group) => ({
+    group,
+    layers: kotoLayers.filter((layer) => layer.group === group),
+  })).filter(({ layers }) => layers.length > 0);
+
   const anyLayerActive = Object.values(kotoLayersVisible).some(Boolean);
   const isPanelCollapsed =
     measureState.status === "active" && isMeasurePanelCollapsed;
@@ -1446,12 +1475,16 @@ const [measureState, setMeasureState] = useState<{
       <AnimatePresence>
         {showLayerControl && (
           <motion.div
-            className="absolute top-16 left-4 z-10 w-[90vw] min-w-[220px] space-y-3 rounded-lg border border-black bg-background p-4 shadow-lg sm:w-auto"
+            className="absolute top-16 left-4 z-10 w-[320px] max-w-[90vw] min-w-[220px] space-y-3 rounded-lg border border-black bg-background p-4 shadow-lg"
             initial={{ opacity: 0, y: -10, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -10, scale: 0.95 }}
             style={{
-              maxHeight: "min(60vh, 240px)",
+              width: "320px",
+              minWidth: "220px",
+              maxWidth: "90vw",
+              marginTop: "10px",
+              maxHeight: "min(80vh, 320px)",
               overflowY: "auto",
             }}
           >
@@ -1467,15 +1500,47 @@ const [measureState, setMeasureState] = useState<{
               </button>
             </div>
 
-            {kotoLayers.map((layer) => (
-              <LayerToggle
-                key={layer.id}
-                label={layer.label}
-                icon={getKotoLayerIcon(layer)}
-                checked={kotoLayersVisible[layer.label]}
-                onChange={() => toggleKotoLayer(layer.label)}
-              />
-            ))}
+            <div className="space-y-2">
+              {groupedKotoLayers.map(({ group, layers }) => (
+                <div
+                  key={group}
+                  className="rounded-md bg-white"
+                >
+                  <button
+                    type="button"
+                    onClick={() => toggleLayerGroupOpen(group)}
+                    className="flex w-full items-center justify-between px-3 py-2 text-left text-sm font-semibold text-black"
+                  >
+                    <span>{group}</span>
+                    <span className="text-lg leading-none">
+                      {layerGroupOpenState[group] ? "-" : "+"}
+                    </span>
+                  </button>
+                  <AnimatePresence initial={false}>
+                    {layerGroupOpenState[group] && (
+                      <motion.div
+                        key={`${group}-content`}
+                        initial={{ opacity: 0, y: -6 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -6 }}
+                        transition={{ duration: 0.15 }}
+                        className="space-y-1 border-t border-neutral-200 px-2 py-2"
+                      >
+                        {layers.map((layer) => (
+                          <LayerToggle
+                            key={layer.id}
+                            label={layer.label}
+                            icon={getKotoLayerIcon(layer)}
+                            checked={kotoLayersVisible[layer.label]}
+                            onChange={() => toggleKotoLayer(layer.label)}
+                          />
+                        ))}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+              ))}
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
