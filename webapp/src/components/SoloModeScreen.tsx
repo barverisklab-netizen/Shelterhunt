@@ -71,7 +71,7 @@ export function SoloModeScreen({
                 type="button"
                 disabled={isProcessing}
                 onClick={() => setSelection("lightning")}
-                className="w-full bg-background text-black border-4 border-black hover:shadow-[4px_4px_0_black] transition-all py-6 px-5 flex flex-col items-center gap-2 cursor-pointer text-center"
+                className="w-full bg-background text-black border-4 border-black hover:bg-neutral-100 hover:shadow-[4px_4px_0_black] transition-all py-6 px-5 flex flex-col items-center gap-2 cursor-pointer text-center"
               >
                 <span className="flex items-center gap-3 text-lg font-bold uppercase tracking-wide">
                   <Zap className="h-5 w-5" /> {t("solo.lightningHunt")}
@@ -85,7 +85,7 @@ export function SoloModeScreen({
                 type="button"
                 disabled={isProcessing}
                 onClick={onSelectCitywide}
-                className="w-full bg-background text-black border-4 border-black hover:shadow-[4px_4px_0_black] transition-all py-6 px-5 flex flex-col items-center gap-2 cursor-pointer text-center"
+                className="w-full bg-background text-black border-4 border-black hover:bg-neutral-100 hover:shadow-[4px_4px_0_black] transition-all py-6 px-5 flex flex-col items-center gap-2 cursor-pointer text-center"
               >
                 <span className="flex items-center gap-3 text-md font-bold uppercase tracking-wide">
                   <Map className="h-5 w-5" /> {t("solo.citywideSearch")}
@@ -129,7 +129,7 @@ export function SoloModeScreen({
                   type="button"
                   disabled={isProcessing}
                   onClick={onSelectLightning}
-                  className="w-full max-w-xs border border-black bg-white text-black transition-colors hover:bg-neutral-200 hover:text-black hover:border-black active:bg-neutral-800 active:text-black active:border-black disabled:bg-neutral-200 disabled:text-black-40 disabled:border-neutral-400 disabled:opacity-100">
+                  className="w-full max-w-xs border border-black bg-white text-black transition-colors hover:bg-neutral-100 hover:text-black hover:border-black active:bg-neutral-800 active:text-black active:border-black disabled:bg-neutral-200 disabled:text-black-40 disabled:border-neutral-400 disabled:opacity-100">
                   {t("solo.startLightning")}
                 </button>
               </div>

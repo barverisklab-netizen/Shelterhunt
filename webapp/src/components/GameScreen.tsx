@@ -80,6 +80,7 @@ export function GameScreen({
   const [solvedQuestions, setSolvedQuestions] = useState<string[]>([]);
   const lastToastPoiId = useRef<string | null>(null);
   const [externalWinnerName, setExternalWinnerName] = useState<string | undefined>(undefined);
+  const [layerPanelCloseSignal, setLayerPanelCloseSignal] = useState(0);
 
   useEffect(() => {
     if (isMeasureActive) {
@@ -470,11 +471,17 @@ export function GameScreen({
           gameEnded={outcome === 'win' || outcome === 'lose'}
           onPOIClick={simulateMove}
           onSecretShelterChange={onSecretShelterChange}
-          onShelterOptionsChange={onShelterOptionsChange}
-          measureTrigger={measureTrigger}
-          onMeasurementActiveChange={setIsMeasureActive}
-          isFiltered={Boolean(filteredPois)}
-        />
+      onShelterOptionsChange={onShelterOptionsChange}
+      measureTrigger={measureTrigger}
+      onMeasurementActiveChange={setIsMeasureActive}
+      isFiltered={Boolean(filteredPois)}
+      onLayerPanelToggle={(open) => {
+        if (open) {
+          setDrawerOpen(false);
+        }
+      }}
+      layerPanelCloseSignal={layerPanelCloseSignal}
+    />
 
         {/* Floating Action Buttons */}
         <div className="absolute top-4 right-4 flex flex-col gap-3">
@@ -501,7 +508,13 @@ export function GameScreen({
           questions={questions}
           availableCategories={defaultCityContext.questionCategories}
           isOpen={drawerOpen}
-          onToggle={() => setDrawerOpen(!drawerOpen)}
+          onToggle={() => {
+            const next = !drawerOpen;
+            if (next) {
+              setLayerPanelCloseSignal((prev) => prev + 1);
+            }
+            setDrawerOpen(next);
+          }}
           onAskQuestion={handleAskQuestion}
           nearbyPOI={PROXIMITY_DISABLED_FOR_TESTING ? "testing-override" : nearbyPOI?.id || null}
           lockedQuestions={[]}

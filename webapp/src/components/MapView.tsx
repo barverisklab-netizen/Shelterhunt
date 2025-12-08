@@ -133,6 +133,8 @@ interface MapViewProps {
   measureTrigger?: number;
   onMeasurementActiveChange?: (active: boolean) => void;
   isFiltered?: boolean;
+  onLayerPanelToggle?: (open: boolean) => void;
+  layerPanelCloseSignal?: number;
 }
 
 // const POI_ICONS = {
@@ -157,6 +159,8 @@ export function MapView({
   measureTrigger,
   onMeasurementActiveChange,
   isFiltered = false,
+  onLayerPanelToggle,
+  layerPanelCloseSignal,
 }: MapViewProps) {
   const { t, locale } = useI18n();
   const mapContainer = useRef<HTMLDivElement>(null);
@@ -202,6 +206,12 @@ const [measureState, setMeasureState] = useState<{
     });
     return initialState;
   });
+
+  useEffect(() => {
+    if (layerPanelCloseSignal !== undefined) {
+      setShowLayerControl(false);
+    }
+  }, [layerPanelCloseSignal]);
 
   const [layerGroupOpenState, setLayerGroupOpenState] = useState<
     Record<KotoLayerGroup, boolean>
@@ -833,6 +843,11 @@ const [measureState, setMeasureState] = useState<{
     libraries: true,
   });
   const [showLayerControl, setShowLayerControl] = useState(false);
+  useEffect(() => {
+    if (layerPanelCloseSignal !== undefined) {
+      setShowLayerControl(false);
+    }
+  }, [layerPanelCloseSignal]);
 
   // Initialize map
   useEffect(() => {
@@ -1367,6 +1382,25 @@ const [measureState, setMeasureState] = useState<{
     }
   };
 
+  const handleLayerControlToggle = useCallback(
+    (desiredState?: boolean) => {
+      const targetState =
+        typeof desiredState === "boolean" ? desiredState : !showLayerControl;
+
+      if (targetState && measureState.status !== "idle") {
+        const shouldCloseOthers = window.confirm(
+          "Another panel is open. Close it and open Map Layers?",
+        );
+        if (!shouldCloseOthers) return;
+        clearMeasurement();
+      }
+
+      setShowLayerControl(targetState);
+      onLayerPanelToggle?.(targetState);
+    },
+    [clearMeasurement, measureState.status, onLayerPanelToggle, showLayerControl],
+  );
+
   const toggleLayerGroupOpen = (group: KotoLayerGroup) => {
     setLayerGroupOpenState((prev) => ({
       ...prev,
@@ -1482,7 +1516,7 @@ const [measureState, setMeasureState] = useState<{
 
       {/* Layer Control Button */}
       <motion.button
-        onClick={() => setShowLayerControl(!showLayerControl)}
+        onClick={() => handleLayerControlToggle()}
         className="absolute top-4 left-4 z-10 rounded-full border border-neutral-900 bg-background p-3 text-neutral-900 shadow-sm transition-colors hover:bg-neutral-100"
         whileHover={{ scale: 1.02 }}
         whileTap={{ scale: 0.98 }}
@@ -1576,7 +1610,7 @@ const [measureState, setMeasureState] = useState<{
             <div className="flex items-center justify-between">
               <span className="text-sm font-semibold uppercase text-black">Layer Legend</span>
               <button
-                onClick={() => setShowLayerControl(false)}
+                onClick={() => handleLayerControlToggle(false)}
                 className="text-black transition-colors hover:text-red-600"
                 aria-label="Close legend"
               >
@@ -1627,7 +1661,7 @@ const [measureState, setMeasureState] = useState<{
           </motion.div>
         ) : (
           <motion.button
-            onClick={() => setShowLayerControl(true)}
+            onClick={() => handleLayerControlToggle(true)}
             className="absolute bottom-20 left-4 z-10 rounded-full border border-black bg-background px-4 py-2 text-sm font-semibold uppercase text-black shadow-sm transition-colors hover:bg-neutral-100"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}

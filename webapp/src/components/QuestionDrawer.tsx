@@ -327,7 +327,7 @@ export function QuestionDrawer({
                           selectedParam !== "" &&
                           !isLocked && (
                             <Button
-                              className={"w-full border border-black"}
+                              className={"w-full border border-black bg-background text-black hover:bg-neutral-100 active:bg-neutral-200"}
                               onClick={() => onAskQuestion(question.id, selectedParam)}
                               variant="destructive"
                             >

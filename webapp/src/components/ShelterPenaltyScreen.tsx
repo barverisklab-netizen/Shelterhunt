@@ -59,7 +59,7 @@ export function ShelterPenaltyScreen({
           {showContinue && (
             <Button
               onClick={onContinue}
-              className="w-full bg-black text-black border hover:bg-neutral-900 hover:text-white"
+              className="w-full border border-black bg-background text-black hover:bg-neutral-100"
             >
               {t("penalty.keepPlaying")}
             </Button>

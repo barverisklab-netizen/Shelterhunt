@@ -73,7 +73,7 @@ export function GuessConfirmScreen({
           </Button>
           <Button
             variant="outline"
-            className="w-full rounded border border-black bg-background py-4 text-sm font-bold uppercase text-black transition-colors hover:bg-neutral-900 hover:text-white"
+            className="w-full rounded border border-black bg-background py-4 text-sm font-bold uppercase text-black transition-colors hover:bg-neutral-100"
             onClick={onCancel}
           >
             {t("guess.backToClues")}

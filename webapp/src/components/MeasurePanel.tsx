@@ -113,6 +113,12 @@ export function MeasurePanel({
 
             {measureState.status === "active" && (
               <>
+                <p className="text-xs text-black/60">
+                  {t("map.measure.layerCountsNote", {
+                    fallback:
+                      "Counts reflect only the currently active layers you have toggled on.",
+                  })}
+                </p>
                 {measureState.featureNames.length === 0 && (
                   <p className="text-xs text-black/50 italic">
                     {t("map.measure.noFeatures", {
@@ -151,7 +157,7 @@ export function MeasurePanel({
                   <button
                     type="button"
                     onClick={onDeleteMeasurement}
-                    className="rounded border border-black bg-red-500/20 px-3 py-2 text-xs font-bold uppercase tracking-wide text-black hover:bg-red-600 hover:text-white active:bg-red-600 active:text-white"
+                    className="rounded border border-black bg-red-500/20 px-3 py-2 text-xs font-bold uppercase tracking-wide text-black hover:bg-neutral-100 active:bg-neutral-200"
                   >
                     {t("map.measure.popup.delete", { fallback: "Delete" })}
                   </button>
