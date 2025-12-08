@@ -25,7 +25,10 @@ export const kotoLayers: KotoLayer[] = [
     },
     layerType: "symbol",
     sourceType: "vector",
-    sourceData: { layerId: "8sbllw5a", layerName: "ihi_evacuation_centers_all-c2o5a5" },
+    sourceData: {
+      layerId: "8sbllw5a",
+      layerName: "ihi_evacuation_centers_all-c2o5a5",
+    },
     style: {
       paint: {
         "text-color": "#000000",
@@ -38,8 +41,20 @@ export const kotoLayers: KotoLayer[] = [
         "icon-size": 0.75,
         "text-font": ["Roboto Bold"],
         "text-size": 10,
-        "icon-image": ["match", ["get", "Category"], "Designated EC", "ihi_dec", ""],
-        "text-field": ["match", ["get", "Category"], "Designated EC", ["get", "Landmark Name (EN)"], ""],
+        "icon-image": [
+          "match",
+          ["get", "Category"],
+          "Designated EC",
+          "ihi_dec",
+          "",
+        ],
+        "text-field": [
+          "match",
+          ["get", "Category"],
+          "Designated EC",
+          ["get", "Landmark Name (EN)"],
+          "",
+        ],
         "text-anchor": "top",
         "text-offset": [0, 2.5],
         "icon-allow-overlap": true,
@@ -69,7 +84,10 @@ export const kotoLayers: KotoLayer[] = [
     },
     layerType: "symbol",
     sourceType: "vector",
-    sourceData: { layerId: "8sbllw5a", layerName: "ihi_evacuation_centers_all-c2o5a5" },
+    sourceData: {
+      layerId: "8sbllw5a",
+      layerName: "ihi_evacuation_centers_all-c2o5a5",
+    },
     style: {
       paint: {
         "text-color": "#000000",
@@ -82,8 +100,20 @@ export const kotoLayers: KotoLayer[] = [
         "icon-size": 0.8,
         "text-font": ["Roboto Bold"],
         "text-size": 10,
-        "icon-image": ["match", ["get", "Category"], "Voluntary EC", "ihi_vec", ""],
-        "text-field": ["match", ["get", "Category"], "Voluntary EC", ["get", "Landmark name (EN)"], ""],
+        "icon-image": [
+          "match",
+          ["get", "Category"],
+          "Voluntary EC",
+          "ihi_vec",
+          "",
+        ],
+        "text-field": [
+          "match",
+          ["get", "Category"],
+          "Voluntary EC",
+          ["get", "Landmark name (EN)"],
+          "",
+        ],
         "text-anchor": "top",
         "text-offset": [0, 1.5],
         "icon-allow-overlap": true,
@@ -113,7 +143,10 @@ export const kotoLayers: KotoLayer[] = [
     },
     layerType: "symbol",
     sourceType: "vector",
-    sourceData: { layerId: "8sbllw5a", layerName: "ihi_evacuation_centers_all-c2o5a5" },
+    sourceData: {
+      layerId: "8sbllw5a",
+      layerName: "ihi_evacuation_centers_all-c2o5a5",
+    },
     style: {
       paint: {
         "text-color": "#000000",
@@ -173,7 +206,10 @@ export const kotoLayers: KotoLayer[] = [
     },
     layerType: "symbol",
     sourceType: "vector",
-    sourceData: { layerId: "8sbllw5a", layerName: "ihi_evacuation_centers_all-c2o5a5" },
+    sourceData: {
+      layerId: "8sbllw5a",
+      layerName: "ihi_evacuation_centers_all-c2o5a5",
+    },
     style: {
       paint: {
         "text-color": "#000000",
@@ -187,7 +223,13 @@ export const kotoLayers: KotoLayer[] = [
         "text-font": ["Roboto Bold"],
         "text-size": 10,
         "icon-image": ["match", ["get", "Category"], "EC", "ihi_ec", ""],
-        "text-field": ["match", ["get", "Category"], "EC", ["get", "Landmark name (EN)"], ""],
+        "text-field": [
+          "match",
+          ["get", "Category"],
+          "EC",
+          ["get", "Landmark name (EN)"],
+          "",
+        ],
         "text-anchor": "top",
         "text-offset": [0, 2.5],
         "icon-allow-overlap": true,
@@ -235,13 +277,7 @@ export const kotoLayers: KotoLayer[] = [
         "icon-size": 0.6,
         "text-font": ["Roboto Bold"],
         "text-size": 10,
-        "icon-image": [
-          "match",
-          ["get", "Category"],
-          "AED",
-          "ihi_aed",
-          "",
-        ],
+        "icon-image": ["match", ["get", "Category"], "AED", "ihi_aed", ""],
         "text-field": [
           "match",
           ["get", "Category"],
@@ -257,13 +293,14 @@ export const kotoLayers: KotoLayer[] = [
   },
   // Flood map
   {
-    id: 9,
+    id: 90,
     label: "Flood Depth",
     metadata: {
       query: {
-        template: "Flood Depth: <b>{{depth_text}}</b><br>Flood Rank: <b>{{flood_rank}}</b>",
+        template:
+          "Flood Depth: <b>{{depth_text}}</b><br>Flood Rank: <b>{{flood_rank}}</b>",
       },
-      loadOnInit: true,
+      loadOnInit: false,
       legendItems: [
         {
           label: "Flood Risk Zones",
@@ -272,6 +309,8 @@ export const kotoLayers: KotoLayer[] = [
           swatchStyle: {
             fillColor: "#fc0303",
           },
+          isActive: true,
+          isEnabled: true,
         },
       ],
     },
@@ -305,6 +344,209 @@ export const kotoLayers: KotoLayer[] = [
       layout: {},
     },
   },
+  // Flood depth rank
+  {
+    id: 91,
+    label: "Inland Waters Depth Rank",
+    metadata: {
+      query: {
+        template:
+          "Inland Waters Depth: <b>{{InlandWaters_Depth}}</b><br>Rank: <b>{{InlandWaters_Depth_Rank}}</b>",
+      },
+      loadOnInit: false,
+      legendItems: [
+        {
+          label: "Inland Waters Depth Rank",
+          swatchType: "fill",
+          description: "Ranked inland waters depth zones.",
+          swatchStyle: {
+            fillColor: "#2a79b9",
+          },
+          isActive: true,
+          isEnabled: true,
+        },
+      ],
+    },
+    layerType: "fill",
+    sourceType: "vector",
+    sourceData: {
+      layerId: "5m35xdxx",
+      layerName: "ihi_inlandwaters_depth-armcon",
+    },
+    style: {
+      paint: {
+        "fill-color": [
+          "interpolate",
+          ["linear"],
+          ["get", "InlandWaters_Depth_Rank"],
+          1,
+          "#f7fbfe",
+          2,
+          "#8EB7D8",
+          3,
+          "#2a79b9",
+          4,
+          "#1C5482FF",
+        ],
+        "fill-opacity": 0.6,
+      },
+      layout: {},
+    },
+  },
+  // Flood duration rank
+  {
+    id: 92,
+    label: "Flood Duration Rank",
+    metadata: {
+      query: {
+        template:
+          "Flood Duration: <b>{{Flood_Duration}}</b><br>Rank: <b>{{Flood_Duration_Rank}}</b>",
+      },
+      loadOnInit: false,
+      legendItems: [
+        {
+          label: "Flood Duration Rank",
+          swatchType: "fill",
+          description: "Ranked flood duration zones.",
+          swatchStyle: {
+            fillColor: "#6a52a2",
+          },
+          isActive: false,
+          isEnabled: true,
+        },
+      ],
+    },
+    layerType: "fill",
+    sourceType: "vector",
+    sourceData: {
+      layerId: "7o06y51k",
+      layerName: "ihi_flood_duration-56uczi",
+    },
+    style: {
+      paint: {
+        "fill-color": [
+          "interpolate",
+          ["linear"],
+          ["get", "Flood_Duration_Rank"],
+          1,
+          "#fcfcfd",
+          2,
+          "#dddbec",
+          3,
+          "#a39fca",
+          6,
+          "#6a52a2",
+        ],
+        "fill-opacity": 0.6,
+      },
+      layout: {},
+    },
+  },
+  // Stormsurge
+  {
+    id: 93,
+    label: "Storm Surge",
+    metadata: {
+      query: {
+        template:
+          "Storm Surge Depth: <b>{{StormSurge_Depth}}</b><br>Rank: <b>{{StormSurge_Depth_Rank}}</b>",
+      },
+      loadOnInit: false,
+      legendItems: [
+        {
+          label: "Storm Surge Depth Rank",
+          swatchType: "fill",
+          description: "Ranked storm surge depth zones.",
+          swatchStyle: {
+            fillColor: "#be4f27",
+          },
+          isActive: false,
+          isEnabled: true,
+        },
+      ],
+    },
+    layerType: "fill",
+    sourceType: "vector",
+    sourceData: {
+      layerId: "96ah6eu6",
+      layerName: "ihi_stormsurge-3wwpzg",
+    },
+    style: {
+      paint: {
+        "fill-color": [
+          "interpolate",
+          ["linear"],
+          ["get", "StormSurge_Depth_Rank"],
+          1,
+          "#fcfad5",
+          2,
+          "#fde8ab",
+          3,
+          "#ffd081",
+          4,
+          "#faaa47",
+          5,
+          "#f28721",
+          6,
+          "#dd6826",
+          7,
+          "#be4f27",
+        ],
+        "fill-opacity": 0.6,
+      },
+      layout: {},
+    },
+  },
+  // Inland water depth
+  {
+    id: 94,
+    label: "Inland Waters Depth",
+    metadata: {
+      query: {
+        template:
+          "Inland Waters Depth: <b>{{InlandWaters_Depth}}</b><br>Rank: <b>{{InlandWaters_Depth_Rank}}</b>",
+      },
+      loadOnInit: false,
+      legendItems: [
+        {
+          label: "Inland Waters Depth Rank",
+          swatchType: "fill",
+          description: "Ranked inland waters depth zones.",
+          swatchStyle: {
+            fillColor: "#2a79b9",
+          },
+          isActive: true,
+          isEnabled: true,
+        },
+      ],
+    },
+    layerType: "fill",
+    sourceType: "vector",
+    sourceData: {
+      layerId: "5m35xdxx",
+      layerName: "ihi_inlandwaters_depth-armcon",
+    },
+    style: {
+      paint: {
+        "fill-color": [
+          "interpolate",
+          ["linear"],
+          ["get", "InlandWaters_Depth_Rank"],
+          1,
+          "#B3DCFE",
+          2,
+          "#80BCEC",
+          3,
+          "#2E83C9",
+          4,
+          "#1A4A71",
+        ],
+        "fill-opacity": 0.6,
+      },
+      layout: {},
+    },
+  },
+
   // Bridges
   {
     id: 11,
