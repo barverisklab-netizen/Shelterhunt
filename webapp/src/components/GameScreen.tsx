@@ -8,7 +8,7 @@ import { ShelterVictoryScreen } from './ShelterVictoryScreen';
 import { ShelterPenaltyScreen } from './ShelterPenaltyScreen';
 import { POI, Question, Clue, QuestionAttribute } from "@/types/game";
 import { defaultCityContext } from '../data/cityContext';
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { toast } from "sonner@2.0.3";
 import { BlurReveal } from './ui/blur-reveal';
 import { useI18n } from "@/i18n";
@@ -80,13 +80,33 @@ export function GameScreen({
   const [solvedQuestions, setSolvedQuestions] = useState<string[]>([]);
   const lastToastPoiId = useRef<string | null>(null);
   const [externalWinnerName, setExternalWinnerName] = useState<string | undefined>(undefined);
+  const [activePanel, setActivePanel] = useState<"layers" | "questions" | "gameplay" | null>(
+    null,
+  );
   const [layerPanelCloseSignal, setLayerPanelCloseSignal] = useState(0);
 
+  const closeLayerPanel = useCallback(() => {
+    setLayerPanelCloseSignal((prev) => prev + 1);
+  }, []);
+
+  const activatePanel = useCallback(
+    (panel: "layers" | "questions" | "gameplay" | null) => {
+      if (panel !== "layers") {
+        closeLayerPanel();
+      }
+
+      setDrawerOpen(panel === "questions");
+      setCluesOpen(panel === "gameplay");
+      setActivePanel(panel);
+    },
+    [closeLayerPanel],
+  );
+
   useEffect(() => {
-    if (isMeasureActive) {
-      setDrawerOpen(false);
+    if (isMeasureActive && activePanel === "questions") {
+      activatePanel(null);
     }
-  }, [isMeasureActive]);
+  }, [activatePanel, activePanel, isMeasureActive]);
 
   useEffect(() => {
     if (!remoteOutcome) return;
@@ -362,7 +382,7 @@ export function GameScreen({
       normalizeName(selectedShelterOption.name) ===
         normalizeName(secretShelter.name);
 
-    setCluesOpen(false);
+    activatePanel(null);
     setSelectedShelterId(null);
 
     if (matches) {
@@ -410,8 +430,7 @@ export function GameScreen({
   };
 
   const handleStartMeasure = () => {
-    setCluesOpen(false);
-    setDrawerOpen(false);
+    activatePanel(null);
     setMeasureTrigger((prev) => prev + 1);
   };
 
@@ -477,7 +496,9 @@ export function GameScreen({
       isFiltered={Boolean(filteredPois)}
       onLayerPanelToggle={(open) => {
         if (open) {
-          setDrawerOpen(false);
+          activatePanel("layers");
+        } else if (activePanel === "layers") {
+          activatePanel(null);
         }
       }}
       layerPanelCloseSignal={layerPanelCloseSignal}
@@ -486,7 +507,7 @@ export function GameScreen({
         {/* Floating Action Buttons */}
         <div className="absolute top-4 right-4 flex flex-col gap-3">
           <motion.button
-            onClick={() => setCluesOpen(true)}
+            onClick={() => activatePanel("gameplay")}
             className="relative flex items-center justify-center bg-background p-4 border border-neutral-900 shadow-md hover:scale-105 transition-transform rounded-full"
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
@@ -511,9 +532,10 @@ export function GameScreen({
           onToggle={() => {
             const next = !drawerOpen;
             if (next) {
-              setLayerPanelCloseSignal((prev) => prev + 1);
+              activatePanel("questions");
+            } else if (activePanel === "questions") {
+              activatePanel(null);
             }
-            setDrawerOpen(next);
           }}
           onAskQuestion={handleAskQuestion}
           nearbyPOI={PROXIMITY_DISABLED_FOR_TESTING ? "testing-override" : nearbyPOI?.id || null}
@@ -525,7 +547,7 @@ export function GameScreen({
       <GameplayPanel
         isOpen={cluesOpen}
         clues={clues}
-        onClose={() => setCluesOpen(false)}
+        onClose={() => activatePanel(null)}
         shelterOptions={shelterOptions}
         selectedShelterId={selectedShelterId}
         onShelterSelect={setSelectedShelterId}
@@ -612,7 +634,7 @@ export function GameScreen({
 
           console.log("[ClueFilter] Applying map filter", { matches: matches.length });
           setFilteredPois(matches);
-          setCluesOpen(false);
+          activatePanel(null);
         }}
         onClearMapFilter={() => setFilteredPois(null)}
         isMapFilterActive={Boolean(filteredPois)}

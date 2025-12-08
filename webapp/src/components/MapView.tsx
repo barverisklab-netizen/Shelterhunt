@@ -210,6 +210,7 @@ const [measureState, setMeasureState] = useState<{
   useEffect(() => {
     if (layerPanelCloseSignal !== undefined) {
       setShowLayerControl(false);
+      onLayerPanelToggle?.(false);
     }
   }, [layerPanelCloseSignal]);
 
@@ -1517,7 +1518,7 @@ const [measureState, setMeasureState] = useState<{
       {/* Layer Control Button */}
       <motion.button
         onClick={() => handleLayerControlToggle()}
-        className="absolute top-4 left-4 z-10 rounded-full border border-neutral-900 bg-background p-3 text-neutral-900 shadow-sm transition-colors hover:bg-neutral-100"
+        className="absolute top-4 left-4 z-10 rounded-full border border-neutral-900 bg-background p-3 text-neutral-900 shadow-sm transition-colors hover:bg-neutral-100 cursor-pointer"
         whileHover={{ scale: 1.02 }}
         whileTap={{ scale: 0.98 }}
       >
