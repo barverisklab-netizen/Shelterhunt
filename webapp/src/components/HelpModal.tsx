@@ -112,22 +112,19 @@ export function HelpModal({ isOpen, onClose }: HelpModalProps) {
                     return (
                       <motion.div
                         key={index}
-                        className="rounded border border-neutral-900 bg-background p-5"
+                        className="rounded border border-neutral-900 bg-neutral-200 p-5"
                         initial={{ opacity: 0, x: -20 }}
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ delay: 0.2 + index * 0.1 }}
                       >
                         <div className="flex gap-4">
-                          <div className="flex-shrink-0 rounded-full bg-neutral-900 p-3">
-                            <Icon className="w-6 h-6 text-white" />
+                          <div className="flex-shrink-0  p-3">
+                            <Icon className="w-6 h-6 text-black" />
+                            
                           </div>
                           <div>
                         <div className="flex items-center gap-3 mb-2">
-                              <span className="text-black/70 text-sm font-bold">
-                                {t("help.stepLabel", {
-                                  replacements: { number: index + 1 },
-                                })}
-                              </span>
+                              
                               <h4 className="text-lg text-black font-bold uppercase">
                                 {step.title}
                               </h4>
@@ -144,7 +141,7 @@ export function HelpModal({ isOpen, onClose }: HelpModalProps) {
 
                 {/* Tips */}
                 <motion.div
-                  className="rounded border border-neutral-900 bg-neutral-50 p-6"
+                  className="rounded  p-6"
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.6 }}
@@ -175,7 +172,7 @@ export function HelpModal({ isOpen, onClose }: HelpModalProps) {
                     <li className="flex items-start gap-2">
                       <span className="text-black mt-1 font-bold">•</span>
                       <span>
-                        {t("help.tips.oneGuess")}
+                        {t("help.tips.guess")}
                       </span>
                     </li>
                   </ul>

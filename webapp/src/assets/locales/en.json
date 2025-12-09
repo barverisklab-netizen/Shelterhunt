@@ -113,7 +113,7 @@
       "greenRed": "Green clues confirm attributes; red clues eliminate them. Combine both to narrow choices.",
       "cooldown": "Repeated wrong answers won’t help—move to another POI or question to progress.",
       "visitPoi": "Check multiple POIs to unlock more questions and a fuller clue set.",
-      "oneGuess": "You have up to three guesses: first wrong resets to 10 minutes, second to 5 minutes, and a third ends the game—make sure your clues line up before locking in."
+      "guess": "You have up to three guesses: first wrong resets to 10 minutes, second to 5 minutes, and a third ends the game—make sure your clues line up before locking in."
     }
   },
   "app": {
