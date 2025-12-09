@@ -178,12 +178,6 @@ export function HelpModal({ isOpen, onClose }: HelpModalProps) {
                         {t("help.tips.oneGuess")}
                       </span>
                     </li>
-                    <li className="flex items-start gap-2">
-                      <span className="text-black mt-1 font-bold">•</span>
-                      <span>
-                        {t("help.tips.teamwork")}
-                      </span>
-                    </li>
                   </ul>
                 </motion.div>
 
