@@ -1490,7 +1490,7 @@ const [measureState, setMeasureState] = useState<{
           border-radius: 8px;
           padding: 10px;
           min-width: 160px;
-          font-family: 'Inter', sans-serif;
+          font-family: 'Noto Sans', sans-serif;
         }
         .measure-popup button {
           border: 1px solid #0f0f0f;

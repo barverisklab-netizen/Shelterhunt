@@ -84,6 +84,7 @@ export function GameScreen({
     null,
   );
   const [layerPanelCloseSignal, setLayerPanelCloseSignal] = useState(0);
+  const DESIGNATED_CATEGORY = "designated ec";
 
   const closeLayerPanel = useCallback(() => {
     setLayerPanelCloseSignal((prev) => prev + 1);
@@ -270,7 +271,7 @@ export function GameScreen({
 
     const clueTemplate =
       (question as Question & { clueTemplate?: string }).clueTemplate || question.text;
-    const clueText = clueTemplate.replace("{param}", `${expected}`);
+    const clueText = clueTemplate.replace("{param}", `${param ?? ""}`);
     const categoryLabel =
       defaultCityContext.questionCategories.find((cat) => cat.id === question.category)
         ?.name ?? question.category;
@@ -282,7 +283,7 @@ export function GameScreen({
       category: categoryLabel,
       categoryId: question.category,
       questionId: question.id,
-      paramValue: expected,
+      paramValue: param ?? expected,
       timestamp: Date.now(),
     };
 
@@ -295,6 +296,7 @@ export function GameScreen({
         }),
       );
     } else {
+      setClues((prev) => [...prev, newClue]);
       toast.error(
         t("questions.incorrect", {
           fallback: "That clue was incorrect. Try another guess.",
@@ -585,13 +587,19 @@ export function GameScreen({
           const target = normalize(clue.paramValue);
           console.log("[ClueFilter] Target value", { target });
 
+          const designatedShelters = shelters.filter(
+            (shelter) =>
+              typeof shelter.category === "string" &&
+              shelter.category.toLowerCase() === DESIGNATED_CATEGORY,
+          );
+
           const baseShelters =
             filteredPois && filteredPois.length
-              ? shelters.filter((shelter) => {
+              ? designatedShelters.filter((shelter) => {
                   const sid = shelter.shareCode || shelter.code || shelter.id;
                   return filteredPois.some((poi) => poi.id === sid);
                 })
-              : shelters;
+              : designatedShelters;
 
           const matches = baseShelters
             .filter((shelter) => {

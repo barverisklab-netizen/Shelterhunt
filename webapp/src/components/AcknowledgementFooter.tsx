@@ -8,7 +8,18 @@ export function AcknowledgementFooter() {
       <table className="w-full">
         <tbody>
           <tr>
-            <td className="text-center">{t("footer.madeBy")}   |   {t("footer.support")}</td>
+            <td className="text-center">
+              {t("footer.madeBy")}{" "}
+              <a
+                href="https://urbanrisklab.mit.edu"
+                target="_blank"
+                rel="noreferrer"
+                className="text-neutral-900 underline-offset-4 hover:underline"
+              >
+                MIT Urban Risk Lab
+              </a>{" "}
+              | {t("footer.support")}
+            </td>
           </tr>
         </tbody>  
       </table>
