@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import { motion } from "motion/react";
 import { Button } from "./ui/button";
 import { useI18n } from "@/i18n";
@@ -9,11 +10,16 @@ interface IntroScreenProps {
 
 export function IntroScreen({ onContinue }: IntroScreenProps) {
   const { t } = useI18n();
-  const paragraphs = [
-    t("intro.paragraph1"),
-    t("intro.paragraph2"),
-    t("intro.paragraph3"),
-  ];
+  const paragraphs = useMemo(
+    () => [
+      t("intro.paragraph1"),
+      t("intro.paragraph2"),
+      t("intro.paragraph3"),
+    ],
+    [t],
+  );
+
+  const fullIntroText = useMemo(() => paragraphs.join("\n\n"), [paragraphs]);
 
   return (
     <div className="min-h-screen bg-white text-black relative flex flex-col items-center px-4 py-10">
@@ -56,11 +62,9 @@ export function IntroScreen({ onContinue }: IntroScreenProps) {
               initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, ease: "easeOut", delay: 0.2 }}
-              className="space-y-5 text-center md:text-left text-base leading-7 sm:text-lg sm:leading-8 w-full max-w-[360px]"
+              className="space-y-5 text-center md:text-left text-base leading-7 sm:text-lg sm:leading-8 w-full max-w-[420px]"
             >
-              {paragraphs.map((paragraph, index) => (
-                <p key={index}>{paragraph}</p>
-              ))}
+              <p className="whitespace-pre-line">{fullIntroText}</p>
             </motion.div>
 
             <motion.div

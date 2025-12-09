@@ -18,9 +18,9 @@
   },
   "intro": {
     "title": "ShelterSearch",
-    "paragraph1": "Ah, welcome, heroes! I'm Bosai-Sensei, your disaster-preparedness guide. A powerful hurricane is approaching Koto City--and our beloved mascot, Koto-chan, has taken shelter somewhere safe... but we've lost contact!",
-    "paragraph2": "Your mission is to help me locate which shelter Koto-chan is in before the storm arrives. To do that, you'll need to explore the city, complete disaster-preparedness challenges, and collect clues.",
-    "paragraph3": "Each correct answer brings us one step closer to Koto-chan--and helps you learn how to stay safe during real emergencies! Ready your team, check your surroundings, and remember: preparedness is the best superpower!",
+    "paragraph1": "Welcome, heroes. I’m Bosai-Sensei, your guide through Koto City as a major hurricane closes in. Our mascot, Koto-chan, is sheltering somewhere safe; but we’ve lost contact.",
+    "paragraph2": "Your task: explore the city, understand the disaster-preparedness information, and gather clues to pinpoint Koto-chan’s location before the storm hits.",
+    "paragraph3": "Each correct move brings you closer and strengthens the skills you’ll need in real emergencies. Stay alert, and remember: preparedness is power.",
     "play": "Play"
   },
   "onboarding": {
