@@ -296,7 +296,7 @@ export const kotoLayers: KotoLayer[] = [
       },
     },
   },
-  // Flood map
+  // Flood depth
   {
     id: 6,
     label: "Flood Depth",
@@ -353,7 +353,7 @@ export const kotoLayers: KotoLayer[] = [
   // Flood depth rank
   {
     id: 7,
-    label: "Inland Waters Depth Rank",
+    label: "Inland Waters Depth",
     group: "Hazard Layers",
     metadata: {
       query: {
@@ -506,60 +506,9 @@ export const kotoLayers: KotoLayer[] = [
       layout: {},
     },
   },
-  // Inland water depth
-  {
-    id: 10,
-    label: "Inland Waters Depth",
-    group: "Hazard Layers",
-    metadata: {
-      query: {
-        template:
-          "Inland Waters Depth: <b>{{InlandWaters_Depth}}</b><br>Rank: <b>{{InlandWaters_Depth_Rank}}</b>",
-      },
-      loadOnInit: false,
-      legendItems: [
-        {
-          label: "Inland Waters Depth Rank",
-          swatchType: "fill",
-          description: "Ranked inland waters depth zones.",
-          swatchStyle: {
-            fillColor: "#2a79b9",
-          },
-          isActive: true,
-          isEnabled: true,
-        },
-      ],
-    },
-    layerType: "fill",
-    sourceType: "vector",
-    sourceData: {
-      layerId: "5m35xdxx",
-      layerName: "ihi_inlandwaters_depth-armcon",
-    },
-    style: {
-      paint: {
-        "fill-color": [
-          "interpolate",
-          ["linear"],
-          ["get", "InlandWaters_Depth_Rank"],
-          1,
-          "#B3DCFE",
-          2,
-          "#80BCEC",
-          3,
-          "#2E83C9",
-          4,
-          "#1A4A71",
-        ],
-        "fill-opacity": 0.6,
-      },
-      layout: {},
-    },
-  },
-
   // Bridges
   {
-    id: 11,
+    id: 10,
     label: "Bridges",
     group: "City Landmarks",
     metadata: {
@@ -622,7 +571,7 @@ export const kotoLayers: KotoLayer[] = [
   },
   // Shrines/Temples
   {
-    id: 12,
+    id: 11,
     label: "Shrines/Temples",
     group: "City Landmarks",
     metadata: {
@@ -685,7 +634,7 @@ export const kotoLayers: KotoLayer[] = [
   },
   // Community Centers
   {
-    id: 13,
+    id: 12,
     label: "Community Centers",
     group: "Evacuation Support Facilities",
     metadata: {
@@ -748,7 +697,7 @@ export const kotoLayers: KotoLayer[] = [
   },
   // Flood Gates
   {
-    id: 14,
+    id: 13,
     label: "Flood Gates",
     group: "City Landmarks",
     metadata: {
@@ -811,7 +760,7 @@ export const kotoLayers: KotoLayer[] = [
   },
   // Train Stations
   {
-    id: 15,
+    id: 14,
     label: "Train Stations",
     group: "City Landmarks",
     metadata: {
