@@ -1039,6 +1039,8 @@ const measureMarkerRef = useRef<mapboxgl.Marker | null>(null);
     const shouldShowLightningCircle =
       gameMode === "lightning" && lightningCenter && Number.isFinite(lightningRadiusKm);
     const removeLightningCircle = () => {
+      if (!map.current || m !== map.current) return;
+      if (typeof m.getStyle !== "function" || !m.getStyle()) return;
       if (m.getLayer(LIGHTNING_RANGE_FILL_LAYER_ID)) m.removeLayer(LIGHTNING_RANGE_FILL_LAYER_ID);
       if (m.getLayer(LIGHTNING_RANGE_OUTLINE_LAYER_ID))
         m.removeLayer(LIGHTNING_RANGE_OUTLINE_LAYER_ID);
@@ -1051,6 +1053,8 @@ const measureMarkerRef = useRef<mapboxgl.Marker | null>(null);
     }
 
     const applyLightningCircle = () => {
+      if (!map.current || m !== map.current) return;
+      if (typeof m.getStyle !== "function" || !m.getStyle()) return;
       const feature = createCircleFeature(
         lightningCenter,
         Math.max(0, (lightningRadiusKm ?? 2) * 1000),
