@@ -58,7 +58,7 @@ type GameState =
 
 type GameMode = "lightning" | "citywide";
 
-const INITIAL_SHELTER_RADIUS_KM = 5;
+const INITIAL_SHELTER_RADIUS_KM = LIGHTNING_RADIUS_KM;
 const DESIGNATED_CATEGORY = "designated ec";
 const MULTIPLAYER_DURATION_MINUTES = 60;
 
@@ -258,18 +258,6 @@ export default function App() {
     },
     [],
   );
-
-  useEffect(() => {
-    const initialCenter = defaultCityContext.mapConfig.startLocation;
-    loadDesignatedShelters(initialCenter, INITIAL_SHELTER_RADIUS_KM).catch(
-      (error) => {
-        console.warn(
-          "[Lightning] Initial designated shelter preload failed:",
-          error,
-        );
-      },
-    );
-  }, [loadDesignatedShelters]);
 
   useEffect(() => {
     return () => {

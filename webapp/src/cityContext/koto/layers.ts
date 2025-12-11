@@ -196,9 +196,70 @@ export const kotoLayers: KotoLayer[] = [
       },
     },
   },
-  // Evacuation Centers (generic EC)
+  // Special Needs Evacuation Centers ()
   {
     id: 4,
+    label: "Special Needs Evacuation Centers",
+    group: "Shelters",
+    metadata: {
+      query: {
+        template:
+          "Name: <b>{{Landmark Name (EN)}}</b> | {{Landmark Name (JP)}}<br>Category: <b>{{Category}}</b><br>Address: <b>{{Address (JP)}}</b>",
+      },
+      loadOnInit: false,
+      legendItems: [
+        {
+          label: "Special Needs Shelter",
+          isActive: true,
+          isEnabled: true,
+          swatchType: "line",
+          description: "Special needs shelter location.",
+          swatchStyle: { strokeColor: "#c1272d", strokeWidth: 2 },
+        },
+      ],
+    },
+    layerType: "symbol",
+    sourceType: "vector",
+    sourceData: {
+      layerId: "8sbllw5a",
+      layerName: "ihi_evacuation_centers_all-c2o5a5",
+    },
+    style: {
+      paint: {
+        "text-color": "#000000",
+        "text-halo-blur": 0.5,
+        "text-halo-color": "#ffffff",
+        "text-halo-width": 1.2,
+      },
+      filter: [
+        "in",
+        ["get", "Category"], "Special Needs Shelter"
+      ],
+      layout: {
+        "icon-size": 0.8,
+        "text-font": ["Roboto Bold"],
+        "text-size": 10,
+        "icon-image": [
+          "match",
+          ["get", "Category"],"Special Needs Shelter",
+          "ihi_snec",
+          "",
+        ],
+        "text-field": [
+          "match",
+          ["get", "Category"],"Special Needs Shelter",
+          ["get", "Landmark Name (JP)"],
+          "",
+        ],
+        "text-anchor": "top",
+        "text-offset": [0, 2.5],
+        "icon-allow-overlap": true,
+      },
+    },
+  },
+  // Evacuation Centers (generic EC)
+  {
+    id: 5,
     label: "Evacuation Centers",
     group: "Shelters",
     metadata: {
@@ -252,7 +313,7 @@ export const kotoLayers: KotoLayer[] = [
   },
   // AED Locations
   {
-    id: 5,
+    id: 6,
     label: "AED Locations",
     group: "Evacuation Support Facilities",
     metadata: {
@@ -308,7 +369,7 @@ export const kotoLayers: KotoLayer[] = [
   },
   // Flood map
   {
-    id: 6,
+    id: 7,
     label: "Flood Depth",
     group: "Hazard Layers",
     metadata: {
@@ -362,7 +423,7 @@ export const kotoLayers: KotoLayer[] = [
   },
   // Flood depth rank
   {
-    id: 7,
+    id: 8,
     label: "Inland Waters Depth Rank",
     group: "Hazard Layers",
     metadata: {
@@ -412,7 +473,7 @@ export const kotoLayers: KotoLayer[] = [
   },
   // Flood duration rank
   {
-    id: 8,
+    id: 9,
     label: "Flood Duration Rank",
     group: "Hazard Layers",
     metadata: {
@@ -462,7 +523,7 @@ export const kotoLayers: KotoLayer[] = [
   },
   // Stormsurge
   {
-    id: 9,
+    id: 10,
     label: "Storm Surge",
     group: "Hazard Layers",
     metadata: {
@@ -518,7 +579,7 @@ export const kotoLayers: KotoLayer[] = [
   },
   // Inland water depth
   {
-    id: 10,
+    id: 11,
     label: "Inland Waters Depth",
     group: "Hazard Layers",
     metadata: {
@@ -566,10 +627,9 @@ export const kotoLayers: KotoLayer[] = [
       layout: {},
     },
   },
-
   // Bridges
   {
-    id: 11,
+    id: 12,
     label: "Bridges",
     group: "City Landmarks",
     metadata: {
@@ -632,7 +692,7 @@ export const kotoLayers: KotoLayer[] = [
   },
   // Shrines/Temples
   {
-    id: 12,
+    id: 13,
     label: "Shrines/Temples",
     group: "City Landmarks",
     metadata: {
@@ -695,7 +755,7 @@ export const kotoLayers: KotoLayer[] = [
   },
   // Community Centers
   {
-    id: 13,
+    id: 14,
     label: "Community Centers",
     group: "Evacuation Support Facilities",
     metadata: {
@@ -758,7 +818,7 @@ export const kotoLayers: KotoLayer[] = [
   },
   // Flood Gates
   {
-    id: 14,
+    id: 15,
     label: "Flood Gates",
     group: "City Landmarks",
     metadata: {
@@ -821,7 +881,7 @@ export const kotoLayers: KotoLayer[] = [
   },
   // Train Stations
   {
-    id: 15,
+    id: 16,
     label: "Train Stations",
     group: "City Landmarks",
     metadata: {

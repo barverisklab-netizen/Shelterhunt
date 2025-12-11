@@ -7,13 +7,15 @@ const toString = (value: string | undefined, fallback: string): string => {
   return value && value.trim().length > 0 ? value : fallback;
 };
 
+const env = import.meta.env ?? {};
+
 export const LIGHTNING_DURATION_MINUTES = toNumber(
-  import.meta.env.VITE_LIGHTNING_MINUTES,
+  env.VITE_LIGHTNING_MINUTES as string | undefined,
   60,
 );
 
 export const LIGHTNING_RADIUS_KM = toNumber(
-  import.meta.env.VITE_LIGHTNING_RADIUS_KM,
+  env.VITE_LIGHTNING_RADIUS_KM as string | undefined,
   2,
 );
 
