@@ -13,6 +13,7 @@ import { toast } from "sonner@2.0.3";
 import { BlurReveal } from './ui/blur-reveal';
 import { useI18n } from "@/i18n";
 import type { Shelter } from "@/services/shelterDataService";
+import { LIGHTNING_RADIUS_KM } from "@/config/runtime";
 
 
 const ENABLE_SECRET_SHELTER_BLUR = true;
@@ -41,6 +42,9 @@ interface GameScreenProps {
   currentPlayerId?: string;
   onMultiplayerWin?: (info: { winnerName: string; winnerUserId?: string }) => void;
   remoteOutcome?: { result: "win" | "lose"; winnerName?: string } | null;
+  gameMode?: "lightning" | "citywide" | null;
+  lightningCenter?: { lat: number; lng: number } | null;
+  lightningRadiusKm?: number;
 }
 
 export function GameScreen({
@@ -62,6 +66,9 @@ export function GameScreen({
   currentPlayerId,
   onMultiplayerWin,
   remoteOutcome,
+  gameMode = null,
+  lightningCenter = null,
+  lightningRadiusKm,
 }: GameScreenProps) {
   const { t } = useI18n();
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -75,6 +82,7 @@ export function GameScreen({
   const [measureTrigger, setMeasureTrigger] = useState(0);
   const [isMeasureActive, setIsMeasureActive] = useState(false);
   const [filteredPois, setFilteredPois] = useState<POI[] | null>(null);
+  const [filterSource, setFilterSource] = useState<"correct" | "wrong" | null>(null);
   const [showExitConfirm, setShowExitConfirm] = useState(false);
   const [penaltyStage, setPenaltyStage] = useState<WrongGuessStage | null>(null);
   const [solvedQuestions, setSolvedQuestions] = useState<string[]>([]);
@@ -85,6 +93,8 @@ export function GameScreen({
   );
   const [layerPanelCloseSignal, setLayerPanelCloseSignal] = useState(0);
   const DESIGNATED_CATEGORY = "designated ec";
+  const normalizeValue = (value: unknown) =>
+    typeof value === "number" ? String(value) : String(value ?? "").trim().toLowerCase();
 
   const closeLayerPanel = useCallback(() => {
     setLayerPanelCloseSignal((prev) => prev + 1);
@@ -194,6 +204,80 @@ export function GameScreen({
     shrineTemple250m: (shelter) => shelter.shrineTemple250m,
     floodgate250m: (shelter) => shelter.floodgate250m,
     bridge250m: (shelter) => shelter.bridge250m,
+  };
+
+  const handleApplyWrongClueFilter = () => {
+    if (filterSource !== "correct" || !filteredPois) {
+      toast.info(
+        t("gameplay.filterUnavailable", {
+          fallback: "Filter a correct clue first to remove wrong clues.",
+        }),
+      );
+      return;
+    }
+
+    const wrongClues = clues.filter(
+      (clue) => !clue.answer && clue.questionId && clue.paramValue != null,
+    );
+    if (!wrongClues.length) {
+      toast.info(
+        t("gameplay.filterUnavailable", {
+          fallback: "No wrong clues available to filter.",
+        }),
+      );
+      return;
+    }
+
+    const designatedShelters = shelters.filter(
+      (shelter) =>
+        typeof shelter.category === "string" &&
+        shelter.category.toLowerCase() === DESIGNATED_CATEGORY,
+    );
+
+    const baseShelters = designatedShelters.filter((shelter) => {
+      const sid = shelter.shareCode || shelter.code || shelter.id;
+      return filteredPois.some((poi) => poi.id === sid);
+    });
+
+    const refinedShelters = baseShelters.filter((shelter) => {
+      for (const clue of wrongClues) {
+        const extractor = attributeValueLookup[clue.questionId as string];
+        if (!extractor) continue;
+        const value = extractor(shelter as any);
+        if (normalizeValue(value) === normalizeValue(clue.paramValue)) {
+          return false;
+        }
+      }
+      return true;
+    });
+
+    if (!refinedShelters.length) {
+      toast.error(
+        t("gameplay.filterNoMatches", {
+          fallback: "No shelters remain after removing wrong clues.",
+        }),
+      );
+      return;
+    }
+
+    const refinedPois = refinedShelters
+      .map<POI>((shelter) => ({
+        id: shelter.shareCode || shelter.code || shelter.id,
+        name: shelter.nameEn || shelter.nameJp || shelter.externalId || shelter.code,
+        ...(shelter.nameEn ? { nameEn: shelter.nameEn } : {}),
+        ...(shelter.nameJp ? { nameJp: shelter.nameJp } : {}),
+        lat: Number(shelter.latitude),
+        lng: Number(shelter.longitude),
+        type: "shelter",
+      }))
+      .filter((poi) => Number.isFinite(poi.lat) && Number.isFinite(poi.lng) && poi.name);
+
+    setFilteredPois(refinedPois);
+    toast.success(
+      t("gameplay.filteredWrongClues", {
+        fallback: "Removed shelters matching wrong clues.",
+      }),
+    );
   };
 
   const getSecretAnswer = (attributeId: string): string | number | null => {
@@ -496,6 +580,9 @@ export function GameScreen({
       measureTrigger={measureTrigger}
       onMeasurementActiveChange={setIsMeasureActive}
       isFiltered={Boolean(filteredPois)}
+      gameMode={gameMode}
+      lightningCenter={lightningCenter}
+      lightningRadiusKm={lightningRadiusKm ?? LIGHTNING_RADIUS_KM}
       onLayerPanelToggle={(open) => {
         if (open) {
           activatePanel("layers");
@@ -581,10 +668,7 @@ export function GameScreen({
             return;
           }
 
-          const normalize = (value: unknown) =>
-            typeof value === "number" ? String(value) : String(value ?? "").trim().toLowerCase();
-
-          const target = normalize(clue.paramValue);
+          const target = normalizeValue(clue.paramValue);
           console.log("[ClueFilter] Target value", { target });
 
           const designatedShelters = shelters.filter(
@@ -604,7 +688,7 @@ export function GameScreen({
           const matches = baseShelters
             .filter((shelter) => {
               const value = extractor(shelter as any);
-              const match = normalize(value) === target;
+              const match = normalizeValue(value) === target;
               if (match) {
                 console.log("[ClueFilter] Shelter match", {
                   id: shelter.id,
@@ -642,10 +726,18 @@ export function GameScreen({
 
           console.log("[ClueFilter] Applying map filter", { matches: matches.length });
           setFilteredPois(matches);
+          setFilterSource(clue.answer ? "correct" : "wrong");
           activatePanel(null);
         }}
-        onClearMapFilter={() => setFilteredPois(null)}
+        onClearMapFilter={() => {
+          setFilteredPois(null);
+          setFilterSource(null);
+        }}
         isMapFilterActive={Boolean(filteredPois)}
+        onApplyWrongClueFilter={handleApplyWrongClueFilter}
+        canApplyWrongClueFilter={Boolean(
+          filteredPois && filterSource === "correct" && clues.some((clue) => !clue.answer),
+        )}
       />
 
       <AnimatePresence>

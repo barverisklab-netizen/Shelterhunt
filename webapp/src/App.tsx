@@ -162,6 +162,10 @@ export default function App() {
   const [wrongGuessCount, setWrongGuessCount] = useState(0);
   const [timerEnabled, setTimerEnabled] = useState(true);
   const [gameMode, setGameMode] = useState<GameMode | null>(null);
+  const [lightningCenter, setLightningCenter] = useState<{ lat: number; lng: number } | null>(
+    null,
+  );
+  const [lightningRadiusKm, setLightningRadiusKm] = useState<number | null>(null);
   const [modeProcessing, setModeProcessing] = useState(false);
   const [sessionBootstrapLoading, setSessionBootstrapLoading] = useState(false);
   const [lockSecretShelter, setLockSecretShelter] = useState(false);
@@ -885,6 +889,8 @@ export default function App() {
     playerCoords,
     lockSecret,
     lockOptions,
+    lightningRadiusKm: startLightningRadiusKm = null,
+    lightningCenter: startLightningCenter = null,
   }: {
     mode: GameMode;
     timerSeconds: number | null;
@@ -893,6 +899,8 @@ export default function App() {
     playerCoords?: { lat: number; lng: number };
     lockSecret: boolean;
     lockOptions: boolean;
+    lightningRadiusKm?: number | null;
+    lightningCenter?: { lat: number; lng: number } | null;
   }) => {
     void disconnectSession();
     const soloPlayer: Player = {
@@ -928,6 +936,16 @@ export default function App() {
       setShelterOptions(options);
     } else {
       setShelterOptions([]);
+    }
+
+    if (mode === "lightning" && playerCoords) {
+      setLightningCenter(startLightningCenter ?? playerCoords);
+      setLightningRadiusKm(
+        typeof startLightningRadiusKm === "number" ? startLightningRadiusKm : LIGHTNING_RADIUS_KM,
+      );
+    } else {
+      setLightningCenter(null);
+      setLightningRadiusKm(null);
     }
 
     if (playerCoords) {
@@ -1107,6 +1125,8 @@ export default function App() {
         playerCoords: coords,
         lockSecret: true,
         lockOptions: true,
+        lightningRadiusKm: radiusKm,
+        lightningCenter: coords,
       });
       setLockSecretShelter(true);
       setLockShelterOptions(true);
@@ -1258,6 +1278,9 @@ export default function App() {
             currentPlayerId={currentSessionUserId}
             onMultiplayerWin={sessionContext ? handleMultiplayerWin : undefined}
             remoteOutcome={remoteOutcome}
+            gameMode={gameMode}
+            lightningCenter={lightningCenter}
+            lightningRadiusKm={lightningRadiusKm ?? undefined}
           />
         )}
 

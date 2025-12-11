@@ -117,6 +117,12 @@ const PLAYER_RANGE_OUTLINE_LAYER_ID = "player-range-outline-layer";
 const FILTER_POIS_SOURCE_ID = "filtered-pois-source";
 const FILTER_POIS_LAYER_ID = "filtered-pois-layer";
 const FILTER_POIS_LABEL_LAYER_ID = "filtered-pois-label-layer";
+const LIGHTNING_RANGE_SOURCE_ID = "lightning-range-source";
+const LIGHTNING_RANGE_FILL_LAYER_ID = "lightning-range-fill-layer";
+const LIGHTNING_RANGE_OUTLINE_LAYER_ID = "lightning-range-outline-layer";
+const GEOLOCATE_STYLE_ID = "mapbox-geolocate-circle-style";
+const ATTRIBUTION_STYLE_ID = "mapbox-attribution-position-style";
+const DEFAULT_START_LOCATION = defaultCityContext.mapConfig.startLocation;
 
 type MeasureStatus = "idle" | "placing" | "active";
 const FIXED_MEASURE_RADIUS_METERS = 250;
@@ -135,6 +141,9 @@ interface MapViewProps {
   isFiltered?: boolean;
   onLayerPanelToggle?: (open: boolean) => void;
   layerPanelCloseSignal?: number;
+  gameMode?: "lightning" | "citywide" | null;
+  lightningCenter?: { lat: number; lng: number } | null;
+  lightningRadiusKm?: number;
 }
 
 // const POI_ICONS = {
@@ -161,6 +170,9 @@ export function MapView({
   isFiltered = false,
   onLayerPanelToggle,
   layerPanelCloseSignal,
+  gameMode,
+  lightningCenter,
+  lightningRadiusKm = 2,
 }: MapViewProps) {
   const { t, locale } = useI18n();
   const mapContainer = useRef<HTMLDivElement>(null);
@@ -179,22 +191,6 @@ const measureMarkerRef = useRef<mapboxgl.Marker | null>(null);
   const measureStatusRef = useRef<MeasureStatus>("idle");
   const lastMeasureRequestRef = useRef<number>(0);
   const geolocateHandlerRef = useRef<((event: GeolocationPosition) => void) | null>(null);
-
-const [measureState, setMeasureState] = useState<{
-  status: MeasureStatus;
-  radius: number;
-  count: number;
-  center: { lng: number; lat: number } | null;
-  featureNames: string[];
-  layerCounts: Record<string, number>;
-}>({
-  status: "idle",
-  radius: FIXED_MEASURE_RADIUS_METERS,
-  count: 0,
-  center: null,
-  featureNames: [],
-  layerCounts: {},
-});
 
   // Koto layer visibility state
   const [kotoLayersVisible, setKotoLayersVisible] = useState<
@@ -223,10 +219,26 @@ const [measureState, setMeasureState] = useState<{
     ),
   );
 
-  const [userCircleCenter, setUserCircleCenter] = useState<{
-    lat: number;
-    lng: number;
-  }>({ lat: playerLocation.lat, lng: playerLocation.lng });
+  const [measureState, setMeasureState] = useState<{
+    status: MeasureStatus;
+    radius: number;
+    count: number;
+    center: { lng: number; lat: number } | null;
+    featureNames: string[];
+    layerCounts: Record<string, number>;
+  }>({
+    status: "idle",
+    radius: FIXED_MEASURE_RADIUS_METERS,
+    count: 0,
+    center: null,
+    featureNames: [],
+    layerCounts: {},
+  });
+
+  const [userCircleCenter, setUserCircleCenter] = useState<{ lat: number; lng: number } | null>(
+    null,
+  );
+  const [hasUserLocationFix, setHasUserLocationFix] = useState(false);
 
   const [isMeasurePanelCollapsed, setIsMeasurePanelCollapsed] = useState(false);
   const [visiblePois, setVisiblePois] = useState<POI[]>([]);
@@ -879,18 +891,21 @@ const [measureState, setMeasureState] = useState<{
         refreshFilteredPoiLayers(visiblePois);
 
         if (!geolocateControl.current) {
+          ensureGeolocateStyle();
+          ensureAttributionStyle();
           const control = new mapboxgl.GeolocateControl({
             positionOptions: { enableHighAccuracy: true },
             trackUserLocation: true,
             showUserHeading: true,
             showAccuracyCircle: false,
-          });
-          geolocateControl.current = control;
-          map.current?.addControl(control, "bottom-right");
+      });
+      geolocateControl.current = control;
+      map.current?.addControl(control, "bottom-right");
 
           const handleGeolocate = (event: GeolocationPosition) => {
             const { latitude, longitude } = event.coords;
             setUserCircleCenter({ lat: latitude, lng: longitude });
+            setHasUserLocationFix(true);
           };
           geolocateHandlerRef.current = handleGeolocate;
           control.on("geolocate", handleGeolocate);
@@ -903,6 +918,9 @@ const [measureState, setMeasureState] = useState<{
             }
           });
         }
+
+        moveAttributionToBottomLeft();
+        map.current?.on("styledata", moveAttributionToBottomLeft);
       });
 
       console.log("Mapbox map created successfully");
@@ -934,6 +952,7 @@ const [measureState, setMeasureState] = useState<{
           map.current.removeControl(geolocateControl.current);
           geolocateControl.current = null;
         }
+        map.current?.off("styledata", moveAttributionToBottomLeft);
         map.current.remove();
         map.current = null;
         hasSelectedShelter.current = false;
@@ -950,14 +969,26 @@ const [measureState, setMeasureState] = useState<{
     // cheap, no-flash update; use easeTo if you want animation
     m.jumpTo({ center: [playerLocation.lng, playerLocation.lat] });
     // or: m.easeTo({ center: [playerLocation.lng, playerLocation.lat], duration: 350 });
+    const isDefaultStart =
+      Math.abs(playerLocation.lat - DEFAULT_START_LOCATION.lat) < 1e-6 &&
+      Math.abs(playerLocation.lng - DEFAULT_START_LOCATION.lng) < 1e-6;
+
+    if (isDefaultStart && !hasUserLocationFix) {
+      return;
+    }
+
     setUserCircleCenter({ lat: playerLocation.lat, lng: playerLocation.lng });
-  }, [playerLocation.lng, playerLocation.lat]);
+    if (!isDefaultStart) {
+      setHasUserLocationFix(true);
+    }
+  }, [playerLocation.lng, playerLocation.lat, hasUserLocationFix]);
 
   useEffect(() => {
     const m = map.current;
     if (!m) return;
 
     const applyRange = () => {
+      if (!userCircleCenter) return;
       const feature = createCircleFeature(userCircleCenter, 250, 96);
 
       if (m.getSource(PLAYER_RANGE_SOURCE_ID)) {
@@ -998,7 +1029,80 @@ const [measureState, setMeasureState] = useState<{
     }
 
     applyRange();
-  }, [userCircleCenter.lat, userCircleCenter.lng]);
+  }, [userCircleCenter?.lat, userCircleCenter?.lng]);
+
+  useEffect(() => {
+    const m = map.current;
+    if (!m) return;
+
+    const shouldShowLightningCircle =
+      gameMode === "lightning" && lightningCenter && Number.isFinite(lightningRadiusKm);
+    const removeLightningCircle = () => {
+      if (m.getLayer(LIGHTNING_RANGE_FILL_LAYER_ID)) m.removeLayer(LIGHTNING_RANGE_FILL_LAYER_ID);
+      if (m.getLayer(LIGHTNING_RANGE_OUTLINE_LAYER_ID))
+        m.removeLayer(LIGHTNING_RANGE_OUTLINE_LAYER_ID);
+      if (m.getSource(LIGHTNING_RANGE_SOURCE_ID)) m.removeSource(LIGHTNING_RANGE_SOURCE_ID);
+    };
+
+    if (!shouldShowLightningCircle) {
+      removeLightningCircle();
+      return;
+    }
+
+    const applyLightningCircle = () => {
+      const feature = createCircleFeature(
+        lightningCenter,
+        Math.max(0, (lightningRadiusKm ?? 2) * 1000),
+        128,
+      );
+
+      if (m.getSource(LIGHTNING_RANGE_SOURCE_ID)) {
+        (m.getSource(LIGHTNING_RANGE_SOURCE_ID) as mapboxgl.GeoJSONSource).setData(
+          feature as any,
+        );
+      } else {
+        m.addSource(LIGHTNING_RANGE_SOURCE_ID, { type: "geojson", data: feature as any });
+        m.addLayer({
+          id: LIGHTNING_RANGE_FILL_LAYER_ID,
+          type: "fill",
+          source: LIGHTNING_RANGE_SOURCE_ID,
+          paint: {
+            "fill-color": "rgba(59,130,246,0.06)",
+            "fill-opacity": 1,
+          },
+        });
+        m.addLayer({
+          id: LIGHTNING_RANGE_OUTLINE_LAYER_ID,
+          type: "line",
+          source: LIGHTNING_RANGE_SOURCE_ID,
+          paint: {
+            "line-color": "rgba(59,130,246,0.45)",
+            "line-width": 2,
+            "line-dasharray": [3, 2, 0.5, 2],
+          },
+        });
+      }
+    };
+
+    let loadHandler: (() => void) | null = null;
+
+    if (!m.isStyleLoaded()) {
+      loadHandler = () => {
+        applyLightningCircle();
+        m.off("load", loadHandler!);
+      };
+      m.on("load", loadHandler);
+    } else {
+      applyLightningCircle();
+    }
+
+    return () => {
+      if (loadHandler) {
+        m.off("load", loadHandler);
+      }
+      removeLightningCircle();
+    };
+  }, [gameMode, lightningCenter?.lat, lightningCenter?.lng, lightningRadiusKm]);
 
   useEffect(() => {
     measureStatusRef.current = measureState.status;
@@ -1427,6 +1531,90 @@ const [measureState, setMeasureState] = useState<{
     closeMeasurePopup();
     clearMeasurement();
   }, [clearMeasurement, closeMeasurePopup]);
+
+  const moveAttributionToBottomLeft = useCallback(() => {
+    const m = map.current;
+    if (!m) return;
+    const container = m.getContainer()?.querySelector(".mapboxgl-control-container");
+    if (!container) return;
+    const attrib = container.querySelector(".mapboxgl-ctrl-attrib") as HTMLElement | null;
+    if (!attrib) return;
+    let bottomLeft = container.querySelector(".mapboxgl-ctrl-bottom-left") as HTMLElement | null;
+    if (!bottomLeft) {
+      bottomLeft = document.createElement("div");
+      bottomLeft.className = "mapboxgl-ctrl-bottom-left";
+      container.appendChild(bottomLeft);
+    }
+    if (attrib.parentElement !== bottomLeft) {
+      bottomLeft.appendChild(attrib);
+    }
+  }, []);
+
+  const ensureGeolocateStyle = useCallback(() => {
+    if (typeof document === "undefined") return;
+    const style =
+      (document.getElementById(GEOLOCATE_STYLE_ID) as HTMLStyleElement | null) ||
+      document.createElement("style");
+    style.id = GEOLOCATE_STYLE_ID;
+    style.textContent = `
+      .mapboxgl-ctrl-bottom-right {
+        bottom: 65px !important;
+        right: 6px !important;
+      }
+      .mapboxgl-ctrl-bottom-right .mapboxgl-ctrl-group {
+        border-radius: 9999px !important;
+        overflow: hidden !important;
+        border: none !important;
+        margin: 0 !important;
+      }
+      .mapboxgl-ctrl-geolocate {
+        width: 44px !important;
+        height: 44px !important;
+        border-radius: 9999px !important;
+        padding: 0 !important;
+        overflow: hidden !important;
+      }
+      .mapboxgl-ctrl-geolocate .mapboxgl-ctrl-icon {
+        width: 44px !important;
+        height: 44px !important;
+        border-radius: 9999px !important;
+        background-position: center !important;
+        background-size: 50% 50% !important;
+        margin: 0 !important;
+      }
+      .mapboxgl-ctrl-geolocate svg {
+        display: none !important;
+      }
+    `;
+    if (!style.parentElement) {
+      document.head.appendChild(style);
+    }
+  }, []);
+
+  const ensureAttributionStyle = useCallback(() => {
+    if (typeof document === "undefined") return;
+    const style =
+      (document.getElementById(ATTRIBUTION_STYLE_ID) as HTMLStyleElement | null) ||
+      document.createElement("style");
+    style.id = ATTRIBUTION_STYLE_ID;
+    style.textContent = `
+      .mapboxgl-ctrl-attrib.mapboxgl-ctrl,
+      .mapboxgl-ctrl-bottom-left .mapboxgl-ctrl-attrib,
+      .mapboxgl-ctrl-bottom-right .mapboxgl-ctrl-attrib {
+        position: absolute !important;
+        left: 5px !important;
+        right: auto !important;
+        bottom: 65px !important;
+        margin: 0 !important;
+        white-space: nowrap !important;
+        display: inline-flex !important;
+        flex-wrap: nowrap !important;
+      }
+    `;
+    if (!style.parentElement) {
+      document.head.appendChild(style);
+    }
+  }, []);
 
   return (
     <div className="relative w-full h-full min-h-[500px] z-0">

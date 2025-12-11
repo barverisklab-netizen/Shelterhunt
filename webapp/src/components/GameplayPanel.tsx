@@ -25,6 +25,8 @@ interface GameplayPanelProps {
   onFilterByClue?: (clue: Clue) => void;
   onClearMapFilter?: () => void;
   isMapFilterActive?: boolean;
+  onApplyWrongClueFilter?: () => void;
+  canApplyWrongClueFilter?: boolean;
 }
 
 export function GameplayPanel({
@@ -41,8 +43,13 @@ export function GameplayPanel({
   onFilterByClue,
   onClearMapFilter,
   isMapFilterActive = false,
+  onApplyWrongClueFilter,
+  canApplyWrongClueFilter = false,
 }: GameplayPanelProps) {
   const { t } = useI18n();
+  const sortedClues = [...clues].sort((a, b) => (b.timestamp ?? 0) - (a.timestamp ?? 0));
+  const correctClues = sortedClues.filter((clue) => clue.answer);
+  const incorrectClues = sortedClues.filter((clue) => !clue.answer);
   return (
     <AnimatePresence>
       {isOpen && (
@@ -114,7 +121,7 @@ export function GameplayPanel({
                 </div>
               </motion.div>
 
-              <Accordion type="multiple" defaultValue={["clues"]} className="space-y-4">
+              <Accordion type="single" defaultValue="clues" className="space-y-4">
                 <AccordionItem
                   value="clues"
                   className="rounded border border-neutral-900 bg-neutral-100"
@@ -131,7 +138,7 @@ export function GameplayPanel({
                     <p className="mb-4 text-xs text-black/70">
                       {t("gameplay.clueHint")}
                     </p>
-                    {clues.length === 0 ? (
+                    {sortedClues.length === 0 ? (
                       <motion.div
                         className="flex flex-col items-center justify-center gap-4 py-8 text-center"
                         initial={{ opacity: 0, y: 20 }}
@@ -154,123 +161,129 @@ export function GameplayPanel({
                         <div className="space-y-3">
                           <div className="flex items-center justify-between text-xs font-semibold uppercase text-black/70">
                             <span>{t("gameplay.correctClues", { fallback: "Correct clues" })}</span>
-                            <span>{clues.filter((c) => c.answer).length}</span>
+                            <span>{correctClues.length}</span>
                           </div>
-                          {clues
-                            .filter((clue) => clue.answer)
-                            .map((clue, index) => (
-                              <motion.div
-                                key={clue.id}
-                                className="rounded border p-4"
-                                style={{
-                                  borderColor: "rgba(22, 163, 74, 0.35)",
-                                  backgroundColor: "rgba(22, 163, 74, 0.08)",
-                                }}
-                                initial={{ opacity: 0, x: 20 }}
-                                animate={{ opacity: 1, x: 0 }}
-                                transition={{ delay: index * 0.05 }}
-                              >
-                                <div className="flex items-start gap-3">
-                                  <div className="mt-1 flex-shrink-0 text-green-600">
-                                    <CheckCircle className="h-5 w-5" />
+                          {correctClues.map((clue, index) => (
+                            <motion.div
+                              key={clue.id}
+                              className="rounded border p-4"
+                              style={{
+                                borderColor: "rgba(22, 163, 74, 0.35)",
+                                backgroundColor: "rgba(22, 163, 74, 0.08)",
+                              }}
+                              initial={{ opacity: 0, x: 20 }}
+                              animate={{ opacity: 1, x: 0 }}
+                              transition={{ delay: index * 0.05 }}
+                            >
+                              <div className="flex items-start gap-3">
+                                <div className="mt-1 flex-shrink-0 text-green-600">
+                                  <CheckCircle className="h-5 w-5" />
+                                </div>
+                                <div className="flex-1 text-black">
+                                  <div className="mb-1 text-xs font-bold uppercase tracking-wide text-black/70">
+                                    {clue.categoryId
+                                      ? t(`questions.categories.${clue.categoryId}.name`, {
+                                          fallback: clue.category,
+                                        })
+                                      : clue.category}
                                   </div>
-                                  <div className="flex-1 text-black">
-                                    <div className="mb-1 text-xs font-bold uppercase tracking-wide text-black/70">
-                                      {clue.categoryId
-                                        ? t(`questions.categories.${clue.categoryId}.name`, {
-                                            fallback: clue.category,
-                                          })
-                                        : clue.category}
-                                    </div>
-                                    <div>
-                                      {clue.questionId
-                                        ? t(`questions.dynamic.${clue.questionId}.clue`, {
-                                            fallback: clue.text,
-                                          }).replace("{param}", `${clue.paramValue ?? ""}`)
-                                        : clue.text}
-                                    </div>
-                                    {onFilterByClue && (
-                                      <div className="mt-2 flex gap-2">
+                                  <div>
+                                    {clue.questionId
+                                      ? t(`questions.dynamic.${clue.questionId}.clue`, {
+                                          fallback: clue.text,
+                                        }).replace("{param}", `${clue.paramValue ?? ""}`)
+                                      : clue.text}
+                                  </div>
+                                  {onFilterByClue && (
+                                    <div className="mt-2 flex gap-2">
+                                      <Button
+                                        type="button"
+                                        variant="outline"
+                                        className="text-xs font-semibold uppercase tracking-wide border border-black text-black hover:bg-neutral-200"
+                                        onClick={() => {
+                                          onFilterByClue(clue);
+                                          onClose();
+                                        }}
+                                      >
+                                        {t("gameplay.showInMap", { fallback: "Show in map" })}
+                                      </Button>
+                                      {isMapFilterActive && onClearMapFilter && (
                                         <Button
                                           type="button"
                                           variant="outline"
                                           className="text-xs font-semibold uppercase tracking-wide border border-black text-black hover:bg-neutral-200"
-                                          onClick={() => {
-                                            onFilterByClue(clue);
-                                            onClose();
-                                          }}
+                                          onClick={onClearMapFilter}
                                         >
-                                          {t("gameplay.showInMap", { fallback: "Show in map" })}
+                                          {t("common.clear", { fallback: "Clear" })}
                                         </Button>
-                                        {isMapFilterActive && onClearMapFilter && (
-                                          <Button
-                                            type="button"
-                                            variant="outline"
-                                            className="text-xs font-semibold uppercase tracking-wide border border-black text-black hover:bg-neutral-200"
-                                            onClick={onClearMapFilter}
-                                          >
-                                            {t("common.clear", { fallback: "Clear" })}
-                                          </Button>
-                                        )}
-                                      </div>
-                                    )}
-                                  </div>
+                                      )}
+                                    </div>
+                                  )}
                                 </div>
-                              </motion.div>
-                            ))}
+                              </div>
+                            </motion.div>
+                          ))}
                         </div>
 
                         <div className="space-y-3">
                           <div className="flex items-center justify-between text-xs font-semibold uppercase text-black/70">
                             <span>{t("gameplay.wrongClues", { fallback: "Wrong clues" })}</span>
-                            <span>{clues.filter((c) => !c.answer).length}</span>
+                            <span>{incorrectClues.length}</span>
                           </div>
-                          {clues
-                            .filter((clue) => !clue.answer)
-                            .map((clue, index) => (
-                              <motion.div
-                                key={clue.id}
-                                className="rounded border p-4"
-                                style={{
-                                  borderColor: "rgba(239, 68, 68, 0.5)",
-                                  backgroundColor: "rgba(239, 68, 68, 0.08)",
-                                }}
-                                initial={{ opacity: 0, x: 20 }}
-                                animate={{ opacity: 1, x: 0 }}
-                                transition={{ delay: index * 0.05 }}
-                              >
-                                <div className="flex items-start gap-3">
-                                  <div className="mt-1 flex-shrink-0 text-red-600">
-                                    <XCircle className="h-5 w-5" />
+                          {onApplyWrongClueFilter && (
+                            <Button
+                              type="button"
+                              variant="outline"
+                              className="w-full border border-black bg-white text-xs font-semibold uppercase tracking-wide text-black transition-colors hover:bg-neutral-200 disabled:cursor-not-allowed disabled:border-neutral-300 disabled:text-black/50"
+                              onClick={onApplyWrongClueFilter}
+                              disabled={!canApplyWrongClueFilter || incorrectClues.length === 0}
+                            >
+                              {t("gameplay.applyWrongClueFilter", {
+                                fallback: "Filter using all wrong clues",
+                              })}
+                            </Button>
+                          )}
+                          {incorrectClues.map((clue, index) => (
+                            <motion.div
+                              key={clue.id}
+                              className="rounded border p-4"
+                              style={{
+                                borderColor: "rgba(239, 68, 68, 0.5)",
+                                backgroundColor: "rgba(239, 68, 68, 0.08)",
+                              }}
+                              initial={{ opacity: 0, x: 20 }}
+                              animate={{ opacity: 1, x: 0 }}
+                              transition={{ delay: index * 0.05 }}
+                            >
+                              <div className="flex items-start gap-3">
+                                <div className="mt-1 flex-shrink-0 text-red-600">
+                                  <XCircle className="h-5 w-5" />
+                                </div>
+                                <div className="flex-1 text-black">
+                                  <div className="mb-1 text-xs font-bold uppercase tracking-wide text-black/70">
+                                    {clue.categoryId
+                                      ? t(`questions.categories.${clue.categoryId}.name`, {
+                                          fallback: clue.category,
+                                        })
+                                      : clue.category}
                                   </div>
-                                  <div className="flex-1 text-black">
-                                    <div className="mb-1 text-xs font-bold uppercase tracking-wide text-black/70">
-                                      {clue.categoryId
-                                        ? t(`questions.categories.${clue.categoryId}.name`, {
-                                            fallback: clue.category,
-                                          })
-                                        : clue.category}
-                                    </div>
-                                    <div>
-                                      {clue.questionId
-                                        ? t(`questions.dynamic.${clue.questionId}.clue`, {
-                                            fallback: clue.text,
-                                          }).replace("{param}", `${clue.paramValue ?? ""}`)
-                                        : clue.text}
-                                    </div>
+                                  <div>
+                                    {clue.questionId
+                                      ? t(`questions.dynamic.${clue.questionId}.clue`, {
+                                          fallback: clue.text,
+                                        }).replace("{param}", `${clue.paramValue ?? ""}`)
+                                      : clue.text}
                                   </div>
                                 </div>
-                              </motion.div>
-                            ))}
+                              </div>
+                            </motion.div>
+                          ))}
                         </div>
                       </div>
                     )}
                   </AccordionContent>
                 </AccordionItem>
-              </Accordion>
 
-{/* Measure tools */}
-              <Accordion type="multiple" defaultValue={["tools", "guess"]} className="space-y-4">
                 <AccordionItem
                   value="tools"
                   className="rounded border border-neutral-900 bg-neutral-100"
@@ -310,7 +323,6 @@ export function GameplayPanel({
                   </AccordionContent>
                 </AccordionItem>
 
-{/* Shelter selection and guess submission */}
                 <AccordionItem
                   value="guess"
                   className="rounded border border-neutral-900 bg-neutral-100"
