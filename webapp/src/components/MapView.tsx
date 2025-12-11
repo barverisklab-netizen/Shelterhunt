@@ -1328,10 +1328,16 @@ const measureMarkerRef = useRef<mapboxgl.Marker | null>(null);
             type: layer.layerType,
             source: sourceId,
             "source-layer": layer.sourceData.layerName,
-            layout: {
-              ...layer.style.layout,
-              visibility: layer.metadata.loadOnInit ? "visible" : "none",
-            },
+            layout: (() => {
+              const layout = {
+                ...layer.style.layout,
+                visibility: layer.metadata.loadOnInit ? "visible" : "none",
+              } as Record<string, unknown>;
+              if (layout["icon-allow-overlap"] === true) {
+                layout["icon-ignore-placement"] = true;
+              }
+              return layout;
+            })(),
             paint: layer.style.paint,
           };
           if (layer.style.filter) layerConfig.filter = layer.style.filter;

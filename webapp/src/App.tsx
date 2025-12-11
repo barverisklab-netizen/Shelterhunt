@@ -763,11 +763,9 @@ export default function App() {
       } catch (error) {
         console.error("[Multiplayer] Host flow failed:", error);
         toast.error(
-          error instanceof Error
-            ? error.message
-            : t("app.errors.startMultiplayer", {
-                fallback: "Unable to start multiplayer session",
-              }),
+          t("app.errors.startMultiplayer", {
+            fallback: "Unable to start multiplayer session",
+          }),
         );
       } finally {
         setModeProcessing(false);
