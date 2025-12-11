@@ -7,7 +7,6 @@ import { useI18n } from "@/i18n";
 interface ShelterVictoryScreenProps {
   shelterName?: string;
   clueCount: number;
-  visitedCount: number;
   onPlayAgain: () => void;
   result?: "win" | "lose";
   winnerName?: string;
@@ -16,7 +15,6 @@ interface ShelterVictoryScreenProps {
 export function ShelterVictoryScreen({
   shelterName,
   clueCount,
-  visitedCount,
   onPlayAgain,
   result = "win",
   winnerName,
@@ -88,10 +86,6 @@ export function ShelterVictoryScreen({
           <div className="flex justify-between text-black font-semibold uppercase">
             <span>{t("victory.clues")}</span>
             <span>{clueCount}</span>
-          </div>
-          <div className="flex justify-between text-black font-semibold uppercase">
-            <span>{t("victory.visited")}</span>
-            <span>{visitedCount}</span>
           </div>
         </div>
 

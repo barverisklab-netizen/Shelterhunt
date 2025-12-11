@@ -161,7 +161,6 @@
     "title": "Victory!",
     "subtitle": "You found the secret shelter! {shelter}",
     "clues": "Clues Collected",
-    "visited": "Locations Visited",
     "playAgain": "Play Again"
   },
   "defeat": {

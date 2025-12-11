@@ -161,7 +161,6 @@
     "title": "勝利 ！",
     "subtitle": "秘密の避難所を見つけました！ {shelter}",
     "clues": "集めた手がかり",
-    "visited": "訪問した場所",
     "playAgain": "もう一度プレイ"
   },
   "defeat": {

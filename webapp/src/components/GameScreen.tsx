@@ -757,7 +757,6 @@ export function GameScreen({
             key="victory"
             shelterName={secretShelter?.name}
             clueCount={clues.length}
-            visitedCount={visitedPOIs.length}
             onPlayAgain={onEndGame}
             result="win"
           />
@@ -767,7 +766,6 @@ export function GameScreen({
             key="defeat"
             shelterName={secretShelter?.name}
             clueCount={clues.length}
-            visitedCount={visitedPOIs.length}
             onPlayAgain={onEndGame}
             result="lose"
             winnerName={externalWinnerName}
