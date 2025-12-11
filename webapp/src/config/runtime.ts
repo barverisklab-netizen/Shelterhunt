@@ -22,6 +22,11 @@ export const MULTIPLAYER_RADIUS_KM = toNumber(
   2,
 );
 
+export const MAPBOX_STYLE_URL = toString(
+  import.meta.env.VITE_MAPBOX_STYLE_URL,
+  "",
+);
+
 export const API_BASE_URL = toString(
   import.meta.env.VITE_API_BASE_URL,
   "http://localhost:4000",

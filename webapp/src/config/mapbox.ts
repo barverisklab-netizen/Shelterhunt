@@ -10,6 +10,9 @@ export const MAPBOX_CONFIG = {
   // Access token is loaded from environment variable (already configured)
   accessToken: import.meta.env.VITE_MAPBOX_TOKEN as string,
 
+  // Optional: style URL override
+  styleUrl: (import.meta.env?.VITE_MAPBOX_STYLE_URL as string | undefined) ?? "",
+
   // Tileset IDs from your Koto layers
   tilesets: {
     evacuation: "664hckgt", // AED Locations & Community Centers

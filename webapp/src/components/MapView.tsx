@@ -18,6 +18,7 @@ import { POI } from "@/types/game";
 import { kotoLayers } from "@/cityContext/koto/layers";
 import { KotoLayerGroup } from "@/types/kotoLayers";
 import { MAPBOX_CONFIG, getTilesetUrl } from "../config/mapbox";
+import { MAPBOX_STYLE_URL } from "@/config/runtime";
 import { defaultCityContext } from "../data/cityContext";
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
@@ -871,7 +872,7 @@ const measureMarkerRef = useRef<mapboxgl.Marker | null>(null);
     try {
       map.current = new mapboxgl.Map({
         container: mapContainer.current,
-        style: basemapUrl,
+        style: MAPBOX_STYLE_URL || basemapUrl,
         center: [playerLocation.lng, playerLocation.lat],
         zoom: 14,
         minZoom: defaultCityContext.mapConfig.minZoom ?? 10,
