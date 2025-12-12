@@ -330,9 +330,7 @@ export function GameplayPanel({
                   <AccordionTrigger className="px-4  text-black">
                     <div className="flex w-full items-center justify-between text-sm font-bold uppercase tracking-wide">
                       <span>{t("gameplay.finalDecision")}</span>
-                      <span className="text-[10px] font-semibold uppercase text-black/60">
-                        {t("gameplay.finalStep")}
-                      </span>
+                      <span />
                     </div>
                   </AccordionTrigger>
                   <AccordionContent className="space-y-3 px-6 py-6">

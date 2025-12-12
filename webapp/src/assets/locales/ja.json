@@ -210,8 +210,7 @@
       "clearMapFilter": "すべてのフィルターを解除",
       "clear": "クリア"
     },
-    "finalDecision": "最終決定",
-    "finalStep": "最後のステップ",
+    "finalDecision": "避難所を特定",
     "selectShelter": "避難所を選択",
     "selectShelterHint": "正解だと思う避難所を選んでください。推理の送信時は250m以内にいる必要があります。",
     "selectPlaceholder": "避難所を選んでください",

@@ -113,8 +113,8 @@
       "greenRed": "Green clues tell you what the shelter HAS, red clues tell you what it DOESN'T have",
       "cooldown": "Wrong trivia answers lock that question for 2 minutes - answer carefully!",
       "visitPoi": "Visit different types of POIs to unlock more question categories",
-      "oneGuess": "You only get ONE guess - make sure you're confident before submitting!",
-      "teamwork": "Work with your team to cover more ground and share clues"
+      "oneGuess": "You only get THREE guesses - make sure you're confident before submitting!",
+      "teamwork": "Work with different layers to cover more ground and gather clues"
     }
   },
   "app": {
@@ -210,8 +210,7 @@
       "clearMapFilter": "Clear all filters",
       "clear": "Clear"
     },
-    "finalDecision": "Final Decision",
-    "finalStep": "Final step",
+    "finalDecision": "Identify Shelter",
     "selectShelter": "Select target shelter",
     "selectShelterHint": "Pick the shelter you believe is correct. You must be within 250m when you submit.",
     "selectPlaceholder": "Select a shelter",
