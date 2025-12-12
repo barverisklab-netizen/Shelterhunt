@@ -422,6 +422,7 @@
       "shelterPreparing": "The secret shelter is still being prepared. Try again in a moment.",
       "submitError": "Unable to submit your guess right now. Please try again.",
       "correctShelter": "You found the correct shelter!",
+      "tooFarForGuess": "Move within 250m of the shelter to submit a guess.",
       "finalGuess": "That was your final guess. Game over.",
       "penaltyFirst": "Wrong guess! 2 guesses remaining.",
       "penaltySecond": "Wrong guess! 1 guess remaining."

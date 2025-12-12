@@ -422,6 +422,7 @@
       "shelterPreparing": "秘密の避難所を準備中です。少し待ってから再試行してください。",
       "submitError": "推理を送信できません。再試行してください。",
       "correctShelter": "正しい避難所を見つけました！",
+      "tooFarForGuess": "推理を送信するには避難所の250m以内まで移動してください。",
       "finalGuess": "最後の推理でした。ゲームオーバー。",
       "penaltyFirst": "不正解！残りはあと2回の推理です。",
       "penaltySecond": "不正解！残りはあと1回です。"
