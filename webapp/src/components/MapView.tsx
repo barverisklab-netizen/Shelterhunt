@@ -176,6 +176,7 @@ export function MapView({
   lightningRadiusKm = 2,
 }: MapViewProps) {
   const { t, locale } = useI18n();
+  const translateRef = useRef(t);
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
   const markers = useRef<{ [key: string]: mapboxgl.Marker }>({});
@@ -210,6 +211,10 @@ const measureMarkerRef = useRef<mapboxgl.Marker | null>(null);
       onLayerPanelToggle?.(false);
     }
   }, [layerPanelCloseSignal]);
+
+  useEffect(() => {
+    translateRef.current = t;
+  }, [t]);
 
   const [layerGroupOpenState, setLayerGroupOpenState] = useState<
     Record<KotoLayerGroup, boolean>
@@ -1295,6 +1300,7 @@ const measureMarkerRef = useRef<mapboxgl.Marker | null>(null);
         {
           template?: string;
           label: string;
+          layerNumericId?: number;
           legendItems?: (typeof kotoLayers)[number]["metadata"]["legendItems"];
         }
       > = ((m as any).__kotoLayerMeta = {});
@@ -1308,7 +1314,29 @@ const measureMarkerRef = useRef<mapboxgl.Marker | null>(null);
       // Render {{ token }} with props[key]; unknown -> em dash
       const renderTemplate = (template: string, props: Record<string, any>) => {
         return template.replace(/{{\s*([^}]+?)\s*}}/g, (_match, rawKey) => {
-          const key = String(rawKey);
+          const key = String(rawKey).trim();
+
+          if (key.startsWith("t:")) {
+            const translationKey = key.slice(2);
+            const translate = translateRef.current;
+            const localized =
+              typeof translate === "function"
+                ? translate(translationKey, { fallback: translationKey })
+                : translationKey;
+            return escapeHtml(localized);
+          }
+
+          if (key.startsWith("locale:")) {
+            const choices = key.slice("locale:".length).split("|").map((part) => part.trim()).filter(Boolean);
+            const [enKey, jaKey] = choices;
+            const chosenKey = locale === "ja" ? jaKey ?? enKey : enKey ?? jaKey;
+            if (chosenKey) {
+              const val = props?.[chosenKey];
+              return val == null || val === "" ? "—" : escapeHtml(String(val));
+            }
+            return "—";
+          }
+
           const val = props?.[key];
           return val == null || val === "" ? "—" : escapeHtml(String(val));
         });
@@ -1356,6 +1384,7 @@ const measureMarkerRef = useRef<mapboxgl.Marker | null>(null);
           layerMetaRegistry[layerId] = {
             template,
             label: layer.label,
+            layerNumericId: layer.id,
             legendItems: layer.metadata?.legendItems,
           };
         } else {
@@ -1417,14 +1446,33 @@ const measureMarkerRef = useRef<mapboxgl.Marker | null>(null);
             if (!meta?.template) return null;
 
             const legend = meta.legendItems?.[0];
+            const labelKey =
+              legend?.labelKey ??
+              (meta.layerNumericId
+                ? `map.layers.items.${meta.layerNumericId}`
+                : undefined);
+            const descriptionKey =
+              legend?.descriptionKey ??
+              (meta.layerNumericId
+                ? `map.layers.descriptions.${meta.layerNumericId}`
+                : undefined);
+            const headerLabel = labelKey
+              ? t(labelKey, {
+                  fallback: legend?.label ?? meta.label,
+                })
+              : legend?.label ?? meta.label;
+            const description = descriptionKey
+              ? t(descriptionKey, { fallback: legend?.description ?? "" })
+              : legend?.description ?? "";
+
             const headerHtml = `
               <div style="padding: 12px;">
                 <div style="font-weight:700; margin-bottom:6px; font-size:14px;">
-                  ${escapeHtml(legend?.label ?? meta.label)}
+                  ${escapeHtml(headerLabel)}
                 </div>
                 ${
-                  legend?.description
-                    ? `<div style="opacity:0.9; font-size:12px; margin-bottom:8px;">${escapeHtml(legend.description)}</div>`
+                  description
+                    ? `<div style="opacity:0.9; font-size:12px; margin-bottom:8px;">${escapeHtml(description)}</div>`
                     : ""
                 }
                 <div style="font-size:12px;">

@@ -10,16 +10,18 @@ export const kotoLayers: KotoLayer[] = [
     metadata: {
       query: {
         template:
-          "Name: <b>{{Landmark Name (EN)}}</b> | {{Landmark Name (JP)}}<br>Category (JP): <b>{{Category (JP)}}</b><br>Shelter Capacity: <b>{{Shelter_Capacity}}</b><br>Address: <b>{{Address (JP)}}</b>",
+          "{{t:map.popup.name}}: <b>{{locale:Landmark Name (EN)|Landmark Name (JP)}}</b><br>{{t:map.popup.categoryJp}}: <b>{{Category (JP)}}</b><br>{{t:map.popup.shelterCapacity}}: <b>{{Shelter_Capacity}}</b><br>{{t:map.popup.address}}: <b>{{Address (JP)}}</b>",
       },
       loadOnInit: true,
       legendItems: [
         {
           label: "Designated Evacuation Centers",
+          labelKey: "map.layers.items.1",
           isActive: true,
           isEnabled: true,
           swatchType: "line",
           description: "Government-designated evacuation center.",
+          descriptionKey: "map.layers.descriptions.1",
           swatchStyle: { strokeColor: "#c1272d", strokeWidth: 2 },
         },
       ],
@@ -80,16 +82,18 @@ export const kotoLayers: KotoLayer[] = [
     metadata: {
       query: {
         template:
-          "Name: <b>{{Landmark Name (EN)}}</b> | {{Landmark Name (JP)}}<br>Category: <b>{{Category}}</b><br>Address: <b>{{Address (JP)}}</b>",
+          "{{t:map.popup.name}}: <b>{{locale:Landmark Name (EN)|Landmark Name (JP)}}</b><br>{{t:map.popup.category}}: <b>{{Category}}</b><br>{{t:map.popup.address}}: <b>{{Address (JP)}}</b>",
       },
       loadOnInit: false,
       legendItems: [
         {
           label: "Voluntary Evacuation Centers",
+          labelKey: "map.layers.items.2",
           isActive: true,
           isEnabled: true,
           swatchType: "line",
           description: "Voluntary evacuation center.",
+          descriptionKey: "map.layers.descriptions.2",
           swatchStyle: { strokeColor: "#c1272d", strokeWidth: 2 },
         },
       ],
@@ -140,16 +144,18 @@ export const kotoLayers: KotoLayer[] = [
     metadata: {
       query: {
         template:
-          "Name: <b>{{Landmark name (EN)}}</b> | {{Landmark name (JP)}}<br>Category: <b>{{Category}}</b><br>Address: <b>{{Address (JP)}}</b>",
+          "{{t:map.popup.name}}: <b>{{locale:Landmark name (EN)|Landmark name (JP)}}</b><br>{{t:map.popup.category}}: <b>{{Category}}</b><br>{{t:map.popup.address}}: <b>{{Address (JP)}}</b>",
       },
       loadOnInit: false,
       legendItems: [
         {
           label: "Temporary Evacuation Centers (Corporate/UR)",
+          labelKey: "map.layers.items.3",
           isActive: true,
           isEnabled: true,
           swatchType: "line",
           description: "Temporary evacuation center location.",
+          descriptionKey: "map.layers.descriptions.3",
           swatchStyle: { strokeColor: "#c1272d", strokeWidth: 2 },
         },
       ],
@@ -204,16 +210,18 @@ export const kotoLayers: KotoLayer[] = [
     metadata: {
       query: {
         template:
-          "Name: <b>{{Landmark Name (EN)}}</b> | {{Landmark Name (JP)}}<br>Category: <b>{{Category}}</b><br>Address: <b>{{Address (JP)}}</b>",
+          "{{t:map.popup.name}}: <b>{{locale:Landmark Name (EN)|Landmark Name (JP)}}</b><br>{{t:map.popup.category}}: <b>{{Category}}</b><br>{{t:map.popup.address}}: <b>{{Address (JP)}}</b>",
       },
       loadOnInit: false,
       legendItems: [
         {
           label: "Special Needs Shelter",
+          labelKey: "map.layers.items.4",
           isActive: true,
           isEnabled: true,
           swatchType: "line",
           description: "Special needs shelter location.",
+          descriptionKey: "map.layers.descriptions.4",
           swatchStyle: { strokeColor: "#c1272d", strokeWidth: 2 },
         },
       ],
@@ -265,16 +273,18 @@ export const kotoLayers: KotoLayer[] = [
     metadata: {
       query: {
         template:
-          "Name: <b>{{Landmark name (EN)}}</b> | {{Landmark name (JP)}}<br>Category: <b>{{Category}}</b><br>Address: <b>{{Address (JP)}}</b>",
+          "{{t:map.popup.name}}: <b>{{locale:Landmark name (EN)|Landmark name (JP)}}</b><br>{{t:map.popup.category}}: <b>{{Category}}</b><br>{{t:map.popup.address}}: <b>{{Address (JP)}}</b>",
       },
       loadOnInit: false,
       legendItems: [
         {
           label: "Evacuation Centers",
+          labelKey: "map.layers.items.5",
           isActive: true,
           isEnabled: true,
           swatchType: "line",
           description: "General evacuation center.",
+          descriptionKey: "map.layers.descriptions.5",
           swatchStyle: { strokeColor: "#c1272d", strokeWidth: 2 },
         },
       ],
@@ -319,16 +329,18 @@ export const kotoLayers: KotoLayer[] = [
     metadata: {
       query: {
         template:
-          "Name: <b>{{Landmark name (EN)}}</b> | {{Landmark name (JP)}}<br>Category: <b>{{Category}}</b><br>Address: <b>{{Address (JP)}}</b>",
+          "{{t:map.popup.name}}: <b>{{locale:Landmark name (EN)|Landmark name (JP)}}</b><br>{{t:map.popup.category}}: <b>{{Category}}</b><br>{{t:map.popup.address}}: <b>{{Address (JP)}}</b>",
       },
       loadOnInit: false,
       legendItems: [
         {
           label: "AED Locations",
+          labelKey: "map.layers.items.6",
           isActive: true,
           isEnabled: true,
           swatchType: "line",
           description: "Evacuation support facility with AED.",
+          descriptionKey: "map.layers.descriptions.6",
           swatchStyle: {
             strokeColor: "#c1272d",
             strokeWidth: 2,
@@ -375,14 +387,16 @@ export const kotoLayers: KotoLayer[] = [
     metadata: {
       query: {
         template:
-          "Flood Depth: <b>{{depth_text}}</b><br>Flood Rank: <b>{{flood_rank}}</b>",
+          "{{t:map.popup.floodDepth}}: <b>{{depth_text}}</b><br>{{t:map.popup.floodRank}}: <b>{{flood_rank}}</b>",
       },
       loadOnInit: false,
       legendItems: [
         {
           label: "Flood Risk Zones",
+          labelKey: "map.layers.items.7",
           swatchType: "fill",
           description: "Flood depth zones from hazard modeling.",
+          descriptionKey: "map.layers.descriptions.7",
           swatchStyle: {
             fillColor: "#fc0303",
           },
@@ -429,14 +443,16 @@ export const kotoLayers: KotoLayer[] = [
     metadata: {
       query: {
         template:
-          "Inland Waters Depth: <b>{{InlandWaters_Depth}}</b><br>Rank: <b>{{InlandWaters_Depth_Rank}}</b>",
+          "{{t:map.popup.inlandWatersDepth}}: <b>{{InlandWaters_Depth}}</b><br>{{t:map.popup.rank}}: <b>{{InlandWaters_Depth_Rank}}</b>",
       },
       loadOnInit: false,
       legendItems: [
         {
           label: "Inland Waters Depth Rank",
+          labelKey: "map.layers.items.8",
           swatchType: "fill",
           description: "Ranked inland waters depth zones.",
+          descriptionKey: "map.layers.descriptions.8",
           swatchStyle: {
             fillColor: "#2a79b9",
           },
@@ -479,14 +495,16 @@ export const kotoLayers: KotoLayer[] = [
     metadata: {
       query: {
         template:
-          "Flood Duration: <b>{{Flood_Duration}}</b><br>Rank: <b>{{Flood_Duration_Rank}}</b>",
+          "{{t:map.popup.floodDuration}}: <b>{{Flood_Duration}}</b><br>{{t:map.popup.rank}}: <b>{{Flood_Duration_Rank}}</b>",
       },
       loadOnInit: false,
       legendItems: [
         {
           label: "Flood Duration Rank",
+          labelKey: "map.layers.items.9",
           swatchType: "fill",
           description: "Ranked flood duration zones.",
+          descriptionKey: "map.layers.descriptions.9",
           swatchStyle: {
             fillColor: "#6a52a2",
           },
@@ -529,14 +547,16 @@ export const kotoLayers: KotoLayer[] = [
     metadata: {
       query: {
         template:
-          "Storm Surge Depth: <b>{{StormSurge_Depth}}</b><br>Rank: <b>{{StormSurge_Depth_Rank}}</b>",
+          "{{t:map.popup.stormSurgeDepth}}: <b>{{StormSurge_Depth}}</b><br>{{t:map.popup.rank}}: <b>{{StormSurge_Depth_Rank}}</b>",
       },
       loadOnInit: false,
       legendItems: [
         {
           label: "Storm Surge Depth Rank",
+          labelKey: "map.layers.items.10",
           swatchType: "fill",
           description: "Ranked storm surge depth zones.",
+          descriptionKey: "map.layers.descriptions.10",
           swatchStyle: {
             fillColor: "#be4f27",
           },
@@ -585,14 +605,16 @@ export const kotoLayers: KotoLayer[] = [
     metadata: {
       query: {
         template:
-          "Inland Waters Depth: <b>{{InlandWaters_Depth}}</b><br>Rank: <b>{{InlandWaters_Depth_Rank}}</b>",
+          "{{t:map.popup.inlandWatersDepth}}: <b>{{InlandWaters_Depth}}</b><br>{{t:map.popup.rank}}: <b>{{InlandWaters_Depth_Rank}}</b>",
       },
       loadOnInit: false,
       legendItems: [
         {
           label: "Inland Waters Depth Rank",
+          labelKey: "map.layers.items.11",
           swatchType: "fill",
           description: "Ranked inland waters depth zones.",
+          descriptionKey: "map.layers.descriptions.11",
           swatchStyle: {
             fillColor: "#2a79b9",
           },
@@ -635,16 +657,18 @@ export const kotoLayers: KotoLayer[] = [
     metadata: {
       query: {
         template:
-          "Name: <b>{{Landmark name (EN)}}</b> | {{Landmark name (JP)}}<br>Category: <b>{{Category}}</b><br>Address: <b>{{Address (JP)}}</b>",
+          "{{t:map.popup.name}}: <b>{{locale:Landmark name (EN)|Landmark name (JP)}}</b><br>{{t:map.popup.category}}: <b>{{Category}}</b><br>{{t:map.popup.address}}: <b>{{Address (JP)}}</b>",
       },
       loadOnInit: false,
       legendItems: [
         {
           label: "Bridges",
+          labelKey: "map.layers.items.12",
           isActive: true,
           isEnabled: true,
           swatchType: "line",
           description: "City bridge landmark.",
+          descriptionKey: "map.layers.descriptions.12",
           swatchStyle: {
             strokeColor: "#377eb8",
             strokeWidth: 2,
@@ -698,16 +722,18 @@ export const kotoLayers: KotoLayer[] = [
     metadata: {
       query: {
         template:
-          "Name: <b>{{Landmark name (EN)}}</b> | {{Landmark name (JP)}}<br>Category: <b>{{Category}}</b><br>Address: <b>{{Address (JP)}}</b>",
+          "{{t:map.popup.name}}: <b>{{locale:Landmark name (EN)|Landmark name (JP)}}</b><br>{{t:map.popup.category}}: <b>{{Category}}</b><br>{{t:map.popup.address}}: <b>{{Address (JP)}}</b>",
       },
       loadOnInit: false,
       legendItems: [
         {
           label: "Shrines/Temples",
+          labelKey: "map.layers.items.13",
           isActive: true,
           isEnabled: true,
           swatchType: "line",
           description: "Religious or cultural landmark.",
+          descriptionKey: "map.layers.descriptions.13",
           swatchStyle: {
             strokeColor: "#377eb8",
             strokeWidth: 2,
@@ -761,16 +787,18 @@ export const kotoLayers: KotoLayer[] = [
     metadata: {
       query: {
         template:
-          "Name: <b>{{Landmark name (EN)}}</b> | {{Landmark name (JP)}}<br>Category: <b>{{Category}}</b><br>Address: <b>{{Address (JP)}}</b>",
+          "{{t:map.popup.name}}: <b>{{locale:Landmark name (EN)|Landmark name (JP)}}</b><br>{{t:map.popup.category}}: <b>{{Category}}</b><br>{{t:map.popup.address}}: <b>{{Address (JP)}}</b>",
       },
       loadOnInit: false,
       legendItems: [
         {
           label: "Community Centers",
+          labelKey: "map.layers.items.14",
           isActive: true,
           isEnabled: true,
           swatchType: "line",
           description: "Designated community center facility.",
+          descriptionKey: "map.layers.descriptions.14",
           swatchStyle: {
             strokeColor: "#c1272d",
             strokeWidth: 2,
@@ -824,16 +852,18 @@ export const kotoLayers: KotoLayer[] = [
     metadata: {
       query: {
         template:
-          "Name: <b>{{Landmark name (EN)}}</b> | {{Landmark name (JP)}}<br>Category: <b>{{Category}}</b><br>Address: <b>{{Address (JP)}}</b>",
+          "{{t:map.popup.name}}: <b>{{locale:Landmark name (EN)|Landmark name (JP)}}</b><br>{{t:map.popup.category}}: <b>{{Category}}</b><br>{{t:map.popup.address}}: <b>{{Address (JP)}}</b>",
       },
       loadOnInit: false,
       legendItems: [
         {
           label: "Flood Gates",
+          labelKey: "map.layers.items.15",
           isActive: true,
           isEnabled: true,
           swatchType: "line",
           description: "City flood gate landmark.",
+          descriptionKey: "map.layers.descriptions.15",
           swatchStyle: {
             strokeColor: "#377eb8",
             strokeWidth: 2,
@@ -887,16 +917,18 @@ export const kotoLayers: KotoLayer[] = [
     metadata: {
       query: {
         template:
-          "Name: <b>{{Landmark name (EN)}}</b> | {{Landmark name (JP)}}<br>Category: <b>{{Category}}</b><br>Address: <b>{{Address (JP)}}</b>",
+          "{{t:map.popup.name}}: <b>{{locale:Landmark name (EN)|Landmark name (JP)}}</b><br>{{t:map.popup.category}}: <b>{{Category}}</b><br>{{t:map.popup.address}}: <b>{{Address (JP)}}</b>",
       },
       loadOnInit: false,
       legendItems: [
         {
           label: "Train Stations",
+          labelKey: "map.layers.items.16",
           isActive: true,
           isEnabled: true,
           swatchType: "line",
           description: "City rail or metro station.",
+          descriptionKey: "map.layers.descriptions.16",
           swatchStyle: {
             strokeColor: "#377eb8",
             strokeWidth: 2,

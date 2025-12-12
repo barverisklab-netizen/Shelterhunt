@@ -13,6 +13,8 @@ export interface KotoLayerLegendItem {
   isEnabled?: boolean;
   swatchType: KotoLayerSwatchType;
   description: string;
+  labelKey?: string;
+  descriptionKey?: string;
   swatchStyle: {
     strokeColor?: string;
     strokeWidth?: number;
