@@ -136,7 +136,7 @@ interface MapViewProps {
   onPOIClick?: (poi: POI) => void;
   basemapUrl?: string;
   onSecretShelterChange?: (info: { id: string; name: string }) => void;
-  onShelterOptionsChange?: (options: { id: string; name: string }[]) => void;
+  onShelterOptionsChange?: (options: { id: string; name: string; lat?: number; lng?: number }[]) => void;
   measureTrigger?: number;
   onMeasurementActiveChange?: (active: boolean) => void;
   isFiltered?: boolean;
@@ -193,6 +193,7 @@ const measureMarkerRef = useRef<mapboxgl.Marker | null>(null);
   const measureStatusRef = useRef<MeasureStatus>("idle");
   const lastMeasureRequestRef = useRef<number>(0);
   const geolocateHandlerRef = useRef<((event: GeolocationPosition) => void) | null>(null);
+  const lastLightningParamsRef = useRef<{ center: { lat: number; lng: number }; radiusKm: number } | null>(null);
 
   // Koto layer visibility state
   const [kotoLayersVisible, setKotoLayersVisible] = useState<
@@ -245,6 +246,7 @@ const measureMarkerRef = useRef<mapboxgl.Marker | null>(null);
     null,
   );
   const [hasUserLocationFix, setHasUserLocationFix] = useState(false);
+  const [mapLoaded, setMapLoaded] = useState(false);
 
   const [isMeasurePanelCollapsed, setIsMeasurePanelCollapsed] = useState(false);
   const [visiblePois, setVisiblePois] = useState<POI[]>([]);
@@ -805,7 +807,7 @@ const measureMarkerRef = useRef<mapboxgl.Marker | null>(null);
           (poi) => poi.category?.toLowerCase() === "designated ec",
         );
 
-        const options: { id: string; name: string }[] = [];
+        const options: { id: string; name: string; lat?: number; lng?: number }[] = [];
         const seenNames = new Set<string>();
         const seenIds = new Set<string>();
 
@@ -826,7 +828,15 @@ const measureMarkerRef = useRef<mapboxgl.Marker | null>(null);
           }
           seenIds.add(resolvedId);
 
-          options.push({ id: resolvedId, name });
+          const hasCoords =
+            Number.isFinite(poi.lat) && Number.isFinite(poi.lng);
+
+          options.push({
+            id: resolvedId,
+            name,
+            lat: hasCoords ? (poi.lat as number) : undefined,
+            lng: hasCoords ? (poi.lng as number) : undefined,
+          });
         });
 
         if (
@@ -885,6 +895,7 @@ const measureMarkerRef = useRef<mapboxgl.Marker | null>(null);
 
       map.current.on("load", () => {
         console.log("Mapbox map loaded successfully!");
+        setMapLoaded(true);
         // Add Koto layer sources and layers
         addKotoLayers();
 
@@ -963,6 +974,7 @@ const measureMarkerRef = useRef<mapboxgl.Marker | null>(null);
         map.current = null;
         hasSelectedShelter.current = false;
         hasEmittedShelterOptions.current = false;
+        setMapLoaded(false);
       }
     };
   }, [basemapUrl, onSecretShelterChange, onShelterOptionsChange, selectShelterFromLocalData]);
@@ -1038,31 +1050,51 @@ const measureMarkerRef = useRef<mapboxgl.Marker | null>(null);
   }, [userCircleCenter?.lat, userCircleCenter?.lng]);
 
   useEffect(() => {
+    const hasCenter =
+      gameMode === "lightning" &&
+      lightningCenter &&
+      Number.isFinite(lightningCenter.lat) &&
+      Number.isFinite(lightningCenter.lng);
+    const hasRadius = Number.isFinite(lightningRadiusKm);
+
+    if (hasCenter && hasRadius) {
+      lastLightningParamsRef.current = {
+        center: { lat: lightningCenter!.lat, lng: lightningCenter!.lng },
+        radiusKm: lightningRadiusKm as number,
+      };
+    }
+  }, [gameMode, lightningCenter?.lat, lightningCenter?.lng, lightningRadiusKm]);
+
+  useEffect(() => {
     const m = map.current;
     if (!m) return;
 
-    const shouldShowLightningCircle =
-      gameMode === "lightning" && lightningCenter && Number.isFinite(lightningRadiusKm);
     const removeLightningCircle = () => {
       if (!map.current || m !== map.current) return;
-      if (typeof m.getStyle !== "function" || !m.getStyle()) return;
       if (m.getLayer(LIGHTNING_RANGE_FILL_LAYER_ID)) m.removeLayer(LIGHTNING_RANGE_FILL_LAYER_ID);
       if (m.getLayer(LIGHTNING_RANGE_OUTLINE_LAYER_ID))
         m.removeLayer(LIGHTNING_RANGE_OUTLINE_LAYER_ID);
       if (m.getSource(LIGHTNING_RANGE_SOURCE_ID)) m.removeSource(LIGHTNING_RANGE_SOURCE_ID);
     };
 
-    if (!shouldShowLightningCircle) {
+    if (gameMode !== "lightning") {
       removeLightningCircle();
       return;
     }
 
     const applyLightningCircle = () => {
       if (!map.current || m !== map.current) return;
-      if (typeof m.getStyle !== "function" || !m.getStyle()) return;
+      const params = lastLightningParamsRef.current;
+      if (!params) return;
+      const styleLoaded =
+        typeof m.isStyleLoaded === "function" ? m.isStyleLoaded() : true;
+      if (!styleLoaded && !mapLoaded) {
+        console.info("[Lightning] Style not loaded yet, waiting for load");
+        return;
+      }
       const feature = createCircleFeature(
-        lightningCenter,
-        Math.max(0, (lightningRadiusKm ?? 2) * 1000),
+        params.center,
+        Math.max(0, (params.radiusKm ?? 2) * 1000),
         128,
       );
 
@@ -1070,23 +1102,20 @@ const measureMarkerRef = useRef<mapboxgl.Marker | null>(null);
         (m.getSource(LIGHTNING_RANGE_SOURCE_ID) as mapboxgl.GeoJSONSource).setData(
           feature as any,
         );
+        if (m.getLayer(LIGHTNING_RANGE_FILL_LAYER_ID)) {
+          m.removeLayer(LIGHTNING_RANGE_FILL_LAYER_ID);
+        }
       } else {
         m.addSource(LIGHTNING_RANGE_SOURCE_ID, { type: "geojson", data: feature as any });
-        m.addLayer({
-          id: LIGHTNING_RANGE_FILL_LAYER_ID,
-          type: "fill",
-          source: LIGHTNING_RANGE_SOURCE_ID,
-          paint: {
-            "fill-color": "rgba(59,130,246,0.06)",
-            "fill-opacity": 1,
-          },
-        });
+      }
+
+      if (!m.getLayer(LIGHTNING_RANGE_OUTLINE_LAYER_ID)) {
         m.addLayer({
           id: LIGHTNING_RANGE_OUTLINE_LAYER_ID,
           type: "line",
           source: LIGHTNING_RANGE_SOURCE_ID,
           paint: {
-            "line-color": "rgba(59,130,246,0.45)",
+            "line-color": "rgba(239, 68, 68, 0.7)",
             "line-width": 2,
             "line-dasharray": [3, 2, 0.5, 2],
           },
@@ -1094,25 +1123,40 @@ const measureMarkerRef = useRef<mapboxgl.Marker | null>(null);
       }
     };
 
-    let loadHandler: (() => void) | null = null;
-
-    if (!m.isStyleLoaded()) {
-      loadHandler = () => {
+    const bindStyleData = () => {
+      const handleStyleData = () => {
+        if (gameMode !== "lightning") {
+          removeLightningCircle();
+          return;
+        }
         applyLightningCircle();
-        m.off("load", loadHandler!);
+      };
+      m.on("styledata", handleStyleData);
+      return () => m.off("styledata", handleStyleData);
+    };
+
+    if (!mapLoaded || (typeof m.isStyleLoaded === "function" && !m.isStyleLoaded())) {
+      const loadHandler = () => {
+        applyLightningCircle();
+        m.off("load", loadHandler);
       };
       m.on("load", loadHandler);
-    } else {
-      applyLightningCircle();
+      const cleanupStyle = bindStyleData();
+      return () => {
+        m.off("load", loadHandler);
+        cleanupStyle();
+        removeLightningCircle();
+      };
     }
 
+    applyLightningCircle();
+    const cleanupStyle = bindStyleData();
+
     return () => {
-      if (loadHandler) {
-        m.off("load", loadHandler);
-      }
+      cleanupStyle();
       removeLightningCircle();
     };
-  }, [gameMode, lightningCenter?.lat, lightningCenter?.lng, lightningRadiusKm]);
+  }, [gameMode, lightningCenter?.lat, lightningCenter?.lng, lightningRadiusKm, mapLoaded]);
 
   useEffect(() => {
     measureStatusRef.current = measureState.status;
