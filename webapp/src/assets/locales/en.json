@@ -350,53 +350,6 @@
       }
     }
   },
-  "trivia": {
-    "challengeTitle": "Trivia Challenge",
-    "challengeSubtitle": "Answer correctly to unlock a clue",
-    "close": "Close trivia",
-    "correct": "Correct! 🎉",
-    "unlockedClue": "You unlocked a clue!",
-    "incorrect": "Incorrect",
-    "locked": "This question is locked for 2 minutes",
-    "submit": "Submit Answer",
-    "t1": {
-      "question": "What year was the Great Boston Fire?",
-      "answers": ["1872", "1905", "1845", "1889"]
-    },
-    "t2": {
-      "question": "What is the recommended emergency water supply per person per day?",
-      "answers": ["1 liter", "2 liters", "3 liters", "4 liters"]
-    },
-    "t3": {
-      "question": "Which hurricane category indicates sustained winds of 111-129 mph?",
-      "answers": ["Category 2", "Category 3", "Category 4", "Category 5"]
-    },
-    "t4": {
-      "question": "What does FEMA stand for?",
-      "answers": [
-        "Federal Emergency Management Agency",
-        "Fire and Emergency Management Authority",
-        "Federal Environmental Monitoring Agency",
-        "First Emergency Medical Aid"
-      ]
-    },
-    "t5": {
-      "question": "How long can a person typically survive without water?",
-      "answers": ["1 day", "3 days", "7 days", "14 days"]
-    },
-    "t6": {
-      "question": "What is the universal emergency number in the United States?",
-      "answers": ["999", "111", "911", "112"]
-    },
-    "t7": {
-      "question": "Which floor is generally safest during a hurricane?",
-      "answers": ["Basement", "Ground floor", "Second floor", "Top floor"]
-    },
-    "t8": {
-      "question": "What percentage of the human body is water?",
-      "answers": ["50%", "60%", "70%", "80%"]
-    }
-  },
   "game": {
     "exitTitle": "Exit to main menu",
     "exitConfirmTitle": "Leave the game?",
