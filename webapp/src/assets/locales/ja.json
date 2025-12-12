@@ -213,8 +213,9 @@
     "finalDecision": "最終決定",
     "finalStep": "最後のステップ",
     "selectShelter": "避難所を選択",
+    "selectShelterHint": "正解だと思う避難所を選んでください。推理の送信時は250m以内にいる必要があります。",
     "selectPlaceholder": "避難所を選んでください",
-    "guessWarning": "間違えるとタイマーが10分に戻ります。手がかりを確認してから提出しましょう。",
+    "guessWarning": "推理できるのは3回までです。手がかりを十分に確認してから送信しましょう。",
     "submitGuess": "推理を送信",
     "returnToMap": "マップに戻る"
   },

@@ -213,8 +213,9 @@
     "finalDecision": "Final Decision",
     "finalStep": "Final step",
     "selectShelter": "Select target shelter",
+    "selectShelterHint": "Pick the shelter you believe is correct. You must be within 250m when you submit.",
     "selectPlaceholder": "Select a shelter",
-    "guessWarning": "Wrong guesses reset the timer to 10 minutes. Make sure your clues line up before submitting.",
+    "guessWarning": "You have three guesses. Use your clues wisely before you submit.",
     "submitGuess": "Submit Guess",
     "returnToMap": "Return to Map"
   },

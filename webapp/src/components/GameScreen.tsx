@@ -14,11 +14,13 @@ import { BlurReveal } from './ui/blur-reveal';
 import { useI18n } from "@/i18n";
 import type { Shelter } from "@/services/shelterDataService";
 import { ENABLE_WRONG_GUESS_PENALTY, LIGHTNING_RADIUS_KM } from "@/config/runtime";
+import { haversineDistanceKm } from "@/utils/lightningSelection";
 
 
 const ENABLE_SECRET_SHELTER_BLUR = true;
 const PROXIMITY_DISABLED_FOR_TESTING =
   import.meta.env?.VITE_ENABLE_PROXIMITY === "false";
+const PROXIMITY_RADIUS_KM = 0.25;
 
 export type WrongGuessStage = 'first' | 'second' | 'third';
 
@@ -414,6 +416,50 @@ export function GameScreen({
     ? shelterOptions.find((option) => option.id === selectedShelterId) ?? null
     : null;
 
+  const resolveShelterCoords = useCallback(
+    (option: { id: string; name: string; lat?: number; lng?: number } | null | undefined) => {
+      if (!option) return null;
+      if (Number.isFinite(option.lat) && Number.isFinite(option.lng)) {
+        return { lat: option.lat as number, lng: option.lng as number };
+      }
+
+      const matchFromShelters = shelters.find(
+        (shelter) =>
+          shelter.id === option.id ||
+          shelter.code === option.id ||
+          shelter.shareCode === option.id ||
+          normalizeName(shelter.nameEn ?? shelter.nameJp ?? shelter.externalId ?? shelter.id) ===
+            normalizeName(option.name),
+      );
+      if (
+        matchFromShelters &&
+        Number.isFinite(matchFromShelters.latitude) &&
+        Number.isFinite(matchFromShelters.longitude)
+      ) {
+        return {
+          lat: Number(matchFromShelters.latitude),
+          lng: Number(matchFromShelters.longitude),
+        };
+      }
+
+      const matchFromPois = pois.find(
+        (poi) =>
+          poi.id === option.id ||
+          normalizeName(poi.name) === normalizeName(option.name),
+      );
+      if (
+        matchFromPois &&
+        Number.isFinite(matchFromPois.lat) &&
+        Number.isFinite(matchFromPois.lng)
+      ) {
+        return { lat: matchFromPois.lat, lng: matchFromPois.lng };
+      }
+
+      return null;
+    },
+    [normalizeName, pois, shelters],
+  );
+
   useEffect(() => {
     if (PROXIMITY_DISABLED_FOR_TESTING) {
       if (lastToastPoiId.current !== "testing") {
@@ -465,6 +511,26 @@ export function GameScreen({
       toast.error(
         t("game.toasts.shelterPreparing", {
           fallback: "The secret shelter is still being prepared. Try again in a moment.",
+        }),
+      );
+      return;
+    }
+
+    const coords = resolveShelterCoords(selectedShelterOption);
+    if (!coords) {
+      toast.error(
+        t("game.toasts.shelterCoordsMissing", {
+          fallback: "Unable to locate that shelter. Try another option.",
+        }),
+      );
+      return;
+    }
+
+    const distanceKm = haversineDistanceKm(playerLocation, coords);
+    if (distanceKm > PROXIMITY_RADIUS_KM) {
+      toast.error(
+        t("game.toasts.tooFarForGuess", {
+          fallback: "Move within 250m of the shelter to submit a guess.",
         }),
       );
       return;

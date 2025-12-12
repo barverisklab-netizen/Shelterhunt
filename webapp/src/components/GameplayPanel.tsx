@@ -340,6 +340,11 @@ export function GameplayPanel({
                       <label className="text-s font-semibold uppercase text-black/70 font-bold ">
                         {t("gameplay.selectShelter")}
                       </label>
+                      <p className="text-[11px] text-black/60">
+                        {t("gameplay.selectShelterHint", {
+                          fallback: "Pick the shelter you believe is correct. You must be within 250m when you submit.",
+                        })}
+                      </p>
                       <select
                         value={selectedShelterId ?? ""}
                         onChange={(event) => onShelterSelect(event.target.value || null)}
