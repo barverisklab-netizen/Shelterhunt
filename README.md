@@ -34,6 +34,7 @@ Optional webapp env toggles:
 - `VITE_LIGHTNING_RADIUS_KM` (default `2`)
 - `VITE_MULTIPLAYER_RADIUS_KM` (default `2`) — max km radius used when selecting or auto-falling back to a nearby shelter in multiplayer
 - `VITE_ENABLE_PROXIMITY` (default `true`) — set to `false` to bypass proximity gating for local testing
+- `VITE_ENABLE_WRONG_GUESS_PENALTY` (default `false`) — when `true`, wrong guesses apply timer penalties (legacy mode); when `false`, you still have 3 attempts but the timer is unchanged
 
 If you want the production build:
 

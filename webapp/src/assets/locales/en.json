@@ -153,7 +153,7 @@
   "guess": {
     "confirmTitle": "Confirm Guess",
     "confirmPrompt": "Are you sure you want to lock in this shelter?",
-    "confirmWarning": "A wrong selection will have time panulty. Make sure you have gathered enough clues before you commit.",
+    "confirmWarning": "You have three guesses. Make sure you have gathered enough clues before you commit.",
     "lockIn": "Lock In Guess",
     "backToClues": "Back to Clues"
   },
@@ -172,11 +172,11 @@
   "penalty": {
     "first": {
       "title": "Not Quite There",
-      "message": "That wasn't the secret shelter. Your timer has been reset to 10 minutes—make every clue count."
+      "message": "That wasn't the secret shelter. 2 guesses remaining."
     },
     "second": {
       "title": "Pressure Rising",
-      "message": "Another miss. The timer now drops to 5 minutes. You will get one last chance, choose wisely."
+      "message": "Another miss. 1 guess remaining—choose wisely."
     },
     "third": {
       "title": "Game Over",
@@ -423,8 +423,8 @@
       "submitError": "Unable to submit your guess right now. Please try again.",
       "correctShelter": "You found the correct shelter!",
       "finalGuess": "That was your final guess. Game over.",
-      "penaltyFirst": "Wrong guess! Timer set to 10 minutes.",
-      "penaltySecond": "Wrong guess! Timer set to 5 minutes."
+      "penaltyFirst": "Wrong guess! 2 guesses remaining.",
+      "penaltySecond": "Wrong guess! 1 guess remaining."
     },
     "clues": {
       "surgeRank": "Surge rank is {rank}",

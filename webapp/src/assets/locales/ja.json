@@ -153,7 +153,7 @@
   "guess": {
     "confirmTitle": "推理の確定",
     "confirmPrompt": "この避難所で確定してよいですか？",
-    "confirmWarning": "間違えるとタイマーが10分に戻り、赤色になります。十分に手がかりを集めてから確定してください。",
+    "confirmWarning": "推理は3回までです。十分に手がかりを集めてから確定してください。",
     "lockIn": "この避難所で確定",
     "backToClues": "手がかり一覧へ戻る"
   },
@@ -423,8 +423,8 @@
       "submitError": "推理を送信できません。再試行してください。",
       "correctShelter": "正しい避難所を見つけました！",
       "finalGuess": "最後の推理でした。ゲームオーバー。",
-      "penaltyFirst": "不正解！タイマーを10分にリセットしました。",
-      "penaltySecond": "不正解！タイマーを5分にリセットしました。"
+      "penaltyFirst": "不正解！残りはあと2回の推理です。",
+      "penaltySecond": "不正解！残りはあと1回です。"
     },
     "clues": {
       "surgeRank": "高潮浸水ランクは{rank}",

@@ -13,7 +13,7 @@ import { toast } from "sonner@2.0.3";
 import { BlurReveal } from './ui/blur-reveal';
 import { useI18n } from "@/i18n";
 import type { Shelter } from "@/services/shelterDataService";
-import { LIGHTNING_RADIUS_KM } from "@/config/runtime";
+import { ENABLE_WRONG_GUESS_PENALTY, LIGHTNING_RADIUS_KM } from "@/config/runtime";
 
 
 const ENABLE_SECRET_SHELTER_BLUR = true;
@@ -85,6 +85,7 @@ export function GameScreen({
   const [filterSource, setFilterSource] = useState<"correct" | "wrong" | null>(null);
   const [showExitConfirm, setShowExitConfirm] = useState(false);
   const [penaltyStage, setPenaltyStage] = useState<WrongGuessStage | null>(null); // retained for compatibility
+  const [wrongGuessCount, setWrongGuessCount] = useState(0);
   const [solvedQuestions, setSolvedQuestions] = useState<string[]>([]);
   const lastToastPoiId = useRef<string | null>(null);
   const [externalWinnerName, setExternalWinnerName] = useState<string | undefined>(undefined);
@@ -499,6 +500,7 @@ export function GameScreen({
         }),
       );
       setPenaltyStage(null);
+      setWrongGuessCount(0);
       setOutcome('win');
       if (outcome !== "win") {
         setExternalWinnerName(undefined);
@@ -510,9 +512,46 @@ export function GameScreen({
         winnerUserId: currentPlayerId,
       });
     } else {
-      toast.error(t('game.toasts.finalGuess', { fallback: 'That was your final guess. Game over.' }));
-      setPenaltyStage(null);
-      setOutcome('lose');
+      if (ENABLE_WRONG_GUESS_PENALTY) {
+        const stage = onApplyPenalty ? onApplyPenalty() : "third";
+        setPenaltyStage(stage);
+
+        if (stage === "third") {
+          toast.error(
+            t("game.toasts.finalGuess", { fallback: "That was your final guess. Game over." }),
+          );
+          setOutcome("lose");
+          return;
+        }
+
+        toast.error(
+          stage === "first"
+            ? t("game.toasts.penaltyFirst", { fallback: "Wrong guess! 2 guesses remaining." })
+            : t("game.toasts.penaltySecond", { fallback: "Wrong guess! 1 guess remaining." }),
+        );
+        setOutcome("penalty");
+      } else {
+        const nextCount = wrongGuessCount + 1;
+        setWrongGuessCount(nextCount);
+        const stage: WrongGuessStage =
+          nextCount === 1 ? "first" : nextCount === 2 ? "second" : "third";
+        setPenaltyStage(stage);
+
+        if (stage === "third") {
+          toast.error(
+            t("game.toasts.finalGuess", { fallback: "That was your final guess. Game over." }),
+          );
+          setOutcome("lose");
+          return;
+        }
+
+        toast.error(
+          stage === "first"
+            ? t("game.toasts.penaltyFirst", { fallback: "Wrong guess! 2 guesses remaining." })
+            : t("game.toasts.penaltySecond", { fallback: "Wrong guess! 1 guess remaining." }),
+        );
+        setOutcome("none");
+      }
     }
   };
 
