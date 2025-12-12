@@ -145,7 +145,7 @@ export function GameplayPanel({
                         animate={{ opacity: 1, y: 0 }}
                       >
                         <div className="bg-black p-6">
-                          <Sparkles className="h-12 w-12 text-black" />
+                          <Sparkles className="h-12 w-12 text-neutral-500" />
                         </div>
                         <div>
                           <div className="mb-2 text-xl font-bold uppercase">

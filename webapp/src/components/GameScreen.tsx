@@ -516,24 +516,26 @@ export function GameScreen({
       return;
     }
 
-    const coords = resolveShelterCoords(selectedShelterOption);
-    if (!coords) {
-      toast.error(
-        t("game.toasts.shelterCoordsMissing", {
-          fallback: "Unable to locate that shelter. Try another option.",
-        }),
-      );
-      return;
-    }
+    if (!PROXIMITY_DISABLED_FOR_TESTING) {
+      const coords = resolveShelterCoords(selectedShelterOption);
+      if (!coords) {
+        toast.error(
+          t("game.toasts.shelterCoordsMissing", {
+            fallback: "Unable to locate that shelter. Try another option.",
+          }),
+        );
+        return;
+      }
 
-    const distanceKm = haversineDistanceKm(playerLocation, coords);
-    if (distanceKm > PROXIMITY_RADIUS_KM) {
-      toast.error(
-        t("game.toasts.tooFarForGuess", {
-          fallback: "Move within 250m of the shelter to submit a guess.",
-        }),
-      );
-      return;
+      const distanceKm = haversineDistanceKm(playerLocation, coords);
+      if (distanceKm > PROXIMITY_RADIUS_KM) {
+        toast.error(
+          t("game.toasts.tooFarForGuess", {
+            fallback: "Move within 250m of the shelter to submit a guess.",
+          }),
+        );
+        return;
+      }
     }
 
     setConfirmGuessOpen(true);
