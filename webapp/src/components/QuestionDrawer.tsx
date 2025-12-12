@@ -284,13 +284,20 @@ export function QuestionDrawer({
                             <input
                               type="number"
                               inputMode="numeric"
+                              min={0}
+                              step={question.id === "shelterCapacity" ? 100 : 1}
                               className="w-full rounded border-2 border-black px-3 py-2"
                               placeholder={t("questions.enterNumber", { fallback: "Enter a number" })}
                               value={selectedParam ?? ""}
                               onChange={(event) =>
                                 setSelectedParams({
                                   ...selectedParams,
-                                  [question.id]: event.target.value ? Number(event.target.value) : "",
+                                  [question.id]:
+                                    event.target.value && Number(event.target.value) >= 0
+                                      ? question.id === "shelterCapacity"
+                                        ? Math.floor(Number(event.target.value) / 100) * 100
+                                        : Number(event.target.value)
+                                      : "",
                                 })
                               }
                               disabled={!isEligible || isLocked}

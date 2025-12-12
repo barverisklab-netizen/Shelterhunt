@@ -345,17 +345,38 @@ export function GameScreen({
     };
 
     let isCorrect = false;
+    const minCountIds = new Set([
+      "waterStation250m",
+      "hospital250m",
+      "aed250m",
+      "emergencySupplyStorage250m",
+      "communityCenter250m",
+      "trainStation250m",
+      "shrineTemple250m",
+      "floodgate250m",
+      "bridge250m",
+      "shelterCapacity",
+    ]);
+    const isMinCountQuestion = minCountIds.has(questionId);
+
     if (question.paramType === "number") {
       const numericGuess = Number(param);
       const numericExpected = Number(expected);
-      isCorrect = Number.isFinite(numericGuess) && numericGuess === numericExpected;
+      isCorrect =
+        Number.isFinite(numericGuess) &&
+        Number.isFinite(numericExpected) &&
+        (isMinCountQuestion ? numericGuess <= numericExpected : numericGuess === numericExpected);
     } else {
       isCorrect = normalizeVal(param) === normalizeVal(expected);
     }
 
     const clueTemplate =
       (question as Question & { clueTemplate?: string }).clueTemplate || question.text;
-    const clueText = clueTemplate.replace("{param}", `${param ?? ""}`);
+    const clueValue =
+      isMinCountQuestion && typeof expected !== "undefined" && expected !== null
+        ? expected
+        : param ?? expected;
+    const clueText = clueTemplate.replace("{param}", `${clueValue ?? ""}`);
     const categoryLabel =
       defaultCityContext.questionCategories.find((cat) => cat.id === question.category)
         ?.name ?? question.category;
@@ -367,7 +388,7 @@ export function GameScreen({
       category: categoryLabel,
       categoryId: question.category,
       questionId: question.id,
-      paramValue: param ?? expected,
+      paramValue: clueValue,
       timestamp: Date.now(),
     };
 

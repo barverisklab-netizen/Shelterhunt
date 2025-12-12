@@ -270,44 +270,44 @@
         "clue": "Facility type is {param}"
       },
       "shelterCapacity": {
-        "question": "Is the shelter capacity {param}?",
-        "clue": "Shelter capacity is {param}"
+        "question": "Is the shelter capacity at least {param}?",
+        "clue": "Shelter capacity is at least {param}"
       },
       "waterStation250m": {
-        "question": "Are there {param} water stations within 250m?",
-        "clue": "There are {param} water stations within 250m"
+        "question": "Are there at least {param} water stations within 250m?",
+        "clue": "There are at least {param} water stations within 250m"
       },
       "hospital250m": {
-        "question": "Are there {param} hospitals within 250m?",
-        "clue": "There are {param} hospitals within 250m"
+        "question": "Are there at least {param} hospitals within 250m?",
+        "clue": "There are at least {param} hospitals within 250m"
       },
       "aed250m": {
-        "question": "Are there {param} AEDs within 250m?",
-        "clue": "There are {param} AEDs within 250m"
+        "question": "Are there at least {param} AEDs within 250m?",
+        "clue": "There are at least {param} AEDs within 250m"
       },
       "emergencySupplyStorage250m": {
-        "question": "Are there {param} emergency supply storages within 250m?",
-        "clue": "There are {param} emergency supply storages within 250m"
+        "question": "Are there at least {param} emergency supply storages within 250m?",
+        "clue": "There are at least {param} emergency supply storages within 250m"
       },
       "communityCenter250m": {
-        "question": "Are there {param} community centers within 250m?",
-        "clue": "There are {param} community centers within 250m"
+        "question": "Are there at least {param} community centers within 250m?",
+        "clue": "There are at least {param} community centers within 250m"
       },
       "trainStation250m": {
-        "question": "Are there {param} train stations within 250m?",
-        "clue": "There are {param} train stations within 250m"
+        "question": "Are there at least {param} train stations within 250m?",
+        "clue": "There are at least {param} train stations within 250m"
       },
       "shrineTemple250m": {
-        "question": "Are there {param} shrines or temples within 250m?",
-        "clue": "There are {param} shrines or temples within 250m"
+        "question": "Are there at least {param} shrines or temples within 250m?",
+        "clue": "There are at least {param} shrines or temples within 250m"
       },
       "floodgate250m": {
-        "question": "Are there {param} floodgates within 250m?",
-        "clue": "There are {param} floodgates within 250m"
+        "question": "Are there at least {param} floodgates within 250m?",
+        "clue": "There are at least {param} floodgates within 250m"
       },
       "bridge250m": {
-        "question": "Are there {param} bridges within 250m?",
-        "clue": "There are {param} bridges within 250m"
+        "question": "Are there at least {param} bridges within 250m?",
+        "clue": "There are at least {param} bridges within 250m"
       }
     },
     "categories": {

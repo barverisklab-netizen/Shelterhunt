@@ -270,44 +270,44 @@
         "clue": "施設の種類は{param}です"
       },
       "shelterCapacity": {
-        "question": "収容人数は{param}ですか？",
-        "clue": "収容人数は{param}です"
+        "question": "収容人数が少なくとも{param}ですか？",
+        "clue": "収容人数が少なくとも{param}です"
       },
       "waterStation250m": {
-        "question": "250m以内に給水所は{param}か所ありますか？",
-        "clue": "250m以内に給水所が{param}か所あります"
+        "question": "250m以内に給水所が少なくとも{param}か所ありますか？",
+        "clue": "250m以内に給水所が少なくとも{param}か所あります"
       },
       "hospital250m": {
-        "question": "250m以内に病院は{param}か所ありますか？",
-        "clue": "250m以内に病院が{param}か所あります"
+        "question": "250m以内に病院が少なくとも{param}か所ありますか？",
+        "clue": "250m以内に病院が少なくとも{param}か所あります"
       },
       "aed250m": {
-        "question": "250m以内にAEDは{param}台ありますか？",
-        "clue": "250m以内にAEDが{param}台あります"
+        "question": "250m以内にAEDが少なくとも{param}台ありますか？",
+        "clue": "250m以内にAEDが少なくとも{param}台あります"
       },
       "emergencySupplyStorage250m": {
-        "question": "250m以内に防災備蓄倉庫は{param}か所ありますか？",
-        "clue": "250m以内に防災備蓄倉庫が{param}か所あります"
+        "question": "250m以内に防災備蓄倉庫が少なくとも{param}か所ありますか？",
+        "clue": "250m以内に防災備蓄倉庫が少なくとも{param}か所あります"
       },
       "communityCenter250m": {
-        "question": "250m以内にコミュニティセンターは{param}か所ありますか？",
-        "clue": "250m以内にコミュニティセンターが{param}か所あります"
+        "question": "250m以内にコミュニティセンターが少なくとも{param}か所ありますか？",
+        "clue": "250m以内にコミュニティセンターが少なくとも{param}か所あります"
       },
       "trainStation250m": {
-        "question": "250m以内に駅は{param}か所ありますか？",
-        "clue": "250m以内に駅が{param}か所あります"
+        "question": "250m以内に駅が少なくとも{param}か所ありますか？",
+        "clue": "250m以内に駅が少なくとも{param}か所あります"
       },
       "shrineTemple250m": {
-        "question": "250m以内に神社・寺院は{param}か所ありますか？",
-        "clue": "250m以内に神社・寺院が{param}か所あります"
+        "question": "250m以内に神社・寺院が少なくとも{param}か所ありますか？",
+        "clue": "250m以内に神社・寺院が少なくとも{param}か所あります"
       },
       "floodgate250m": {
-        "question": "250m以内に水門は{param}か所ありますか？",
-        "clue": "250m以内に水門が{param}か所あります"
+        "question": "250m以内に水門が少なくとも{param}か所ありますか？",
+        "clue": "250m以内に水門が少なくとも{param}か所あります"
       },
       "bridge250m": {
-        "question": "250m以内に橋は{param}か所ありますか？",
-        "clue": "250m以内に橋が{param}か所あります"
+        "question": "250m以内に橋が少なくとも{param}か所ありますか？",
+        "clue": "250m以内に橋が少なくとも{param}か所あります"
       }
     },
     "categories": {
