@@ -52,6 +52,7 @@ npm run preview      # serves dist/ locally
 ### Core UI Modules
 
 - **MapView** (`src/components/MapView.tsx`): Wraps Mapbox GL, handles POI markers, draws a 250m user range ring (GeolocateControl-driven), exposes a location picker mode, and wires in Koto-specific layers (`src/cityContext/koto/layers.ts`). Measurement toasts are localized.
+- **Map layer localization**: Layer popups are locale-aware. Templates in `src/cityContext/koto/layers.ts` use `{{t:key}}` for labels and `{{locale:enKey|jaKey}}` to choose the right property name per locale. Legend titles/descriptions resolve from `map.layers.items.*` and `map.layers.descriptions.*` in `src/assets/locales/*.json`, so keep those ids in sync with layer `id`s when adding/editing layers.
 - **Question Drawer** (`src/components/QuestionDrawer.tsx`): Bottom sheet that gates question prompts based on proximity and logs clues on correct answers.
 - **Gameplay Panel** (`src/components/GameplayPanel.tsx`): Side panel for Mission Control, showing logged clues and strategy tips.
 - **Clue Engine**: Questions and clues are driven by `question_attributes` plus locale strings (`questions.dynamic.*`). Clues log only on correct answers; location category is always selectable, other categories require proximity (unless `VITE_ENABLE_PROXIMITY=false` for testing).
