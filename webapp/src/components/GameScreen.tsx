@@ -78,13 +78,13 @@ export function GameScreen({
   const [nearbyPOI, setNearbyPOI] = useState<POI | null>(null);
   const [selectedShelterId, setSelectedShelterId] = useState<string | null>(null);
   const [confirmGuessOpen, setConfirmGuessOpen] = useState(false);
-  const [outcome, setOutcome] = useState<'none' | 'win' | 'penalty' | 'lose'>('none');
+  const [outcome, setOutcome] = useState<'none' | 'win' | 'lose'>('none');
   const [measureTrigger, setMeasureTrigger] = useState(0);
   const [isMeasureActive, setIsMeasureActive] = useState(false);
   const [filteredPois, setFilteredPois] = useState<POI[] | null>(null);
   const [filterSource, setFilterSource] = useState<"correct" | "wrong" | null>(null);
   const [showExitConfirm, setShowExitConfirm] = useState(false);
-  const [penaltyStage, setPenaltyStage] = useState<WrongGuessStage | null>(null);
+  const [penaltyStage, setPenaltyStage] = useState<WrongGuessStage | null>(null); // retained for compatibility
   const [solvedQuestions, setSolvedQuestions] = useState<string[]>([]);
   const lastToastPoiId = useRef<string | null>(null);
   const [externalWinnerName, setExternalWinnerName] = useState<string | undefined>(undefined);
@@ -510,24 +510,9 @@ export function GameScreen({
         winnerUserId: currentPlayerId,
       });
     } else {
-      const stage = onApplyPenalty();
-      if (stage === 'third') {
-        setPenaltyStage(null);
-        setOutcome('lose');
-        return;
-      }
-
-      const penaltyMessage = stage === 'first'
-        ? t("game.toasts.penaltyFirst", {
-            fallback: "Wrong guess! Timer set to 10 minutes.",
-          })
-        : t("game.toasts.penaltySecond", {
-            fallback: "Wrong guess! Timer set to 5 minutes.",
-          });
-
-      toast.error(penaltyMessage);
-      setPenaltyStage(stage);
-      setOutcome('penalty');
+      toast.error(t('game.toasts.finalGuess', { fallback: 'That was your final guess. Game over.' }));
+      setPenaltyStage(null);
+      setOutcome('lose');
     }
   };
 
