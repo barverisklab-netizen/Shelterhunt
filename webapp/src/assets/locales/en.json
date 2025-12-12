@@ -330,6 +330,43 @@
     }
   },
   "map": {
+    "layers": {
+      "title": "Map Layers",
+      "clearAll": "Clear All",
+      "groups": {
+        "Shelters": "Shelters",
+        "Evacuation Support Facilities": "Evacuation Support Facilities",
+        "City Landmarks": "City Landmarks",
+        "Hazard Layers": "Hazard Layers"
+      },
+      "items": {
+        "1": "Designated Evacuation Centers",
+        "2": "Voluntary Evacuation Centers",
+        "3": "Temporary Evacuation Centers",
+        "4": "Evacuation Centers",
+        "5": "AED Locations",
+        "6": "Community Centers",
+        "7": "Fire Stations",
+        "8": "Hospitals",
+        "9": "Libraries",
+        "10": "Parks",
+        "11": "Schools",
+        "12": "Shrines/Temples",
+        "13": "Flood Gates",
+        "14": "Bridges",
+        "15": "Train Stations",
+        "16": "Water Stations",
+        "17": "Designated Evacuation Boundaries",
+        "18": "Flood Depth",
+        "19": "Storm Surge",
+        "20": "Inland Water Flooding",
+        "21": "No-Retreat Area",
+        "22": "Districts at Risk",
+        "23": "Temporary Evacuation Centers (School)",
+        "24": "Temporary Evacuation Centers (Health Center)",
+        "25": "Evacuation Support Facilities"
+      }
+    },
     "measure": {
       "placePrompt": "Tap the map to place a new measurement point.",
       "dropPrompt": "Tap the map to drop a measurement point.",

@@ -1528,6 +1528,10 @@ const measureMarkerRef = useRef<mapboxgl.Marker | null>(null);
     group,
     layers: kotoLayers.filter((layer) => layer.group === group),
   })).filter(({ layers }) => layers.length > 0);
+  const translateGroup = (group: KotoLayerGroup) =>
+    t(`map.layers.groups.${group}`, { fallback: group });
+  const translateLayerLabel = (layerId: number, label: string) =>
+    t(`map.layers.items.${layerId}`, { fallback: label });
 
   const anyLayerActive = Object.values(kotoLayersVisible).some(Boolean);
   const isPanelCollapsed =
@@ -1742,14 +1746,16 @@ const measureMarkerRef = useRef<mapboxgl.Marker | null>(null);
             }}
           >
             <div className="mb-2 flex items-center justify-between">
-              <span className="text-sm font-semibold uppercase text-black">Map Layers</span>
+              <span className="text-sm font-semibold uppercase text-black">
+                {t("map.layers.title", { fallback: "Map Layers" })}
+              </span>
               <button
                 type="button"
                 onClick={clearAllLayers}
                 disabled={!anyLayerActive}
                 className="rounded border border-black bg-background px-3 py-1 text-xs font-semibold uppercase text-black transition-colors hover:bg-neutral-100 disabled:cursor-not-allowed disabled:border-neutral-400 disabled:bg-neutral-200 disabled:text-neutral-500"
               >
-                Clear All
+                {t("map.layers.clearAll", { fallback: "Clear All" })}
               </button>
             </div>
 
@@ -1764,7 +1770,7 @@ const measureMarkerRef = useRef<mapboxgl.Marker | null>(null);
                     onClick={() => toggleLayerGroupOpen(group)}
                     className="flex w-full items-center justify-between px-3 py-2 text-left text-sm font-semibold text-black"
                   >
-                    <span>{group}</span>
+                    <span>{translateGroup(group)}</span>
                     <span className="text-lg leading-none">
                       {layerGroupOpenState[group] ? "-" : "+"}
                     </span>
@@ -1782,7 +1788,7 @@ const measureMarkerRef = useRef<mapboxgl.Marker | null>(null);
                         {layers.map((layer) => (
                           <LayerToggle
                             key={layer.id}
-                            label={layer.label}
+                            label={translateLayerLabel(layer.id, layer.label)}
                             icon={getKotoLayerIcon(layer)}
                             checked={kotoLayersVisible[layer.label]}
                             onChange={() => toggleKotoLayer(layer.label)}
