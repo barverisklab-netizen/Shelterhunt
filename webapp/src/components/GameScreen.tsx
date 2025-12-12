@@ -637,7 +637,7 @@ export function GameScreen({
     <div className="fixed inset-0 flex flex-col bg-neutral-950">
       {/* Top Bar */}
       <motion.div
-        className="bg-background text-neutral-900 p-4 border-b border-neutral-900"
+        className="bg-background text-neutral-900 p-4 border-b border-neutral-400"
         initial={{ y: -50, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
       >
