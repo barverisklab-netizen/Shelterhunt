@@ -95,9 +95,37 @@ export function GameScreen({
     null,
   );
   const [layerPanelCloseSignal, setLayerPanelCloseSignal] = useState(0);
+  const [nearbyAmenityCounts, setNearbyAmenityCounts] = useState<Record<string, number>>({});
+  const [nearbyAmenityCategories, setNearbyAmenityCategories] = useState<string[]>([]);
+  const staleLocationTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const lastGeoStatusRef = useRef<string>("unknown");
+  const [amenityQueryTrigger, setAmenityQueryTrigger] = useState(0);
   const DESIGNATED_CATEGORY = "designated ec";
   const normalizeValue = (value: unknown) =>
     typeof value === "number" ? String(value) : String(value ?? "").trim().toLowerCase();
+
+  const lastLocationRequestRef = useRef<number>(0);
+  const requestLatestLocation = useCallback(() => {
+    if (PROXIMITY_DISABLED_FOR_TESTING) return;
+    if (typeof navigator === "undefined" || !navigator.geolocation || !onLocationChange) return;
+    const now = Date.now();
+    if (now - lastLocationRequestRef.current < 4000) return;
+    lastLocationRequestRef.current = now;
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        lastGeoStatusRef.current = "ok";
+        onLocationChange({
+          lat: pos.coords.latitude,
+          lng: pos.coords.longitude,
+        });
+      },
+      (err) => {
+        lastGeoStatusRef.current = `error:${err.code ?? "unknown"}`;
+        console.warn("[Geo] Unable to refresh location", err);
+      },
+      { enableHighAccuracy: true, maximumAge: 2000, timeout: 10000 },
+    );
+  }, [onLocationChange]);
 
   const closeLayerPanel = useCallback(() => {
     setLayerPanelCloseSignal((prev) => prev + 1);
@@ -109,11 +137,16 @@ export function GameScreen({
         closeLayerPanel();
       }
 
+      if (panel === "questions") {
+        requestLatestLocation();
+        setAmenityQueryTrigger((prev) => prev + 1);
+      }
+
       setDrawerOpen(panel === "questions");
       setCluesOpen(panel === "gameplay");
       setActivePanel(panel);
     },
-    [closeLayerPanel],
+    [closeLayerPanel, requestLatestLocation],
   );
 
   useEffect(() => {
@@ -128,6 +161,22 @@ export function GameScreen({
     setOutcome(remoteOutcome.result);
     setExternalWinnerName(remoteOutcome.winnerName);
   }, [remoteOutcome]);
+
+  useEffect(() => {
+    console.info("[GameScreen] Player location updated", playerLocation);
+    if (staleLocationTimerRef.current) {
+      clearTimeout(staleLocationTimerRef.current);
+    }
+    staleLocationTimerRef.current = setTimeout(() => {
+      console.info("[NearbyAmenity] Location stale, clearing amenity counts");
+      setNearbyAmenityCounts({});
+      setNearbyAmenityCategories([]);
+    }, 15000);
+  }, [playerLocation.lat, playerLocation.lng]);
+
+  useEffect(() => {
+    // logging trimmed per request
+  }, [playerLocation.lat, playerLocation.lng, nearbyAmenityCounts]);
 
   const attributeCategoryMap: Record<string, Question["category"]> = {
     floodDepthRank: "location",
@@ -290,12 +339,25 @@ export function GameScreen({
     return extractor(secretShelterRecord);
   };
 
-  const questions: (Question & { clueTemplate?: string })[] = questionAttributes
+  const NEARBY_AMENITY_IDS = new Set([
+    "waterStation250m",
+    "hospital250m",
+    "aed250m",
+    "emergencySupplyStorage250m",
+    "communityCenter250m",
+    "trainStation250m",
+    "shrineTemple250m",
+    "floodgate250m",
+    "bridge250m",
+  ]);
+
+  const baseQuestions: (Question & { clueTemplate?: string })[] = questionAttributes
     .filter((attribute) => !solvedQuestions.includes(attribute.id))
     .filter((attribute) => {
       const value = getSecretAnswer(attribute.id);
       return value !== null && value !== undefined;
     })
+    .filter((attribute) => !NEARBY_AMENITY_IDS.has(attribute.id))
     .map((attribute) => {
       const { questionText, clueTemplate } = buildQuestionTexts(attribute);
       return {
@@ -307,6 +369,24 @@ export function GameScreen({
         options: attribute.kind === "select" ? attribute.options : undefined,
       };
     });
+
+  const nearbyAmenityQuestion: Question = {
+    id: "nearbyAmenity",
+    text: t("questions.dynamic.nearbyAmenity.question", {
+      fallback: "Are there nearby amenities within 250m?",
+    }),
+    category: "nearby",
+    paramType: "select",
+    options: [],
+  };
+
+  const hasNearbyAmenities =
+    PROXIMITY_DISABLED_FOR_TESTING ||
+    Object.values(nearbyAmenityCounts).some((count) => (count ?? 0) > 0);
+
+  const questions: (Question & { clueTemplate?: string })[] = hasNearbyAmenities
+    ? [...baseQuestions, nearbyAmenityQuestion]
+    : [...baseQuestions];
 
   // Check if player is near a POI (simplified for dem #ToFix)
   const checkNearbyPOI = () => {
@@ -541,6 +621,61 @@ export function GameScreen({
     setConfirmGuessOpen(true);
   };
 
+  const handleAskNearbyAmenity = ({
+    amenityKey,
+    count,
+  }: {
+    amenityKey: string;
+    count: number;
+  }) => {
+    if (PROXIMITY_DISABLED_FOR_TESTING) {
+      return;
+    }
+    const available = nearbyAmenityCounts[amenityKey] ?? 0;
+    if (available === 0) {
+      toast.error(
+        t("questions.nearbyAmenity.unavailable", {
+          fallback: "No amenities of this type within 250m. Move closer.",
+        }),
+      );
+      return;
+    }
+    const isCorrect = available >= count;
+    const amenityLabel = t(`questions.dynamic.nearbyAmenity.types.${amenityKey}`, {
+      fallback: amenityKey,
+    });
+    const clueText = t("questions.dynamic.nearbyAmenity.clue", {
+      fallback: "There are at least {param} {amenity} within 250m",
+    })
+      .replace("{param}", String(count))
+      .replace("{amenity}", amenityLabel);
+
+    const newClue: Clue = {
+      id: `clue-${Date.now()}`,
+      text: clueText,
+      answer: isCorrect,
+      category: t("questions.categories.nearby.name", { fallback: "Nearby Amenities" }),
+      categoryId: "nearby",
+      questionId: "nearbyAmenity",
+      paramValue: count,
+      timestamp: Date.now(),
+    };
+
+    setClues((prev) => [...prev, newClue]);
+    if (isCorrect) {
+      setSolvedQuestions((prev) =>
+        prev.includes("nearbyAmenity") ? prev : [...prev, "nearbyAmenity"],
+      );
+      toast.success(
+        t("questions.correct", { fallback: "Correct clue unlocked!" }),
+      );
+    } else {
+      toast.error(
+        t("questions.incorrect", { fallback: "That clue was incorrect. Try another guess." }),
+      );
+    }
+  };
+
   const resolveGuess = () => {
     setConfirmGuessOpen(false);
 
@@ -688,23 +823,28 @@ export function GameScreen({
           visitedPOIs={visitedPOIs}
           gameEnded={outcome === 'win' || outcome === 'lose'}
           onPOIClick={simulateMove}
-          onSecretShelterChange={onSecretShelterChange}
-      onShelterOptionsChange={onShelterOptionsChange}
-      measureTrigger={measureTrigger}
-      onMeasurementActiveChange={setIsMeasureActive}
-      isFiltered={Boolean(filteredPois)}
-      gameMode={gameMode}
-      lightningCenter={lightningCenter}
-      lightningRadiusKm={lightningRadiusKm ?? LIGHTNING_RADIUS_KM}
-      onLayerPanelToggle={(open) => {
-        if (open) {
-          activatePanel("layers");
-        } else if (activePanel === "layers") {
-          activatePanel(null);
-        }
-      }}
-      layerPanelCloseSignal={layerPanelCloseSignal}
-    />
+        onSecretShelterChange={onSecretShelterChange}
+        onShelterOptionsChange={onShelterOptionsChange}
+        measureTrigger={measureTrigger}
+        onMeasurementActiveChange={setIsMeasureActive}
+        isFiltered={Boolean(filteredPois)}
+        gameMode={gameMode}
+        lightningCenter={lightningCenter}
+        lightningRadiusKm={lightningRadiusKm ?? LIGHTNING_RADIUS_KM}
+        onAmenitiesWithinRadius={(info) => {
+          setNearbyAmenityCounts(info.counts ?? {});
+          setNearbyAmenityCategories(info.matchedCategories ?? []);
+        }}
+        amenityQueryTrigger={amenityQueryTrigger}
+          onLayerPanelToggle={(open) => {
+            if (open) {
+              activatePanel("layers");
+            } else if (activePanel === "layers") {
+              activatePanel(null);
+            }
+          }}
+          layerPanelCloseSignal={layerPanelCloseSignal}
+        />
 
         {/* Floating Action Buttons */}
         <div className="absolute top-4 right-4 flex flex-col gap-3">
@@ -739,11 +879,15 @@ export function GameScreen({
               activatePanel(null);
             }
           }}
-          onAskQuestion={handleAskQuestion}
-          nearbyPOI={PROXIMITY_DISABLED_FOR_TESTING ? "testing-override" : nearbyPOI?.id || null}
-          lockedQuestions={[]}
-        />
-      )}
+        onAskQuestion={handleAskQuestion}
+        nearbyPOI={PROXIMITY_DISABLED_FOR_TESTING ? "testing-override" : nearbyPOI?.id || null}
+        lockedQuestions={[]}
+        onAskNearbyAmenity={handleAskNearbyAmenity}
+        nearbyAmenityCounts={nearbyAmenityCounts}
+        nearbyAmenityCategories={nearbyAmenityCategories}
+        proximityEnabled={!PROXIMITY_DISABLED_FOR_TESTING}
+      />
+    )}
 
       {/* Gameplay Panel */}
       <GameplayPanel

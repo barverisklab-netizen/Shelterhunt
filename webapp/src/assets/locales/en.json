@@ -232,6 +232,14 @@
     "selectParamLocation": "Select a parameter",
     "cooldown": "Try again in 2 minutes after a wrong answer",
     "disabledProximityHint": "Move around the city and questions will unlock when this asset type is within 250m of your location.",
+    "nearbyAmenity": {
+      "selectAmenity": "Amenity type",
+      "selectCount": "Minimum count",
+      "unavailable": "No amenities of this type within 250m. Move closer.",
+      "moveCloser": "Move within 250m of that amenity to ask.",
+      "availableCategories": "Available nearby: {categories}",
+      "noneWithinRadius": "No amenities within 250m yet."
+    },
     "dynamic": {
       "floodDepthRank": {
         "question": "Is the flood depth rank {param}?",
@@ -308,6 +316,21 @@
       "bridge250m": {
         "question": "Are there at least {param} bridges within 250m?",
         "clue": "There are at least {param} bridges within 250m"
+      },
+      "nearbyAmenity": {
+        "question": "Are there nearby amenities within 250m?",
+        "clue": "There are at least {param} {amenity} within 250m",
+        "types": {
+          "waterStation250m": "Water stations",
+          "hospital250m": "Hospitals",
+          "aed250m": "AEDs",
+          "emergencySupplyStorage250m": "Emergency supply storage",
+          "communityCenter250m": "Community centers",
+          "trainStation250m": "Train stations",
+          "shrineTemple250m": "Shrines/Temples",
+          "floodgate250m": "Flood gates",
+          "bridge250m": "Bridges"
+        }
       }
     },
     "categories": {

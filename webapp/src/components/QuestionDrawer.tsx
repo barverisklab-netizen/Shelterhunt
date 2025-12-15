@@ -23,6 +23,10 @@ interface QuestionDrawerProps {
   onAskQuestion: (questionId: string, param: string | number) => void;
   nearbyPOI: string | null;
   lockedQuestions: string[];
+  onAskNearbyAmenity?: (info: { amenityKey: string; count: number }) => void;
+  nearbyAmenityCounts?: Record<string, number>;
+  proximityEnabled?: boolean;
+  nearbyAmenityCategories?: string[];
 }
 
 const CATEGORY_ICONS = {
@@ -40,12 +44,32 @@ export function QuestionDrawer({
   onAskQuestion,
   nearbyPOI,
   lockedQuestions,
+  onAskNearbyAmenity,
+  nearbyAmenityCounts = {},
+  proximityEnabled = true,
+  nearbyAmenityCategories = [],
 }: QuestionDrawerProps) {
   const { t } = useI18n();
   const [selectedParams, setSelectedParams] = useState<
     Record<string, string | number>
   >({});
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [nearbyAmenitySelection, setNearbyAmenitySelection] = useState<{
+    amenityKey: string | null;
+    count: number | null;
+  }>({ amenityKey: null, count: null });
+
+  const AMENITY_OPTIONS: { key: string; label: string }[] = [
+    { key: "waterStation250m", label: t("questions.dynamic.nearbyAmenity.types.waterStation250m", { fallback: "Water stations" }) },
+    { key: "hospital250m", label: t("questions.dynamic.nearbyAmenity.types.hospital250m", { fallback: "Hospitals" }) },
+    { key: "aed250m", label: t("questions.dynamic.nearbyAmenity.types.aed250m", { fallback: "AEDs" }) },
+    { key: "emergencySupplyStorage250m", label: t("questions.dynamic.nearbyAmenity.types.emergencySupplyStorage250m", { fallback: "Emergency supply storage" }) },
+    { key: "communityCenter250m", label: t("questions.dynamic.nearbyAmenity.types.communityCenter250m", { fallback: "Community centers" }) },
+    { key: "trainStation250m", label: t("questions.dynamic.nearbyAmenity.types.trainStation250m", { fallback: "Train stations" }) },
+    { key: "shrineTemple250m", label: t("questions.dynamic.nearbyAmenity.types.shrineTemple250m", { fallback: "Shrines/Temples" }) },
+    { key: "floodgate250m", label: t("questions.dynamic.nearbyAmenity.types.floodgate250m", { fallback: "Flood gates" }) },
+    { key: "bridge250m", label: t("questions.dynamic.nearbyAmenity.types.bridge250m", { fallback: "Bridges" }) },
+  ];
 
   const translateCategory = (category: QuestionCategory) => ({
     name: t(`questions.categories.${category.id}.name`, {
@@ -66,6 +90,9 @@ export function QuestionDrawer({
   };
 
   const isQuestionEligible = (question: Question) => {
+    if (question.id === "nearbyAmenity") {
+      return !lockedQuestions.includes(question.id);
+    }
     const inRange = nearbyPOI !== null || question.category === "location";
     return inRange && !lockedQuestions.includes(question.id);
   };
@@ -73,6 +100,12 @@ export function QuestionDrawer({
   const filteredQuestions = selectedCategory
     ? questions.filter((q) => q.category === selectedCategory)
     : [];
+
+  const inRange =
+    !!nearbyPOI ||
+    !proximityEnabled ||
+    Object.values(nearbyAmenityCounts).some((c) => (c ?? 0) > 0) ||
+    nearbyAmenityCategories.length > 0;
 
   return (
     <motion.div
@@ -115,7 +148,7 @@ export function QuestionDrawer({
               {/* Location Status */}
               <motion.div
                 className={`mb-4 p-4 border-4 ${
-                  nearbyPOI
+                  inRange
                     ? "bg-background border-red-400/50"
                     : "bg-background border-red-400/50"
                 }`}
@@ -123,7 +156,7 @@ export function QuestionDrawer({
                 animate={{ scale: 1 }}
               >
                 <div className="flex items-center gap-3">
-                  {nearbyPOI ? (
+                  {inRange ? (
                     <>
                       <Unlock className="w-5 h-5 text-red-600" />
                       <div>
@@ -131,7 +164,12 @@ export function QuestionDrawer({
                           {t("questions.inRange")}
                         </div>
                         <div className="text-sm text-black/70">
-                          {t("questions.inRangeCopy")}
+                          {nearbyAmenityCategories.length > 0
+                            ? t("questions.nearbyAmenity.availableCategories", {
+                                replacements: { categories: nearbyAmenityCategories.join(", ") },
+                                fallback: `Available nearby: ${nearbyAmenityCategories.join(", ")}`,
+                              })
+                            : t("questions.inRangeCopy")}
                         </div>
                       </div>
                     </>
@@ -164,9 +202,17 @@ export function QuestionDrawer({
                       (q) => q.category === category.id,
                     );
                     const translatedCategory = translateCategory(category);
-                    const requireProximity = category.id !== "location";
+                    const isNearbyCategory = category.id === "nearby";
+                    const requireProximity = category.id !== "location" && !isNearbyCategory;
+                    const hasNearbyAmenityAccess =
+                      isNearbyCategory &&
+                      (!proximityEnabled ||
+                        Object.values(nearbyAmenityCounts).some((c) => (c ?? 0) > 0) ||
+                        nearbyAmenityCategories.length > 0);
                     const isDisabled =
-                      (requireProximity && !nearbyPOI) ||
+                      (isNearbyCategory
+                        ? !hasNearbyAmenityAccess
+                        : requireProximity && !nearbyPOI) ||
                       questionsInCategory.length === 0;
 
                     return (
@@ -195,10 +241,14 @@ export function QuestionDrawer({
                               <div className="mt-1 flex items-start gap-3 rounded border border-neutral-300 bg-neutral-100 p-3 text-sm text-neutral-600">
                                 <IconComponent className="w-5 h-5 text-neutral-500 mt-0.5" />
                                 <span>
-                                  {t("questions.disabledProximityHint", {
-                                    fallback:
-                                      "Move around the city and questions will unlock when this asset type is within 250m of your location.",
-                                  })}
+                                  {isNearbyCategory
+                                    ? t("questions.nearbyAmenity.noneWithinRadius", {
+                                        fallback: "No amenities within 250m yet.",
+                                      })
+                                    : t("questions.disabledProximityHint", {
+                                        fallback:
+                                          "Move around the city and questions will unlock when this asset type is within 250m of your location.",
+                                      })}
                                 </span>
                               </div>
                             ) : (
@@ -279,7 +329,117 @@ export function QuestionDrawer({
                         </div>
 
                         {/* Parameter Selection */}
-                        {question.paramType === "number" && (!question.options || !question.options.length) ? (
+                        {question.id === "nearbyAmenity" ? (
+                          <div className="space-y-2">
+                            <label className="text-xs font-semibold uppercase text-black/70">
+                              {t("questions.nearbyAmenity.selectAmenity", {
+                                fallback: "Amenity type",
+                              })}
+                            </label>
+                            <select
+                              className="w-full rounded border-2 border-black px-3 py-2"
+                              value={nearbyAmenitySelection.amenityKey ?? ""}
+                              onChange={(e) =>
+                                setNearbyAmenitySelection((prev) => ({
+                                  ...prev,
+                                  amenityKey: e.target.value || null,
+                                }))
+                              }
+                              disabled={isLocked}
+                            >
+                              <option value="" disabled>
+                                {t("questions.nearbyAmenity.selectAmenity", {
+                                  fallback: "Amenity type",
+                                })}
+                              </option>
+                              {AMENITY_OPTIONS.map((opt) => {
+                                const count = nearbyAmenityCounts[opt.key] ?? 0;
+                                const disabled =
+                                  proximityEnabled && typeof count === "number" && count <= 0;
+                                return (
+                                  <option key={opt.key} value={opt.key} disabled={disabled}>
+                                    {opt.label}
+                                  </option>
+                                );
+                              })}
+                            </select>
+                            <label className="text-xs font-semibold uppercase text-black/70">
+                              {t("questions.nearbyAmenity.selectCount", {
+                                fallback: "Minimum count",
+                              })}
+                            </label>
+                            <select
+                              className="w-full rounded border-2 border-black px-3 py-2"
+                              value={
+                                nearbyAmenitySelection.count != null
+                                  ? String(nearbyAmenitySelection.count)
+                                  : ""
+                              }
+                              onChange={(e) =>
+                                setNearbyAmenitySelection((prev) => ({
+                                  ...prev,
+                                  count: e.target.value === "" ? null : Number(e.target.value),
+                                }))
+                              }
+                              disabled={isLocked}
+                            >
+                              <option value="" disabled>
+                                {t("questions.nearbyAmenity.selectCount", {
+                                  fallback: "Minimum count",
+                                })}
+                              </option>
+                            {[0, 1, 2, 3, 4, 5].map((n) => (
+                              <option key={n} value={n}>
+                                {n}
+                              </option>
+                            ))}
+                          </select>
+                            <div className="text-xs text-black/70">
+                              {nearbyAmenityCategories.length > 0
+                                ? t("questions.nearbyAmenity.availableCategories", {
+                                    fallback: "Available nearby: {categories}",
+                                    categories: nearbyAmenityCategories.join(", "),
+                                  })
+                                : t("questions.nearbyAmenity.noneWithinRadius", {
+                                    fallback: "No amenities within 250m yet.",
+                                  })}
+                            </div>
+                            {nearbyAmenitySelection.amenityKey &&
+                              proximityEnabled &&
+                              (nearbyAmenityCounts[nearbyAmenitySelection.amenityKey] ?? 0) <=
+                                0 && (
+                                <div className="text-xs text-red-600 font-semibold">
+                                  {t("questions.nearbyAmenity.unavailable", {
+                                    fallback: "No amenities of this type within 250m. Move closer.",
+                                  })}
+                                </div>
+                              )}
+                            <Button
+                              className={"w-full border border-black bg-background text-black hover:bg-neutral-100 active:bg-neutral-200"}
+                              onClick={() => {
+                                if (
+                                  onAskNearbyAmenity &&
+                                  nearbyAmenitySelection.amenityKey &&
+                                  nearbyAmenitySelection.count != null
+                                ) {
+                                  onAskNearbyAmenity({
+                                    amenityKey: nearbyAmenitySelection.amenityKey,
+                                    count: nearbyAmenitySelection.count,
+                                  });
+                                }
+                              }}
+                              variant="destructive"
+                              disabled={
+                                !nearbyAmenitySelection.amenityKey ||
+                                nearbyAmenitySelection.count == null ||
+                                isLocked
+                              }
+                            >
+                              <Unlock className="w-4 h-4 mr-2" />
+                              {t("questions.askNow")}
+                            </Button>
+                          </div>
+                        ) : question.paramType === "number" && (!question.options || !question.options.length) ? (
                           <div className="flex flex-col gap-2">
                             <input
                               type="number"

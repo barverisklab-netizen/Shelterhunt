@@ -232,6 +232,14 @@
     "selectParamLocation": "パラメーターを選択",
     "cooldown": "間違えた場合は2分後に再挑戦できます",
     "disabledProximityHint": "街を移動して、対象の資産タイプが250m以内に入ると質問が解放されます。",
+    "nearbyAmenity": {
+      "selectAmenity": "設備の種類",
+      "selectCount": "最低数",
+      "unavailable": "この種類の設備が250m以内にありません。近づいてください。",
+      "moveCloser": "その設備の250m以内まで移動してから質問してください。",
+      "availableCategories": "250m以内にある設備: {categories}",
+      "noneWithinRadius": "まだ250m以内に設備はありません。"
+    },
     "dynamic": {
       "floodDepthRank": {
         "question": "浸水深ランクは{param}ですか？",
@@ -308,6 +316,21 @@
       "bridge250m": {
         "question": "250m以内に橋が少なくとも{param}か所ありますか？",
         "clue": "250m以内に橋が少なくとも{param}か所あります"
+      },
+      "nearbyAmenity": {
+        "question": "250m以内の周辺設備について尋ねますか？",
+        "clue": "{amenity}が少なくとも{param}か所、250m以内にあります",
+        "types": {
+          "waterStation250m": "給水所",
+          "hospital250m": "病院",
+          "aed250m": "AED",
+          "emergencySupplyStorage250m": "防災備蓄倉庫",
+          "communityCenter250m": "コミュニティセンター",
+          "trainStation250m": "駅",
+          "shrineTemple250m": "神社・寺院",
+          "floodgate250m": "水門",
+          "bridge250m": "橋"
+        }
       }
     },
     "categories": {

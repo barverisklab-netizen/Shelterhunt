@@ -68,5 +68,11 @@ import path from 'path';
       host: '0.0.0.0',
       port: 5000,
       allowedHosts: true,
+      fs: {
+        allow: [
+          path.resolve(__dirname),
+          path.resolve(__dirname, '..'), // allow loading shared data/geojson
+        ],
+      },
     },
   });
