@@ -25,6 +25,7 @@ import "mapbox-gl/dist/mapbox-gl.css";
 import { toast } from "sonner@2.0.3"
 import { haversineDistanceKm } from "@/utils/lightningSelection";
 import { getLocalShelters } from "@/services/mapLayerQueryService";
+import { countAmenitiesWithinRadius } from "@/services/amenityIndex";
 import { useI18n } from "@/i18n";
 import { MeasurePanel } from "./MeasurePanel";
 
@@ -105,6 +106,17 @@ const KOTO_LAYER_GROUPS: KotoLayerGroup[] = [
 const SHELTER_KOTO_LAYER_IDS = kotoLayers
   .filter((layer) => /Designated Evacuation Centers/i.test(layer.label))
   .map((layer) => `koto-layer-${layer.id}`);
+const AMENITY_CATEGORIES: Record<string, string> = {
+  "Water Station": "waterStation250m",
+  "Hospital": "hospital250m",
+  "AED": "aed250m",
+  "Emergency Supply Storage": "emergencySupplyStorage250m",
+  "Community Center": "communityCenter250m",
+  "Train Station": "trainStation250m",
+  "Shrine/Temple": "shrineTemple250m",
+  "Flood Gate": "floodgate250m",
+  "Bridge": "bridge250m",
+};
 
 const MEASURE_CIRCLE_SOURCE_ID = "measure-circle-source";
 const MEASURE_CIRCLE_FILL_LAYER_ID = "measure-circle-fill";
@@ -145,6 +157,8 @@ interface MapViewProps {
   gameMode?: "lightning" | "citywide" | null;
   lightningCenter?: { lat: number; lng: number } | null;
   lightningRadiusKm?: number;
+  onAmenitiesWithinRadius?: (info: { counts: Record<string, number>; matchedCategories: string[] }) => void;
+  amenityQueryTrigger?: number;
 }
 
 // const POI_ICONS = {
@@ -174,6 +188,8 @@ export function MapView({
   gameMode,
   lightningCenter,
   lightningRadiusKm = 2,
+  onAmenitiesWithinRadius,
+  amenityQueryTrigger,
 }: MapViewProps) {
   const { t, locale } = useI18n();
   const translateRef = useRef(t);
@@ -194,6 +210,12 @@ const measureMarkerRef = useRef<mapboxgl.Marker | null>(null);
   const lastMeasureRequestRef = useRef<number>(0);
   const geolocateHandlerRef = useRef<((event: GeolocationPosition) => void) | null>(null);
   const lastLightningParamsRef = useRef<{ center: { lat: number; lng: number }; radiusKm: number } | null>(null);
+  const amenityCountsRef = useRef<Record<string, number>>({});
+  const reapplyPlayerRangeRef = useRef<() => void>(() => {});
+  const latestLocationRef = useRef<{ lat: number; lng: number }>(playerLocation);
+  const amenitiesCallbackRef = useRef<
+    ((info: { counts: Record<string, number>; matchedCategories: string[] }) => void) | undefined
+  >(onAmenitiesWithinRadius);
 
   // Koto layer visibility state
   const [kotoLayersVisible, setKotoLayersVisible] = useState<
@@ -433,6 +455,47 @@ const measureMarkerRef = useRef<mapboxgl.Marker | null>(null);
     },
     [locale],
   );
+
+  useEffect(() => {
+    latestLocationRef.current = playerLocation;
+  }, [playerLocation.lat, playerLocation.lng]);
+
+  useEffect(() => {
+    amenitiesCallbackRef.current = onAmenitiesWithinRadius;
+  }, [onAmenitiesWithinRadius]);
+
+  const updateNearbyAmenityCounts = useCallback(async () => {
+    // Reset cached counts so consumers don't see stale data between polls
+    amenityCountsRef.current = {};
+    amenitiesCallbackRef.current?.({ counts: {}, matchedCategories: [] });
+    try {
+      const radiusKm = 0.25;
+      const { counts, matchedCategories, unmatched } = await countAmenitiesWithinRadius(
+        { lat: latestLocationRef.current.lat, lng: latestLocationRef.current.lng },
+        radiusKm,
+        AMENITY_CATEGORIES,
+      );
+
+      amenityCountsRef.current = counts;
+      console.info("[Amenities] Counts within 250m", {
+        center: latestLocationRef.current,
+        counts,
+        matchedKeys: Object.keys(counts),
+        matchedCategories: Array.from(matchedCategories),
+        unmatched,
+      });
+      if (matchedCategories.size > 0) {
+        console.info("[Amenities] Categories within 250m", Array.from(matchedCategories));
+      }
+      amenitiesCallbackRef.current?.({
+        counts,
+        matchedCategories: Array.from(matchedCategories),
+      });
+    } catch (error) {
+      amenitiesCallbackRef.current?.({ counts: {}, matchedCategories: [] });
+      console.warn("[Amenities] Failed to update counts from geojson index", error);
+    }
+  }, []);
 
   const updateShelterMarkers = useCallback(
     (shelters: POI[]) => {
@@ -898,6 +961,9 @@ const measureMarkerRef = useRef<mapboxgl.Marker | null>(null);
         setMapLoaded(true);
         // Add Koto layer sources and layers
         addKotoLayers();
+        if (reapplyPlayerRangeRef.current) {
+          reapplyPlayerRangeRef.current();
+        }
 
         if (onSecretShelterChange) {
           hasSelectedShelter.current = false;
@@ -927,17 +993,38 @@ const measureMarkerRef = useRef<mapboxgl.Marker | null>(null);
           geolocateHandlerRef.current = handleGeolocate;
           control.on("geolocate", handleGeolocate);
 
-          window.requestAnimationFrame(() => {
+          // Trigger once after the control has fully attached
+          window.setTimeout(() => {
             try {
-              control.trigger();
+              if ((control as any)?._map) {
+                control.trigger();
+              }
             } catch (error) {
               console.warn("[mapbox] Failed to trigger geolocate control:", error);
             }
-          });
+          }, 50);
         }
 
         moveAttributionToBottomLeft();
-        map.current?.on("styledata", moveAttributionToBottomLeft);
+        map.current?.on("styledata", () => {
+          moveAttributionToBottomLeft();
+          const reapply = reapplyPlayerRangeRef.current;
+          const mInner = map.current;
+          if (!reapply || !mInner) return;
+          const hasRangeSource = (() => {
+            try {
+              return Boolean(mInner.getSource(PLAYER_RANGE_SOURCE_ID));
+            } catch {
+              return false;
+            }
+          })();
+          if (hasRangeSource) return;
+          if (mInner.isStyleLoaded()) {
+            reapply();
+          } else {
+            mInner.once("idle", () => reapply());
+          }
+        });
       });
 
       console.log("Mapbox map created successfully");
@@ -977,7 +1064,7 @@ const measureMarkerRef = useRef<mapboxgl.Marker | null>(null);
         setMapLoaded(false);
       }
     };
-  }, [basemapUrl, onSecretShelterChange, onShelterOptionsChange, selectShelterFromLocalData]);
+  }, []);
 
   // Recenter camera when playerLocation changes (no reinit)
   useEffect(() => {
@@ -1007,39 +1094,54 @@ const measureMarkerRef = useRef<mapboxgl.Marker | null>(null);
 
     const applyRange = () => {
       if (!userCircleCenter) return;
+      // Style can briefly be undefined during reloads; skip until ready
+      // @ts-expect-error: mapbox private style access
+      if (!(m as any)?.style) return;
       const feature = createCircleFeature(userCircleCenter, 250, 96);
 
-      if (m.getSource(PLAYER_RANGE_SOURCE_ID)) {
-        (m.getSource(PLAYER_RANGE_SOURCE_ID) as mapboxgl.GeoJSONSource).setData(
-          feature as any,
-        );
+      const existingSource = (() => {
+        try {
+          return m.getSource(PLAYER_RANGE_SOURCE_ID) as mapboxgl.GeoJSONSource | undefined;
+        } catch {
+          return undefined;
+        }
+      })();
+
+      if (existingSource) {
+        existingSource.setData(feature as any);
         return;
       }
 
-      m.addSource(PLAYER_RANGE_SOURCE_ID, {
-        type: "geojson",
-        data: feature as any,
-      });
-      m.addLayer({
-        id: PLAYER_RANGE_FILL_LAYER_ID,
-        type: "fill",
-        source: PLAYER_RANGE_SOURCE_ID,
-        paint: {
-          "fill-color": "#4da3ff",
-          "fill-opacity": 0.12,
-        },
-      });
-      m.addLayer({
-        id: PLAYER_RANGE_OUTLINE_LAYER_ID,
-        type: "line",
-        source: PLAYER_RANGE_SOURCE_ID,
-        paint: {
-          "line-color": "#4da3ff",
-          "line-width": 2,
-          "line-dasharray": [2, 2],
-        },
-      });
+      try {
+        m.addSource(PLAYER_RANGE_SOURCE_ID, {
+          type: "geojson",
+          data: feature as any,
+        });
+        m.addLayer({
+          id: PLAYER_RANGE_FILL_LAYER_ID,
+          type: "fill",
+          source: PLAYER_RANGE_SOURCE_ID,
+          paint: {
+            "fill-color": "#4da3ff",
+            "fill-opacity": 0.12,
+          },
+        });
+        m.addLayer({
+          id: PLAYER_RANGE_OUTLINE_LAYER_ID,
+          type: "line",
+          source: PLAYER_RANGE_SOURCE_ID,
+          paint: {
+            "line-color": "#4da3ff",
+            "line-width": 2,
+            "line-dasharray": [2, 2],
+          },
+        });
+      } catch (error) {
+        console.warn("[Map] Failed to draw player range", error);
+      }
     };
+
+    reapplyPlayerRangeRef.current = applyRange;
 
     if (!m.isStyleLoaded()) {
       m.once("load", applyRange);
@@ -1048,6 +1150,14 @@ const measureMarkerRef = useRef<mapboxgl.Marker | null>(null);
 
     applyRange();
   }, [userCircleCenter?.lat, userCircleCenter?.lng]);
+
+  useEffect(() => {
+    if (!mapLoaded || !map.current) return;
+    if (!amenityQueryTrigger) return;
+    // Only run when explicitly triggered (e.g., opening Questions panel)
+    void updateNearbyAmenityCounts();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [amenityQueryTrigger, mapLoaded]);
 
   useEffect(() => {
     const hasCenter =
