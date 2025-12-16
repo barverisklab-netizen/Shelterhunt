@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { countAmenitiesWithinRadius } from "./amenityIndex";
+import { countAmenitiesWithinRadius, hasShelterWithinRadius } from "./proximityIndex";
 
 // Mapping used in MapView for amenity keys
 const AMENITY_CATEGORIES: Record<string, string> = {
@@ -51,5 +51,12 @@ describe("amenityIndex", () => {
 
     expect(counts.aed250m).toBe(1);
     expect(matchedCategories.has("AED")).toBe(true);
+  });
+
+  it("detects a shelter within 250m using geojson index", async () => {
+    const center = { lat: 35.69516, lng: 139.8212 }; // Daisan Kameido Junior High School
+    const { found, nearest } = await hasShelterWithinRadius(center, 0.25);
+    expect(found).toBe(true);
+    expect(nearest?.category).toBeTruthy();
   });
 });

@@ -33,7 +33,7 @@ const parseGeoJson = (raw: string): FeatureCollection<TurfPoint> | null => {
   return null;
 };
 
-class AmenityIndex {
+class ProximityIndex {
   private bucketSizeDeg = 0.005; // ~550m at this latitude
   private buckets = new Map<string, AmenityFeature[]>();
   private loadPromise: Promise<void> | null = null;
@@ -123,14 +123,37 @@ class AmenityIndex {
   }
 }
 
-export const amenityIndex = new AmenityIndex();
+export const proximityIndex = new ProximityIndex();
+export const SHELTER_CATEGORY_MAP: Record<string, string> = {
+  "Designated Evacuation Center": "shelter",
+  "Voluntary Evacuation Center": "shelter",
+  "Temporary Evacuation Center": "shelter",
+  "Special Needs Shelter": "shelter",
+  "Evacuation Center": "shelter",
+  "EC": "shelter",
+  "Designated EC": "shelter",
+  "EC/Voluntary EC": "shelter",
+};
+
+const isShelterCategory = (category: string) => {
+  if (!category) return false;
+  if (SHELTER_CATEGORY_MAP[category]) return true;
+  const normalized = category.trim().toLowerCase();
+  return (
+    normalized.includes("evacuation center") ||
+    normalized === "ec" ||
+    normalized.includes("designated ec") ||
+    normalized.includes("voluntary ec") ||
+    normalized.includes("ec/")
+  );
+};
 
 export async function countAmenitiesWithinRadius(
   center: { lat: number; lng: number },
   radiusKm: number,
   categoryKeyMap: Record<string, string>,
 ): Promise<{ counts: Record<string, number>; matchedCategories: Set<string>; unmatched: Record<string, number> }> {
-  const { features } = await amenityIndex.queryWithin(center, radiusKm);
+  const { features } = await proximityIndex.queryWithin(center, radiusKm);
 
   const counts: Record<string, number> = {};
   const unmatched: Record<string, number> = {};
@@ -147,4 +170,25 @@ export async function countAmenitiesWithinRadius(
   });
 
   return { counts, matchedCategories, unmatched };
+}
+
+export async function hasShelterWithinRadius(
+  center: { lat: number; lng: number },
+  radiusKm: number,
+): Promise<{ found: boolean; nearest?: AmenityFeature }> {
+  const { features } = await proximityIndex.queryWithin(center, radiusKm);
+
+  let nearest: AmenityFeature | undefined;
+  let nearestDistance = Number.POSITIVE_INFINITY;
+
+  features.forEach((feature) => {
+    if (!isShelterCategory(feature.category)) return;
+    const d = distance(point([center.lng, center.lat]), point([feature.lng, feature.lat]));
+    if (d < nearestDistance) {
+      nearestDistance = d;
+      nearest = feature;
+    }
+  });
+
+  return { found: Boolean(nearest), nearest };
 }

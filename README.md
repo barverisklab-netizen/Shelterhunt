@@ -58,6 +58,8 @@ npm run preview      # serves dist/ locally
 - **Gameplay Panel** (`src/components/GameplayPanel.tsx`): Side panel for Mission Control, showing logged clues and strategy tips.
 - **Clue Engine**: Questions and clues are driven by `question_attributes` plus locale strings (`questions.dynamic.*`). Clues log only on correct answers; location category is always selectable, other categories require proximity (unless `VITE_ENABLE_PROXIMITY=false` for testing).
 - **UI Primitives** (`src/components/ui/*`): Custom shadcn-derived kit (buttons, drawers, dialogs, etc.) that underpins the interaction model.
+- **Proximity & spatial index**: `src/services/proximityIndex.ts` builds a Turf-based spatial index over all local GeoJSON (landmarks, support, shelters). Map amenities use `countAmenitiesWithinRadius` to unlock the Nearby Amenity question; the answer is validated against the secret shelter’s stored attributes (exact counts). Facility/Capacity and other proximity-gated categories unlock when any shelter is within 250m, detected via the same index (`hasShelterWithinRadius`). Set `VITE_ENABLE_PROXIMITY=false` to bypass gating in local testing.
+- **Answer validation**: Facility Type, Capacity/Resources, and all nearby-amenity questions are validated against the secret shelter’s stored attributes (`attributeValueLookup`), not the player’s surroundings. Proximity affects availability; correctness always compares to the secret shelter data.
 
 ## Multiplayer API (Render/Supabase)
 

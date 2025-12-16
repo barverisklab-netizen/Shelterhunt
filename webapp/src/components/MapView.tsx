@@ -25,7 +25,7 @@ import "mapbox-gl/dist/mapbox-gl.css";
 import { toast } from "sonner@2.0.3"
 import { haversineDistanceKm } from "@/utils/lightningSelection";
 import { getLocalShelters } from "@/services/mapLayerQueryService";
-import { countAmenitiesWithinRadius } from "@/services/amenityIndex";
+import { countAmenitiesWithinRadius } from "@/services/proximityIndex";
 import { useI18n } from "@/i18n";
 import { MeasurePanel } from "./MeasurePanel";
 

@@ -15,12 +15,14 @@ import { useI18n } from "@/i18n";
 import type { Shelter } from "@/services/shelterDataService";
 import { ENABLE_WRONG_GUESS_PENALTY, LIGHTNING_RADIUS_KM } from "@/config/runtime";
 import { haversineDistanceKm } from "@/utils/lightningSelection";
+import { hasShelterWithinRadius } from "@/services/proximityIndex";
 
 
 const ENABLE_SECRET_SHELTER_BLUR = true;
 const PROXIMITY_DISABLED_FOR_TESTING =
   import.meta.env?.VITE_ENABLE_PROXIMITY === "false";
 const PROXIMITY_RADIUS_KM = 0.25;
+const PROXIMITY_ENABLED = !PROXIMITY_DISABLED_FOR_TESTING;
 
 export type WrongGuessStage = 'first' | 'second' | 'third';
 
@@ -73,11 +75,13 @@ export function GameScreen({
   lightningRadiusKm,
 }: GameScreenProps) {
   const { t } = useI18n();
+  const proximityEnabled = PROXIMITY_ENABLED;
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [cluesOpen, setCluesOpen] = useState(false);
   const [clues, setClues] = useState<Clue[]>([]);
   const [visitedPOIs, setVisitedPOIs] = useState<string[]>([]);
   const [nearbyPOI, setNearbyPOI] = useState<POI | null>(null);
+  const previousNearbyPOIRef = useRef<POI | null>(null);
   const [selectedShelterId, setSelectedShelterId] = useState<string | null>(null);
   const [confirmGuessOpen, setConfirmGuessOpen] = useState(false);
   const [outcome, setOutcome] = useState<'none' | 'win' | 'lose'>('none');
@@ -100,6 +104,7 @@ export function GameScreen({
   const [solvedNearbyAmenityKeys, setSolvedNearbyAmenityKeys] = useState<string[]>([]);
   const staleLocationTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastGeoStatusRef = useRef<string>("unknown");
+  const hasLoggedProximityRef = useRef(false);
   const [amenityQueryTrigger, setAmenityQueryTrigger] = useState(0);
   const lastAmenityQueryLocationRef = useRef<{ lat: number; lng: number } | null>(null);
   const DESIGNATED_CATEGORY = "designated ec";
@@ -133,6 +138,52 @@ export function GameScreen({
     setLayerPanelCloseSignal((prev) => prev + 1);
   }, []);
 
+  // Check if player is near a shelter (using geojson index, within proximity radius)
+  const checkNearbyPOI = useCallback(async () => {
+    try {
+      const result = await hasShelterWithinRadius(playerLocation, PROXIMITY_RADIUS_KM);
+      let closest: POI | null = null;
+      let closestDistanceKm = Number.POSITIVE_INFINITY;
+
+      if (result.found && result.nearest) {
+        closest = {
+          id: `shelter-proximity-${result.nearest.lat}-${result.nearest.lng}`,
+          name: result.nearest.category || "Nearby shelter",
+          lat: result.nearest.lat,
+          lng: result.nearest.lng,
+          type: "shelter",
+        };
+        closestDistanceKm = haversineDistanceKm(playerLocation, {
+          lat: result.nearest.lat,
+          lng: result.nearest.lng,
+        });
+      }
+
+      const previous = previousNearbyPOIRef.current;
+      const changed = (previous?.id || null) !== (closest?.id || null);
+      if (changed || !hasLoggedProximityRef.current) {
+        if (closest) {
+          console.info("[Proximity] Nearby shelter detected", {
+            id: closest.id,
+            name: closest.name,
+            distanceMeters: Math.round(closestDistanceKm * 1000),
+          });
+        } else {
+          console.info("[Proximity] No shelter within 250m");
+        }
+        previousNearbyPOIRef.current = closest;
+        hasLoggedProximityRef.current = true;
+      }
+
+      setNearbyPOI(closest);
+      if (closest && !visitedPOIs.includes(closest.id)) {
+        setVisitedPOIs((prev) => [...prev, closest!.id]);
+      }
+    } catch (error) {
+      console.warn("[Proximity] Failed to check nearby shelter", error);
+    }
+  }, [playerLocation.lat, playerLocation.lng, visitedPOIs]);
+
   const activatePanel = useCallback(
     (panel: "layers" | "questions" | "gameplay" | null) => {
       if (panel !== "layers") {
@@ -156,6 +207,17 @@ export function GameScreen({
       activatePanel(null);
     }
   }, [activatePanel, activePanel, isMeasureActive]);
+
+  useEffect(() => {
+    void checkNearbyPOI();
+  }, [checkNearbyPOI]);
+
+  // Align proximity gating with amenities: refresh proximity when opening questions or moving
+  useEffect(() => {
+    if (drawerOpen) {
+      void checkNearbyPOI();
+    }
+  }, [drawerOpen, playerLocation.lat, playerLocation.lng, checkNearbyPOI]);
 
   useEffect(() => {
     if (!remoteOutcome) return;
@@ -400,25 +462,11 @@ export function GameScreen({
     ? [...baseQuestions, nearbyAmenityQuestion]
     : [...baseQuestions];
 
-  // Check if player is near a POI (simplified for dem #ToFix)
-  const checkNearbyPOI = () => {
-    const nearPOI = pois.find(poi => {
-      const distance = Math.sqrt(
-        Math.pow(poi.lat - playerLocation.lat, 2) + Math.pow(poi.lng - playerLocation.lng, 2)
-      );
-      return distance < 0.002; // Simulated radius
-    });
-    setNearbyPOI(nearPOI || null);
-    if (nearPOI && !visitedPOIs.includes(nearPOI.id)) {
-      setVisitedPOIs([...visitedPOIs, nearPOI.id]);
-    }
-  };
-
   // Simulate player movement (for demo)
   const simulateMove = (poi: POI) => {
     playerLocation.lat = poi.lat;
     playerLocation.lng = poi.lng;
-    checkNearbyPOI();
+    void checkNearbyPOI();
   };
 
   const handleAskQuestion = (questionId: string, param: string | number) => {
@@ -640,9 +688,6 @@ export function GameScreen({
     amenityKey: string;
     count: number;
   }) => {
-    if (PROXIMITY_DISABLED_FOR_TESTING) {
-      return;
-    }
     if (solvedNearbyAmenityKeys.includes(amenityKey)) {
       toast.error(
         t("questions.nearbyAmenity.unavailable", {
@@ -652,7 +697,7 @@ export function GameScreen({
       return;
     }
     const available = nearbyAmenityCounts[amenityKey] ?? 0;
-    if (available === 0) {
+    if (proximityEnabled && available === 0) {
       toast.error(
         t("questions.nearbyAmenity.unavailable", {
           fallback: "No amenities of this type within 250m. Move closer.",
@@ -660,7 +705,17 @@ export function GameScreen({
       );
       return;
     }
-    const isCorrect = available === count;
+    const expected = getSecretAnswer(amenityKey);
+    if (expected === null || expected === undefined) {
+      toast.error(
+        t("questions.nearbyAmenity.unavailable", {
+          fallback: "No amenities of this type within 250m. Move closer.",
+        }),
+      );
+      return;
+    }
+    const expectedNumber = Number(expected);
+    const isCorrect = Number.isFinite(expectedNumber) && expectedNumber === count;
     const amenityLabel = t(`questions.dynamic.nearbyAmenity.types.${amenityKey}`, {
       fallback: amenityKey,
     });
@@ -913,7 +968,7 @@ export function GameScreen({
         nearbyAmenityCounts={nearbyAmenityCounts}
         nearbyAmenityCategories={nearbyAmenityCategories}
         solvedNearbyAmenityKeys={solvedNearbyAmenityKeys}
-        proximityEnabled={!PROXIMITY_DISABLED_FOR_TESTING}
+        proximityEnabled={proximityEnabled}
       />
     )}
 
