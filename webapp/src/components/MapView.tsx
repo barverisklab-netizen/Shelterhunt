@@ -193,6 +193,7 @@ export function MapView({
 }: MapViewProps) {
   const { t, locale } = useI18n();
   const translateRef = useRef(t);
+  const localeRef = useRef(locale);
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
   const markers = useRef<{ [key: string]: mapboxgl.Marker }>({});
@@ -238,6 +239,68 @@ const measureMarkerRef = useRef<mapboxgl.Marker | null>(null);
   useEffect(() => {
     translateRef.current = t;
   }, [t]);
+
+  useEffect(() => {
+    localeRef.current = locale;
+  }, [locale]);
+
+  const localizeTextFieldExpression = useCallback(
+    (expr: any, currentLocale: typeof locale): any => {
+      if (Array.isArray(expr)) {
+        return expr.map((item) => localizeTextFieldExpression(item, currentLocale));
+      }
+      if (typeof expr === "string") {
+        const normalized = expr.trim().toLowerCase();
+        const wantsName =
+          normalized === "landmark name (jp)" ||
+          normalized === "landmark name (en)" ||
+          normalized === "landmark name";
+        const wantsAddress =
+          normalized === "address (jp)" ||
+          normalized === "address (en)" ||
+          normalized === "address";
+
+        if (wantsName) {
+          return currentLocale === "ja" ? "Landmark Name (JP)" : "Landmark Name (EN)";
+        }
+        if (wantsAddress) {
+          return currentLocale === "ja" ? "Address (JP)" : "Address (EN)";
+        }
+      }
+      return expr;
+    },
+    [],
+  );
+
+  useEffect(() => {
+    const m = map.current;
+    if (!m) return;
+
+    const cloneFn = (globalThis as any).structuredClone as
+      | (<T>(value: T) => T)
+      | undefined;
+
+    kotoLayers.forEach((layer) => {
+      const layerId = `koto-layer-${layer.id}`;
+      const baseTextField = layer.style.layout?.["text-field"];
+      if (!baseTextField) return;
+      if (!m.getLayer(layerId)) return;
+
+      const cloned = cloneFn
+        ? cloneFn(baseTextField)
+        : JSON.parse(JSON.stringify(baseTextField));
+      const localized = localizeTextFieldExpression(cloned, locale);
+
+      try {
+        m.setLayoutProperty(layerId, "text-field", localized);
+      } catch (error) {
+        console.warn("[koto] Failed to update text-field for locale", {
+          layerId,
+          error,
+        });
+      }
+    });
+  }, [locale, localizeTextFieldExpression]);
 
   const [layerGroupOpenState, setLayerGroupOpenState] = useState<
     Record<KotoLayerGroup, boolean>
@@ -1414,11 +1477,18 @@ const measureMarkerRef = useRef<mapboxgl.Marker | null>(null);
     }
 
     try {
+      const sortedKotoLayers = [...kotoLayers].sort((a, b) => {
+        if (a.layerType === b.layerType) return 0;
+        if (a.layerType === "fill" && b.layerType !== "fill") return -1;
+        if (a.layerType !== "fill" && b.layerType === "fill") return 1;
+        return 0;
+      });
+
       const expectedLayerIds = new Set(
-        kotoLayers.map((layer) => `koto-layer-${layer.id}`),
+        sortedKotoLayers.map((layer) => `koto-layer-${layer.id}`),
       );
       const expectedSourceIds = new Set(
-        kotoLayers.map((layer) => `koto-source-${layer.sourceData.layerId}`),
+        sortedKotoLayers.map((layer) => `koto-source-${layer.sourceData.layerId}`),
       );
 
       // Remove stale Koto layers/sources from previous configs
@@ -1484,7 +1554,8 @@ const measureMarkerRef = useRef<mapboxgl.Marker | null>(null);
           if (key.startsWith("locale:")) {
             const choices = key.slice("locale:".length).split("|").map((part) => part.trim()).filter(Boolean);
             const [enKey, jaKey] = choices;
-            const chosenKey = locale === "ja" ? jaKey ?? enKey : enKey ?? jaKey;
+            const currentLocale = localeRef.current;
+            const chosenKey = currentLocale === "ja" ? jaKey ?? enKey : enKey ?? jaKey;
             if (chosenKey) {
               const val = props?.[chosenKey];
               return val == null || val === "" ? "—" : escapeHtml(String(val));
@@ -1497,16 +1568,26 @@ const measureMarkerRef = useRef<mapboxgl.Marker | null>(null);
         });
       };
 
-      kotoLayers.forEach((layer) => {
+      sortedKotoLayers.forEach((layer) => {
         const sourceId = `koto-source-${layer.sourceData.layerId}`;
         const layerId = `koto-layer-${layer.id}`;
 
-        // Add source (vector) if needed
+        // Add source if needed (vector or geojson)
         if (!addedSources.has(sourceId) && !m.getSource(sourceId)) {
-          const tilesetUrl = getTilesetUrl(layer.sourceData.layerId); // your existing util
-          m.addSource(sourceId, { type: "vector", url: tilesetUrl });
-          addedSources.add(sourceId);
-          // console.debug(`[koto] add source: ${sourceId} -> ${tilesetUrl}`);
+          if (layer.sourceType === "geojson") {
+            const data = layer.sourceData.geojsonUrl;
+            if (!data) {
+              console.warn(`[koto] Missing geojsonUrl for layer ${layer.label}`);
+            } else {
+              m.addSource(sourceId, { type: "geojson", data });
+              addedSources.add(sourceId);
+            }
+          } else {
+            const tilesetUrl = getTilesetUrl(layer.sourceData.layerId);
+            m.addSource(sourceId, { type: "vector", url: tilesetUrl });
+            addedSources.add(sourceId);
+            // console.debug(`[koto] add source: ${sourceId} -> ${tilesetUrl}`);
+          }
         }
 
         // Add style layer if missing
@@ -1515,7 +1596,6 @@ const measureMarkerRef = useRef<mapboxgl.Marker | null>(null);
             id: layerId,
             type: layer.layerType,
             source: sourceId,
-            "source-layer": layer.sourceData.layerName,
             layout: (() => {
               const layout = {
                 ...layer.style.layout,
@@ -1528,6 +1608,22 @@ const measureMarkerRef = useRef<mapboxgl.Marker | null>(null);
             })(),
             paint: layer.style.paint,
           };
+          if (layer.style.layout?.["text-field"]) {
+            const baseTextField = layer.style.layout["text-field"];
+            const cloneFn = (globalThis as any).structuredClone as
+              | (<T>(value: T) => T)
+              | undefined;
+            const cloned = cloneFn
+              ? cloneFn(baseTextField)
+              : JSON.parse(JSON.stringify(baseTextField));
+            layerConfig.layout["text-field"] = localizeTextFieldExpression(
+              cloned,
+              localeRef.current,
+            );
+          }
+          if (layer.sourceType === "vector" && layer.sourceData.layerName) {
+            layerConfig["source-layer"] = layer.sourceData.layerName;
+          }
           if (layer.style.filter) layerConfig.filter = layer.style.filter;
 
           m.addLayer(layerConfig);
@@ -1845,14 +1941,6 @@ const measureMarkerRef = useRef<mapboxgl.Marker | null>(null);
 
       {/* Add CSS animations */}
       <style>{`
-        @keyframes pulse {
-          0%, 100% { opacity: 0.5; transform: scale(1); }
-          50% { opacity: 0.8; transform: scale(1.1); }
-        }
-        @keyframes ripple {
-          0% { transform: scale(1); opacity: 0.5; }
-          100% { transform: scale(2); opacity: 0; }
-        }
         .mapboxgl-popup-content {
           background: transparent !important;
           padding: 0 !important;
@@ -1877,14 +1965,6 @@ const measureMarkerRef = useRef<mapboxgl.Marker | null>(null);
           background: #c1272d;
           border-radius: 50%;
           opacity: 0.85;
-        }
-        .measure-shelter-marker {
-          width: 16px;
-          height: 16px;
-          border-radius: 50%;
-          border: 3px solid #c1272d;
-          background: #0f0f0f;
-          box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.45);
         }
         .measure-popup {
           display: flex;
@@ -2122,23 +2202,4 @@ function LayerToggle({
       <span className="text-sm text-black">{label}</span>
     </label>
   );
-}
-
-function getIconSVG(type: string): string {
-  switch (type) {
-    case "shelter":
-      return '<path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline>';
-    case "fire_station":
-      return '<path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"></path>';
-    case "hospital":
-      return '<path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"></path>';
-    case "park":
-      return '<path d="M12 12c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4zm7-1c1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3 1.34 3 3 3zm-14 0c1.66 0 3-1.34 3-3S6.66 5 5 5 2 6.34 2 8s1.34 3 3 3zm7-8c2.21 0 4 1.79 4 4s-1.79 4-4 4-4-1.79-4-4 1.79-4 4-4z"></path>';
-    case "library":
-      return '<path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"></path>';
-    case "school":
-      return '<path d="M22 10v6M2 10l10-5 10 5-10 5z"></path><path d="M6 12v5c3 3 9 3 12 0v-5"></path>';
-    default:
-      return '<circle cx="12" cy="12" r="10"></circle>';
-  }
 }

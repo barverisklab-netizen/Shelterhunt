@@ -1,4 +1,5 @@
 import { KotoLayer } from "@/types/kotoLayers";
+import { KOTO_GEOJSON_SOURCES } from "@/data/kotoGeojsonSources";
 
 // Koto, Tokyo Mapbox layer definitions and styling details
 export const kotoLayers: KotoLayer[] = [
@@ -10,7 +11,7 @@ export const kotoLayers: KotoLayer[] = [
     metadata: {
       query: {
         template:
-          "{{t:map.popup.name}}: <b>{{locale:Landmark Name (EN)|Landmark Name (JP)}}</b><br>{{t:map.popup.categoryJp}}: <b>{{Category (JP)}}</b><br>{{t:map.popup.shelterCapacity}}: <b>{{Shelter_Capacity}}</b><br>{{t:map.popup.address}}: <b>{{Address (JP)}}</b>",
+          "{{t:map.popup.name}}: <b>{{locale:Landmark Name (EN)|Landmark Name (JP)}}</b><br>{{t:map.popup.category}}: <b>{{locale:Category|Category (JP)}}</b><br>{{t:map.popup.shelterCapacity}}: <b>{{Shelter_Capacity}}</b><br>{{t:map.popup.address}}: <b>{{locale:Address (EN)|Address (JP)}}</b>",
       },
       loadOnInit: true,
       legendItems: [
@@ -27,10 +28,11 @@ export const kotoLayers: KotoLayer[] = [
       ],
     },
     layerType: "symbol",
-    sourceType: "vector",
+    sourceType: "geojson",
     sourceData: {
       layerId: "8sbllw5a",
       layerName: "ihi_evacuation_centers_all-c2o5a5",
+      geojsonUrl: KOTO_GEOJSON_SOURCES.shelters,
     },
     style: {
       paint: {
@@ -82,7 +84,7 @@ export const kotoLayers: KotoLayer[] = [
     metadata: {
       query: {
         template:
-          "{{t:map.popup.name}}: <b>{{locale:Landmark Name (EN)|Landmark Name (JP)}}</b><br>{{t:map.popup.category}}: <b>{{Category}}</b><br>{{t:map.popup.address}}: <b>{{Address (JP)}}</b>",
+          "{{t:map.popup.name}}: <b>{{locale:Landmark Name (EN)|Landmark Name (JP)}}</b><br>{{t:map.popup.category}}: <b>{{locale:Category|Category (JP)}}</b><br>{{t:map.popup.address}}: <b>{{locale:Address (EN)|Address (JP)}}</b>",
       },
       loadOnInit: false,
       legendItems: [
@@ -99,10 +101,11 @@ export const kotoLayers: KotoLayer[] = [
       ],
     },
     layerType: "symbol",
-    sourceType: "vector",
+    sourceType: "geojson",
     sourceData: {
       layerId: "8sbllw5a",
       layerName: "ihi_evacuation_centers_all-c2o5a5",
+      geojsonUrl: KOTO_GEOJSON_SOURCES.shelters,
     },
     style: {
       paint: {
@@ -144,7 +147,7 @@ export const kotoLayers: KotoLayer[] = [
     metadata: {
       query: {
         template:
-          "{{t:map.popup.name}}: <b>{{locale:Landmark name (EN)|Landmark name (JP)}}</b><br>{{t:map.popup.category}}: <b>{{Category}}</b><br>{{t:map.popup.address}}: <b>{{Address (JP)}}</b>",
+          "{{t:map.popup.name}}: <b>{{locale:Landmark Name (EN)|Landmark Name (JP)}}</b><br>{{t:map.popup.category}}: <b>{{locale:Category|Category (JP)}}</b><br>{{t:map.popup.address}}: <b>{{locale:Address (EN)|Address (JP)}}</b>",
       },
       loadOnInit: false,
       legendItems: [
@@ -161,10 +164,11 @@ export const kotoLayers: KotoLayer[] = [
       ],
     },
     layerType: "symbol",
-    sourceType: "vector",
+    sourceType: "geojson",
     sourceData: {
       layerId: "8sbllw5a",
       layerName: "ihi_evacuation_centers_all-c2o5a5",
+      geojsonUrl: KOTO_GEOJSON_SOURCES.shelters,
     },
     style: {
       paint: {
@@ -210,7 +214,7 @@ export const kotoLayers: KotoLayer[] = [
     metadata: {
       query: {
         template:
-          "{{t:map.popup.name}}: <b>{{locale:Landmark Name (EN)|Landmark Name (JP)}}</b><br>{{t:map.popup.category}}: <b>{{Category}}</b><br>{{t:map.popup.address}}: <b>{{Address (JP)}}</b>",
+          "{{t:map.popup.name}}: <b>{{locale:Landmark Name (EN)|Landmark Name (JP)}}</b><br>{{t:map.popup.category}}: <b>{{locale:Category|Category (JP)}}</b><br>{{t:map.popup.address}}: <b>{{locale:Address (EN)|Address (JP)}}</b>",
       },
       loadOnInit: false,
       legendItems: [
@@ -227,10 +231,11 @@ export const kotoLayers: KotoLayer[] = [
       ],
     },
     layerType: "symbol",
-    sourceType: "vector",
+    sourceType: "geojson",
     sourceData: {
       layerId: "8sbllw5a",
       layerName: "ihi_evacuation_centers_all-c2o5a5",
+      geojsonUrl: KOTO_GEOJSON_SOURCES.shelters,
     },
     style: {
       paint: {
@@ -273,7 +278,7 @@ export const kotoLayers: KotoLayer[] = [
     metadata: {
       query: {
         template:
-          "{{t:map.popup.name}}: <b>{{locale:Landmark name (EN)|Landmark name (JP)}}</b><br>{{t:map.popup.category}}: <b>{{Category}}</b><br>{{t:map.popup.address}}: <b>{{Address (JP)}}</b>",
+          "{{t:map.popup.name}}: <b>{{locale:Landmark Name (EN)|Landmark Name (JP)}}</b><br>{{t:map.popup.category}}: <b>{{locale:Category|Category (JP)}}</b><br>{{t:map.popup.address}}: <b>{{locale:Address (EN)|Address (JP)}}</b>",
       },
       loadOnInit: false,
       legendItems: [
@@ -290,10 +295,11 @@ export const kotoLayers: KotoLayer[] = [
       ],
     },
     layerType: "symbol",
-    sourceType: "vector",
+    sourceType: "geojson",
     sourceData: {
       layerId: "8sbllw5a",
       layerName: "ihi_evacuation_centers_all-c2o5a5",
+      geojsonUrl: KOTO_GEOJSON_SOURCES.shelters,
     },
     style: {
       paint: {
@@ -329,7 +335,7 @@ export const kotoLayers: KotoLayer[] = [
     metadata: {
       query: {
         template:
-          "{{t:map.popup.name}}: <b>{{locale:Landmark name (EN)|Landmark name (JP)}}</b><br>{{t:map.popup.category}}: <b>{{Category}}</b><br>{{t:map.popup.address}}: <b>{{Address (JP)}}</b>",
+          "{{t:map.popup.name}}: <b>{{locale:Landmark Name (EN)|Landmark Name (JP)}}</b><br>{{t:map.popup.category}}: <b>{{locale:Category|Category (JP)}}</b><br>{{t:map.popup.address}}: <b>{{locale:Address (EN)|Address (JP)}}</b>",
       },
       loadOnInit: false,
       legendItems: [
@@ -349,10 +355,11 @@ export const kotoLayers: KotoLayer[] = [
       ],
     },
     layerType: "symbol",
-    sourceType: "vector",
+    sourceType: "geojson",
     sourceData: {
       layerId: "664hckgt",
       layerName: "ihi_evacuation_support_facili-7iemgu",
+      geojsonUrl: KOTO_GEOJSON_SOURCES.support,
     },
     style: {
       paint: {
@@ -657,7 +664,7 @@ export const kotoLayers: KotoLayer[] = [
     metadata: {
       query: {
         template:
-          "{{t:map.popup.name}}: <b>{{locale:Landmark name (EN)|Landmark name (JP)}}</b><br>{{t:map.popup.category}}: <b>{{Category}}</b><br>{{t:map.popup.address}}: <b>{{Address (JP)}}</b>",
+          "{{t:map.popup.name}}: <b>{{locale:Landmark Name (EN)|Landmark Name (JP)}}</b><br>{{t:map.popup.category}}: <b>{{locale:Category|Category (JP)}}</b><br>{{t:map.popup.address}}: <b>{{locale:Address (EN)|Address (JP)}}</b>",
       },
       loadOnInit: false,
       legendItems: [
@@ -677,10 +684,11 @@ export const kotoLayers: KotoLayer[] = [
       ],
     },
     layerType: "symbol",
-    sourceType: "vector",
+    sourceType: "geojson",
     sourceData: {
       layerId: "6nnqpx91",
       layerName: "ihi_city_landmarks-3au3oa",
+      geojsonUrl: KOTO_GEOJSON_SOURCES.landmarks,
     },
     style: {
       paint: {
@@ -722,7 +730,7 @@ export const kotoLayers: KotoLayer[] = [
     metadata: {
       query: {
         template:
-          "{{t:map.popup.name}}: <b>{{locale:Landmark name (EN)|Landmark name (JP)}}</b><br>{{t:map.popup.category}}: <b>{{Category}}</b><br>{{t:map.popup.address}}: <b>{{Address (JP)}}</b>",
+          "{{t:map.popup.name}}: <b>{{locale:Landmark Name (EN)|Landmark Name (JP)}}</b><br>{{t:map.popup.category}}: <b>{{locale:Category|Category (JP)}}</b><br>{{t:map.popup.address}}: <b>{{locale:Address (EN)|Address (JP)}}</b>",
       },
       loadOnInit: false,
       legendItems: [
@@ -742,10 +750,11 @@ export const kotoLayers: KotoLayer[] = [
       ],
     },
     layerType: "symbol",
-    sourceType: "vector",
+    sourceType: "geojson",
     sourceData: {
       layerId: "6nnqpx91",
       layerName: "ihi_city_landmarks-3au3oa",
+      geojsonUrl: KOTO_GEOJSON_SOURCES.landmarks,
     },
     style: {
       paint: {
@@ -787,7 +796,7 @@ export const kotoLayers: KotoLayer[] = [
     metadata: {
       query: {
         template:
-          "{{t:map.popup.name}}: <b>{{locale:Landmark name (EN)|Landmark name (JP)}}</b><br>{{t:map.popup.category}}: <b>{{Category}}</b><br>{{t:map.popup.address}}: <b>{{Address (JP)}}</b>",
+          "{{t:map.popup.name}}: <b>{{locale:Landmark Name (EN)|Landmark Name (JP)}}</b><br>{{t:map.popup.category}}: <b>{{locale:Category|Category (JP)}}</b><br>{{t:map.popup.address}}: <b>{{locale:Address (EN)|Address (JP)}}</b>",
       },
       loadOnInit: false,
       legendItems: [
@@ -807,10 +816,11 @@ export const kotoLayers: KotoLayer[] = [
       ],
     },
     layerType: "symbol",
-    sourceType: "vector",
+    sourceType: "geojson",
     sourceData: {
       layerId: "664hckgt",
       layerName: "ihi_evacuation_support_facili-7iemgu",
+      geojsonUrl: KOTO_GEOJSON_SOURCES.support,
     },
     style: {
       paint: {
@@ -852,7 +862,7 @@ export const kotoLayers: KotoLayer[] = [
     metadata: {
       query: {
         template:
-          "{{t:map.popup.name}}: <b>{{locale:Landmark name (EN)|Landmark name (JP)}}</b><br>{{t:map.popup.category}}: <b>{{Category}}</b><br>{{t:map.popup.address}}: <b>{{Address (JP)}}</b>",
+          "{{t:map.popup.name}}: <b>{{locale:Landmark Name (EN)|Landmark Name (JP)}}</b><br>{{t:map.popup.category}}: <b>{{locale:Category|Category (JP)}}</b><br>{{t:map.popup.address}}: <b>{{locale:Address (EN)|Address (JP)}}</b>",
       },
       loadOnInit: false,
       legendItems: [
@@ -872,10 +882,11 @@ export const kotoLayers: KotoLayer[] = [
       ],
     },
     layerType: "symbol",
-    sourceType: "vector",
+    sourceType: "geojson",
     sourceData: {
       layerId: "6nnqpx91",
       layerName: "ihi_city_landmarks-3au3oa",
+      geojsonUrl: KOTO_GEOJSON_SOURCES.landmarks,
     },
     style: {
       paint: {
@@ -917,7 +928,7 @@ export const kotoLayers: KotoLayer[] = [
     metadata: {
       query: {
         template:
-          "{{t:map.popup.name}}: <b>{{locale:Landmark name (EN)|Landmark name (JP)}}</b><br>{{t:map.popup.category}}: <b>{{Category}}</b><br>{{t:map.popup.address}}: <b>{{Address (JP)}}</b>",
+          "{{t:map.popup.name}}: <b>{{locale:Landmark Name (EN)|Landmark Name (JP)}}</b><br>{{t:map.popup.category}}: <b>{{locale:Category|Category (JP)}}</b><br>{{t:map.popup.address}}: <b>{{locale:Address (EN)|Address (JP)}}</b>",
       },
       loadOnInit: false,
       legendItems: [
@@ -937,10 +948,11 @@ export const kotoLayers: KotoLayer[] = [
       ],
     },
     layerType: "symbol",
-    sourceType: "vector",
+    sourceType: "geojson",
     sourceData: {
       layerId: "6nnqpx91",
       layerName: "ihi_city_landmarks-3au3oa",
+      geojsonUrl: KOTO_GEOJSON_SOURCES.landmarks,
     },
     style: {
       paint: {

@@ -170,6 +170,9 @@ export const fetchDesignatedShelterPOIs = async (
 
   const tilesetId = `${username}.${designatedLayer.sourceData.layerId}`;
   const layerName = designatedLayer.sourceData.layerName;
+  if (!layerName) {
+    throw new Error("Designated evacuation shelter layer name is missing.");
+  }
 
   const clampedRadiusKm = Math.max(0, radiusKm);
   const radiusMeters = Math.max(1, Math.round(clampedRadiusKm * 1000));

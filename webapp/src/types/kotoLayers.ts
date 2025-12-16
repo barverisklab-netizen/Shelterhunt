@@ -31,8 +31,11 @@ export interface KotoLayerMetadata {
 }
 
 export interface KotoLayerSourceData {
+  // For vector sources, layerId + layerName are required; for geojson sources,
+  // layerId is a stable identifier and geojsonUrl points to the bundled data.
   layerId: string;
-  layerName: string;
+  layerName?: string;
+  geojsonUrl?: string;
 }
 
 export interface KotoLayerStyle {
@@ -47,7 +50,7 @@ export interface KotoLayer {
   group: KotoLayerGroup;
   metadata: KotoLayerMetadata;
   layerType: "symbol" | "fill" | "line";
-  sourceType: "vector";
+  sourceType: "vector" | "geojson";
   sourceData: KotoLayerSourceData;
   style: KotoLayerStyle;
 }

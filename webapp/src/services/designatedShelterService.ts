@@ -145,6 +145,9 @@ export class DesignatedShelterService {
 
     const tilesetId = `${username}.${designatedLayer.sourceData.layerId}`;
     const layerName = designatedLayer.sourceData.layerName;
+    if (!layerName) {
+      throw new Error("Designated evacuation shelter layer name is missing.");
+    }
 
     const radiusMeters = Math.max(1, Math.round(options.radiusMeters));
     const url = new URL(

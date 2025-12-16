@@ -418,11 +418,11 @@
         "delete": "Delete"
       }
     },
-    "popup": {
-      "name": "Name",
-      "category": "Category",
-      "categoryJp": "Category (JP)",
-      "address": "Address",
+      "popup": {
+        "name": "Name",
+        "category": "Category",
+        "categoryJp": "Category",
+        "address": "Address",
       "shelterCapacity": "Shelter Capacity",
       "floodDepth": "Flood Depth",
       "floodDuration": "Flood Duration",

@@ -418,11 +418,11 @@
         "delete": "削除"
       }
     },
-    "popup": {
-      "name": "名称",
-      "category": "カテゴリ",
-      "categoryJp": "カテゴリ（日本語）",
-      "address": "住所",
+      "popup": {
+        "name": "名称",
+        "category": "カテゴリ",
+        "categoryJp": "カテゴリ",
+        "address": "住所",
       "shelterCapacity": "収容人数",
       "floodDepth": "浸水深",
       "floodDuration": "浸水継続時間",
