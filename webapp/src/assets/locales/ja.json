@@ -234,7 +234,7 @@
     "disabledProximityHint": "街を移動して、対象の資産タイプが250m以内に入ると質問が解放されます。",
     "nearbyAmenity": {
       "selectAmenity": "設備の種類",
-      "selectCount": "最低数",
+      "selectCount": "正確な数",
       "unavailable": "この種類の設備が250m以内にありません。近づいてください。",
       "moveCloser": "その設備の250m以内まで移動してから質問してください。",
       "availableCategories": "250m以内にある設備: {categories}",
@@ -282,44 +282,44 @@
         "clue": "収容人数が少なくとも{param}です"
       },
       "waterStation250m": {
-        "question": "250m以内に給水所が少なくとも{param}か所ありますか？",
-        "clue": "250m以内に給水所が少なくとも{param}か所あります"
+        "question": "250m以内に給水所がちょうど{param}か所ありますか？",
+        "clue": "250m以内に給水所がちょうど{param}か所あります"
       },
       "hospital250m": {
-        "question": "250m以内に病院が少なくとも{param}か所ありますか？",
-        "clue": "250m以内に病院が少なくとも{param}か所あります"
+        "question": "250m以内に病院がちょうど{param}か所ありますか？",
+        "clue": "250m以内に病院がちょうど{param}か所あります"
       },
       "aed250m": {
-        "question": "250m以内にAEDが少なくとも{param}台ありますか？",
-        "clue": "250m以内にAEDが少なくとも{param}台あります"
+        "question": "250m以内にAEDがちょうど{param}台ありますか？",
+        "clue": "250m以内にAEDがちょうど{param}台あります"
       },
       "emergencySupplyStorage250m": {
-        "question": "250m以内に防災備蓄倉庫が少なくとも{param}か所ありますか？",
-        "clue": "250m以内に防災備蓄倉庫が少なくとも{param}か所あります"
+        "question": "250m以内に防災備蓄倉庫がちょうど{param}か所ありますか？",
+        "clue": "250m以内に防災備蓄倉庫がちょうど{param}か所あります"
       },
       "communityCenter250m": {
-        "question": "250m以内にコミュニティセンターが少なくとも{param}か所ありますか？",
-        "clue": "250m以内にコミュニティセンターが少なくとも{param}か所あります"
+        "question": "250m以内にコミュニティセンターがちょうど{param}か所ありますか？",
+        "clue": "250m以内にコミュニティセンターがちょうど{param}か所あります"
       },
       "trainStation250m": {
-        "question": "250m以内に駅が少なくとも{param}か所ありますか？",
-        "clue": "250m以内に駅が少なくとも{param}か所あります"
+        "question": "250m以内に駅がちょうど{param}か所ありますか？",
+        "clue": "250m以内に駅がちょうど{param}か所あります"
       },
       "shrineTemple250m": {
-        "question": "250m以内に神社・寺院が少なくとも{param}か所ありますか？",
-        "clue": "250m以内に神社・寺院が少なくとも{param}か所あります"
+        "question": "250m以内に神社・寺院がちょうど{param}か所ありますか？",
+        "clue": "250m以内に神社・寺院がちょうど{param}か所あります"
       },
       "floodgate250m": {
-        "question": "250m以内に水門が少なくとも{param}か所ありますか？",
-        "clue": "250m以内に水門が少なくとも{param}か所あります"
+        "question": "250m以内に水門がちょうど{param}か所ありますか？",
+        "clue": "250m以内に水門がちょうど{param}か所あります"
       },
       "bridge250m": {
-        "question": "250m以内に橋が少なくとも{param}か所ありますか？",
-        "clue": "250m以内に橋が少なくとも{param}か所あります"
+        "question": "250m以内に橋がちょうど{param}か所ありますか？",
+        "clue": "250m以内に橋がちょうど{param}か所あります"
       },
       "nearbyAmenity": {
         "question": "250m以内の周辺設備について尋ねますか？",
-        "clue": "{amenity}が少なくとも{param}か所、250m以内にあります",
+        "clue": "{amenity}がちょうど{param}か所、250m以内にあります",
         "types": {
           "waterStation250m": "給水所",
           "hospital250m": "病院",

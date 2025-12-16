@@ -234,7 +234,7 @@
     "disabledProximityHint": "Move around the city and questions will unlock when this asset type is within 250m of your location.",
     "nearbyAmenity": {
       "selectAmenity": "Amenity type",
-      "selectCount": "Minimum count",
+      "selectCount": "Exact count",
       "unavailable": "No amenities of this type within 250m. Move closer.",
       "moveCloser": "Move within 250m of that amenity to ask.",
       "availableCategories": "Available nearby: {categories}",
@@ -282,44 +282,44 @@
         "clue": "Shelter capacity is at least {param}"
       },
       "waterStation250m": {
-        "question": "Are there at least {param} water stations within 250m?",
-        "clue": "There are at least {param} water stations within 250m"
+        "question": "Are there exactly {param} water stations within 250m?",
+        "clue": "There are exactly {param} water stations within 250m"
       },
       "hospital250m": {
-        "question": "Are there at least {param} hospitals within 250m?",
-        "clue": "There are at least {param} hospitals within 250m"
+        "question": "Are there exactly {param} hospitals within 250m?",
+        "clue": "There are exactly {param} hospitals within 250m"
       },
       "aed250m": {
-        "question": "Are there at least {param} AEDs within 250m?",
-        "clue": "There are at least {param} AEDs within 250m"
+        "question": "Are there exactly {param} AEDs within 250m?",
+        "clue": "There are exactly {param} AEDs within 250m"
       },
       "emergencySupplyStorage250m": {
-        "question": "Are there at least {param} emergency supply storages within 250m?",
-        "clue": "There are at least {param} emergency supply storages within 250m"
+        "question": "Are there exactly {param} emergency supply storages within 250m?",
+        "clue": "There are exactly {param} emergency supply storages within 250m"
       },
       "communityCenter250m": {
-        "question": "Are there at least {param} community centers within 250m?",
-        "clue": "There are at least {param} community centers within 250m"
+        "question": "Are there exactly {param} community centers within 250m?",
+        "clue": "There are exactly {param} community centers within 250m"
       },
       "trainStation250m": {
-        "question": "Are there at least {param} train stations within 250m?",
-        "clue": "There are at least {param} train stations within 250m"
+        "question": "Are there exactly {param} train stations within 250m?",
+        "clue": "There are exactly {param} train stations within 250m"
       },
       "shrineTemple250m": {
-        "question": "Are there at least {param} shrines or temples within 250m?",
-        "clue": "There are at least {param} shrines or temples within 250m"
+        "question": "Are there exactly {param} shrines or temples within 250m?",
+        "clue": "There are exactly {param} shrines or temples within 250m"
       },
       "floodgate250m": {
-        "question": "Are there at least {param} floodgates within 250m?",
-        "clue": "There are at least {param} floodgates within 250m"
+        "question": "Are there exactly {param} floodgates within 250m?",
+        "clue": "There are exactly {param} floodgates within 250m"
       },
       "bridge250m": {
-        "question": "Are there at least {param} bridges within 250m?",
-        "clue": "There are at least {param} bridges within 250m"
+        "question": "Are there exactly {param} bridges within 250m?",
+        "clue": "There are exactly {param} bridges within 250m"
       },
       "nearbyAmenity": {
         "question": "Are there nearby amenities within 250m?",
-        "clue": "There are at least {param} {amenity} within 250m",
+        "clue": "There are exactly {param} {amenity} within 250m",
         "types": {
           "waterStation250m": "Water stations",
           "hospital250m": "Hospitals",

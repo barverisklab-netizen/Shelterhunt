@@ -27,6 +27,7 @@ interface QuestionDrawerProps {
   nearbyAmenityCounts?: Record<string, number>;
   proximityEnabled?: boolean;
   nearbyAmenityCategories?: string[];
+  solvedNearbyAmenityKeys?: string[];
 }
 
 const CATEGORY_ICONS = {
@@ -48,6 +49,7 @@ export function QuestionDrawer({
   nearbyAmenityCounts = {},
   proximityEnabled = true,
   nearbyAmenityCategories = [],
+  solvedNearbyAmenityKeys = [],
 }: QuestionDrawerProps) {
   const { t } = useI18n();
   const [selectedParams, setSelectedParams] = useState<
@@ -355,7 +357,8 @@ export function QuestionDrawer({
                               {AMENITY_OPTIONS.map((opt) => {
                                 const count = nearbyAmenityCounts[opt.key] ?? 0;
                                 const disabled =
-                                  proximityEnabled && typeof count === "number" && count <= 0;
+                                  (proximityEnabled && typeof count === "number" && count <= 0) ||
+                                  solvedNearbyAmenityKeys.includes(opt.key);
                                 return (
                                   <option key={opt.key} value={opt.key} disabled={disabled}>
                                     {opt.label}
@@ -365,7 +368,7 @@ export function QuestionDrawer({
                             </select>
                             <label className="text-xs font-semibold uppercase text-black/70">
                               {t("questions.nearbyAmenity.selectCount", {
-                                fallback: "Minimum count",
+                                fallback: "Exact count",
                               })}
                             </label>
                             <select
@@ -394,16 +397,6 @@ export function QuestionDrawer({
                               </option>
                             ))}
                           </select>
-                            <div className="text-xs text-black/70">
-                              {nearbyAmenityCategories.length > 0
-                                ? t("questions.nearbyAmenity.availableCategories", {
-                                    fallback: "Available nearby: {categories}",
-                                    categories: nearbyAmenityCategories.join(", "),
-                                  })
-                                : t("questions.nearbyAmenity.noneWithinRadius", {
-                                    fallback: "No amenities within 250m yet.",
-                                  })}
-                            </div>
                             {nearbyAmenitySelection.amenityKey &&
                               proximityEnabled &&
                               (nearbyAmenityCounts[nearbyAmenitySelection.amenityKey] ?? 0) <=

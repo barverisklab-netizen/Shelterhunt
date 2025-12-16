@@ -469,6 +469,7 @@ const measureMarkerRef = useRef<mapboxgl.Marker | null>(null);
     amenityCountsRef.current = {};
     amenitiesCallbackRef.current?.({ counts: {}, matchedCategories: [] });
     try {
+      console.info("Amenity query center", latestLocationRef.current);
       const radiusKm = 0.25;
       const { counts, matchedCategories, unmatched } = await countAmenitiesWithinRadius(
         { lat: latestLocationRef.current.lat, lng: latestLocationRef.current.lng },

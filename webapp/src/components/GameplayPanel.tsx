@@ -175,25 +175,27 @@ export function GameplayPanel({
                               animate={{ opacity: 1, x: 0 }}
                               transition={{ delay: index * 0.05 }}
                             >
-                              <div className="flex items-start gap-3">
-                                <div className="mt-1 flex-shrink-0 text-green-600">
-                                  <CheckCircle className="h-5 w-5" />
-                                </div>
-                                <div className="flex-1 text-black">
-                                  <div className="mb-1 text-xs font-bold uppercase tracking-wide text-black/70">
-                                    {clue.categoryId
-                                      ? t(`questions.categories.${clue.categoryId}.name`, {
-                                          fallback: clue.category,
-                                        })
-                                      : clue.category}
-                                  </div>
-                                  <div>
-                                    {clue.questionId
-                                      ? t(`questions.dynamic.${clue.questionId}.clue`, {
-                                          fallback: clue.text,
-                                        }).replace("{param}", `${clue.paramValue ?? ""}`)
-                                      : clue.text}
-                                  </div>
+                                  <div className="flex items-start gap-3">
+                                    <div className="mt-1 flex-shrink-0 text-green-600">
+                                      <CheckCircle className="h-5 w-5" />
+                                    </div>
+                                    <div className="flex-1 text-black">
+                                      <div className="mb-1 text-xs font-bold uppercase tracking-wide text-black/70">
+                                        {clue.categoryId
+                                          ? t(`questions.categories.${clue.categoryId}.name`, {
+                                              fallback: clue.category,
+                                            })
+                                          : clue.category}
+                                      </div>
+                                      <div>
+                                        {clue.questionId === "nearbyAmenity"
+                                          ? clue.text
+                                          : clue.questionId
+                                            ? t(`questions.dynamic.${clue.questionId}.clue`, {
+                                                fallback: clue.text,
+                                              }).replace("{param}", `${clue.paramValue ?? ""}`)
+                                            : clue.text}
+                                      </div>
                                   {onFilterByClue && (
                                     <div className="mt-2 flex gap-2">
                                       <Button

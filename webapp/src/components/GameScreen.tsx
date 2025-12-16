@@ -97,9 +97,11 @@ export function GameScreen({
   const [layerPanelCloseSignal, setLayerPanelCloseSignal] = useState(0);
   const [nearbyAmenityCounts, setNearbyAmenityCounts] = useState<Record<string, number>>({});
   const [nearbyAmenityCategories, setNearbyAmenityCategories] = useState<string[]>([]);
+  const [solvedNearbyAmenityKeys, setSolvedNearbyAmenityKeys] = useState<string[]>([]);
   const staleLocationTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastGeoStatusRef = useRef<string>("unknown");
   const [amenityQueryTrigger, setAmenityQueryTrigger] = useState(0);
+  const lastAmenityQueryLocationRef = useRef<{ lat: number; lng: number } | null>(null);
   const DESIGNATED_CATEGORY = "designated ec";
   const normalizeValue = (value: unknown) =>
     typeof value === "number" ? String(value) : String(value ?? "").trim().toLowerCase();
@@ -173,6 +175,16 @@ export function GameScreen({
       setNearbyAmenityCategories([]);
     }, 15000);
   }, [playerLocation.lat, playerLocation.lng]);
+
+  // Re-run amenity query if location changes while questions panel is open
+  useEffect(() => {
+    if (!drawerOpen) return;
+    const prev = lastAmenityQueryLocationRef.current;
+    if (!prev || prev.lat !== playerLocation.lat || prev.lng !== playerLocation.lng) {
+      setAmenityQueryTrigger((n) => n + 1);
+      lastAmenityQueryLocationRef.current = { lat: playerLocation.lat, lng: playerLocation.lng };
+    }
+  }, [drawerOpen, playerLocation.lat, playerLocation.lng]);
 
   useEffect(() => {
     // logging trimmed per request
@@ -631,6 +643,14 @@ export function GameScreen({
     if (PROXIMITY_DISABLED_FOR_TESTING) {
       return;
     }
+    if (solvedNearbyAmenityKeys.includes(amenityKey)) {
+      toast.error(
+        t("questions.nearbyAmenity.unavailable", {
+          fallback: "No amenities of this type within 250m. Move closer.",
+        }),
+      );
+      return;
+    }
     const available = nearbyAmenityCounts[amenityKey] ?? 0;
     if (available === 0) {
       toast.error(
@@ -640,15 +660,19 @@ export function GameScreen({
       );
       return;
     }
-    const isCorrect = available >= count;
+    const isCorrect = available === count;
     const amenityLabel = t(`questions.dynamic.nearbyAmenity.types.${amenityKey}`, {
       fallback: amenityKey,
     });
-    const clueText = t("questions.dynamic.nearbyAmenity.clue", {
-      fallback: "There are at least {param} {amenity} within 250m",
-    })
-      .replace("{param}", String(count))
-      .replace("{amenity}", amenityLabel);
+    const clueText =
+      t(`questions.dynamic.${amenityKey}.clue`, {
+        replacements: { param: count },
+        fallback: "",
+      }) ||
+      t("questions.dynamic.nearbyAmenity.clue", {
+        replacements: { param: count, amenity: amenityLabel },
+        fallback: `There are exactly ${count} ${amenityLabel} within 250m`,
+      });
 
     const newClue: Clue = {
       id: `clue-${Date.now()}`,
@@ -656,7 +680,7 @@ export function GameScreen({
       answer: isCorrect,
       category: t("questions.categories.nearby.name", { fallback: "Nearby Amenities" }),
       categoryId: "nearby",
-      questionId: "nearbyAmenity",
+      questionId: amenityKey,
       paramValue: count,
       timestamp: Date.now(),
     };
@@ -665,6 +689,9 @@ export function GameScreen({
     if (isCorrect) {
       setSolvedQuestions((prev) =>
         prev.includes("nearbyAmenity") ? prev : [...prev, "nearbyAmenity"],
+      );
+      setSolvedNearbyAmenityKeys((prev) =>
+        prev.includes(amenityKey) ? prev : [...prev, amenityKey],
       );
       toast.success(
         t("questions.correct", { fallback: "Correct clue unlocked!" }),
@@ -885,6 +912,7 @@ export function GameScreen({
         onAskNearbyAmenity={handleAskNearbyAmenity}
         nearbyAmenityCounts={nearbyAmenityCounts}
         nearbyAmenityCategories={nearbyAmenityCategories}
+        solvedNearbyAmenityKeys={solvedNearbyAmenityKeys}
         proximityEnabled={!PROXIMITY_DISABLED_FOR_TESTING}
       />
     )}
