@@ -442,10 +442,10 @@ export const kotoLayers: KotoLayer[] = [
       layout: {},
     },
   },
-  // Flood depth rank
+  // Inland water depth
   {
     id: 8,
-    label: "Inland Waters Depth Rank",
+    label: "Inland Waters Depth",
     group: "Hazard Layers",
     metadata: {
       query: {
@@ -455,10 +455,10 @@ export const kotoLayers: KotoLayer[] = [
       loadOnInit: false,
       legendItems: [
         {
-          label: "Inland Waters Depth Rank",
+          label: "Inland Waters Depth",
           labelKey: "map.layers.items.8",
           swatchType: "fill",
-          description: "Ranked inland waters depth zones.",
+          description: "Inland waters depth zones.",
           descriptionKey: "map.layers.descriptions.8",
           swatchStyle: {
             fillColor: "#2a79b9",
@@ -481,13 +481,13 @@ export const kotoLayers: KotoLayer[] = [
           ["linear"],
           ["get", "InlandWaters_Depth_Rank"],
           1,
-          "#f7fbfe",
+          "#B3DCFE",
           2,
-          "#8EB7D8",
+          "#80BCEC",
           3,
-          "#2a79b9",
+          "#2E83C9",
           4,
-          "#1C5482",
+          "#1A4A71",
         ],
         "fill-opacity": 0.6,
       },
@@ -604,61 +604,9 @@ export const kotoLayers: KotoLayer[] = [
       layout: {},
     },
   },
-  // Inland water depth
-  {
-    id: 11,
-    label: "Inland Waters Depth",
-    group: "Hazard Layers",
-    metadata: {
-      query: {
-        template:
-          "{{t:map.popup.inlandWatersDepth}}: <b>{{InlandWaters_Depth}}</b><br>{{t:map.popup.rank}}: <b>{{InlandWaters_Depth_Rank}}</b>",
-      },
-      loadOnInit: false,
-      legendItems: [
-        {
-          label: "Inland Waters Depth Rank",
-          labelKey: "map.layers.items.11",
-          swatchType: "fill",
-          description: "Ranked inland waters depth zones.",
-          descriptionKey: "map.layers.descriptions.11",
-          swatchStyle: {
-            fillColor: "#2a79b9",
-          },
-          isActive: true,
-          isEnabled: true,
-        },
-      ],
-    },
-    layerType: "fill",
-    sourceType: "vector",
-    sourceData: {
-      layerId: "5m35xdxx",
-      layerName: "ihi_inlandwaters_depth-armcon",
-    },
-    style: {
-      paint: {
-        "fill-color": [
-          "interpolate",
-          ["linear"],
-          ["get", "InlandWaters_Depth_Rank"],
-          1,
-          "#B3DCFE",
-          2,
-          "#80BCEC",
-          3,
-          "#2E83C9",
-          4,
-          "#1A4A71",
-        ],
-        "fill-opacity": 0.6,
-      },
-      layout: {},
-    },
-  },
   // Bridges
   {
-    id: 12,
+    id: 11,
     label: "Bridges",
     group: "City Landmarks",
     metadata: {
@@ -670,12 +618,12 @@ export const kotoLayers: KotoLayer[] = [
       legendItems: [
         {
           label: "Bridges",
-          labelKey: "map.layers.items.12",
+          labelKey: "map.layers.items.11",
           isActive: true,
           isEnabled: true,
           swatchType: "line",
           description: "City bridge landmark.",
-          descriptionKey: "map.layers.descriptions.12",
+          descriptionKey: "map.layers.descriptions.11",
           swatchStyle: {
             strokeColor: "#377eb8",
             strokeWidth: 2,
@@ -724,7 +672,7 @@ export const kotoLayers: KotoLayer[] = [
   },
   // Shrines/Temples
   {
-    id: 13,
+    id: 12,
     label: "Shrines/Temples",
     group: "City Landmarks",
     metadata: {
@@ -736,12 +684,12 @@ export const kotoLayers: KotoLayer[] = [
       legendItems: [
         {
           label: "Shrines/Temples",
-          labelKey: "map.layers.items.13",
+          labelKey: "map.layers.items.12",
           isActive: true,
           isEnabled: true,
           swatchType: "line",
           description: "Religious or cultural landmark.",
-          descriptionKey: "map.layers.descriptions.13",
+          descriptionKey: "map.layers.descriptions.12",
           swatchStyle: {
             strokeColor: "#377eb8",
             strokeWidth: 2,
@@ -790,7 +738,7 @@ export const kotoLayers: KotoLayer[] = [
   },
   // Community Centers
   {
-    id: 14,
+    id: 13,
     label: "Community Centers",
     group: "Evacuation Support Facilities",
     metadata: {
@@ -802,12 +750,12 @@ export const kotoLayers: KotoLayer[] = [
       legendItems: [
         {
           label: "Community Centers",
-          labelKey: "map.layers.items.14",
+          labelKey: "map.layers.items.13",
           isActive: true,
           isEnabled: true,
           swatchType: "line",
           description: "Designated community center facility.",
-          descriptionKey: "map.layers.descriptions.14",
+          descriptionKey: "map.layers.descriptions.13",
           swatchStyle: {
             strokeColor: "#c1272d",
             strokeWidth: 2,
@@ -856,7 +804,7 @@ export const kotoLayers: KotoLayer[] = [
   },
   // Flood Gates
   {
-    id: 15,
+    id: 14,
     label: "Flood Gates",
     group: "City Landmarks",
     metadata: {
@@ -868,12 +816,12 @@ export const kotoLayers: KotoLayer[] = [
       legendItems: [
         {
           label: "Flood Gates",
-          labelKey: "map.layers.items.15",
+          labelKey: "map.layers.items.14",
           isActive: true,
           isEnabled: true,
           swatchType: "line",
           description: "City flood gate landmark.",
-          descriptionKey: "map.layers.descriptions.15",
+          descriptionKey: "map.layers.descriptions.14",
           swatchStyle: {
             strokeColor: "#377eb8",
             strokeWidth: 2,
@@ -922,7 +870,7 @@ export const kotoLayers: KotoLayer[] = [
   },
   // Train Stations
   {
-    id: 16,
+    id: 15,
     label: "Train Stations",
     group: "City Landmarks",
     metadata: {
@@ -934,12 +882,12 @@ export const kotoLayers: KotoLayer[] = [
       legendItems: [
         {
           label: "Train Stations",
-          labelKey: "map.layers.items.16",
+          labelKey: "map.layers.items.15",
           isActive: true,
           isEnabled: true,
           swatchType: "line",
           description: "City rail or metro station.",
-          descriptionKey: "map.layers.descriptions.16",
+          descriptionKey: "map.layers.descriptions.15",
           swatchStyle: {
             strokeColor: "#377eb8",
             strokeWidth: 2,
