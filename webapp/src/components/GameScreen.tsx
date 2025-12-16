@@ -186,12 +186,17 @@ export function GameScreen({
     }
   }, [playerLocation.lat, playerLocation.lng, visitedPOIs]);
 
-  const pollProximityAndAmenities = useCallback(() => {
+  const pollNearbyShelter = useCallback(() => {
     if (PROXIMITY_DISABLED_FOR_TESTING) return;
     requestLatestLocation();
-    setAmenityQueryTrigger((prev) => prev + 1);
     void checkNearbyPOI({ forceLog: true });
   }, [checkNearbyPOI, requestLatestLocation]);
+
+  const pollProximityAndAmenities = useCallback(() => {
+    pollNearbyShelter();
+    if (PROXIMITY_DISABLED_FOR_TESTING) return;
+    setAmenityQueryTrigger((prev) => prev + 1);
+  }, [pollNearbyShelter]);
 
   const activatePanel = useCallback(
     (panel: "layers" | "questions" | "gameplay" | null) => {
@@ -204,14 +209,14 @@ export function GameScreen({
       }
 
       if (panel === "gameplay") {
-        pollProximityAndAmenities();
+        pollNearbyShelter();
       }
 
       setDrawerOpen(panel === "questions");
       setCluesOpen(panel === "gameplay");
       setActivePanel(panel);
     },
-    [closeLayerPanel, pollProximityAndAmenities],
+    [closeLayerPanel, pollNearbyShelter, pollProximityAndAmenities],
   );
 
   useEffect(() => {
@@ -1038,7 +1043,7 @@ export function GameScreen({
         isGuessDisabled={isGuessDisabled}
         onStartMeasure={handleStartMeasure}
         isMeasureActive={isMeasureActive}
-        onPollProximity={pollProximityAndAmenities}
+        onPollProximity={pollNearbyShelter}
         onFilterByClue={(clue) => {
           console.log("[ClueFilter] show in map clicked", clue);
           const id = clue.questionId;
