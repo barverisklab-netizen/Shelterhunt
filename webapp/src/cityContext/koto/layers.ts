@@ -802,9 +802,207 @@ export const kotoLayers: KotoLayer[] = [
       },
     },
   },
-  // Flood Gates
+  // Water Stations
   {
     id: 14,
+    label: "Water Stations",
+    group: "Evacuation Support Facilities",
+    metadata: {
+      query: {
+        template:
+          "{{t:map.popup.name}}: <b>{{locale:Landmark Name (EN)|Landmark Name (JP)}}</b><br>{{t:map.popup.category}}: <b>{{locale:Category|Category (JP)}}</b><br>{{t:map.popup.address}}: <b>{{locale:Address (EN)|Address (JP)}}</b>",
+      },
+      loadOnInit: false,
+      legendItems: [
+        {
+          label: "Water Stations",
+          labelKey: "map.layers.items.14",
+          isActive: true,
+          isEnabled: true,
+          swatchType: "line",
+          description: "Water supply station landmark.",
+          descriptionKey: "map.layers.descriptions.14",
+          swatchStyle: {
+            strokeColor: "#377eb8",
+            strokeWidth: 2,
+          },
+        },
+      ],
+    },
+    layerType: "symbol",
+    sourceType: "geojson",
+    sourceData: {
+      layerId: "664hckgt",
+      layerName: "ihi_evacuation_support_facili-7iemgu",
+      geojsonUrl: KOTO_GEOJSON_SOURCES.support,
+    },
+    style: {
+      paint: {
+        "text-color": "#000000",
+        "text-halo-blur": 0.5,
+        "text-halo-color": "#ffffff",
+        "text-halo-width": 1.2,
+      },
+      filter: ["==", ["get", "Category"], "Water Station"],
+      layout: {
+        "icon-size": 0.6,
+        "text-font": ["Roboto Bold"],
+        "text-size": 10,
+        "icon-image": [
+          "match",
+          ["get", "Category"],
+          "Water Station",
+          "ihi_waterstation",
+          "",
+        ],
+        "text-field": [
+          "match",
+          ["get", "Category"],
+          "Water Station",
+          ["get", "Landmark Name (JP)"],
+          "",
+        ],
+        "text-anchor": "top",
+        "text-offset": [0, 1.5],
+        "icon-allow-overlap": true,
+      },
+    },
+  },
+  // Hospitals
+  {
+    id: 15,
+    label: "Hospitals",
+    group: "Evacuation Support Facilities",
+    metadata: {
+      query: {
+        template:
+          "{{t:map.popup.name}}: <b>{{locale:Landmark Name (EN)|Landmark Name (JP)}}</b><br>{{t:map.popup.category}}: <b>{{locale:Category|Category (JP)}}</b><br>{{t:map.popup.address}}: <b>{{locale:Address (EN)|Address (JP)}}</b>",
+      },
+      loadOnInit: false,
+      legendItems: [
+        {
+          label: "Hospitals",
+          labelKey: "map.layers.items.15",
+          isActive: true,
+          isEnabled: true,
+          swatchType: "line",
+          description: "Hospital or medical facility landmark.",
+          descriptionKey: "map.layers.descriptions.15",
+          swatchStyle: {
+            strokeColor: "#377eb8",
+            strokeWidth: 2,
+          },
+        },
+      ],
+    },
+    layerType: "symbol",
+    sourceType: "geojson",
+    sourceData: {
+      layerId: "664hckgt",
+      layerName: "ihi_evacuation_support_facili-7iemgu",
+      geojsonUrl: KOTO_GEOJSON_SOURCES.support,
+    },
+    style: {
+      paint: {
+        "text-color": "#000000",
+        "text-halo-blur": 0.5,
+        "text-halo-color": "#ffffff",
+        "text-halo-width": 1.2,
+      },
+      filter: ["==", ["get", "Category"], "Hospital"],
+      layout: {
+        "icon-size": 0.6,
+        "text-font": ["Roboto Bold"],
+        "text-size": 10,
+        "icon-image": [
+          "match",
+          ["get", "Category"],
+          "Hospital",
+          "ihi_hospital",
+          "",
+        ],
+        "text-field": [
+          "match",
+          ["get", "Category"],
+          "Hospital",
+          ["get", "Landmark Name (JP)"],
+          "",
+        ],
+        "text-anchor": "top",
+        "text-offset": [0, 1.5],
+        "icon-allow-overlap": true,
+      },
+    },
+  },
+  // Emergency Supply Storage
+  {
+    id: 16,
+    label: "Emergency Supply Storage",
+    group: "Evacuation Support Facilities",
+    metadata: {
+      query: {
+        template:
+          "{{t:map.popup.name}}: <b>{{locale:Landmark Name (EN)|Landmark Name (JP)}}</b><br>{{t:map.popup.category}}: <b>{{locale:Category|Category (JP)}}</b><br>{{t:map.popup.address}}: <b>{{locale:Address (EN)|Address (JP)}}</b>",
+      },
+      loadOnInit: false,
+      legendItems: [
+        {
+          label: "Emergency Supply Storage",
+          labelKey: "map.layers.items.16",
+          isActive: true,
+          isEnabled: true,
+          swatchType: "line",
+          description: "Emergency supply storage facility.",
+          descriptionKey: "map.layers.descriptions.16",
+          swatchStyle: {
+            strokeColor: "#377eb8",
+            strokeWidth: 2,
+          },
+        },
+      ],
+    },
+    layerType: "symbol",
+    sourceType: "geojson",
+    sourceData: {
+      layerId: "664hckgt",
+      layerName: "ihi_evacuation_support_facili-7iemgu",
+      geojsonUrl: KOTO_GEOJSON_SOURCES.support,
+    },
+    style: {
+      paint: {
+        "text-color": "#000000",
+        "text-halo-blur": 0.5,
+        "text-halo-color": "#ffffff",
+        "text-halo-width": 1.2,
+      },
+      filter: ["==", ["get", "Category"], "Emergency Supply Storage"],
+      layout: {
+        "icon-size": 0.6,
+        "text-font": ["Roboto Bold"],
+        "text-size": 10,
+        "icon-image": [
+          "match",
+          ["get", "Category"],
+          "Emergency Supply Storage",
+          "ihi_bosaistorage",
+          "",
+        ],
+        "text-field": [
+          "match",
+          ["get", "Category"],
+          "Emergency Supply Storage",
+          ["get", "Landmark Name (JP)"],
+          "",
+        ],
+        "text-anchor": "top",
+        "text-offset": [0, 1.5],
+        "icon-allow-overlap": true,
+      },
+    },
+  },
+  // Flood Gates
+  {
+    id: 17,
     label: "Flood Gates",
     group: "City Landmarks",
     metadata: {
@@ -816,12 +1014,12 @@ export const kotoLayers: KotoLayer[] = [
       legendItems: [
         {
           label: "Flood Gates",
-          labelKey: "map.layers.items.14",
+          labelKey: "map.layers.items.17",
           isActive: true,
           isEnabled: true,
           swatchType: "line",
           description: "City flood gate landmark.",
-          descriptionKey: "map.layers.descriptions.14",
+          descriptionKey: "map.layers.descriptions.17",
           swatchStyle: {
             strokeColor: "#377eb8",
             strokeWidth: 2,
@@ -870,7 +1068,7 @@ export const kotoLayers: KotoLayer[] = [
   },
   // Train Stations
   {
-    id: 15,
+    id: 18,
     label: "Train Stations",
     group: "City Landmarks",
     metadata: {
@@ -882,12 +1080,12 @@ export const kotoLayers: KotoLayer[] = [
       legendItems: [
         {
           label: "Train Stations",
-          labelKey: "map.layers.items.15",
+          labelKey: "map.layers.items.18",
           isActive: true,
           isEnabled: true,
           swatchType: "line",
           description: "City rail or metro station.",
-          descriptionKey: "map.layers.descriptions.15",
+          descriptionKey: "map.layers.descriptions.18",
           swatchStyle: {
             strokeColor: "#377eb8",
             strokeWidth: 2,

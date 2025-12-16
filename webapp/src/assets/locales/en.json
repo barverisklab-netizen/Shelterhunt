@@ -376,8 +376,11 @@
     "11": "Bridges",
     "12": "Shrines/Temples",
     "13": "Community Centers",
-    "14": "Flood Gates",
-    "15": "Train Stations"
+    "14": "Water Stations",
+    "15": "Hospitals",
+    "16": "Emergency Supply Storage",
+    "17": "Flood Gates",
+    "18": "Train Stations"
   },
   "descriptions": {
     "1": "Government-designated evacuation center.",
@@ -393,8 +396,11 @@
     "11": "City bridge landmark.",
     "12": "Religious or cultural landmark.",
     "13": "Designated community center facility.",
-    "14": "City flood gate landmark.",
-    "15": "City rail or metro station."
+    "14": "Water supply station landmark.",
+    "15": "Hospital or medical facility landmark.",
+    "16": "Emergency supply storage facility.",
+    "17": "City flood gate landmark.",
+    "18": "City rail or metro station."
   }
 },
     "measure": {

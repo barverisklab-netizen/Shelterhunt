@@ -13,6 +13,8 @@ import {
   Building2,
   Cable,
   Train,
+  Droplet,
+  Archive,
 } from "lucide-react";
 import { POI } from "@/types/game";
 import { kotoLayers } from "@/cityContext/koto/layers";
@@ -80,6 +82,9 @@ const LAYER_ICON_BY_LABEL: Record<string, React.ReactNode> = {
   "Community Centers": <Building2 className="w-4 h-4" />,
   "Flood Gates": <Cable className="w-4 h-4" />,
   "Train Stations": <Train className="w-4 h-4" />,
+  "Water Stations": <Droplet className="w-4 h-4" />,
+  "Hospitals": <Hospital className="w-4 h-4" />,
+  "Emergency Supply Storage": <Archive className="w-4 h-4" />,
 };
 
 // Helper function to get icons for Koto layers based on label

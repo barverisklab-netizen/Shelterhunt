@@ -28,6 +28,7 @@ interface QuestionDrawerProps {
   proximityEnabled?: boolean;
   nearbyAmenityCategories?: string[];
   solvedNearbyAmenityKeys?: string[];
+  nearbyShelterName?: string | null;
 }
 
 const CATEGORY_ICONS = {
@@ -50,6 +51,7 @@ export function QuestionDrawer({
   proximityEnabled = true,
   nearbyAmenityCategories = [],
   solvedNearbyAmenityKeys = [],
+  nearbyShelterName = null,
 }: QuestionDrawerProps) {
   const { t } = useI18n();
   const [selectedParams, setSelectedParams] = useState<
@@ -105,6 +107,7 @@ export function QuestionDrawer({
 
   const inRange =
     !!nearbyPOI ||
+    !!nearbyShelterName ||
     !proximityEnabled ||
     Object.values(nearbyAmenityCounts).some((c) => (c ?? 0) > 0) ||
     nearbyAmenityCategories.length > 0;
@@ -166,12 +169,17 @@ export function QuestionDrawer({
                           {t("questions.inRange")}
                         </div>
                         <div className="text-sm text-black/70">
-                          {nearbyAmenityCategories.length > 0
+                          {nearbyShelterName
                             ? t("questions.nearbyAmenity.availableCategories", {
-                                replacements: { categories: nearbyAmenityCategories.join(", ") },
-                                fallback: `Available nearby: ${nearbyAmenityCategories.join(", ")}`,
+                                replacements: { categories: `Shelter${nearbyAmenityCategories.length ? ", " + nearbyAmenityCategories.join(", ") : ""}` },
+                                fallback: `Available nearby: Shelter${nearbyAmenityCategories.length ? `, ${nearbyAmenityCategories.join(", ")}` : ""}`,
                               })
-                            : t("questions.inRangeCopy")}
+                            : nearbyAmenityCategories.length > 0
+                              ? t("questions.nearbyAmenity.availableCategories", {
+                                  replacements: { categories: nearbyAmenityCategories.join(", ") },
+                                  fallback: `Available nearby: ${nearbyAmenityCategories.join(", ")}`,
+                                })
+                              : t("questions.inRangeCopy")}
                         </div>
                       </div>
                     </>
@@ -434,25 +442,37 @@ export function QuestionDrawer({
                           </div>
                         ) : question.paramType === "number" && (!question.options || !question.options.length) ? (
                           <div className="flex flex-col gap-2">
+                            {question.id === "shelterCapacity" && (
+                              <span className="text-xs font-semibold uppercase text-black/70">
+                                {t("questions.enterNumber", { fallback: "Enter a number" })} (must be greater than 0)
+                              </span>
+                            )}
                             <input
                               type="number"
                               inputMode="numeric"
-                              min={0}
-                              step={question.id === "shelterCapacity" ? 100 : 1}
+                              min={question.id === "shelterCapacity" ? 1 : 0}
+                              step={question.id === "shelterCapacity" ? 1 : 1}
                               className="w-full rounded border-2 border-black px-3 py-2"
                               placeholder={t("questions.enterNumber", { fallback: "Enter a number" })}
                               value={selectedParam ?? ""}
-                              onChange={(event) =>
+                              onChange={(event) => {
+                                const rawValue = event.target.value;
+                                if (rawValue === "") {
+                                  setSelectedParams({ ...selectedParams, [question.id]: "" });
+                                  return;
+                                }
+
+                                const numericValue = Number(rawValue);
+                                const isCapacityQuestion = question.id === "shelterCapacity";
+                                const isValidNumber =
+                                  Number.isFinite(numericValue) &&
+                                  (isCapacityQuestion ? numericValue > 0 : numericValue >= 0);
+
                                 setSelectedParams({
                                   ...selectedParams,
-                                  [question.id]:
-                                    event.target.value && Number(event.target.value) >= 0
-                                      ? question.id === "shelterCapacity"
-                                        ? Math.floor(Number(event.target.value) / 100) * 100
-                                        : Number(event.target.value)
-                                      : "",
-                                })
-                              }
+                                  [question.id]: isValidNumber ? numericValue : "",
+                                });
+                              }}
                               disabled={!isEligible || isLocked}
                             />
                           </div>

@@ -101,6 +101,7 @@ export function GameScreen({
   const [nearbyAmenityCounts, setNearbyAmenityCounts] = useState<Record<string, number>>({});
   const [nearbyAmenityCategories, setNearbyAmenityCategories] = useState<string[]>([]);
   const [solvedNearbyAmenityKeys, setSolvedNearbyAmenityKeys] = useState<string[]>([]);
+  const [nearbyShelterName, setNearbyShelterName] = useState<string | null>(null);
   const staleLocationTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastGeoStatusRef = useRef<string>("unknown");
   const hasLoggedProximityRef = useRef(false);
@@ -178,6 +179,7 @@ export function GameScreen({
       }
 
       setNearbyPOI(closest);
+      setNearbyShelterName(closest?.name ?? null);
       if (closest && !visitedPOIs.includes(closest.id)) {
         setVisitedPOIs((prev) => [...prev, closest!.id]);
       }
@@ -1022,6 +1024,7 @@ export function GameScreen({
           }}
         onAskQuestion={handleAskQuestion}
         nearbyPOI={PROXIMITY_DISABLED_FOR_TESTING ? "testing-override" : nearbyPOI?.id || null}
+        nearbyShelterName={nearbyShelterName}
         lockedQuestions={[]}
         onAskNearbyAmenity={handleAskNearbyAmenity}
         nearbyAmenityCounts={nearbyAmenityCounts}
