@@ -18,7 +18,7 @@ import { POI } from "@/types/game";
 import { kotoLayers } from "@/cityContext/koto/layers";
 import { KotoLayerGroup } from "@/types/kotoLayers";
 import { MAPBOX_CONFIG, getTilesetUrl } from "../config/mapbox";
-import { MAPBOX_STYLE_URL } from "@/config/runtime";
+import { MAPBOX_STYLE_URL, PROXIMITY_RADIUS_KM } from "@/config/runtime";
 import { defaultCityContext } from "../data/cityContext";
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
@@ -139,6 +139,7 @@ const DEFAULT_START_LOCATION = defaultCityContext.mapConfig.startLocation;
 
 type MeasureStatus = "idle" | "placing" | "active";
 const FIXED_MEASURE_RADIUS_METERS = 250;
+const PLAYER_RADIUS_METERS = Math.max(1, PROXIMITY_RADIUS_KM * 1000);
 
 interface MapViewProps {
   pois: POI[];
@@ -533,7 +534,7 @@ const measureMarkerRef = useRef<mapboxgl.Marker | null>(null);
     amenitiesCallbackRef.current?.({ counts: {}, matchedCategories: [] });
     try {
       console.info("Amenity query center", latestLocationRef.current);
-      const radiusKm = 0.25;
+      const radiusKm = PROXIMITY_RADIUS_KM;
       const { counts, matchedCategories, unmatched } = await countAmenitiesWithinRadius(
         { lat: latestLocationRef.current.lat, lng: latestLocationRef.current.lng },
         radiusKm,
@@ -541,15 +542,16 @@ const measureMarkerRef = useRef<mapboxgl.Marker | null>(null);
       );
 
       amenityCountsRef.current = counts;
-      console.info("[Amenities] Counts within 250m", {
+      console.info("[Amenities] Counts within radius", {
         center: latestLocationRef.current,
+        radiusKm,
         counts,
         matchedKeys: Object.keys(counts),
         matchedCategories: Array.from(matchedCategories),
         unmatched,
       });
       if (matchedCategories.size > 0) {
-        console.info("[Amenities] Categories within 250m", Array.from(matchedCategories));
+        console.info("[Amenities] Categories within radius", Array.from(matchedCategories));
       }
       amenitiesCallbackRef.current?.({
         counts,
@@ -1161,7 +1163,7 @@ const measureMarkerRef = useRef<mapboxgl.Marker | null>(null);
       // Style can briefly be undefined during reloads; skip until ready
       // @ts-expect-error: mapbox private style access
       if (!(m as any)?.style) return;
-      const feature = createCircleFeature(userCircleCenter, 250, 96);
+      const feature = createCircleFeature(userCircleCenter, PLAYER_RADIUS_METERS, 96);
 
       const existingSource = (() => {
         try {

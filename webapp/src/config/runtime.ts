@@ -32,6 +32,11 @@ export const MULTIPLAYER_RADIUS_KM = toNumber(
   2,
 );
 
+export const PROXIMITY_RADIUS_KM = toNumber(
+  env.VITE_PROXIMITY_RADIUS_KM as string | undefined,
+  0.25,
+);
+
 export const MAPBOX_STYLE_URL = toString(
   import.meta.env.VITE_MAPBOX_STYLE_URL,
   "",

@@ -13,15 +13,14 @@ import { toast } from "sonner@2.0.3";
 import { BlurReveal } from './ui/blur-reveal';
 import { useI18n } from "@/i18n";
 import type { Shelter } from "@/services/shelterDataService";
-import { ENABLE_WRONG_GUESS_PENALTY, LIGHTNING_RADIUS_KM } from "@/config/runtime";
+import { ENABLE_WRONG_GUESS_PENALTY, LIGHTNING_RADIUS_KM, PROXIMITY_RADIUS_KM } from "@/config/runtime";
 import { haversineDistanceKm } from "@/utils/lightningSelection";
-import { hasShelterWithinRadius } from "@/services/proximityIndex";
+import { hasShelterWithinRadius, matchShelterWithinRadius } from "@/services/proximityIndex";
 
 
 const ENABLE_SECRET_SHELTER_BLUR = true;
 const PROXIMITY_DISABLED_FOR_TESTING =
   import.meta.env?.VITE_ENABLE_PROXIMITY === "false";
-const PROXIMITY_RADIUS_KM = 0.25;
 const PROXIMITY_ENABLED = !PROXIMITY_DISABLED_FOR_TESTING;
 
 export type WrongGuessStage = 'first' | 'second' | 'third';
@@ -139,7 +138,7 @@ export function GameScreen({
   }, []);
 
   // Check if player is near a shelter (using geojson index, within proximity radius)
-  const checkNearbyPOI = useCallback(async () => {
+  const checkNearbyPOI = useCallback(async ({ forceLog = false }: { forceLog?: boolean } = {}) => {
     try {
       const result = await hasShelterWithinRadius(playerLocation, PROXIMITY_RADIUS_KM);
       let closest: POI | null = null;
@@ -161,15 +160,18 @@ export function GameScreen({
 
       const previous = previousNearbyPOIRef.current;
       const changed = (previous?.id || null) !== (closest?.id || null);
-      if (changed || !hasLoggedProximityRef.current) {
+      if (changed || forceLog || !hasLoggedProximityRef.current) {
         if (closest) {
           console.info("[Proximity] Nearby shelter detected", {
             id: closest.id,
             name: closest.name,
             distanceMeters: Math.round(closestDistanceKm * 1000),
+            radiusKm: PROXIMITY_RADIUS_KM,
           });
         } else {
-          console.info("[Proximity] No shelter within 250m");
+          console.info("[Proximity] No shelter within radius", {
+            radiusKm: PROXIMITY_RADIUS_KM,
+          });
         }
         previousNearbyPOIRef.current = closest;
         hasLoggedProximityRef.current = true;
@@ -215,7 +217,7 @@ export function GameScreen({
   // Align proximity gating with amenities: refresh proximity when opening questions or moving
   useEffect(() => {
     if (drawerOpen) {
-      void checkNearbyPOI();
+      void checkNearbyPOI({ forceLog: true });
     }
   }, [drawerOpen, playerLocation.lat, playerLocation.lng, checkNearbyPOI]);
 
@@ -463,11 +465,15 @@ export function GameScreen({
     : [...baseQuestions];
 
   // Simulate player movement (for demo)
-  const simulateMove = (poi: POI) => {
-    playerLocation.lat = poi.lat;
-    playerLocation.lng = poi.lng;
-    void checkNearbyPOI();
-  };
+  const simulateMove = useCallback(
+    (poi: POI) => {
+      const next = { lat: poi.lat, lng: poi.lng };
+      onLocationChange?.(next);
+      // checkNearbyPOI will run via the location change effect; this is just extra insurance.
+      void checkNearbyPOI();
+    },
+    [checkNearbyPOI, onLocationChange],
+  );
 
   const handleAskQuestion = (questionId: string, param: string | number) => {
     const question = questions.find((q) => q.id === questionId);
@@ -556,11 +562,20 @@ export function GameScreen({
     ? shelterOptions.find((option) => option.id === selectedShelterId) ?? null
     : null;
 
-  const resolveShelterCoords = useCallback(
+  const buildShelterMatchContext = useCallback(
     (option: { id: string; name: string; lat?: number; lng?: number } | null | undefined) => {
-      if (!option) return null;
+      const altIds = new Set<string>();
+      const altNames = new Set<string>();
+      let coords: { lat: number; lng: number } | null = null;
+
+      if (!option) {
+        return { coords, altIds: [] as string[], altNames: [] as string[] };
+      }
+
+      if (option.id) altIds.add(option.id);
+      if (option.name) altNames.add(option.name);
       if (Number.isFinite(option.lat) && Number.isFinite(option.lng)) {
-        return { lat: option.lat as number, lng: option.lng as number };
+        coords = { lat: option.lat as number, lng: option.lng as number };
       }
 
       const matchFromShelters = shelters.find(
@@ -571,15 +586,19 @@ export function GameScreen({
           normalizeName(shelter.nameEn ?? shelter.nameJp ?? shelter.externalId ?? shelter.id) ===
             normalizeName(option.name),
       );
-      if (
-        matchFromShelters &&
-        Number.isFinite(matchFromShelters.latitude) &&
-        Number.isFinite(matchFromShelters.longitude)
-      ) {
-        return {
-          lat: Number(matchFromShelters.latitude),
-          lng: Number(matchFromShelters.longitude),
-        };
+      if (matchFromShelters) {
+        if (Number.isFinite(matchFromShelters.latitude) && Number.isFinite(matchFromShelters.longitude)) {
+          coords = coords ?? {
+            lat: Number(matchFromShelters.latitude),
+            lng: Number(matchFromShelters.longitude),
+          };
+        }
+        [matchFromShelters.shareCode, matchFromShelters.code, matchFromShelters.id, matchFromShelters.externalId]
+          .filter(Boolean)
+          .forEach((id) => altIds.add(id as string));
+        [matchFromShelters.nameEn, matchFromShelters.nameJp]
+          .filter(Boolean)
+          .forEach((name) => altNames.add(name as string));
       }
 
       const matchFromPois = pois.find(
@@ -587,15 +606,20 @@ export function GameScreen({
           poi.id === option.id ||
           normalizeName(poi.name) === normalizeName(option.name),
       );
-      if (
-        matchFromPois &&
-        Number.isFinite(matchFromPois.lat) &&
-        Number.isFinite(matchFromPois.lng)
-      ) {
-        return { lat: matchFromPois.lat, lng: matchFromPois.lng };
+      if (matchFromPois) {
+        if (Number.isFinite(matchFromPois.lat) && Number.isFinite(matchFromPois.lng)) {
+          coords = coords ?? { lat: matchFromPois.lat, lng: matchFromPois.lng };
+        }
+        if (matchFromPois.name) {
+          altNames.add(matchFromPois.name);
+        }
       }
 
-      return null;
+      return {
+        coords,
+        altIds: Array.from(altIds).filter(Boolean),
+        altNames: Array.from(altNames).filter(Boolean),
+      };
     },
     [normalizeName, pois, shelters],
   );
@@ -633,7 +657,7 @@ export function GameScreen({
     .padStart(2, "0")}`;
   const isGuessDisabled = !secretShelter || shelterOptions.length === 0;
 
-  const handleGuessRequest = () => {
+  const handleGuessRequest = async () => {
     if (isGuessDisabled) {
       return;
     }
@@ -657,8 +681,8 @@ export function GameScreen({
     }
 
     if (!PROXIMITY_DISABLED_FOR_TESTING) {
-      const coords = resolveShelterCoords(selectedShelterOption);
-      if (!coords) {
+      const { altIds, altNames } = buildShelterMatchContext(selectedShelterOption);
+      if (!altIds.length && !altNames.length) {
         toast.error(
           t("game.toasts.shelterCoordsMissing", {
             fallback: "Unable to locate that shelter. Try another option.",
@@ -667,8 +691,28 @@ export function GameScreen({
         return;
       }
 
-      const distanceKm = haversineDistanceKm(playerLocation, coords);
-      if (distanceKm > PROXIMITY_RADIUS_KM) {
+      try {
+        const proximity = await matchShelterWithinRadius(
+          playerLocation,
+          PROXIMITY_RADIUS_KM,
+          {
+            id: selectedShelterOption.id,
+            name: selectedShelterOption.name,
+            altIds,
+            altNames,
+          },
+        );
+
+        if (!proximity.match) {
+          toast.error(
+            t("game.toasts.tooFarForGuess", {
+              fallback: "Move within 250m of the shelter to submit a guess.",
+            }),
+          );
+          return;
+        }
+      } catch (error) {
+        console.warn("[Guess] Proximity validation failed", error);
         toast.error(
           t("game.toasts.tooFarForGuess", {
             fallback: "Move within 250m of the shelter to submit a guess.",

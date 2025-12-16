@@ -11,10 +11,21 @@ type AmenityFeature = {
   lat: number;
   lng: number;
   category: string;
+  id?: string;
+  name?: string;
+  nameEn?: string;
+  nameJp?: string;
 };
+
+type NearbyShelterFeature = AmenityFeature & { distanceKm: number };
 
 const isFiniteNumber = (value: unknown): value is number =>
   typeof value === "number" && Number.isFinite(value);
+
+const normalizeText = (value: string | number | null | undefined) =>
+  typeof value === "string" || typeof value === "number"
+    ? String(value).trim().toLowerCase()
+    : "";
 
 const parseGeoJson = (raw: string): FeatureCollection<TurfPoint> | null => {
   try {
@@ -58,17 +69,41 @@ class ProximityIndex {
     if (!collection) return;
     featureEach(collection, (feat) => {
       if (!feat || feat.geometry?.type !== "Point") return;
+      const props = feat.properties ?? {};
       const coords = feat.geometry.coordinates;
       const lng = coords[0];
       const lat = coords[1];
       const category =
-        (feat.properties?.Category as string | undefined) ||
-        (feat.properties?.["Category "] as string | undefined) ||
+        (props?.Category as string | undefined) ||
+        (props?.["Category "] as string | undefined) ||
         "";
+      const featureId =
+        feat.id != null ? String(feat.id) : props?.NO != null ? String(props.NO) : undefined;
+      const nameEn =
+        typeof props?.["Landmark Name (EN)"] === "string"
+          ? props["Landmark Name (EN)"].trim()
+          : typeof props?.["Landmark name (EN)"] === "string"
+            ? props["Landmark name (EN)"].trim()
+            : undefined;
+      const nameJp =
+        typeof props?.["Landmark Name (JP)"] === "string"
+          ? props["Landmark Name (JP)"].trim()
+          : typeof props?.["Landmark name (JP)"] === "string"
+            ? props["Landmark name (JP)"].trim()
+            : undefined;
+      const name = nameEn || nameJp || category;
 
       if (!isFiniteNumber(lat) || !isFiniteNumber(lng) || !category) return;
 
-      this.addFeature({ lat, lng, category });
+      this.addFeature({
+        lat,
+        lng,
+        category,
+        id: featureId,
+        name,
+        nameEn,
+        nameJp,
+      });
     });
   }
 
@@ -175,20 +210,79 @@ export async function countAmenitiesWithinRadius(
 export async function hasShelterWithinRadius(
   center: { lat: number; lng: number },
   radiusKm: number,
-): Promise<{ found: boolean; nearest?: AmenityFeature }> {
+): Promise<{ found: boolean; nearest?: NearbyShelterFeature }> {
   const { features } = await proximityIndex.queryWithin(center, radiusKm);
 
-  let nearest: AmenityFeature | undefined;
+  let nearest: NearbyShelterFeature | undefined;
   let nearestDistance = Number.POSITIVE_INFINITY;
 
   features.forEach((feature) => {
     if (!isShelterCategory(feature.category)) return;
-    const d = distance(point([center.lng, center.lat]), point([feature.lng, feature.lat]));
+    const d = distance(point([center.lng, center.lat]), point([feature.lng, feature.lat]), {
+      units: "kilometers",
+    });
     if (d < nearestDistance) {
       nearestDistance = d;
-      nearest = feature;
+      nearest = { ...feature, distanceKm: d };
     }
   });
 
   return { found: Boolean(nearest), nearest };
+}
+
+export type ShelterMatchTarget = {
+  id?: string;
+  name?: string;
+  altIds?: string[];
+  altNames?: string[];
+};
+
+export async function matchShelterWithinRadius(
+  center: { lat: number; lng: number },
+  radiusKm: number,
+  target: ShelterMatchTarget,
+): Promise<{ match: NearbyShelterFeature | null; nearest?: NearbyShelterFeature }> {
+  const { features } = await proximityIndex.queryWithin(center, radiusKm);
+
+  const centerPoint = point([center.lng, center.lat]);
+  const targetIds = [target.id, ...(target.altIds ?? [])]
+    .map(normalizeText)
+    .filter(Boolean);
+  const targetNames = [target.name, ...(target.altNames ?? [])]
+    .map(normalizeText)
+    .filter(Boolean);
+
+  let nearest: NearbyShelterFeature | undefined;
+
+  for (const feature of features) {
+    if (!isShelterCategory(feature.category)) continue;
+
+    const distanceKm = distance(centerPoint, point([feature.lng, feature.lat]), {
+      units: "kilometers",
+    });
+    const withDistance: NearbyShelterFeature = { ...feature, distanceKm };
+
+    if (!nearest || distanceKm < nearest.distanceKm) {
+      nearest = withDistance;
+    }
+
+    const candidateTokens = [
+      feature.id,
+      feature.name,
+      feature.nameEn,
+      feature.nameJp,
+      feature.category,
+    ]
+      .map(normalizeText)
+      .filter(Boolean);
+
+    const matchesId = targetIds.some((id) => candidateTokens.includes(id));
+    const matchesName = targetNames.some((name) => candidateTokens.includes(name));
+
+    if (matchesId || matchesName) {
+      return { match: withDistance, nearest };
+    }
+  }
+
+  return { match: null, nearest };
 }
