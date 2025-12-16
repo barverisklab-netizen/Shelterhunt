@@ -186,6 +186,13 @@ export function GameScreen({
     }
   }, [playerLocation.lat, playerLocation.lng, visitedPOIs]);
 
+  const pollProximityAndAmenities = useCallback(() => {
+    if (PROXIMITY_DISABLED_FOR_TESTING) return;
+    requestLatestLocation();
+    setAmenityQueryTrigger((prev) => prev + 1);
+    void checkNearbyPOI({ forceLog: true });
+  }, [checkNearbyPOI, requestLatestLocation]);
+
   const activatePanel = useCallback(
     (panel: "layers" | "questions" | "gameplay" | null) => {
       if (panel !== "layers") {
@@ -193,15 +200,18 @@ export function GameScreen({
       }
 
       if (panel === "questions") {
-        requestLatestLocation();
-        setAmenityQueryTrigger((prev) => prev + 1);
+        pollProximityAndAmenities();
+      }
+
+      if (panel === "gameplay") {
+        pollProximityAndAmenities();
       }
 
       setDrawerOpen(panel === "questions");
       setCluesOpen(panel === "gameplay");
       setActivePanel(panel);
     },
-    [closeLayerPanel, requestLatestLocation],
+    [closeLayerPanel, pollProximityAndAmenities],
   );
 
   useEffect(() => {
@@ -1028,6 +1038,7 @@ export function GameScreen({
         isGuessDisabled={isGuessDisabled}
         onStartMeasure={handleStartMeasure}
         isMeasureActive={isMeasureActive}
+        onPollProximity={pollProximityAndAmenities}
         onFilterByClue={(clue) => {
           console.log("[ClueFilter] show in map clicked", clue);
           const id = clue.questionId;

@@ -10,6 +10,7 @@ import {
 } from "./ui/accordion";
 import { Clue } from "@/types/game";
 import { useI18n } from "@/i18n";
+import { useState } from "react";
 
 interface GameplayPanelProps {
   isOpen: boolean;
@@ -27,6 +28,7 @@ interface GameplayPanelProps {
   isMapFilterActive?: boolean;
   onApplyWrongClueFilter?: () => void;
   canApplyWrongClueFilter?: boolean;
+  onPollProximity?: () => void;
 }
 
 export function GameplayPanel({
@@ -45,11 +47,13 @@ export function GameplayPanel({
   isMapFilterActive = false,
   onApplyWrongClueFilter,
   canApplyWrongClueFilter = false,
+  onPollProximity,
 }: GameplayPanelProps) {
   const { t } = useI18n();
   const sortedClues = [...clues].sort((a, b) => (b.timestamp ?? 0) - (a.timestamp ?? 0));
   const correctClues = sortedClues.filter((clue) => clue.answer);
   const incorrectClues = sortedClues.filter((clue) => !clue.answer);
+  const [accordionValue, setAccordionValue] = useState<string | undefined>("clues");
   return (
     <AnimatePresence>
       {isOpen && (
@@ -121,7 +125,17 @@ export function GameplayPanel({
                 </div>
               </motion.div>
 
-              <Accordion type="single" defaultValue="clues" className="space-y-4">
+              <Accordion
+                type="single"
+                value={accordionValue}
+                onValueChange={(value) => {
+                  setAccordionValue(value);
+                  if (value === "guess") {
+                    onPollProximity?.();
+                  }
+                }}
+                className="space-y-4"
+              >
                 <AccordionItem
                   value="clues"
                   className="rounded border border-neutral-900 bg-neutral-100"
