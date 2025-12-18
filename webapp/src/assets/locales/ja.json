@@ -230,7 +230,7 @@
     "askNow": "今すぐ質問",
     "selectParam": "パラメーターを選択",
     "selectParamLocation": "パラメーターを選択",
-    "cooldown": "間違えた場合は2分後に再挑戦できます",
+    "cooldown": "{seconds}秒後に再び質問できます",
     "disabledProximityHint": "街を移動して、対象の資産タイプが250m以内に入ると質問が解放されます。",
     "nearbyAmenity": {
       "selectAmenity": "設備の種類",

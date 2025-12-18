@@ -230,7 +230,7 @@
     "askNow": "Ask Now",
     "selectParam": "Select parameter",
     "selectParamLocation": "Select a parameter",
-    "cooldown": "Try again in 2 minutes after a wrong answer",
+    "cooldown": "Question available again in {seconds}s",
     "disabledProximityHint": "Move around the city and questions will unlock when this asset type is within 250m of your location.",
     "nearbyAmenity": {
       "selectAmenity": "Amenity type",

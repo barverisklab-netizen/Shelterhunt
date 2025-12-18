@@ -22,6 +22,7 @@ const ENABLE_SECRET_SHELTER_BLUR = true;
 const PROXIMITY_DISABLED_FOR_TESTING =
   import.meta.env?.VITE_ENABLE_PROXIMITY === "false";
 const PROXIMITY_ENABLED = !PROXIMITY_DISABLED_FOR_TESTING;
+const QUESTION_COOLDOWN_MS = 120_000;
 
 export type WrongGuessStage = 'first' | 'second' | 'third';
 
@@ -102,6 +103,8 @@ export function GameScreen({
   const [nearbyAmenityCategories, setNearbyAmenityCategories] = useState<string[]>([]);
   const [solvedNearbyAmenityKeys, setSolvedNearbyAmenityKeys] = useState<string[]>([]);
   const [nearbyShelterName, setNearbyShelterName] = useState<string | null>(null);
+  const [, setCooldownTick] = useState(0);
+  const [questionCooldowns, setQuestionCooldowns] = useState<Record<string, number>>({});
   const staleLocationTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastGeoStatusRef = useRef<string>("unknown");
   const hasLoggedProximityRef = useRef(false);
@@ -270,6 +273,39 @@ export function GameScreen({
   useEffect(() => {
     // logging trimmed per request
   }, [playerLocation.lat, playerLocation.lng, nearbyAmenityCounts]);
+
+  useEffect(() => {
+    if (PROXIMITY_DISABLED_FOR_TESTING) return;
+    const intervalId = window.setInterval(() => {
+      setQuestionCooldowns((prev) => {
+        const now = Date.now();
+        let changed = false;
+        const next: Record<string, number> = {};
+        Object.entries(prev).forEach(([id, expiresAt]) => {
+          if (expiresAt > now) {
+            next[id] = expiresAt;
+          } else {
+            changed = true;
+          }
+        });
+        return changed ? next : prev;
+      });
+      setCooldownTick((tick) => (tick + 1) % Number.MAX_SAFE_INTEGER);
+    }, 1000);
+    return () => {
+      window.clearInterval(intervalId);
+    };
+  }, []);
+
+  const startQuestionCooldown = useCallback((questionId: string) => {
+    if (PROXIMITY_DISABLED_FOR_TESTING) return;
+    setQuestionCooldowns((prev) => ({
+      ...prev,
+      [questionId]: Date.now() + QUESTION_COOLDOWN_MS,
+    }));
+  }, []);
+
+  const lockedQuestionIds = Object.keys(questionCooldowns);
 
   const attributeCategoryMap: Record<string, Question["category"]> = {
     floodDepth: "location",
@@ -566,6 +602,7 @@ export function GameScreen({
         }),
       );
     }
+    startQuestionCooldown(questionId);
   };
   const selectedShelterOption = selectedShelterId
     ? shelterOptions.find((option) => option.id === selectedShelterId) ?? null
@@ -809,6 +846,7 @@ export function GameScreen({
         t("questions.incorrect", { fallback: "That clue was incorrect. Try another guess." }),
       );
     }
+    startQuestionCooldown("nearbyAmenity");
   };
 
   const resolveGuess = () => {
@@ -1017,12 +1055,13 @@ export function GameScreen({
         onAskQuestion={handleAskQuestion}
         nearbyPOI={PROXIMITY_DISABLED_FOR_TESTING ? "testing-override" : nearbyPOI?.id || null}
         nearbyShelterName={nearbyShelterName}
-        lockedQuestions={[]}
+        lockedQuestions={lockedQuestionIds}
         onAskNearbyAmenity={handleAskNearbyAmenity}
         nearbyAmenityCounts={nearbyAmenityCounts}
         nearbyAmenityCategories={nearbyAmenityCategories}
         solvedNearbyAmenityKeys={solvedNearbyAmenityKeys}
         proximityEnabled={proximityEnabled}
+        questionCooldowns={questionCooldowns}
       />
     )}
 

@@ -31,11 +31,14 @@ Create `webapp/.env.local` with at least `VITE_MAPBOX_TOKEN` and point `VITE_API
 
 Optional webapp env toggles:
 
+- `VITE_LIGHTNING_MINUTES` (default `60`) — duration of the lightning round
 - `VITE_LIGHTNING_RADIUS_KM` (default `2`)
 - `VITE_MULTIPLAYER_RADIUS_KM` (default `2`) — max km radius used when selecting or auto-falling back to a nearby shelter in multiplayer
-- `VITE_ENABLE_PROXIMITY` (default `true`) — set to `false` to bypass proximity gating for local testing
+- `VITE_ENABLE_PROXIMITY` (default `true`) — set to `false` to bypass proximity gating (and question cooldowns) for local testing
 - `VITE_PROXIMITY_RADIUS_KM` (default `0.25`) — radius (in km) for proximity checks and nearby amenity counts
 - `VITE_ENABLE_WRONG_GUESS_PENALTY` (default `false`) — when `true`, wrong guesses apply timer penalties (legacy mode); when `false`, you still have 3 attempts but the timer is unchanged
+- `VITE_MAPBOX_STYLE_URL` (optional) — override the default Mapbox style
+- `VITE_WS_BASE_URL` (defaults to `VITE_API_BASE_URL` with `ws` scheme) — explicit WebSocket host if it differs from the REST API
 
 If you want the production build:
 
@@ -55,12 +58,13 @@ npm run preview      # serves dist/ locally
 
 - **MapView** (`src/components/MapView.tsx`): Wraps Mapbox GL, handles POI markers, draws a 250m user range ring (GeolocateControl-driven), exposes a location picker mode, and wires in Koto-specific layers (`src/cityContext/koto/layers.ts`). Measurement toasts are localized.
 - **Map layer localization**: Layer popups are locale-aware. Templates in `src/cityContext/koto/layers.ts` use `{{t:key}}` for labels and `{{locale:enKey|jaKey}}` to choose the right property name per locale. Legend titles/descriptions resolve from `map.layers.items.*` and `map.layers.descriptions.*` in `src/assets/locales/*.json`, so keep those ids in sync with layer `id`s when adding/editing layers.
-- **Question Drawer** (`src/components/QuestionDrawer.tsx`): Bottom sheet that gates question prompts based on proximity and logs clues on correct answers. Nearby Amenity is a single dynamic question powered by a local spatial index over the GeoJSON data (`data/geojson/ihi_*`). It counts mapped categories (water stations, hospitals, AED, emergency storage, community centers, train stations, shrines/temples, flood gates, bridges) within a configurable radius (default 250m) of the current player location.
+- **Question Drawer** (`src/components/QuestionDrawer.tsx`): Bottom sheet that gates question prompts based on proximity and logs every answer (both correct and incorrect) so players can refer back later. Nearby Amenity is a single dynamic question powered by a local spatial index over the GeoJSON data (`data/geojson/ihi_*`). It counts mapped categories (water stations, hospitals, AED, emergency storage, community centers, train stations, shrines/temples, flood gates, bridges) within a configurable radius (default 250m) of the current player location.
+  - **Question cooldowns**: After any question is answered, that question enters a 120-second cooldown (per player/session). The drawer disables the prompt and shows a live countdown (`questions.cooldown` string) until it becomes available again. Set `VITE_ENABLE_PROXIMITY=false` to bypass proximity gating and cooldown delays during local testing.
 - **Gameplay Panel** (`src/components/GameplayPanel.tsx`): Side panel for Mission Control, showing logged clues and strategy tips.
-- **Clue Engine**: Questions and clues are driven by `question_attributes` plus locale strings (`questions.dynamic.*`). Clues log only on correct answers; location category is always selectable, other categories require proximity (unless `VITE_ENABLE_PROXIMITY=false` for testing).
+- **Clue Engine**: Questions and clues are driven by `question_attributes` plus locale strings (`questions.dynamic.*`). Every answer is captured: correct clues accumulate in the “Correct” list, wrong guesses land under “Wrong clues,” and the Mission Control panel can filter the map using either set (e.g., remove shelters matching all known wrong answers). Location category is always selectable; other categories require proximity (unless `VITE_ENABLE_PROXIMITY=false` for testing).
 - **UI Primitives** (`src/components/ui/*`): Custom shadcn-derived kit (buttons, drawers, dialogs, etc.) that underpins the interaction model.
 - **Proximity & spatial index**: `src/services/proximityIndex.ts` builds a Turf-based spatial index over all local GeoJSON (landmarks, support, shelters). Map amenities use `countAmenitiesWithinRadius` to unlock the Nearby Amenity question; the answer is validated against the secret shelter’s stored attributes (exact counts). Facility/Capacity and other proximity-gated categories unlock when any shelter is within the configured radius (default 250m), detected via the same index (`hasShelterWithinRadius`). Set `VITE_ENABLE_PROXIMITY=false` to bypass gating in local testing.
-- **Answer validation**: Facility Type, Capacity/Resources, and all nearby-amenity questions are validated against the secret shelter’s stored attributes (`attributeValueLookup`), not the player’s surroundings. Proximity affects availability; correctness always compares to the secret shelter data.
+- **Answer validation & measurement**: Facility Type, Capacity/Resources, and all nearby-amenity questions are validated against the secret shelter’s stored attributes (`attributeValueLookup`), not the player’s surroundings. For spatial context, the Measure tool (MapView + `MeasurePanel`) lets players drop a center point and see every mapped point-of-interest within 250 m, along with per-layer counts and labels sourced from the same local GeoJSON bundles. Proximity affects availability; correctness always compares to the secret shelter data.
 
 ## Multiplayer API (Render/Supabase)
 

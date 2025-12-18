@@ -23,6 +23,7 @@ interface QuestionDrawerProps {
   onAskQuestion: (questionId: string, param: string | number) => void;
   nearbyPOI: string | null;
   lockedQuestions: string[];
+  questionCooldowns?: Record<string, number>;
   onAskNearbyAmenity?: (info: { amenityKey: string; count: number }) => void;
   nearbyAmenityCounts?: Record<string, number>;
   proximityEnabled?: boolean;
@@ -46,6 +47,7 @@ export function QuestionDrawer({
   onAskQuestion,
   nearbyPOI,
   lockedQuestions,
+  questionCooldowns = {},
   onAskNearbyAmenity,
   nearbyAmenityCounts = {},
   proximityEnabled = true,
@@ -75,6 +77,7 @@ export function QuestionDrawer({
     { key: "bridge250m", label: t("questions.dynamic.nearbyAmenity.types.bridge250m", { fallback: "Bridges" }) },
   ];
   const AMENITY_COUNT_OPTIONS = Array.from({ length: 11 }, (_, index) => index);
+  const currentTime = Date.now();
 
   const translateCategory = (category: QuestionCategory) => ({
     name: t(`questions.categories.${category.id}.name`, {
@@ -313,6 +316,11 @@ export function QuestionDrawer({
                   {filteredQuestions.map((question, index) => {
                     const isEligible = isQuestionEligible(question);
                     const isLocked = lockedQuestions.includes(question.id);
+                    const cooldownExpiresAt = questionCooldowns[question.id];
+                    const secondsLeft =
+                      isLocked && cooldownExpiresAt
+                        ? Math.max(0, Math.ceil((cooldownExpiresAt - currentTime) / 1000))
+                        : null;
                     const selectedParam = selectedParams[question.id];
                     const outOfRange =
                       nearbyPOI === null && question.category !== "location";
@@ -519,7 +527,10 @@ export function QuestionDrawer({
 
                         {isLocked && (
                           <div className="text-xs text-center text-red-600 font-bold">
-                            {t("questions.cooldown")}
+                            {t("questions.cooldown", {
+                              replacements: { seconds: secondsLeft ?? 0 },
+                              fallback: `Question available again in ${secondsLeft ?? 0}s`,
+                            })}
                           </div>
                         )}
                       </motion.div>
