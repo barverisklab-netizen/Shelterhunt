@@ -1,30 +1,24 @@
 {
   "common": {
-    "appName": "ShelterSearch",
+    "appName": "Map n' Seek",
     "back": "Back",
     "cancel": "Cancel",
     "close": "Close",
     "continue": "Continue",
-    "copy": "Copy",
-    "you": "You",
-    "languageLabel": "Language",
     "language": {
       "en": "English",
       "ja": "日本語"
-    },
-    "default": "Default",
-    "setDefault": "Set Default",
-    "defaultLanguage": "Default: {language}"
+    }
   },
   "intro": {
-    "title": "ShelterSearch",
+    "title": "Map n' Seek",
     "paragraph1": "Welcome, heroes. I’m Bosai-Sensei, your guide through Koto City as a major hurricane closes in. Our mascot, Koto-chan, is sheltering somewhere safe; but we’ve lost contact.",
     "paragraph2": "Your task: explore the city, understand the disaster-preparedness information, and gather clues to pinpoint Koto-chan’s location before the storm hits.",
     "paragraph3": "Each correct move brings you closer and strengthens the skills you’ll need in real emergencies. Stay alert, and remember: preparedness is power.",
     "play": "Play"
   },
   "onboarding": {
-    "title": "ShelterSearch",
+    "title": "Map n' Seek",
     "tagline": "Find the shelter before the storm!",
     "playSolo": "Play Solo",
     "joinGame": "Join Game",
@@ -197,24 +191,27 @@
     "strategyTip1": "Quickly isolate shelters using wide-area layers like flood depth and storm surge zones.",
     "strategyTip2": "Move around the map to unlock facility questions for anything within 250m of you.",
     "strategyTip3": "Use layer toggles and the measuring circle in Tools to analyze and zero in on shelters that match your clues.",
+    "correctClues": "Correct clues",
+    "wrongClues": "Wrong clues",
+    "applyWrongClueFilter": "Filter using all wrong clues",
     "tools": {
       "title": "Tools",
       "active": "Active",
       "idle": "Idle",
       "copy": "Draw a search radius to inspect which shelters fall within a chosen distance.",
       "trigger": "Measure Shelters Radius",
-      "activeButton": "Measurement Active",
-      "filterUnavailable": "Unable to filter map for this clue.",
-      "filterNoMatches": "No shelters match this clue.",
-      "showInMap": "Show in map",
-      "clearMapFilter": "Clear all filters",
-      "clear": "Clear"
+      "activeButton": "Measurement Active"
     },
     "finalDecision": "Identify Shelter",
     "selectShelter": "Select target shelter",
     "selectShelterHint": "Pick the shelter you believe is correct. You must be within 250m when you submit.",
     "selectPlaceholder": "Select a shelter",
     "guessWarning": "You have three guesses. Use your clues wisely before you submit.",
+    "filterUnavailable": "Unable to filter map for this clue.",
+    "filterNoMatches": "No shelters match this clue.",
+    "showInMap": "Show in map",
+    "clearMapFilter": "Clear all filters",
+    "clear": "Clear",
     "submitGuess": "Submit Guess",
     "returnToMap": "Return to Map"
   },
@@ -226,17 +223,15 @@
     "outOfRangeCopy": "Visit a POI to unlock questions",
     "chooseCategory": "Choose a Category",
     "availableCount": "{count} question{suffix} available",
-    "locked": "Locked - Answer Cooldown",
     "askNow": "Ask Now",
-    "selectParam": "Select parameter",
-    "selectParamLocation": "Select a parameter",
+    "correct": "Correct clue unlocked!",
     "cooldown": "Question available again in {seconds}s",
     "disabledProximityHint": "Move around the city and questions will unlock when this asset type is within 250m of your location.",
+    "incorrect": "That clue was incorrect. Try another guess.",
     "nearbyAmenity": {
       "selectAmenity": "Amenity type",
       "selectCount": "Exact count",
       "unavailable": "No amenities of this type within 250m. Move closer.",
-      "moveCloser": "Move within 250m of that amenity to ask.",
       "availableCategories": "Available nearby: {categories}",
       "noneWithinRadius": "No amenities within 250m yet."
     },
@@ -397,7 +392,6 @@
       "featuresSubtitle": "{count} features total",
       "noFeatures": "No visible point-layer features in this radius.",
       "table": {
-        "featureType": "Feature type",
         "count": "Count",
         "countValue": "{count} features"
       },
@@ -406,11 +400,10 @@
         "delete": "Delete"
       }
     },
-      "popup": {
-        "name": "Name",
-        "category": "Category",
-        "categoryJp": "Category",
-        "address": "Address",
+    "popup": {
+      "name": "Name",
+      "category": "Category",
+      "address": "Address",
       "shelterCapacity": "Shelter Capacity",
       "floodDepth": "Flood Depth",
       "floodDuration": "Flood Duration",
@@ -437,19 +430,6 @@
       "finalGuess": "That was your final guess. Game over.",
       "penaltyFirst": "Wrong guess! 2 guesses remaining.",
       "penaltySecond": "Wrong guess! 1 guess remaining."
-    },
-    "clues": {
-      "surgeRank": "Surge rank is {rank}",
-      "capacity": "Capacity is {capacity}+ people",
-      "notFireStation": "Not a fire station",
-      "parks": "Has {parks}+ nearby parks",
-      "notSurgeRankFour": "Not in surge rank 4",
-      "categories": {
-        "location": "Location",
-        "capacity": "Capacity",
-        "facility": "Facility",
-        "nearby": "Nearby"
-      }
     }
   }
 }

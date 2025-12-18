@@ -1,30 +1,24 @@
 {
   "common": {
-    "appName": "シェルターサーチ",
+    "appName": "マップれんぼ",
     "back": "戻る",
     "cancel": "キャンセル",
     "close": "閉じる",
     "continue": "続ける",
-    "copy": "コピー",
-    "you": "あなた",
-    "languageLabel": "言語",
     "language": {
       "en": "English",
       "ja": "日本語"
-    },
-    "default": "デフォルト",
-    "setDefault": "デフォルトに設定",
-    "defaultLanguage": "デフォルト: {language}"
+    }
   },
   "intro": {
-    "title": "シェルターサーチ",
+    "title": "マップれんぼ",
     "paragraph1": "ようこそ、ヒーローのみなさん。防災先生です。大型ハリケーンが江東区に迫っています。マスコットのコトちゃんは安全な場所に避難しているはずですが、連絡が途絶えています。",
     "paragraph2": "任務: 街を巡り、防災情報を理解し、手がかりを集めて、嵐が来る前にコトちゃんの居場所を特定してください。",
     "paragraph3": "正しい行動を重ねるほどコトちゃんに近づき、実際の緊急時に役立つ力が身につきます。油断せず、覚えておいてください—備えこそ力です。",
     "play": "プレイ"
   },
   "onboarding": {
-    "title": "シェルターサーチ",
+    "title": "マップれんぼ",
     "tagline": "嵐が来る前に避難所を見つけよう！",
     "playSolo": "ソロで遊ぶ",
     "joinGame": "ゲームに参加",
@@ -197,24 +191,27 @@
     "strategyTip1": "洪水深や高潮エリアなど広域レイヤーを使って避難所を素早く絞り込みましょう。",
     "strategyTip2": "マップを移動して、250m以内の施設に関する質問をアンロックしましょう。",
     "strategyTip3": "ツールのレイヤートグルと計測円を使い、手がかりに合う避難所を分析・特定しましょう。",
+    "correctClues": "正しい手がかり",
+    "wrongClues": "間違った手がかり",
     "tools": {
       "title": "ツール",
       "active": "稼働中",
       "idle": "待機中",
       "copy": "検索半径を描き、範囲内の避難所を確認します。",
       "trigger": "半径を計測",
-      "activeButton": "計測中",
-      "filterUnavailable": "この手がかりでは地図を絞り込めません。",
-      "filterNoMatches": "この手がかりに合致する避難所はありません。",
-      "showInMap": "地図で表示",
-      "clearMapFilter": "すべてのフィルターを解除",
-      "clear": "クリア"
+      "activeButton": "計測中"
     },
     "finalDecision": "避難所を特定",
     "selectShelter": "避難所を選択",
     "selectShelterHint": "正解だと思う避難所を選んでください。推理の送信時は250m以内にいる必要があります。",
     "selectPlaceholder": "避難所を選んでください",
     "guessWarning": "推理できるのは3回までです。手がかりを十分に確認してから送信しましょう。",
+    "applyWrongClueFilter": "すべての誤った手がかりで絞り込む",
+    "filterUnavailable": "この手がかりでは地図を絞り込めません。",
+    "filterNoMatches": "この手がかりに合致する避難所はありません。",
+    "showInMap": "地図で表示",
+    "clearMapFilter": "すべてのフィルターを解除",
+    "clear": "クリア",
     "submitGuess": "推理を送信",
     "returnToMap": "マップに戻る"
   },
@@ -226,17 +223,15 @@
     "outOfRangeCopy": "POIに移動すると質問が解放されます",
     "chooseCategory": "カテゴリーを選ぶ",
     "availableCount": "質問{count}件利用可能",
-    "locked": "ロック中 - クールダウン",
     "askNow": "今すぐ質問",
-    "selectParam": "パラメーターを選択",
-    "selectParamLocation": "パラメーターを選択",
+    "correct": "正しい手がかりを解放しました！",
     "cooldown": "{seconds}秒後に再び質問できます",
     "disabledProximityHint": "街を移動して、対象の資産タイプが250m以内に入ると質問が解放されます。",
+    "incorrect": "その手がかりは間違っています。別の推理を試してください。",
     "nearbyAmenity": {
       "selectAmenity": "設備の種類",
       "selectCount": "正確な数",
       "unavailable": "この種類の設備が250m以内にありません。近づいてください。",
-      "moveCloser": "その設備の250m以内まで移動してから質問してください。",
       "availableCategories": "250m以内にある設備: {categories}",
       "noneWithinRadius": "まだ250m以内に設備はありません。"
     },
@@ -397,7 +392,6 @@
       "featuresSubtitle": "合計{count}件",
       "noFeatures": "この範囲に表示中のポイントはありません。",
       "table": {
-        "featureType": "種類",
         "count": "件数",
         "countValue": "{count}件"
       },
@@ -406,11 +400,10 @@
         "delete": "削除"
       }
     },
-      "popup": {
-        "name": "名称",
-        "category": "カテゴリ",
-        "categoryJp": "カテゴリ",
-        "address": "住所",
+    "popup": {
+      "name": "名称",
+      "category": "カテゴリ",
+      "address": "住所",
       "shelterCapacity": "収容人数",
       "floodDepth": "浸水深",
       "floodDuration": "浸水継続時間",
@@ -437,19 +430,6 @@
       "finalGuess": "最後の推理でした。ゲームオーバー。",
       "penaltyFirst": "不正解！残りはあと2回の推理です。",
       "penaltySecond": "不正解！残りはあと1回です。"
-    },
-    "clues": {
-      "surgeRank": "高潮浸水ランクは{rank}",
-      "capacity": "収容人数は{capacity}人以上",
-      "notFireStation": "消防署ではない",
-      "parks": "{parks}以上の公園が近くにある",
-      "notSurgeRankFour": "浸水ランク4ではない",
-      "categories": {
-        "location": "位置",
-        "capacity": "収容",
-        "facility": "施設",
-        "nearby": "周辺"
-      }
     }
   }
 }

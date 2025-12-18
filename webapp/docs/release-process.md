@@ -1,4 +1,4 @@
-# ShelterSearch Release Process
+# Map n' Seek Release Process
 
 This project follows [semantic versioning](https://semver.org/) in the form `MAJOR.MINOR.PATCH`. Use the steps below to ship a new Minor or Major release and to keep the published version in sync with the onboarding screen badge.
 
@@ -67,7 +67,7 @@ npm run start
 
 ## Step 5 — Deploy
 
-Download the `sheltersearch-build` artifact from the release workflow run and deploy it to your hosting provider (Render). If Render auto-deploys from releases, verify the new version is live and that the onboarding badge matches the release number.
+Download the `map-n-seek-build` artifact from the release workflow run and deploy it to your hosting provider (Render). If Render auto-deploys from releases, verify the new version is live and that the onboarding badge matches the release number.
 
 ---
 

@@ -1,6 +1,6 @@
-# ShelterSearch · Location-Based Deduction Game
+# Map n' Seek (マップれんぼ) · Location-Based Deduction Game
 
-This repository contains the ShelterSearch prototype, a browser-based deduction game that helps players locate an emergency shelter before time runs out. The experience mirrors the visual system documented in Figma and is implemented with React, Vite, Tailwind v4, Mapbox GL, and a shadcn-inspired component kit.
+This repository contains the Map n' Seek (マップれんぼ) prototype, a browser-based deduction game that helps players locate an emergency shelter before time runs out. The experience mirrors the visual system documented in Figma and is implemented with React, Vite, Tailwind v4, Mapbox GL, and a shadcn-inspired component kit.
 
 ## Repository layout
 

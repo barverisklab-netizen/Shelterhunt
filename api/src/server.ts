@@ -87,7 +87,7 @@ export function buildServer() {
       <html lang="en">
       <head>
         <meta charset="utf-8" />
-        <title>ShelterHunt API</title>
+        <title>Map n' Seek API</title>
         <style>
           body {
             font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
@@ -122,7 +122,7 @@ export function buildServer() {
       <body>
         <section class="card">
           <h1>API Running</h1>
-          <p>The ShelterHunt backend is online.</p>
+          <p>The Map n' Seek backend is online.</p>
           <p style="margin-top: 0.5rem; font-size: 0.85rem; color: #808080;">
             version: ${process.env.COMMIT_SHA ?? process.env.VERSION ?? pkg.version}
           </p>
