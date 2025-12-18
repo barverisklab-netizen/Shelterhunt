@@ -10,7 +10,6 @@ import { POI, Question, Clue, QuestionAttribute } from "@/types/game";
 import { defaultCityContext } from '../data/cityContext';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { toast } from "sonner@2.0.3";
-import { BlurReveal } from './ui/blur-reveal';
 import { useI18n } from "@/i18n";
 import type { Shelter } from "@/services/shelterDataService";
 import { ENABLE_WRONG_GUESS_PENALTY, LIGHTNING_RADIUS_KM, PROXIMITY_RADIUS_KM } from "@/config/runtime";
@@ -18,7 +17,6 @@ import { haversineDistanceKm } from "@/utils/lightningSelection";
 import { hasShelterWithinRadius, matchShelterWithinRadius } from "@/services/proximityIndex";
 
 
-const ENABLE_SECRET_SHELTER_BLUR = true;
 const PROXIMITY_DISABLED_FOR_TESTING =
   import.meta.env?.VITE_ENABLE_PROXIMITY === "false";
 const PROXIMITY_ENABLED = !PROXIMITY_DISABLED_FOR_TESTING;
@@ -110,6 +108,9 @@ export function GameScreen({
   const hasLoggedProximityRef = useRef(false);
   const [amenityQueryTrigger, setAmenityQueryTrigger] = useState(0);
   const lastAmenityQueryLocationRef = useRef<{ lat: number; lng: number } | null>(null);
+  const secretShelterLogRef = useRef<string | null>(null);
+  const secretShelterId = secretShelter?.id ?? null;
+  const secretShelterName = secretShelter?.name ?? null;
   const DESIGNATED_CATEGORY = "designated ec";
   const normalizeValue = (value: unknown) =>
     typeof value === "number" ? String(value) : String(value ?? "").trim().toLowerCase();
@@ -136,6 +137,16 @@ export function GameScreen({
       { enableHighAccuracy: true, maximumAge: 2000, timeout: 10000 },
     );
   }, [onLocationChange]);
+
+  useEffect(() => {
+    if (secretShelterName && secretShelterLogRef.current !== secretShelterName) {
+      secretShelterLogRef.current = secretShelterName;
+      console.info("[SecretShelter] Target updated", {
+        id: secretShelterId,
+        name: secretShelterName,
+      });
+    }
+  }, [secretShelterId, secretShelterName]);
 
   const closeLayerPanel = useCallback(() => {
     setLayerPanelCloseSignal((prev) => prev + 1);
@@ -379,6 +390,42 @@ export function GameScreen({
     bridge250m: (shelter) => shelter.bridge250m,
   };
 
+  const buildPoiFromShelter = useCallback(
+    (shelter: Shelter): POI | null => {
+      const lat = Number(shelter.latitude);
+      const lng = Number(shelter.longitude);
+      if (!Number.isFinite(lat) || !Number.isFinite(lng)) return null;
+
+      const nameEn = shelter.nameEn ?? null;
+      const nameJp = shelter.nameJp ?? null;
+      const fallbackName = nameEn || nameJp || shelter.externalId || shelter.code;
+      if (!fallbackName) return null;
+
+      const properties: Record<string, string | number | null> = {
+        "Landmark Name (EN)": nameEn ?? fallbackName,
+        "Landmark Name (JP)": nameJp ?? fallbackName,
+        Category: shelter.category ?? "",
+        "Category (JP)": shelter.categoryJp ?? shelter.category ?? "",
+        Shelter_Capacity:
+          shelter.shelterCapacity != null ? Number(shelter.shelterCapacity) : null,
+        "Address (EN)": shelter.addressEn ?? shelter.address ?? null,
+        "Address (JP)": shelter.addressJp ?? shelter.address ?? null,
+      };
+
+      return {
+        id: shelter.shareCode || shelter.code || shelter.id,
+        name: fallbackName,
+        nameEn,
+        nameJp,
+        lat,
+        lng,
+        type: "shelter",
+        properties,
+      };
+    },
+    [],
+  );
+
   const handleApplyWrongClueFilter = () => {
     if (filterSource !== "correct" || !filteredPois) {
       toast.info(
@@ -434,16 +481,8 @@ export function GameScreen({
     }
 
     const refinedPois = refinedShelters
-      .map<POI>((shelter) => ({
-        id: shelter.shareCode || shelter.code || shelter.id,
-        name: shelter.nameEn || shelter.nameJp || shelter.externalId || shelter.code,
-        ...(shelter.nameEn ? { nameEn: shelter.nameEn } : {}),
-        ...(shelter.nameJp ? { nameJp: shelter.nameJp } : {}),
-        lat: Number(shelter.latitude),
-        lng: Number(shelter.longitude),
-        type: "shelter",
-      }))
-      .filter((poi) => Number.isFinite(poi.lat) && Number.isFinite(poi.lng) && poi.name);
+      .map((shelter) => buildPoiFromShelter(shelter))
+      .filter((poi): poi is POI => Boolean(poi));
 
     setFilteredPois(refinedPois);
     toast.success(
@@ -959,23 +998,12 @@ export function GameScreen({
               <X className="w-15 h-15" />
             </button>
             <div className="flex flex-col">
-              <h1 className="text-xl font-bold text-black uppercase">
-                {t("game.secretShelter")}
+              <h1 className="text-xl font-bold text-black">
+                {t("common.appName", { fallback: "Map n' Seek" })}
               </h1>
-              {secretShelter?.name ? (
-                ENABLE_SECRET_SHELTER_BLUR ? (
-                  <BlurReveal
-                    className="text-sm font-semibold text-black/90"
-                    aria-label={t("game.secretShelterName")}
-                  >
-                    {secretShelter.name}
-                  </BlurReveal>
-                ) : (
-                  <span className="text-sm font-semibold text-black/90">
-                    {secretShelter.name}
-                  </span>
-                )
-              ) : null}
+              <span className="text-sm font-semibold text-black/70">
+                {t("game.secretShelterName", { fallback: "Solve clues to reveal the shelter" })}
+              </span>
             </div>
           </div>
 
@@ -1134,19 +1162,8 @@ export function GameScreen({
               }
               return match;
             })
-            .map<POI>((shelter) => ({
-              id: shelter.shareCode || shelter.code || shelter.id,
-              name: shelter.nameEn || shelter.nameJp || shelter.externalId || shelter.code,
-              // Preserve localized names for map labels
-              ...(shelter.nameEn ? { nameEn: shelter.nameEn } : {}),
-              ...(shelter.nameJp ? { nameJp: shelter.nameJp } : {}),
-              lat: Number(shelter.latitude),
-              lng: Number(shelter.longitude),
-              type: "shelter",
-            }))
-            .filter(
-              (poi) => Number.isFinite(poi.lat) && Number.isFinite(poi.lng) && poi.name,
-            );
+            .map((shelter) => buildPoiFromShelter(shelter))
+            .filter((poi): poi is POI => Boolean(poi));
 
           if (!matches.length) {
             console.warn("[ClueFilter] No matches for clue", { clue, target });
@@ -1236,7 +1253,7 @@ export function GameScreen({
               </h2>
               <p className="text-sm text-black mb-4">
                 {t("game.exitConfirmBody", {
-                  fallback: "Your progress in this match will be lost.",
+                  fallback: "Your progress will be lost.",
                 })}
               </p>
               <div className="flex justify-center gap-3">

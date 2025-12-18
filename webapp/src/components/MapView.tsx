@@ -44,6 +44,11 @@ const sanitizeToBauhausColor = (color?: string): string => {
   return (color ?? "#000000").trim();
 };
 
+const escapeHtml = (s: string) =>
+  s.replace(/[&<>"'`=\/]/g, (c) =>
+    ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;", "/": "&#x2F;", "`": "&#x60;", "=": "&#x3D;" }[c] as string),
+  );
+
 const createCircleFeature = (
   center: { lng: number; lat: number },
   radiusMeters: number,
@@ -300,9 +305,12 @@ export function MapView({
   const markers = useRef<{ [key: string]: mapboxgl.Marker }>({});
   const playerMarker = useRef<mapboxgl.Marker | null>(null);
   const geolocateControl = useRef<mapboxgl.GeolocateControl | null>(null);
-  const infoPopup = useRef<mapboxgl.Popup | null>(null);
-  const hasSelectedShelter = useRef(false);
-  const hasEmittedShelterOptions = useRef(false);
+const infoPopup = useRef<mapboxgl.Popup | null>(null);
+const hasSelectedShelter = useRef(false);
+const hasEmittedShelterOptions = useRef(false);
+const filteredPoiPopupHandlerRef = useRef<
+  ((event: mapboxgl.MapLayerMouseEvent & mapboxgl.EventData) => void) | null
+>(null);
 const measureMarkerRef = useRef<mapboxgl.Marker | null>(null);
   const measureShelterMarkersRef = useRef<mapboxgl.Marker[]>([]);
   const measurePopupRef = useRef<mapboxgl.Popup | null>(null);
@@ -515,6 +523,86 @@ const measureMarkerRef = useRef<mapboxgl.Marker | null>(null);
     [loadGeojsonPointFeatures],
   );
 
+  const buildDesignatedShelterPopupHtml = useCallback((props: Record<string, any>) => {
+    const translate = translateRef.current;
+    const currentLocale = localeRef.current;
+
+    const translateLabel = (key: string, fallback: string) =>
+      typeof translate === "function" ? translate(key, { fallback }) : fallback;
+
+    const headerLabel = translateLabel(
+      "map.layers.items.1",
+      "Designated Evacuation Centers",
+    );
+    const headerDescription = translateLabel(
+      "map.layers.descriptions.1",
+      "Government-designated evacuation center.",
+    );
+
+    const getLocalizedValue = (enKey: string, jaKey: string) => {
+      if (currentLocale === "ja") {
+        return props?.[jaKey] ?? props?.[enKey] ?? null;
+      }
+      return props?.[enKey] ?? props?.[jaKey] ?? null;
+    };
+
+    const name =
+      getLocalizedValue("Landmark Name (EN)", "Landmark Name (JP)") ??
+      (currentLocale === "ja"
+        ? props?.name_jp ?? props?.name
+        : props?.name_en ?? props?.name);
+    const category = getLocalizedValue("Category", "Category (JP)");
+    const capacity =
+      props?.Shelter_Capacity ??
+      props?.["Shelter_Capacity"] ??
+      props?.shelterCapacity ??
+      null;
+    const address = getLocalizedValue("Address (EN)", "Address (JP)");
+
+    const rows = [
+      { label: translateLabel("map.popup.name", "Name"), value: name },
+      { label: translateLabel("map.popup.category", "Category"), value: category },
+      {
+        label: translateLabel("map.popup.shelterCapacity", "Shelter Capacity"),
+        value: capacity,
+      },
+      { label: translateLabel("map.popup.address", "Address"), value: address },
+    ].filter((row) => row.value != null && row.value !== "");
+
+    if (!rows.length) return null;
+
+    const rowsHtml = rows
+      .map(
+        (row) =>
+          `${escapeHtml(row.label)}: <b>${escapeHtml(
+            String(row.value ?? ""),
+          )}</b>`,
+      )
+      .join("<br>");
+
+    const inner = `
+      <div style="padding: 12px;">
+        <div style="font-weight:700; margin-bottom:6px; font-size:14px;">
+          ${escapeHtml(headerLabel)}
+        </div>
+        ${
+          headerDescription
+            ? `<div style="opacity:0.9; font-size:12px; margin-bottom:8px;">${escapeHtml(headerDescription)}</div>`
+            : ""
+        }
+        <div style="font-size:12px; line-height:1.5;">
+          ${rowsHtml}
+        </div>
+      </div>
+    `;
+
+    return `
+      <div style="background: rgba(0,0,0,0.85); border-radius: 8px; min-width: 220px; color: #fff;">
+        ${inner}
+      </div>
+    `;
+  }, []);
+
 
   useEffect(() => {
     if (measureState.status !== "active") {
@@ -630,6 +718,10 @@ const measureMarkerRef = useRef<mapboxgl.Marker | null>(null);
         if (m.getLayer(FILTER_POIS_LABEL_LAYER_ID)) m.removeLayer(FILTER_POIS_LABEL_LAYER_ID);
         if (m.getLayer(FILTER_POIS_LAYER_ID)) m.removeLayer(FILTER_POIS_LAYER_ID);
         if (m.getSource(FILTER_POIS_SOURCE_ID)) m.removeSource(FILTER_POIS_SOURCE_ID);
+        if (filteredPoiPopupHandlerRef.current) {
+          m.off("click", FILTER_POIS_LAYER_ID, filteredPoiPopupHandlerRef.current);
+          filteredPoiPopupHandlerRef.current = null;
+        }
         return;
       }
 
@@ -640,8 +732,9 @@ const measureMarkerRef = useRef<mapboxgl.Marker | null>(null);
           geometry: { type: "Point", coordinates: [poi.lng, poi.lat] },
           properties: {
             name: poi.name ?? "Shelter",
-            name_en: (poi as any).nameEn ?? poi.name ?? null,
-            name_jp: (poi as any).nameJp ?? poi.name ?? null,
+            name_en: poi.nameEn ?? poi.name ?? null,
+            name_jp: poi.nameJp ?? poi.name ?? null,
+            ...(poi.properties ?? {}),
           },
         })),
       } as const;
@@ -694,8 +787,28 @@ const measureMarkerRef = useRef<mapboxgl.Marker | null>(null);
           },
         });
       }
+
+      if (!filteredPoiPopupHandlerRef.current) {
+        const handler = (
+          event: mapboxgl.MapLayerMouseEvent & mapboxgl.EventData,
+        ) => {
+          const feature = event.features?.[0];
+          if (!feature) return;
+          const html = buildDesignatedShelterPopupHtml(feature.properties ?? {});
+          if (!html) return;
+          if (!infoPopup.current) {
+            infoPopup.current = new mapboxgl.Popup({
+              closeButton: true,
+              closeOnClick: true,
+            });
+          }
+          infoPopup.current.setLngLat(event.lngLat).setHTML(html).addTo(m);
+        };
+        filteredPoiPopupHandlerRef.current = handler;
+        m.on("click", FILTER_POIS_LAYER_ID, handler);
+      }
     },
-    [locale],
+    [locale, buildDesignatedShelterPopupHtml],
   );
 
   useEffect(() => {
@@ -1289,6 +1402,10 @@ const measureMarkerRef = useRef<mapboxgl.Marker | null>(null);
           map.current.removeControl(geolocateControl.current);
           geolocateControl.current = null;
         }
+        if (filteredPoiPopupHandlerRef.current) {
+          map.current?.off("click", FILTER_POIS_LAYER_ID, filteredPoiPopupHandlerRef.current);
+          filteredPoiPopupHandlerRef.current = null;
+        }
         map.current?.off("styledata", moveAttributionToBottomLeft);
         map.current.remove();
         map.current = null;
@@ -1698,12 +1815,6 @@ const measureMarkerRef = useRef<mapboxgl.Marker | null>(null);
           legendItems?: (typeof kotoLayers)[number]["metadata"]["legendItems"];
         }
       > = ((m as any).__kotoLayerMeta = {});
-
-      // Simple, safe HTML escape for interpolated values
-      const escapeHtml = (s: string) =>
-        s.replace(/[&<>"'`=\/]/g, (c) =>
-          ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;", "/": "&#x2F;", "`": "&#x60;", "=": "&#x3D;" }[c] as string)
-        );
 
       // Render {{ token }} with props[key]; unknown -> em dash
       const renderTemplate = (template: string, props: Record<string, any>) => {

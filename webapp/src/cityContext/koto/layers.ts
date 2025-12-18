@@ -21,7 +21,7 @@ export const kotoLayers: KotoLayer[] = [
           isActive: true,
           isEnabled: true,
           swatchType: "line",
-          description: "Government-designated evacuation center.",
+          description: "Designated evacuation center.",
           descriptionKey: "map.layers.descriptions.1",
           swatchStyle: { strokeColor: "#c1272d", strokeWidth: 2 },
         },

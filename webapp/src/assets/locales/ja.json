@@ -418,8 +418,8 @@
     "exitConfirmTitle": "ゲームを終了しますか？",
     "exitConfirmBody": "このプレイの進行状況は失われます。",
     "exitConfirmLeave": "終了",
-    "secretShelter": "秘密の避難所",
-    "secretShelterName": "秘密の避難所名",
+    "secretShelter": "隠された避難所",
+    "secretShelterName": "手がかりを解くと名前が表示されます",
     "tapToAsk": "質問するにはタップ",
     "toasts": {
       "selectShelterFirst": "推理を送信する前に避難所を選択してください。",

@@ -57,7 +57,7 @@ export function MenuHeader({
 
         <div className="space-y-4">
           <motion.h1
-            className="text-4xl font-black uppercase tracking-tight leading-none"
+            className="text-4xl font-black tracking-tight leading-none"
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.75, duration: 0.6, ease: [0.22, 1, 0.36, 1] }}

@@ -362,7 +362,7 @@
     "18": "Train Stations"
   },
   "descriptions": {
-    "1": "Government-designated evacuation center.",
+    "1": "Designated evacuation center.",
     "2": "Voluntary evacuation center.",
     "3": "Temporary evacuation center location.",
     "4": "Special needs shelter location.",
@@ -416,10 +416,10 @@
   "game": {
     "exitTitle": "Exit to main menu",
     "exitConfirmTitle": "Leave the game?",
-    "exitConfirmBody": "Your progress in this match will be lost.",
+    "exitConfirmBody": "Your progress will be lost.",
     "exitConfirmLeave": "Exit",
-    "secretShelter": "Secret Shelter",
-    "secretShelterName": "Secret shelter name",
+    "secretShelter": "Hidden target",
+    "secretShelterName": "Solve clues to reveal the shelter",
     "tapToAsk": "Testing mode active",
     "toasts": {
       "selectShelterFirst": "Select a shelter before submitting a guess.",

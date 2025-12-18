@@ -1,12 +1,12 @@
 export interface POI {
   id: string;
   name: string;
+  nameEn?: string | null;
+  nameJp?: string | null;
   lat: number;
   lng: number;
   type: "shelter" | "fire_station" | "hospital" | "park" | "library" | "school";
-  surgeRank?: number;
-  capacity?: number;
-  nearbyParks?: number;
+  properties?: Record<string, string | number | null>;
 }
 
 export interface Question {
