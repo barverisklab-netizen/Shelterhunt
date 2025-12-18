@@ -21,8 +21,6 @@ interface GameplayPanelProps {
   onShelterSelect: (id: string | null) => void;
   onGuessRequest: () => void;
   isGuessDisabled?: boolean;
-  onStartMeasure: () => void;
-  isMeasureActive?: boolean;
   onFilterByClue?: (clue: Clue) => void;
   onClearMapFilter?: () => void;
   isMapFilterActive?: boolean;
@@ -40,8 +38,6 @@ export function GameplayPanel({
   onShelterSelect,
   onGuessRequest,
   isGuessDisabled = false,
-  onStartMeasure,
-  isMeasureActive = false,
   onFilterByClue,
   onClearMapFilter,
   isMapFilterActive = false,
@@ -349,46 +345,6 @@ export function GameplayPanel({
                         </div>
                       </div>
                     )}
-                  </AccordionContent>
-                </AccordionItem>
-
-                {/* Tools */}
-                <AccordionItem
-                  value="tools"
-                  className="rounded border border-neutral-900 bg-neutral-100"
-                >
-                  <AccordionTrigger className="px-4 text-black">
-                    <div className="flex w-full items-center justify-between text-sm font-bold uppercase tracking-wide">
-                      <span>{t("gameplay.tools.title")}</span>
-                      <span
-                        className={`text-[10px] font-semibold uppercase ${
-                          isMeasureActive ? "text-red-600" : "text-black/40"
-                        }`}
-                      >
-                        {isMeasureActive
-                          ? t("gameplay.tools.active")
-                          : t("gameplay.tools.idle")}
-                      </span>
-                    </div>
-                  </AccordionTrigger>
-                  <AccordionContent className="px-6 py-6">
-                    <p className="mb-3 text-xs text-black/70">
-                      {t("gameplay.tools.copy")}
-                    </p>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => {
-                        onClose();
-                        onStartMeasure();
-                      }}
-                      className="w-full border border-black bg-white text-xs tracking-wide text-black transition-colors hover:bg-neutral-200 hover:text-black hover:border-black active:bg-neutral-800 active:text-black active:border-black disabled:border-neutral-400 disabled:text-black-40 disabled:bg-neutral-200"
-                      disabled={isMeasureActive}
-                    >
-                      {isMeasureActive
-                        ? t("gameplay.tools.activeButton")
-                        : t("gameplay.tools.trigger")}
-                    </Button>
                   </AccordionContent>
                 </AccordionItem>
 

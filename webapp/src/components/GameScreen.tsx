@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from 'motion/react';
-import { Clock, Lightbulb, MapPin, X} from 'lucide-react';
+import { Clock, Lightbulb, MapPin, Ruler, X} from 'lucide-react';
 import { MapView } from './MapView';
 import { QuestionDrawer } from './QuestionDrawer';
 import { GameplayPanel } from './GameplayPanel';
@@ -1038,12 +1038,15 @@ export function GameScreen({
         />
 
         {/* Floating Action Buttons */}
-        <div className="absolute top-4 right-4 flex flex-col gap-3">
+        <div className="absolute top-4 right-4 flex flex-col gap-3 items-end">
           <motion.button
+            type="button"
             onClick={() => activatePanel("gameplay")}
             className="relative flex items-center justify-center bg-background p-4 border border-neutral-900 shadow-md hover:scale-105 transition-transform rounded-full"
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
+            aria-label={t("gameplay.missionControl")}
+            title={t("gameplay.missionControl")}
           >
             <Lightbulb className="w-6 h-6 text-black" />
             {clues.length > 0 && (
@@ -1051,6 +1054,27 @@ export function GameScreen({
                 {clues.length}
               </div>
             )}
+          </motion.button>
+
+          <motion.button
+            type="button"
+            onClick={() => {
+              if (!isMeasureActive) {
+                handleStartMeasure();
+              }
+            }}
+            disabled={isMeasureActive}
+            className={`relative flex items-center justify-center rounded-full border border-neutral-900 p-4 shadow-md transition-transform ${
+              isMeasureActive
+                ? "bg-red-200 text-red-900 cursor-not-allowed opacity-80"
+                : "bg-background text-black hover:scale-105"
+            }`}
+            whileHover={isMeasureActive ? undefined : { scale: 1.05 }}
+            whileTap={isMeasureActive ? undefined : { scale: 0.95 }}
+            aria-label={t("map.measure.title", { fallback: "Measure Radius" })}
+            title={t("map.measure.title", { fallback: "Measure Radius" })}
+          >
+            <Ruler className="w-5 h-5" />
           </motion.button>
         </div>
 
@@ -1093,8 +1117,6 @@ export function GameScreen({
         onShelterSelect={setSelectedShelterId}
         onGuessRequest={handleGuessRequest}
         isGuessDisabled={isGuessDisabled}
-        onStartMeasure={handleStartMeasure}
-        isMeasureActive={isMeasureActive}
         onPollProximity={pollNearbyShelter}
         onFilterByClue={(clue) => {
           console.log("[ClueFilter] show in map clicked", clue);
