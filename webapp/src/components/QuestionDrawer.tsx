@@ -74,6 +74,7 @@ export function QuestionDrawer({
     { key: "floodgate250m", label: t("questions.dynamic.nearbyAmenity.types.floodgate250m", { fallback: "Flood gates" }) },
     { key: "bridge250m", label: t("questions.dynamic.nearbyAmenity.types.bridge250m", { fallback: "Bridges" }) },
   ];
+  const AMENITY_COUNT_OPTIONS = Array.from({ length: 11 }, (_, index) => index);
 
   const translateCategory = (category: QuestionCategory) => ({
     name: t(`questions.categories.${category.id}.name`, {
@@ -399,7 +400,7 @@ export function QuestionDrawer({
                                   fallback: "Minimum count",
                                 })}
                               </option>
-                            {[0, 1, 2, 3, 4, 5].map((n) => (
+                            {AMENITY_COUNT_OPTIONS.map((n) => (
                               <option key={n} value={n}>
                                 {n}
                               </option>

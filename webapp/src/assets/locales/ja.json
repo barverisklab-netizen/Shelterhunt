@@ -241,33 +241,17 @@
       "noneWithinRadius": "まだ250m以内に設備はありません。"
     },
     "dynamic": {
-      "floodDepthRank": {
-        "question": "浸水深ランクは{param}ですか？",
-        "clue": "浸水深ランクは{param}です"
-      },
       "floodDepth": {
         "question": "浸水深は{param}ですか？",
         "clue": "浸水深は{param}です"
-      },
-      "stormSurgeDepthRank": {
-        "question": "高潮深ランクは{param}ですか？",
-        "clue": "高潮深ランクは{param}です"
       },
       "stormSurgeDepth": {
         "question": "高潮深は{param}ですか？",
         "clue": "高潮深は{param}です"
       },
-      "floodDurationRank": {
-        "question": "浸水継続ランクは{param}ですか？",
-        "clue": "浸水継続ランクは{param}です"
-      },
       "floodDuration": {
         "question": "浸水継続時間は{param}ですか？",
         "clue": "浸水継続時間は{param}です"
-      },
-      "inlandWatersDepthRank": {
-        "question": "内水氾濫深ランクは{param}ですか？",
-        "clue": "内水氾濫深ランクは{param}です"
       },
       "inlandWatersDepth": {
         "question": "内水氾濫深は{param}ですか？",

@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, useCallback } from "react";
+import type { Feature, FeatureCollection, Point, MultiPoint } from "geojson";
 import { motion, AnimatePresence } from "motion/react";
 import {
   MapPin,
@@ -72,6 +73,100 @@ const createCircleFeature = (
     },
     properties: {},
   };
+};
+
+type PointLikeGeometry = Point | MultiPoint;
+type PointLikeFeature = Feature<PointLikeGeometry, Record<string, any>>;
+
+const getFeatureCoordinates = (feature: PointLikeFeature): [number, number][] => {
+  const geometry = feature.geometry;
+  if (!geometry) return [];
+
+  if (geometry.type === "Point") {
+    const [lng, lat] = geometry.coordinates;
+    return Number.isFinite(lng) && Number.isFinite(lat) ? [[lng, lat]] : [];
+  }
+
+  if (geometry.type === "MultiPoint") {
+    return geometry.coordinates.filter(
+      (coords): coords is [number, number] =>
+        Array.isArray(coords) &&
+        Number.isFinite(coords[0]) &&
+        Number.isFinite(coords[1]),
+    );
+  }
+
+  return [];
+};
+
+const resolveFilterExpression = (
+  expression: unknown,
+  properties: Record<string, any>,
+): unknown => {
+  if (!Array.isArray(expression)) {
+    return expression;
+  }
+
+  const [op, ...args] = expression;
+  if (op === "get") {
+    const key = args[0];
+    if (typeof key === "string") {
+      return properties?.[key];
+    }
+    return undefined;
+  }
+
+  if (op === "literal") {
+    return args[0];
+  }
+
+  return expression;
+};
+
+const evaluateLayerFilter = (
+  filter: unknown,
+  properties: Record<string, any>,
+): boolean => {
+  if (!filter) return true;
+  if (!Array.isArray(filter)) return true;
+
+  const [op, ...args] = filter;
+
+  if (op === "==") {
+    if (args.length < 2) return true;
+    return (
+      resolveFilterExpression(args[0], properties) ===
+      resolveFilterExpression(args[1], properties)
+    );
+  }
+
+  if (op === "in") {
+    if (args.length < 2) return true;
+    const needle = resolveFilterExpression(args[0], properties);
+    const haystack = args.slice(1).flatMap((arg) => {
+      const resolved = resolveFilterExpression(arg, properties);
+      if (Array.isArray(resolved)) {
+        return resolved;
+      }
+      return [resolved];
+    });
+    return haystack.some((value) => value === needle);
+  }
+
+  if (op === "all") {
+    return args.every((clause) => evaluateLayerFilter(clause, properties));
+  }
+
+  if (op === "any") {
+    return args.some((clause) => evaluateLayerFilter(clause, properties));
+  }
+
+  if (op === "!") {
+    if (!args.length) return true;
+    return !evaluateLayerFilter(args[0], properties);
+  }
+
+  return true;
 };
 
 
@@ -218,6 +313,10 @@ const measureMarkerRef = useRef<mapboxgl.Marker | null>(null);
   const geolocateHandlerRef = useRef<((event: GeolocationPosition) => void) | null>(null);
   const lastLightningParamsRef = useRef<{ center: { lat: number; lng: number }; radiusKm: number } | null>(null);
   const amenityCountsRef = useRef<Record<string, number>>({});
+  const geojsonSourceCacheRef = useRef<Record<string, PointLikeFeature[]>>({});
+  const geojsonSourcePromisesRef = useRef<Record<string, Promise<PointLikeFeature[]>>>({});
+  const layerFeatureCacheRef = useRef<Record<number, PointLikeFeature[]>>({});
+  const layerFeaturePromisesRef = useRef<Record<number, Promise<PointLikeFeature[]>>>({});
   const reapplyPlayerRangeRef = useRef<() => void>(() => {});
   const latestLocationRef = useRef<{ lat: number; lng: number }>(playerLocation);
   const amenitiesCallbackRef = useRef<
@@ -341,6 +440,80 @@ const measureMarkerRef = useRef<mapboxgl.Marker | null>(null);
 
   const [isMeasurePanelCollapsed, setIsMeasurePanelCollapsed] = useState(false);
   const [visiblePois, setVisiblePois] = useState<POI[]>([]);
+
+  const loadGeojsonPointFeatures = useCallback(
+    async (geojsonUrl?: string): Promise<PointLikeFeature[]> => {
+      if (!geojsonUrl) return [];
+
+      if (geojsonSourceCacheRef.current[geojsonUrl]) {
+        return geojsonSourceCacheRef.current[geojsonUrl];
+      }
+
+      if (!geojsonSourcePromisesRef.current[geojsonUrl]) {
+        geojsonSourcePromisesRef.current[geojsonUrl] = fetch(geojsonUrl)
+          .then((response) => {
+            if (!response.ok) {
+              throw new Error(
+                `Failed to load geojson source ${geojsonUrl}: ${response.status} ${response.statusText}`,
+              );
+            }
+            return response.json() as Promise<FeatureCollection>;
+          })
+          .then((collection) => {
+            if (
+              !collection ||
+              collection.type !== "FeatureCollection" ||
+              !Array.isArray(collection.features)
+            ) {
+              return [];
+            }
+            const pointFeatures = collection.features.filter(
+              (feature): feature is PointLikeFeature => {
+                const type = feature?.geometry?.type;
+                return type === "Point" || type === "MultiPoint";
+              },
+            );
+            geojsonSourceCacheRef.current[geojsonUrl] = pointFeatures;
+            return pointFeatures;
+          })
+          .catch((error) => {
+            console.warn(`[Measure] Unable to load geojson ${geojsonUrl}`, error);
+            delete geojsonSourcePromisesRef.current[geojsonUrl];
+            return [];
+          });
+      }
+
+      return geojsonSourcePromisesRef.current[geojsonUrl];
+    },
+    [],
+  );
+
+  const getLayerMeasurementFeatures = useCallback(
+    async (layer: (typeof kotoLayers)[number]): Promise<PointLikeFeature[]> => {
+      if (layer.sourceType !== "geojson") {
+        return [];
+      }
+
+      if (layerFeatureCacheRef.current[layer.id]) {
+        return layerFeatureCacheRef.current[layer.id];
+      }
+
+      if (!layerFeaturePromisesRef.current[layer.id]) {
+        layerFeaturePromisesRef.current[layer.id] = loadGeojsonPointFeatures(
+          layer.sourceData.geojsonUrl,
+        ).then((features) => {
+          const filtered = features.filter((feature) =>
+            evaluateLayerFilter(layer.style.filter, feature.properties ?? {}),
+          );
+          layerFeatureCacheRef.current[layer.id] = filtered;
+          return filtered;
+        });
+      }
+
+      return layerFeaturePromisesRef.current[layer.id];
+    },
+    [loadGeojsonPointFeatures],
+  );
 
 
   useEffect(() => {
@@ -700,71 +873,60 @@ const measureMarkerRef = useRef<mapboxgl.Marker | null>(null);
       (async () => {
         const radiusKm = Math.max(0, radius) / 1000;
         const origin = { lat: center.lat, lng: center.lng };
-        const m = map.current;
-        if (!m) return;
 
         const activeSymbolLayers = kotoLayers.filter(
           (layer) => layer.layerType === "symbol" && kotoLayersVisible[layer.label],
         );
-        const activeLayerIds = activeSymbolLayers
-          .map((layer) => `koto-layer-${layer.id}`)
-          .filter((layerId) => m.getLayer(layerId));
 
-        const layerLabelById = new Map(
-          activeSymbolLayers.map((layer) => [`koto-layer-${layer.id}`, layer.label]),
+        const layerResults = await Promise.all(
+          activeSymbolLayers.map(async (layer) => ({
+            layer,
+            features: await getLayerMeasurementFeatures(layer),
+          })),
         );
-
-        const rawFeatures =
-          activeLayerIds.length > 0
-            ? (m.queryRenderedFeatures(undefined, {
-                layers: activeLayerIds,
-              }) as mapboxgl.MapboxGeoJSONFeature[])
-            : [];
-
-        const pointFeatures = rawFeatures.filter(
-          (feature) =>
-            (feature.geometry?.type === "Point" ||
-              feature.geometry?.type === "MultiPoint") &&
-            Array.isArray((feature.geometry as any).coordinates),
-        );
-
-        const withinRadius = pointFeatures.filter((feature) => {
-          const coords = (feature.geometry as any).coordinates;
-          if (feature.geometry?.type === "MultiPoint" && Array.isArray(coords)) {
-            return coords.some(([lng, lat]: [number, number]) => haversineDistanceKm(origin, { lat, lng }) <= radiusKm);
-          }
-          const [lng, lat] = coords;
-          return haversineDistanceKm(origin, { lat, lng }) <= radiusKm;
-        });
 
         const layerCounts: Record<string, number> = {};
+        const markers: POI[] = [];
 
-        const markers = withinRadius.map<POI>((feature, index) => {
-          const coords = (feature.geometry as any).coordinates;
-          const [lng, lat] = Array.isArray(coords[0]) ? coords[0] : coords;
-          const layerLabel = layerLabelById.get(feature.layer?.id ?? "") ?? feature.layer?.id ?? "Layer";
-          layerCounts[layerLabel] = (layerCounts[layerLabel] ?? 0) + 1;
+        layerResults.forEach(({ layer, features }) => {
+          features.forEach((feature, index) => {
+            const coordinates = getFeatureCoordinates(feature);
+            if (!coordinates.length) return;
 
-          const props = feature.properties ?? {};
-          const name =
-            (props["Landmark Name (EN)"] as string) ??
-            (props["Landmark name (EN)"] as string) ??
-            (props["Landmark name (JP)"] as string) ??
-            (props.name as string) ??
-            layerLabel;
+            const isWithinRadius = coordinates.some(([lng, lat]) =>
+              haversineDistanceKm(origin, { lat, lng }) <= radiusKm,
+            );
+            if (!isWithinRadius) return;
 
-          const id =
-            feature.id != null
-              ? String(feature.id)
-              : `${feature.layer?.id ?? "feature"}-${index}`;
+            const [lng, lat] = coordinates[0];
+            if (!Number.isFinite(lng) || !Number.isFinite(lat)) {
+              return;
+            }
 
-          return {
-            id,
-            name,
-            lat: Number(lat),
-            lng: Number(lng),
-            type: "shelter",
-          };
+            layerCounts[layer.label] = (layerCounts[layer.label] ?? 0) + 1;
+
+            const props = feature.properties ?? {};
+            const name =
+              (props["Landmark Name (EN)"] as string) ??
+              (props["Landmark name (EN)"] as string) ??
+              (props["Landmark Name (JP)"] as string) ??
+              (props["Landmark name (JP)"] as string) ??
+              (props.name as string) ??
+              layer.label;
+
+            const id =
+              feature.id != null
+                ? String(feature.id)
+                : `${layer.id}-${index}`;
+
+            markers.push({
+              id,
+              name,
+              lat: Number(lat),
+              lng: Number(lng),
+              type: "shelter",
+            });
+          });
         });
 
         if (lastMeasureRequestRef.current !== requestId) {
@@ -796,7 +958,7 @@ const measureMarkerRef = useRef<mapboxgl.Marker | null>(null);
         console.error("[Measure] Failed to load shelters", error);
       });
     },
-    [hideShelterLayers, restoreShelterLayers, updateShelterMarkers, kotoLayersVisible],
+    [getLayerMeasurementFeatures, hideShelterLayers, updateShelterMarkers, kotoLayersVisible],
   );
 
   const beginMoveCenter = useCallback(() => {

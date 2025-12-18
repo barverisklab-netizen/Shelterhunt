@@ -368,6 +368,7 @@ export const kotoLayers: KotoLayer[] = [
         "text-halo-color": "#ffffff",
         "text-halo-width": 1.2,
       },
+      filter: ["==", ["get", "Category"], "AED"],
       layout: {
         "icon-size": 0.6,
         "text-font": ["Roboto Bold"],

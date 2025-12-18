@@ -241,33 +241,17 @@
       "noneWithinRadius": "No amenities within 250m yet."
     },
     "dynamic": {
-      "floodDepthRank": {
-        "question": "Is the flood depth rank {param}?",
-        "clue": "Flood depth rank is {param}"
-      },
       "floodDepth": {
         "question": "Is the flood depth {param}?",
         "clue": "Flood depth is {param}"
-      },
-      "stormSurgeDepthRank": {
-        "question": "Is the storm surge depth rank {param}?",
-        "clue": "Storm surge depth rank is {param}"
       },
       "stormSurgeDepth": {
         "question": "Is the storm surge depth {param}?",
         "clue": "Storm surge depth is {param}"
       },
-      "floodDurationRank": {
-        "question": "Is the flood duration rank {param}?",
-        "clue": "Flood duration rank is {param}"
-      },
       "floodDuration": {
         "question": "Is the flood duration {param}?",
         "clue": "Flood duration is {param}"
-      },
-      "inlandWatersDepthRank": {
-        "question": "Is the inland waters depth rank {param}?",
-        "clue": "Inland waters depth rank is {param}"
       },
       "inlandWatersDepth": {
         "question": "Is the inland waters depth {param}?",

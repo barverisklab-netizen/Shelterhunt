@@ -106,7 +106,7 @@ export function GameplayPanel({
 
             <div className="flex-1 overflow-y-auto p-6 space-y-4 ">
               <motion.div
-                className="rounded border border-neutral-900 bg-neutral-50 p-4"
+                className="rounded bg-neutral-50 p-4"
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
               >
@@ -136,6 +136,58 @@ export function GameplayPanel({
                 }}
                 className="space-y-4"
               >
+                {/* Final guess */}
+                <AccordionItem
+                  value="guess"
+                  className="rounded border-2 border-red-400/50 bg-red-500/20"
+                >
+                  <AccordionTrigger className="px-4  text-black">
+                    <div className="flex w-full items-center justify-between text-sm font-bold uppercase tracking-wide">
+                      <span>{t("gameplay.finalDecision")}</span>
+                      <span />
+                    </div>
+                  </AccordionTrigger>
+                  <AccordionContent className="space-y-3 px-6 py-6">
+                    <div className="space-y-2">
+                      <label className="text-s font-semibold uppercase text-black/70 font-bold ">
+                        {t("gameplay.selectShelter")}
+                      </label>
+                      <p className="text-[11px] text-black/60">
+                        {t("gameplay.selectShelterHint", {
+                          fallback: "Pick the shelter you believe is correct. You must be within 250m when you submit.",
+                        })}
+                      </p>
+                      <select
+                        value={selectedShelterId ?? ""}
+                        onChange={(event) => onShelterSelect(event.target.value || null)}
+                        className="w-full rounded border border-neutral-700 bg-background p-2 text-sm font-semibold uppercase text-neutral-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-neutral-500"
+                      >
+                        <option value="" disabled hidden>
+                          {t("gameplay.selectPlaceholder")}
+                        </option>
+                        {shelterOptions.map((option) => (
+                          <option key={option.id} value={option.id}>
+                            {option.name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <p className="text-[11px] text-black/60">
+                      {t("gameplay.guessWarning")}
+                    </p>
+                    <Button
+                      onClick={onGuessRequest}
+                      className="w-full border border-black bg-white text-black transition-colors hover:bg-neutral-200 hover:text-black hover:border-black active:bg-neutral-800 active:text-black active:border-black disabled:bg-neutral-200 disabled:text-black-40 disabled:border-neutral-400 disabled:opacity-100"
+                      disabled={
+                        isGuessDisabled || !selectedShelterId || !shelterOptions.length
+                      }
+                    >
+                      {t("gameplay.submitGuess")}
+                    </Button>
+                  </AccordionContent>
+                </AccordionItem>
+
+                {/* Clues */}
                 <AccordionItem
                   value="clues"
                   className="rounded border border-neutral-900 bg-neutral-100"
@@ -300,6 +352,7 @@ export function GameplayPanel({
                   </AccordionContent>
                 </AccordionItem>
 
+                {/* Tools */}
                 <AccordionItem
                   value="tools"
                   className="rounded border border-neutral-900 bg-neutral-100"
@@ -339,55 +392,6 @@ export function GameplayPanel({
                   </AccordionContent>
                 </AccordionItem>
 
-                <AccordionItem
-                  value="guess"
-                  className="rounded border border-neutral-900 bg-neutral-100"
-                >
-                  <AccordionTrigger className="px-4  text-black">
-                    <div className="flex w-full items-center justify-between text-sm font-bold uppercase tracking-wide">
-                      <span>{t("gameplay.finalDecision")}</span>
-                      <span />
-                    </div>
-                  </AccordionTrigger>
-                  <AccordionContent className="space-y-3 px-6 py-6">
-                    <div className="space-y-2">
-                      <label className="text-s font-semibold uppercase text-black/70 font-bold ">
-                        {t("gameplay.selectShelter")}
-                      </label>
-                      <p className="text-[11px] text-black/60">
-                        {t("gameplay.selectShelterHint", {
-                          fallback: "Pick the shelter you believe is correct. You must be within 250m when you submit.",
-                        })}
-                      </p>
-                      <select
-                        value={selectedShelterId ?? ""}
-                        onChange={(event) => onShelterSelect(event.target.value || null)}
-                        className="w-full rounded border border-neutral-700 bg-background p-2 text-sm font-semibold uppercase text-neutral-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-neutral-500"
-                      >
-                        <option value="" disabled hidden>
-                          {t("gameplay.selectPlaceholder")}
-                        </option>
-                        {shelterOptions.map((option) => (
-                          <option key={option.id} value={option.id}>
-                            {option.name}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                    <p className="text-[11px] text-black/60">
-                      {t("gameplay.guessWarning")}
-                    </p>
-                    <Button
-                      onClick={onGuessRequest}
-                      className="w-full border border-black bg-white text-black transition-colors hover:bg-neutral-200 hover:text-black hover:border-black active:bg-neutral-800 active:text-black active:border-black disabled:bg-neutral-200 disabled:text-black-40 disabled:border-neutral-400 disabled:opacity-100"
-                      disabled={
-                        isGuessDisabled || !selectedShelterId || !shelterOptions.length
-                      }
-                    >
-                      {t("gameplay.submitGuess")}
-                    </Button>
-                  </AccordionContent>
-                </AccordionItem>
               </Accordion>
 
               <div className="mt-2 flex items-center justify-between gap-3">

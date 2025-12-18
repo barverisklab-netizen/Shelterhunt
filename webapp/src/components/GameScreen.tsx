@@ -272,13 +272,9 @@ export function GameScreen({
   }, [playerLocation.lat, playerLocation.lng, nearbyAmenityCounts]);
 
   const attributeCategoryMap: Record<string, Question["category"]> = {
-    floodDepthRank: "location",
     floodDepth: "location",
-    stormSurgeDepthRank: "location",
     stormSurgeDepth: "location",
-    floodDurationRank: "location",
     floodDuration: "location",
-    inlandWatersDepthRank: "location",
     inlandWatersDepth: "location",
     facilityType: "facility",
     shelterCapacity: "capacity",
@@ -330,13 +326,9 @@ export function GameScreen({
       )
     : undefined;
   const attributeValueLookup: Record<string, (shelter: Shelter) => string | number | null> = {
-    floodDepthRank: (shelter) => shelter.floodDepthRank,
     floodDepth: (shelter) => shelter.floodDepth,
-    stormSurgeDepthRank: (shelter) => shelter.stormSurgeDepthRank,
     stormSurgeDepth: (shelter) => shelter.stormSurgeDepth,
-    floodDurationRank: (shelter) => shelter.floodDurationRank,
     floodDuration: (shelter) => shelter.floodDuration,
-    inlandWatersDepthRank: (shelter) => shelter.inlandWatersDepthRank,
     inlandWatersDepth: (shelter) => shelter.inlandWatersDepth,
     facilityType: (shelter) => shelter.facilityType,
     shelterCapacity: (shelter) => shelter.shelterCapacity,

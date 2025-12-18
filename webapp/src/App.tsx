@@ -61,6 +61,12 @@ type GameMode = "lightning" | "citywide";
 const INITIAL_SHELTER_RADIUS_KM = LIGHTNING_RADIUS_KM;
 const DESIGNATED_CATEGORY = "designated ec";
 const MULTIPLAYER_DURATION_MINUTES = 60;
+const EXCLUDED_QUESTION_ATTRIBUTE_IDS = new Set([
+  "floodDepthRank",
+  "stormSurgeDepthRank",
+  "floodDurationRank",
+  "inlandWatersDepthRank",
+]);
 
 type SessionRole = "host" | "player";
 
@@ -222,7 +228,11 @@ export default function App() {
       .then(setShelters)
       .catch((error) => console.warn("[Shelters] Failed to load shelter dataset:", error));
     getQuestionAttributes()
-      .then(setQuestionAttributes)
+      .then((attributes) =>
+        setQuestionAttributes(
+          attributes.filter((attribute) => !EXCLUDED_QUESTION_ATTRIBUTE_IDS.has(attribute.id)),
+        ),
+      )
       .catch((error) => console.warn("[Questions] Failed to load question attributes:", error));
   }, []);
 
