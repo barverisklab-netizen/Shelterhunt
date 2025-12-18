@@ -1185,11 +1185,6 @@ const measureMarkerRef = useRef<mapboxgl.Marker | null>(null);
             { lng: updated.lng, lat: updated.lat },
             FIXED_MEASURE_RADIUS_METERS,
           );
-          toast.success(
-            t("map.measure.measuring", {
-              fallback: "Measuring 250m radius around your point.",
-            }),
-          );
         });
       }
 
@@ -1709,11 +1704,6 @@ const measureMarkerRef = useRef<mapboxgl.Marker | null>(null);
         layerCounts: {},
       }));
       updateCircle({ lng, lat }, FIXED_MEASURE_RADIUS_METERS);
-      toast.success(
-        t("map.measure.measuring", {
-          fallback: "Measuring 250m radius around your point.",
-        }),
-      );
     };
 
     m.on("click", handleMapClick);
