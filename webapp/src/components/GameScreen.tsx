@@ -91,7 +91,6 @@ export function GameScreen({
   const [penaltyStage, setPenaltyStage] = useState<WrongGuessStage | null>(null); // retained for compatibility
   const [wrongGuessCount, setWrongGuessCount] = useState(0);
   const [solvedQuestions, setSolvedQuestions] = useState<string[]>([]);
-  const lastToastPoiId = useRef<string | null>(null);
   const [externalWinnerName, setExternalWinnerName] = useState<string | undefined>(undefined);
   const [activePanel, setActivePanel] = useState<"layers" | "questions" | "gameplay" | null>(
     null,
@@ -116,6 +115,7 @@ export function GameScreen({
     typeof value === "number" ? String(value) : String(value ?? "").trim().toLowerCase();
 
   const lastLocationRequestRef = useRef<number>(0);
+  const hasAnnouncedTestingModeRef = useRef(false);
   const requestLatestLocation = useCallback(() => {
     if (PROXIMITY_DISABLED_FOR_TESTING) return;
     if (typeof navigator === "undefined" || !navigator.geolocation || !onLocationChange) return;
@@ -710,23 +710,13 @@ export function GameScreen({
   );
 
   useEffect(() => {
-    if (PROXIMITY_DISABLED_FOR_TESTING) {
-      if (lastToastPoiId.current !== "testing") {
-        toast.info(
-          t("game.tapToAsk", { fallback: "Tap to ask questions." }),
-        );
-        lastToastPoiId.current = "testing";
-      }
-      return;
-    }
-
-    if (nearbyPOI?.id && lastToastPoiId.current !== nearbyPOI.id) {
-      toast.info(
-        t("game.tapToAsk", { fallback: "Tap to ask questions." }),
-      );
-      lastToastPoiId.current = nearbyPOI.id;
-    }
-  }, [nearbyPOI, t]);
+    if (!PROXIMITY_DISABLED_FOR_TESTING) return;
+    if (hasAnnouncedTestingModeRef.current) return;
+    toast.info(
+      t("game.testingModeActive", { fallback: "Testing mode active." }),
+    );
+    hasAnnouncedTestingModeRef.current = true;
+  }, [t]);
 
   const timerContainerClasses = [
     "flex items-center gap-2 px-4 py-2 border rounded-full",

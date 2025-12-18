@@ -420,7 +420,7 @@
     "exitConfirmLeave": "Exit",
     "secretShelter": "Hidden target",
     "secretShelterName": "Solve clues to reveal the shelter",
-    "tapToAsk": "Testing mode active",
+    "testingModeActive": "Testing mode active",
     "toasts": {
       "selectShelterFirst": "Select a shelter before submitting a guess.",
       "shelterPreparing": "The secret shelter is still being prepared. Try again in a moment.",

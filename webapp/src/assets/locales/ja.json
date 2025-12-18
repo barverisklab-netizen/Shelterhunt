@@ -420,7 +420,7 @@
     "exitConfirmLeave": "終了",
     "secretShelter": "隠された避難所",
     "secretShelterName": "手がかりを解くと名前が表示されます",
-    "tapToAsk": "質問するにはタップ",
+    "testingModeActive": "テストモードが有効です",
     "toasts": {
       "selectShelterFirst": "推理を送信する前に避難所を選択してください。",
       "shelterPreparing": "秘密の避難所を準備中です。少し待ってから再試行してください。",
