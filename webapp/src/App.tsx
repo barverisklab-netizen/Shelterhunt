@@ -94,6 +94,7 @@ interface GameSnapshot {
   currentUserId: string;
   timeRemaining: number;
   timerEnabled: boolean;
+  timerEndsAt: number | null;
   isTimerCritical: boolean;
   playerLocation: { lat: number; lng: number };
   secretShelter: { id: string; name: string } | null;
@@ -206,6 +207,7 @@ export default function App() {
   const [isTimerCritical, setIsTimerCritical] = useState(false);
   const [wrongGuessCount, setWrongGuessCount] = useState(0);
   const [timerEnabled, setTimerEnabled] = useState(true);
+  const [timerEndsAt, setTimerEndsAt] = useState<number | null>(null);
   const [gameMode, setGameMode] = useState<GameMode | null>(null);
   const [lightningCenter, setLightningCenter] = useState<{ lat: number; lng: number } | null>(
     null,
@@ -245,8 +247,15 @@ export default function App() {
     setShelterOptions([]);
     setIsTimerCritical(false);
     setTimerEnabled(false);
+    setTimerEndsAt(null);
     toast.error(t("app.toasts.timeUp", { fallback: "Time's up! Game over." }));
   }, [t]);
+
+  const setTimerState = useCallback((seconds: number, enabled: boolean) => {
+    setTimeRemaining(seconds);
+    setTimerEnabled(enabled);
+    setTimerEndsAt(enabled ? Date.now() + seconds * 1000 : null);
+  }, []);
 
   const buildGameSnapshot = useCallback(
     (): GameSnapshot => ({
@@ -260,6 +269,7 @@ export default function App() {
       currentUserId: sessionContext?.userId ?? currentUserId,
       timeRemaining,
       timerEnabled,
+      timerEndsAt,
       isTimerCritical,
       playerLocation,
       secretShelter,
@@ -299,6 +309,7 @@ export default function App() {
       shelterOptions,
       timeRemaining,
       timerEnabled,
+      timerEndsAt,
       wrongGuessCount,
     ],
   );
@@ -343,12 +354,17 @@ export default function App() {
         return;
       }
 
-      const elapsedSeconds = Math.max(0, Math.floor((now - snapshot.savedAt) / 1000));
-      const nextTimeRemaining =
-        snapshot.timerEnabled && snapshot.timeRemaining > 0
-          ? Math.max(0, snapshot.timeRemaining - elapsedSeconds)
-          : snapshot.timeRemaining;
-      const shouldEnd = snapshot.timerEnabled && snapshot.gameState === "playing" && nextTimeRemaining <= 0;
+      const resolvedTimerEndsAt =
+        snapshot.timerEnabled
+          ? Number.isFinite(snapshot.timerEndsAt)
+            ? (snapshot.timerEndsAt as number)
+            : snapshot.savedAt + snapshot.timeRemaining * 1000
+          : null;
+      const nextTimeRemaining = resolvedTimerEndsAt
+        ? Math.max(0, Math.ceil((resolvedTimerEndsAt - now) / 1000))
+        : snapshot.timeRemaining;
+      const shouldEnd =
+        snapshot.timerEnabled && snapshot.gameState === "playing" && nextTimeRemaining <= 0;
 
       setResumeId(snapshot.resumeId || crypto.randomUUID());
       setGameState(shouldEnd ? "ended" : snapshot.gameState);
@@ -357,6 +373,7 @@ export default function App() {
       setIsHost(snapshot.isHost ?? false);
       setTimeRemaining(nextTimeRemaining);
       setTimerEnabled(snapshot.timerEnabled ?? true);
+      setTimerEndsAt(snapshot.timerEnabled ? resolvedTimerEndsAt : null);
       setIsTimerCritical(snapshot.isTimerCritical ?? false);
       setPlayerLocation(snapshot.playerLocation ?? defaultCityContext.mapConfig.startLocation);
       setSecretShelter(snapshot.secretShelter ?? null);
@@ -389,23 +406,24 @@ export default function App() {
 
   // Timer countdown
   useEffect(() => {
-    if (!timerEnabled || gameState !== "playing") {
+    if (!timerEnabled || gameState !== "playing" || !timerEndsAt) {
       return;
     }
 
-    if (timeRemaining > 0) {
-      const timer = setInterval(() => {
-        setTimeRemaining((prev) => {
-          if (prev <= 1) {
-            handleTimeUp();
-            return 0;
-          }
-          return prev - 1;
-        });
-      }, 1000);
-      return () => clearInterval(timer);
-    }
-  }, [gameState, handleTimeUp, timeRemaining, timerEnabled]);
+    const tick = () => {
+      const nextRemaining = Math.max(0, Math.ceil((timerEndsAt - Date.now()) / 1000));
+      if (nextRemaining <= 0) {
+        setTimeRemaining(0);
+        handleTimeUp();
+        return;
+      }
+      setTimeRemaining(nextRemaining);
+    };
+
+    tick();
+    const timer = setInterval(tick, 1000);
+    return () => clearInterval(timer);
+  }, [gameState, handleTimeUp, timerEnabled, timerEndsAt]);
 
   useEffect(() => {
     getShelters()
@@ -474,12 +492,11 @@ export default function App() {
   const resetGameContext = () => {
     clearGameSnapshots();
     setResumeId(crypto.randomUUID());
-    setTimeRemaining(1800);
+    setTimerState(1800, true);
     setIsTimerCritical(false);
     setShelterOptions([]);
     setSecretShelter(null);
     setWrongGuessCount(0);
-    setTimerEnabled(true);
     setGameMode(null);
     setLockSecretShelter(false);
     setLockShelterOptions(false);
@@ -523,12 +540,11 @@ export default function App() {
       setGameState(options?.targetState ?? "onboarding");
       setGameCode("");
       setPlayers(defaultPlayers);
-      setTimeRemaining(1800);
+      setTimerState(1800, true);
       setShelterOptions([]);
       setIsTimerCritical(false);
       setSecretShelter(null);
       setWrongGuessCount(0);
-      setTimerEnabled(true);
       setGameMode(null);
       setLockSecretShelter(false);
       setLockShelterOptions(false);
@@ -547,7 +563,7 @@ export default function App() {
         );
       }
     },
-    [clearGameSnapshots, disconnectSession, t],
+    [clearGameSnapshots, disconnectSession, setTimerState, t],
   );
 
   const refreshSessionPlayers = useCallback(
@@ -732,8 +748,7 @@ export default function App() {
       setLockSecretShelter(true);
       setLockShelterOptions(true);
       setGameMode("lightning");
-      setTimeRemaining(MULTIPLAYER_DURATION_MINUTES * 60);
-      setTimerEnabled(true);
+      setTimerState(MULTIPLAYER_DURATION_MINUTES * 60, true);
       setIsTimerCritical(false);
       if (coords) {
         setPlayerLocation(coords);
@@ -772,7 +787,7 @@ export default function App() {
     } else {
       useFallback();
     }
-  }, [currentShelter, sessionContext, designatedShelters, buildLocalDesignatedShelters]);
+  }, [buildLocalDesignatedShelters, currentShelter, designatedShelters, sessionContext, setTimerState]);
 
   const bootstrapSession = useCallback(
     async (
@@ -813,13 +828,12 @@ export default function App() {
       setLockShelterOptions(false);
       setSecretShelter(null);
       setShelterOptions([]);
-      setTimeRemaining(1800);
-      setTimerEnabled(true);
+      setTimerState(1800, true);
       setIsTimerCritical(false);
       await refreshSessionPlayers(response.session.id, response.token);
       setGameState("waiting");
     },
-    [refreshSessionPlayers],
+    [getShelterByShareCode, profileName, refreshSessionPlayers, setTimerState],
   );
 
   const handleSessionEvent = useCallback(
@@ -1167,11 +1181,9 @@ export default function App() {
     setGameMode(mode);
 
     if (typeof timerSeconds === "number" && timerSeconds > 0) {
-      setTimeRemaining(timerSeconds);
-      setTimerEnabled(true);
+      setTimerState(timerSeconds, true);
     } else {
-      setTimeRemaining(0);
-      setTimerEnabled(false);
+      setTimerState(0, false);
     }
 
     setLockSecretShelter(lockSecret);
@@ -1252,12 +1264,11 @@ export default function App() {
     }
 
     setResumeId(crypto.randomUUID());
-    setTimeRemaining(1800);
+    setTimerState(1800, true);
     setIsTimerCritical(false);
     setShelterOptions([]);
     setSecretShelter(null);
     setWrongGuessCount(0);
-    setTimerEnabled(true);
     setGameState("playing");
     toast.success(
       t("app.toasts.gameStarted", {
@@ -1275,15 +1286,13 @@ export default function App() {
     setWrongGuessCount(next);
 
     if (next === 1) {
-      setTimeRemaining(600);
-      setTimerEnabled(true);
+      setTimerState(600, true);
       setIsTimerCritical(true);
       return "first";
     }
 
     if (next === 2) {
-      setTimeRemaining(300);
-      setTimerEnabled(true);
+      setTimerState(300, true);
       setIsTimerCritical(true);
       return "second";
     }
@@ -1446,7 +1455,6 @@ export default function App() {
       lockSecret: false,
       lockOptions: false,
     });
-    setTimerEnabled(false);
     setModeProcessing(false);
   };
 
