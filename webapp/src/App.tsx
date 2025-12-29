@@ -67,6 +67,10 @@ const EXCLUDED_QUESTION_ATTRIBUTE_IDS = new Set([
   "floodDurationRank",
   "inlandWatersDepthRank",
 ]);
+const GAME_SNAPSHOT_KEY = "shelterhunt.gameSnapshot.v1";
+const GAMEPLAY_SNAPSHOT_KEY = "shelterhunt.gameplaySnapshot.v1";
+const GAME_SNAPSHOT_VERSION = 1;
+const RESUME_GRACE_MS = 10 * 60 * 1000;
 
 type SessionRole = "host" | "player";
 
@@ -79,6 +83,33 @@ interface MultiplayerSessionContext {
   shelterCode: string;
 }
 
+interface GameSnapshot {
+  version: number;
+  savedAt: number;
+  resumeId: string;
+  gameState: GameState;
+  gameCode: string;
+  isHost: boolean;
+  players: Player[];
+  currentUserId: string;
+  timeRemaining: number;
+  timerEnabled: boolean;
+  isTimerCritical: boolean;
+  playerLocation: { lat: number; lng: number };
+  secretShelter: { id: string; name: string } | null;
+  shelterOptions: { id: string; name: string }[];
+  gameMode: GameMode | null;
+  lightningCenter: { lat: number; lng: number } | null;
+  lightningRadiusKm: number | null;
+  designatedShelters: POI[];
+  remoteOutcome: { result: "win" | "lose"; winnerName?: string } | null;
+  sessionContext: MultiplayerSessionContext | null;
+  sessionHostId: string | null;
+  currentShelter: Shelter | null;
+  lockSecretShelter: boolean;
+  lockShelterOptions: boolean;
+  wrongGuessCount: number;
+}
 const mapSessionPlayersToUI = (
   records: SessionPlayer[],
   hostId: string,
@@ -142,7 +173,15 @@ export default function App() {
   const [gameCode, setGameCode] = useState("");
   const [isHost, setIsHost] = useState(false);
   const [players, setPlayers] = useState<Player[]>(defaultPlayers);
-  const [currentUserId] = useState(() => crypto.randomUUID());
+  const [currentUserId, setCurrentUserId] = useState(() => {
+    if (typeof window === "undefined") return crypto.randomUUID();
+    const stored = localStorage.getItem("shelterhunt.currentUserId");
+    if (stored) return stored;
+    const created = crypto.randomUUID();
+    localStorage.setItem("shelterhunt.currentUserId", created);
+    return created;
+  });
+  const [resumeId, setResumeId] = useState(() => crypto.randomUUID());
   const [profileName, setProfileName] = useState(() => {
     if (typeof window === "undefined") return "";
     return localStorage.getItem("shelterhunt.profileName") ?? "";
@@ -184,6 +223,7 @@ export default function App() {
   const [questionAttributes, setQuestionAttributes] = useState<QuestionAttribute[]>([]);
   const [sessionContext, setSessionContext] = useState<MultiplayerSessionContext | null>(null);
   const sessionSocketRef = useRef<WebSocket | null>(null);
+  const [socketReconnectKey, setSocketReconnectKey] = useState(0);
   const [sessionHostId, setSessionHostId] = useState<string | null>(null);
   const [currentShelter, setCurrentShelter] = useState<Shelter | null>(null);
   const [joinCodeScreenOpen, setJoinCodeScreenOpen] = useState(false);
@@ -197,6 +237,155 @@ export default function App() {
       defaultNavigatorName
     : profileName || defaultSoloName;
   const currentSessionUserId = sessionContext?.userId ?? currentUserId;
+  const restoredFromSnapshotRef = useRef(false);
+
+  const handleTimeUp = useCallback(() => {
+    setGameState("ended");
+    setSecretShelter(null);
+    setShelterOptions([]);
+    setIsTimerCritical(false);
+    setTimerEnabled(false);
+    toast.error(t("app.toasts.timeUp", { fallback: "Time's up! Game over." }));
+  }, [t]);
+
+  const buildGameSnapshot = useCallback(
+    (): GameSnapshot => ({
+      version: GAME_SNAPSHOT_VERSION,
+      savedAt: Date.now(),
+      resumeId,
+      gameState,
+      gameCode,
+      isHost,
+      players,
+      currentUserId: sessionContext?.userId ?? currentUserId,
+      timeRemaining,
+      timerEnabled,
+      isTimerCritical,
+      playerLocation,
+      secretShelter,
+      shelterOptions,
+      gameMode,
+      lightningCenter,
+      lightningRadiusKm,
+      designatedShelters,
+      remoteOutcome,
+      sessionContext,
+      sessionHostId,
+      currentShelter,
+      lockSecretShelter,
+      lockShelterOptions,
+      wrongGuessCount,
+    }),
+    [
+      currentShelter,
+      currentUserId,
+      designatedShelters,
+      gameCode,
+      gameMode,
+      gameState,
+      isHost,
+      isTimerCritical,
+      lightningCenter,
+      lightningRadiusKm,
+      lockSecretShelter,
+      lockShelterOptions,
+      playerLocation,
+      players,
+      remoteOutcome,
+      resumeId,
+      secretShelter,
+      sessionContext,
+      sessionHostId,
+      shelterOptions,
+      timeRemaining,
+      timerEnabled,
+      wrongGuessCount,
+    ],
+  );
+
+  const saveGameSnapshot = useCallback(() => {
+    if (typeof window === "undefined") return;
+    try {
+      const snapshot = buildGameSnapshot();
+      localStorage.setItem(GAME_SNAPSHOT_KEY, JSON.stringify(snapshot));
+    } catch (error) {
+      console.warn("[Resume] Failed to save snapshot", error);
+    }
+  }, [buildGameSnapshot]);
+
+  const clearGameSnapshots = useCallback(() => {
+    if (typeof window === "undefined") return;
+    localStorage.removeItem(GAME_SNAPSHOT_KEY);
+    localStorage.removeItem(GAMEPLAY_SNAPSHOT_KEY);
+  }, []);
+
+  const loadGameSnapshot = useCallback((): GameSnapshot | null => {
+    if (typeof window === "undefined") return null;
+    const raw = localStorage.getItem(GAME_SNAPSHOT_KEY);
+    if (!raw) return null;
+    try {
+      const parsed = JSON.parse(raw) as GameSnapshot;
+      if (parsed.version !== GAME_SNAPSHOT_VERSION) {
+        return null;
+      }
+      return parsed;
+    } catch (error) {
+      console.warn("[Resume] Failed to parse snapshot", error);
+      return null;
+    }
+  }, []);
+
+  const applyGameSnapshot = useCallback(
+    (snapshot: GameSnapshot) => {
+      const now = Date.now();
+      if (now - snapshot.savedAt > RESUME_GRACE_MS) {
+        clearGameSnapshots();
+        return;
+      }
+
+      const elapsedSeconds = Math.max(0, Math.floor((now - snapshot.savedAt) / 1000));
+      const nextTimeRemaining =
+        snapshot.timerEnabled && snapshot.timeRemaining > 0
+          ? Math.max(0, snapshot.timeRemaining - elapsedSeconds)
+          : snapshot.timeRemaining;
+      const shouldEnd = snapshot.timerEnabled && snapshot.gameState === "playing" && nextTimeRemaining <= 0;
+
+      setResumeId(snapshot.resumeId || crypto.randomUUID());
+      setGameState(shouldEnd ? "ended" : snapshot.gameState);
+      setGameCode(snapshot.gameCode ?? "");
+      setPlayers(snapshot.players ?? defaultPlayers);
+      setIsHost(snapshot.isHost ?? false);
+      setTimeRemaining(nextTimeRemaining);
+      setTimerEnabled(snapshot.timerEnabled ?? true);
+      setIsTimerCritical(snapshot.isTimerCritical ?? false);
+      setPlayerLocation(snapshot.playerLocation ?? defaultCityContext.mapConfig.startLocation);
+      setSecretShelter(snapshot.secretShelter ?? null);
+      setShelterOptions(snapshot.shelterOptions ?? []);
+      setGameMode(snapshot.gameMode ?? null);
+      setLightningCenter(snapshot.lightningCenter ?? null);
+      setLightningRadiusKm(snapshot.lightningRadiusKm ?? null);
+      setDesignatedShelters(snapshot.designatedShelters ?? []);
+      setRemoteOutcome(snapshot.remoteOutcome ?? null);
+      setSessionContext(snapshot.sessionContext ?? null);
+      setSessionHostId(snapshot.sessionHostId ?? null);
+      setCurrentShelter(snapshot.currentShelter ?? null);
+      setLockSecretShelter(snapshot.lockSecretShelter ?? false);
+      setLockShelterOptions(snapshot.lockShelterOptions ?? false);
+      setWrongGuessCount(snapshot.wrongGuessCount ?? 0);
+
+      if (snapshot.currentUserId && snapshot.currentUserId !== currentUserId) {
+        setCurrentUserId(snapshot.currentUserId);
+        if (typeof window !== "undefined") {
+          localStorage.setItem("shelterhunt.currentUserId", snapshot.currentUserId);
+        }
+      }
+
+      if (shouldEnd) {
+        handleTimeUp();
+      }
+    },
+    [clearGameSnapshots, currentUserId, handleTimeUp],
+  );
 
   // Timer countdown
   useEffect(() => {
@@ -208,12 +397,7 @@ export default function App() {
       const timer = setInterval(() => {
         setTimeRemaining((prev) => {
           if (prev <= 1) {
-            setGameState("ended");
-            setSecretShelter(null);
-            setShelterOptions([]);
-            setIsTimerCritical(false);
-            setTimerEnabled(false);
-            toast.error(t("app.toasts.timeUp", { fallback: "Time's up! Game over." }));
+            handleTimeUp();
             return 0;
           }
           return prev - 1;
@@ -221,7 +405,7 @@ export default function App() {
       }, 1000);
       return () => clearInterval(timer);
     }
-  }, [gameState, timeRemaining, timerEnabled]);
+  }, [gameState, handleTimeUp, timeRemaining, timerEnabled]);
 
   useEffect(() => {
     getShelters()
@@ -235,6 +419,16 @@ export default function App() {
       )
       .catch((error) => console.warn("[Questions] Failed to load question attributes:", error));
   }, []);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (restoredFromSnapshotRef.current) return;
+    const snapshot = loadGameSnapshot();
+    if (!snapshot) return;
+    applyGameSnapshot(snapshot);
+    restoredFromSnapshotRef.current = true;
+  }, [applyGameSnapshot, loadGameSnapshot]);
+
 
   const updateSecretShelter = useCallback(
     (info: { id: string; name: string }) => {
@@ -278,6 +472,8 @@ export default function App() {
   }, []);
 
   const resetGameContext = () => {
+    clearGameSnapshots();
+    setResumeId(crypto.randomUUID());
     setTimeRemaining(1800);
     setIsTimerCritical(false);
     setShelterOptions([]);
@@ -320,6 +516,8 @@ export default function App() {
 
   const performSessionReset = useCallback(
     (options?: { toastMessage?: string; skipToast?: boolean; targetState?: GameState }) => {
+      clearGameSnapshots();
+      setResumeId(crypto.randomUUID());
       setRemoteOutcome(null);
       void disconnectSession();
       setGameState(options?.targetState ?? "onboarding");
@@ -349,7 +547,7 @@ export default function App() {
         );
       }
     },
-    [disconnectSession, t],
+    [clearGameSnapshots, disconnectSession, t],
   );
 
   const refreshSessionPlayers = useCallback(
@@ -439,6 +637,56 @@ export default function App() {
     [currentUserId, gameState, performSessionReset, sessionHostId, t],
   );
 
+  useEffect(() => {
+    if (typeof document === "undefined") return;
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "hidden") {
+        saveGameSnapshot();
+        return;
+      }
+
+      const snapshot = loadGameSnapshot();
+      if (snapshot && snapshot.resumeId === resumeId) {
+        applyGameSnapshot(snapshot);
+      }
+
+      if (sessionContext) {
+        const socket = sessionSocketRef.current;
+        if (!socket || socket.readyState !== WebSocket.OPEN) {
+          setSocketReconnectKey((prev) => prev + 1);
+        }
+        refreshSessionPlayers(sessionContext.sessionId, sessionContext.token);
+        heartbeatSession(sessionContext.sessionId, sessionContext.token).catch((error) => {
+          console.warn("[Multiplayer] Heartbeat failed after resume:", error);
+        });
+      }
+    };
+
+    const handlePageHide = () => {
+      saveGameSnapshot();
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    window.addEventListener("pagehide", handlePageHide);
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      window.removeEventListener("pagehide", handlePageHide);
+    };
+  }, [
+    applyGameSnapshot,
+    loadGameSnapshot,
+    refreshSessionPlayers,
+    resumeId,
+    saveGameSnapshot,
+    sessionContext,
+  ]);
+
+  useEffect(() => {
+    if (!sessionContext || !restoredFromSnapshotRef.current) return;
+    refreshSessionPlayers(sessionContext.sessionId, sessionContext.token);
+  }, [refreshSessionPlayers, sessionContext]);
+
   const requestUserLocation = useCallback(
     () =>
       new Promise<{ lat: number; lng: number }>((resolve, reject) => {
@@ -471,6 +719,7 @@ export default function App() {
     if (!currentShelter) {
       return;
     }
+    setResumeId(crypto.randomUUID());
 
     const label =
       currentShelter.nameEn ??
@@ -664,7 +913,7 @@ export default function App() {
     return () => {
       socket.close();
     };
-  }, [handleSessionEvent, sessionContext]);
+  }, [handleSessionEvent, sessionContext, socketReconnectKey]);
 
   useEffect(() => {
     if (!sessionContext) {
@@ -701,6 +950,11 @@ export default function App() {
       localStorage.setItem("shelterhunt.profileName", trimmed);
     }
   }, [profileName]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    localStorage.setItem("shelterhunt.currentUserId", currentUserId);
+  }, [currentUserId]);
 
   const startHostFlow = useCallback(
     async (overrideName?: string) => {
@@ -899,6 +1153,7 @@ export default function App() {
     lightningCenter?: { lat: number; lng: number } | null;
   }) => {
     void disconnectSession();
+    setResumeId(crypto.randomUUID());
     const soloPlayer: Player = {
       id: currentUserId,
       name: profileName.trim() || defaultSoloName,
@@ -996,6 +1251,7 @@ export default function App() {
       return;
     }
 
+    setResumeId(crypto.randomUUID());
     setTimeRemaining(1800);
     setIsTimerCritical(false);
     setShelterOptions([]);
@@ -1277,6 +1533,7 @@ export default function App() {
             gameMode={gameMode}
             lightningCenter={lightningCenter}
             lightningRadiusKm={lightningRadiusKm ?? undefined}
+            resumeId={resumeId}
           />
         )}
 

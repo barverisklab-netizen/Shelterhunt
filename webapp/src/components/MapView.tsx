@@ -1318,8 +1318,8 @@ const measureMarkerRef = useRef<mapboxgl.Marker | null>(null);
           ensureGeolocateStyle();
           ensureAttributionStyle();
           const control = new mapboxgl.GeolocateControl({
-            positionOptions: { enableHighAccuracy: true },
-            trackUserLocation: true,
+            positionOptions: { enableHighAccuracy: false },
+            trackUserLocation: false,
             showUserHeading: true,
             showAccuracyCircle: false,
       });

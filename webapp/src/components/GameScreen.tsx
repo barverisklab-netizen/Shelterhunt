@@ -21,9 +21,31 @@ const PROXIMITY_DISABLED_FOR_TESTING =
   import.meta.env?.VITE_ENABLE_PROXIMITY === "false";
 const PROXIMITY_ENABLED = !PROXIMITY_DISABLED_FOR_TESTING;
 const QUESTION_COOLDOWN_MS = 120_000;
+const GAMEPLAY_SNAPSHOT_KEY = "shelterhunt.gameplaySnapshot.v1";
+const GAMEPLAY_SNAPSHOT_VERSION = 1;
+const RESUME_GRACE_MS = 10 * 60 * 1000;
 
 export type WrongGuessStage = 'first' | 'second' | 'third';
 
+interface GameplaySnapshot {
+  version: number;
+  savedAt: number;
+  resumeId: string;
+  data: {
+    clues: Clue[];
+    visitedPOIs: string[];
+    filteredPois: POI[] | null;
+    filterSource: "correct" | "wrong" | null;
+    penaltyStage: WrongGuessStage | null;
+    wrongGuessCount: number;
+    solvedQuestions: string[];
+    solvedNearbyAmenityKeys: string[];
+    questionCooldowns: Record<string, number>;
+    outcome: "none" | "win" | "lose" | "penalty";
+    externalWinnerName?: string;
+    selectedShelterId: string | null;
+  };
+}
 
 interface GameScreenProps {
   pois: POI[];
@@ -47,6 +69,7 @@ interface GameScreenProps {
   gameMode?: "lightning" | "citywide" | null;
   lightningCenter?: { lat: number; lng: number } | null;
   lightningRadiusKm?: number;
+  resumeId?: string;
 }
 
 export function GameScreen({
@@ -71,6 +94,7 @@ export function GameScreen({
   gameMode = null,
   lightningCenter = null,
   lightningRadiusKm,
+  resumeId,
 }: GameScreenProps) {
   const { t } = useI18n();
   const proximityEnabled = PROXIMITY_ENABLED;
@@ -82,7 +106,7 @@ export function GameScreen({
   const previousNearbyPOIRef = useRef<POI | null>(null);
   const [selectedShelterId, setSelectedShelterId] = useState<string | null>(null);
   const [confirmGuessOpen, setConfirmGuessOpen] = useState(false);
-  const [outcome, setOutcome] = useState<'none' | 'win' | 'lose'>('none');
+  const [outcome, setOutcome] = useState<'none' | 'win' | 'lose' | 'penalty'>('none');
   const [measureTrigger, setMeasureTrigger] = useState(0);
   const [isMeasureActive, setIsMeasureActive] = useState(false);
   const [filteredPois, setFilteredPois] = useState<POI[] | null>(null);
@@ -115,6 +139,8 @@ export function GameScreen({
     typeof value === "number" ? String(value) : String(value ?? "").trim().toLowerCase();
 
   const lastLocationRequestRef = useRef<number>(0);
+  const lastHighAccuracyRequestRef = useRef<number>(0);
+  const restoredGameplayRef = useRef(false);
   const hasAnnouncedTestingModeRef = useRef(false);
   const requestLatestLocation = useCallback(() => {
     if (PROXIMITY_DISABLED_FOR_TESTING) return;
@@ -138,6 +164,85 @@ export function GameScreen({
     );
   }, [onLocationChange]);
 
+  const requestHighAccuracyLocation = useCallback(
+    () =>
+      new Promise<{ lat: number; lng: number } | null>((resolve) => {
+        if (PROXIMITY_DISABLED_FOR_TESTING) {
+          resolve(null);
+          return;
+        }
+        if (typeof navigator === "undefined" || !navigator.geolocation) {
+          resolve(null);
+          return;
+        }
+        const now = Date.now();
+        if (now - lastHighAccuracyRequestRef.current < 4000) {
+          resolve(null);
+          return;
+        }
+        lastHighAccuracyRequestRef.current = now;
+        navigator.geolocation.getCurrentPosition(
+          (pos) => {
+            lastGeoStatusRef.current = "ok";
+            lastLocationRequestRef.current = Date.now();
+            const next = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+            onLocationChange?.(next);
+            resolve(next);
+          },
+          (err) => {
+            lastGeoStatusRef.current = `error:${err.code ?? "unknown"}`;
+            console.warn("[Geo] High-accuracy refresh failed", err);
+            resolve(null);
+          },
+          { enableHighAccuracy: true, maximumAge: 0, timeout: 8000 },
+        );
+      }),
+    [onLocationChange],
+  );
+
+  const saveGameplaySnapshot = useCallback(() => {
+    if (typeof window === "undefined") return;
+    if (!resumeId) return;
+    const snapshot: GameplaySnapshot = {
+      version: GAMEPLAY_SNAPSHOT_VERSION,
+      savedAt: Date.now(),
+      resumeId,
+      data: {
+        clues,
+        visitedPOIs,
+        filteredPois,
+        filterSource,
+        penaltyStage,
+        wrongGuessCount,
+        solvedQuestions,
+        solvedNearbyAmenityKeys,
+        questionCooldowns,
+        outcome,
+        externalWinnerName,
+        selectedShelterId,
+      },
+    };
+    try {
+      localStorage.setItem(GAMEPLAY_SNAPSHOT_KEY, JSON.stringify(snapshot));
+    } catch (error) {
+      console.warn("[Resume] Failed to save gameplay snapshot", error);
+    }
+  }, [
+    clues,
+    externalWinnerName,
+    filterSource,
+    filteredPois,
+    outcome,
+    penaltyStage,
+    questionCooldowns,
+    resumeId,
+    selectedShelterId,
+    solvedNearbyAmenityKeys,
+    solvedQuestions,
+    visitedPOIs,
+    wrongGuessCount,
+  ]);
+
   useEffect(() => {
     if (secretShelterName && secretShelterLogRef.current !== secretShelterName) {
       secretShelterLogRef.current = secretShelterName;
@@ -147,6 +252,69 @@ export function GameScreen({
       });
     }
   }, [secretShelterId, secretShelterName]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (!resumeId || restoredGameplayRef.current) return;
+    const raw = localStorage.getItem(GAMEPLAY_SNAPSHOT_KEY);
+    if (!raw) return;
+    try {
+      const snapshot = JSON.parse(raw) as GameplaySnapshot;
+      if (snapshot.version !== GAMEPLAY_SNAPSHOT_VERSION) return;
+      if (snapshot.resumeId !== resumeId) return;
+      if (Date.now() - snapshot.savedAt > RESUME_GRACE_MS) return;
+      const data = snapshot.data ?? {};
+      setClues(Array.isArray(data.clues) ? data.clues : []);
+      setVisitedPOIs(Array.isArray(data.visitedPOIs) ? data.visitedPOIs : []);
+      setFilteredPois(Array.isArray(data.filteredPois) ? data.filteredPois : null);
+      setFilterSource(data.filterSource ?? null);
+      setPenaltyStage(data.penaltyStage ?? null);
+      setWrongGuessCount(typeof data.wrongGuessCount === "number" ? data.wrongGuessCount : 0);
+      setSolvedQuestions(Array.isArray(data.solvedQuestions) ? data.solvedQuestions : []);
+      setSolvedNearbyAmenityKeys(
+        Array.isArray(data.solvedNearbyAmenityKeys) ? data.solvedNearbyAmenityKeys : [],
+      );
+      setQuestionCooldowns(
+        data.questionCooldowns && typeof data.questionCooldowns === "object"
+          ? data.questionCooldowns
+          : {},
+      );
+      const restoredOutcome =
+        data.outcome === "win" ||
+        data.outcome === "lose" ||
+        data.outcome === "penalty" ||
+        data.outcome === "none"
+          ? data.outcome
+          : "none";
+      setOutcome(restoredOutcome);
+      setExternalWinnerName(data.externalWinnerName);
+      setSelectedShelterId(data.selectedShelterId ?? null);
+      restoredGameplayRef.current = true;
+    } catch (error) {
+      console.warn("[Resume] Failed to parse gameplay snapshot", error);
+    }
+  }, [resumeId]);
+
+  useEffect(() => {
+    if (typeof document === "undefined") return;
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "hidden") {
+        saveGameplaySnapshot();
+      }
+    };
+
+    const handlePageHide = () => {
+      saveGameplaySnapshot();
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    window.addEventListener("pagehide", handlePageHide);
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      window.removeEventListener("pagehide", handlePageHide);
+    };
+  }, [saveGameplaySnapshot]);
 
   const closeLayerPanel = useCallback(() => {
     setLayerPanelCloseSignal((prev) => prev + 1);
@@ -767,8 +935,10 @@ export function GameScreen({
       }
 
       try {
+        const freshLocation = await requestHighAccuracyLocation();
+        const locationForCheck = freshLocation ?? playerLocation;
         const proximity = await matchShelterWithinRadius(
-          playerLocation,
+          locationForCheck,
           PROXIMITY_RADIUS_KM,
           {
             id: selectedShelterOption.id,
