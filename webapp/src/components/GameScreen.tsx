@@ -1236,7 +1236,7 @@ export function GameScreen({
             disabled={isMeasureActive}
             className={`relative flex items-center justify-center rounded-full border border-neutral-900 p-4 shadow-md transition-transform ${
               isMeasureActive
-                ? "bg-red-200 text-red-900 cursor-not-allowed opacity-80"
+                ? "bg-neutral-900 text-white cursor-not-allowed opacity-80 border-white/20"
                 : "bg-background text-black hover:scale-105"
             }`}
             whileHover={isMeasureActive ? undefined : { scale: 1.05 }}

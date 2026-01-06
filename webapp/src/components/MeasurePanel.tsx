@@ -1,5 +1,5 @@
 import { AnimatePresence, motion } from "motion/react";
-import { ChevronDown } from "lucide-react";
+import { ChevronUp, Ruler } from "lucide-react";
 
 type MeasureStatus = "idle" | "placing" | "active";
 
@@ -55,52 +55,51 @@ export function MeasurePanel({
     .filter(([, count]) => count > 0)
     .sort((a, b) => b[1] - a[1]);
 
-  const canToggle = measureState.status === "active" && measureState.featureNames.length > 0;
+  const canToggle = measureState.status !== "idle";
 
   return (
     <motion.div
-      className="absolute bottom-4 left-1/2 z-30 w-[92vw] max-w-sm -translate-x-1/2 rounded-lg bg-background p-4 shadow-xl"
-      initial={{ opacity: 0, y: 20, scale: 0.96 }}
-      animate={{ opacity: 1, y: 0, scale: 1 }}
-      exit={{ opacity: 0, y: 20, scale: 0.96 }}
+      className="fixed bottom-0 left-0 right-0 z-40 bg-background border-t-4 border-black"
+      initial={{ y: "100%" }}
+      animate={{ y: isPanelCollapsed ? "calc(100% - 72px)" : 0 }}
+      exit={{ y: "100%" }}
+      transition={{ type: "spring", damping: 25, stiffness: 300 }}
     >
       <button
         type="button"
-        onClick={() => {
-          if (canToggle) {
-            onToggleCollapse();
-          }
-        }}
-        className={`w-full rounded px-4 py-3 text-left transition-colors ${
-          canToggle ? "cursor-pointer" : "cursor-default"
+        onClick={() => (canToggle ? onToggleCollapse() : null)}
+        className={`w-full py-4 flex flex-col items-center gap-2 transition-colors ${
+          canToggle ? "cursor-pointer hover:bg-black/5" : "cursor-default"
         }`}
       >
-        <div className="flex items-center justify-between gap-3 pb-1">
-          <div className="space-y-1">
-            <div className="text-sm font-bold uppercase text-black leading-tight">
-              {headerTitle}
-            </div>
-            <div className="text-xs text-black/70 pb-1.5">{headerSubtitle}</div>
-          </div>
+        <div className="w-12 h-1 bg-background" />
+        <div className="flex items-center gap-2 text-black">
+          <Ruler className="h-5 w-5" />
+          <span className="text-lg font-bold uppercase">{headerTitle}</span>
           {canToggle && (
-            <motion.div animate={{ rotate: isPanelCollapsed ? 180 : 0 }} transition={{ duration: 0.2 }} className="text-black">
-              <ChevronDown className="h-4 w-4 text-black" />
+            <motion.div
+              animate={{ rotate: isPanelCollapsed ? 0 : 180 }}
+              transition={{ duration: 0.2 }}
+              className="text-black"
+            >
+              <ChevronUp className="h-5 w-5 text-black" />
             </motion.div>
           )}
         </div>
+        <div className="text-xs text-black/70">{headerSubtitle}</div>
       </button>
 
       <AnimatePresence>
         {!isPanelCollapsed && (
           <motion.div
             key="measurement-panel-details"
-            className="mt-4 space-y-3 text-black"
-            initial={{ opacity: 0, y: -6 }}
+            className="max-h-[60vh] w-full max-w-[400px] overflow-y-auto px-4 py-4 text-black space-y-3 mx-auto"
+            initial={{ opacity: 0, y: -8 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -6 }}
+            exit={{ opacity: 0, y: -8 }}
           >
             {measureState.status === "placing" && (
-              <div className="flex flex-col gap-2 sm:flex-row sm:justify-end">
+              <div className="flex flex-col gap-2 sm:flex-row sm:justify-end pt-2">
                 <button
                   type="button"
                   onClick={onCancelPlacement}
@@ -146,18 +145,18 @@ export function MeasurePanel({
                     ))}
                   </div>
                 )}
-                <div className="grid gap-2 pb-1 sm:grid-cols-3">
+                <div className="grid w-full gap-2 pb-1 items-start justify-items-start sm:inline-grid sm:w-fit sm:max-w-[400px] sm:grid-cols-3">
                   <button
                     type="button"
                     onClick={onMovePoint}
-                    className="rounded border border-black px-3 py-2 text-xs font-semibold uppercase tracking-wide hover:bg-neutral-100"
+                    className="w-fit max-w-[200px] rounded border border-black px-3 py-2 text-xs font-semibold uppercase tracking-wide hover:bg-neutral-100"
                   >
                     {t("map.measure.popup.move", { fallback: "Move center" })}
                   </button>
                   <button
                     type="button"
                     onClick={onDeleteMeasurement}
-                    className="rounded border border-black bg-red-500/20 px-3 py-2 text-xs font-bold uppercase tracking-wide text-black hover:bg-neutral-100 active:bg-neutral-200"
+                    className="w-fit max-w-[200px] rounded border border-black bg-red-500/20 px-3 py-2 text-xs font-bold uppercase tracking-wide text-black hover:bg-neutral-100 active:bg-neutral-200"
                   >
                     {t("map.measure.popup.delete", { fallback: "Delete" })}
                   </button>
