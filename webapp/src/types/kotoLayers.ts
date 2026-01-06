@@ -47,6 +47,7 @@ export interface KotoLayerStyle {
 export interface KotoLayer {
   id: number;
   label: string;
+  labelJp?: string;
   group: KotoLayerGroup;
   metadata: KotoLayerMetadata;
   layerType: "symbol" | "fill" | "line";

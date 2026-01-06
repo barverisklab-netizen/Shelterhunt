@@ -81,6 +81,14 @@ export function I18nProvider({ children }: { children: React.ReactNode }) {
       const localized = getFromPath(translations[locale], key);
       const fallbackMessage = getFromPath(translations.en, key);
 
+      if (import.meta.env?.VITE_I18N_DEBUG === "true" && typeof localized !== "string") {
+        console.warn("[i18n] Missing key", {
+          locale,
+          key,
+          fallbackUsed: typeof fallbackMessage === "string",
+        });
+      }
+
       const resolved =
         typeof localized === "string"
           ? localized

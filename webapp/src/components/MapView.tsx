@@ -1002,6 +1002,8 @@ const measureMarkerRef = useRef<mapboxgl.Marker | null>(null);
         const markers: POI[] = [];
 
         layerResults.forEach(({ layer, features }) => {
+          const displayLabel =
+            localeRef.current === "ja" ? layer.labelJp ?? layer.label : layer.label;
           features.forEach((feature, index) => {
             const coordinates = getFeatureCoordinates(feature);
             if (!coordinates.length) return;
@@ -1016,16 +1018,20 @@ const measureMarkerRef = useRef<mapboxgl.Marker | null>(null);
               return;
             }
 
-            layerCounts[layer.label] = (layerCounts[layer.label] ?? 0) + 1;
+            layerCounts[displayLabel] = (layerCounts[displayLabel] ?? 0) + 1;
 
             const props = feature.properties ?? {};
-            const name =
-              (props["Landmark Name (EN)"] as string) ??
-              (props["Landmark name (EN)"] as string) ??
-              (props["Landmark Name (JP)"] as string) ??
-              (props["Landmark name (JP)"] as string) ??
-              (props.name as string) ??
-              layer.label;
+            const localizedName =
+              localeRef.current === "ja"
+                ? (props["Landmark Name (JP)"] as string) ??
+                  (props["Landmark name (JP)"] as string) ??
+                  (props["Landmark Name (EN)"] as string) ??
+                  (props["Landmark name (EN)"] as string)
+                : (props["Landmark Name (EN)"] as string) ??
+                  (props["Landmark name (EN)"] as string) ??
+                  (props["Landmark Name (JP)"] as string) ??
+                  (props["Landmark name (JP)"] as string);
+            const name = localizedName ?? (props.name as string) ?? displayLabel;
 
             const id =
               feature.id != null

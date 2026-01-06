@@ -15,6 +15,7 @@
     "paragraph1": "Welcome, heroes. I’m Bosai-Sensei, your guide through Koto City as a major hurricane closes in. Our mascot, Koto-chan, is sheltering somewhere safe; but we’ve lost contact.",
     "paragraph2": "Your task: explore the city, understand the disaster-preparedness information, and gather clues to pinpoint Koto-chan’s location before the storm hits.",
     "paragraph3": "Each correct move brings you closer and strengthens the skills you’ll need in real emergencies. Stay alert, and remember: preparedness is power.",
+    "imageAlt": "Koto-chan and Bosai-Sensei illustration",
     "play": "Play"
   },
   "onboarding": {
@@ -382,6 +383,7 @@
       "startSubtitle": "Drop a center point to begin",
       "featuresTitle": "Features within {radius}m",
       "featuresSubtitle": "{count} features total",
+      "layerCountsNote": "Counts reflect only the currently active layers you have toggled on.",
       "noFeatures": "No visible point-layer features in this radius.",
       "table": {
         "count": "Count",

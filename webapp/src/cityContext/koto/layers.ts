@@ -7,6 +7,7 @@ export const kotoLayers: KotoLayer[] = [
   {
     id: 1,
     label: "Designated Evacuation Centers",
+    labelJp: "指定避難所",
     group: "Shelters",
     metadata: {
       query: {
@@ -80,6 +81,7 @@ export const kotoLayers: KotoLayer[] = [
   {
     id: 2,
     label: "Voluntary Evacuation Centers",
+    labelJp: "自主避難所",
     group: "Shelters",
     metadata: {
       query: {
@@ -143,6 +145,7 @@ export const kotoLayers: KotoLayer[] = [
   {
     id: 3,
     label: "Temporary Evacuation Centers",
+    labelJp: "一時避難所（企業・UR）",
     group: "Shelters",
     metadata: {
       query: {
@@ -210,6 +213,7 @@ export const kotoLayers: KotoLayer[] = [
   {
     id: 4,
     label: "Special Needs Evacuation Centers",
+    labelJp: "福祉避難所",
     group: "Shelters",
     metadata: {
       query: {
@@ -274,6 +278,7 @@ export const kotoLayers: KotoLayer[] = [
   {
     id: 5,
     label: "Evacuation Centers",
+    labelJp: "避難所",
     group: "Shelters",
     metadata: {
       query: {
@@ -331,6 +336,7 @@ export const kotoLayers: KotoLayer[] = [
   {
     id: 6,
     label: "AED Locations",
+    labelJp: "AED設置場所",
     group: "Evacuation Support Facilities",
     metadata: {
       query: {
@@ -391,6 +397,7 @@ export const kotoLayers: KotoLayer[] = [
   {
     id: 7,
     label: "Flood Depth",
+    labelJp: "浸水リスクゾーン",
     group: "Hazard Layers",
     metadata: {
       query: {
@@ -447,6 +454,7 @@ export const kotoLayers: KotoLayer[] = [
   {
     id: 8,
     label: "Inland Waters Depth",
+    labelJp: "内水氾濫深",
     group: "Hazard Layers",
     metadata: {
       query: {
@@ -499,6 +507,7 @@ export const kotoLayers: KotoLayer[] = [
   {
     id: 9,
     label: "Flood Duration Rank",
+    labelJp: "浸水継続時間",
     group: "Hazard Layers",
     metadata: {
       query: {
@@ -551,6 +560,7 @@ export const kotoLayers: KotoLayer[] = [
   {
     id: 10,
     label: "Storm Surge",
+    labelJp: "高潮浸水深",
     group: "Hazard Layers",
     metadata: {
       query: {
@@ -609,6 +619,7 @@ export const kotoLayers: KotoLayer[] = [
   {
     id: 11,
     label: "Bridges",
+    labelJp: "橋",
     group: "City Landmarks",
     metadata: {
       query: {
@@ -675,6 +686,7 @@ export const kotoLayers: KotoLayer[] = [
   {
     id: 12,
     label: "Shrines/Temples",
+    labelJp: "神社・寺院",
     group: "City Landmarks",
     metadata: {
       query: {
@@ -741,6 +753,7 @@ export const kotoLayers: KotoLayer[] = [
   {
     id: 13,
     label: "Community Centers",
+    labelJp: "コミュニティセンター",
     group: "Evacuation Support Facilities",
     metadata: {
       query: {
@@ -807,6 +820,7 @@ export const kotoLayers: KotoLayer[] = [
   {
     id: 14,
     label: "Water Stations",
+    labelJp: "給水ステーション",
     group: "Evacuation Support Facilities",
     metadata: {
       query: {
@@ -873,6 +887,7 @@ export const kotoLayers: KotoLayer[] = [
   {
     id: 15,
     label: "Hospitals",
+    labelJp: "病院",
     group: "Evacuation Support Facilities",
     metadata: {
       query: {
@@ -939,6 +954,7 @@ export const kotoLayers: KotoLayer[] = [
   {
     id: 16,
     label: "Emergency Supply Storage",
+    labelJp: "防災備蓄倉庫",
     group: "Evacuation Support Facilities",
     metadata: {
       query: {
@@ -1005,6 +1021,7 @@ export const kotoLayers: KotoLayer[] = [
   {
     id: 17,
     label: "Flood Gates",
+    labelJp: "水門",
     group: "City Landmarks",
     metadata: {
       query: {
@@ -1071,6 +1088,7 @@ export const kotoLayers: KotoLayer[] = [
   {
     id: 18,
     label: "Train Stations",
+    labelJp: "駅",
     group: "City Landmarks",
     metadata: {
       query: {
