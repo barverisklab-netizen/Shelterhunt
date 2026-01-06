@@ -1149,15 +1149,7 @@ export function GameScreen({
         animate={{ y: 0, opacity: 1 }}
       >
           <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <button
-              onClick={() => setShowExitConfirm(true)}
-              className="rounded border-4 border-black bg-red-500 p-4 text-black shadow-sm transition-colors hover:bg-red-600"
-              title={t("game.exitTitle")}
-            >
-              <X className="w-15 h-15" />
-            </button>
-            <div className="flex flex-col">
+          <div className="flex flex-col">
               <h1 className="text-xl font-bold text-black">
                 {t("common.appName", { fallback: "Map n' Seek" })}
               </h1>
@@ -1165,14 +1157,21 @@ export function GameScreen({
                 {t("game.secretShelterName", { fallback: "Solve clues to reveal the shelter" })}
               </span>
             </div>
+          <div className="flex items-center gap-3">
+            {isTimerEnabled ? (
+              <div className={timerContainerClasses}>
+                <Clock className={`w-4 h-4 ${isTimerCritical ? 'text-red-600' : 'text-black'}`} />
+                <span className={timerTextClasses}>{formattedTimer}</span>
+              </div>
+            ) : null}
+            <button
+              onClick={() => setShowExitConfirm(true)}
+              className="rounded border-4 border-black bg-red-500 p-4 text-black shadow-sm transition-colors hover:bg-red-600"
+              title={t("game.exitTitle")}
+            >
+              <X className="w-15 h-15" />
+            </button>
           </div>
-
-          {isTimerEnabled ? (
-            <div className={timerContainerClasses}>
-              <Clock className={`w-4 h-4 ${isTimerCritical ? 'text-red-600' : 'text-black'}`} />
-              <span className={timerTextClasses}>{formattedTimer}</span>
-            </div>
-          ) : null}
         </div>
       </motion.div>
 

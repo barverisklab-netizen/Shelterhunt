@@ -1,5 +1,6 @@
 import { useMemo } from "react";
 import { motion } from "motion/react";
+import { MapPin } from "lucide-react";
 import { Button } from "./ui/button";
 import { useI18n } from "@/i18n";
 import introIllustration from "../assets/graphics/bosaisensai_w.svg";
@@ -49,14 +50,23 @@ export function IntroScreen({ onContinue }: IntroScreenProps) {
           </motion.div>
 
           <div className="flex flex-col space-y-6 md:space-y-8 items-center md:items-start">
-            <motion.h1
-              className="text-center md:text-left text-3xl font-black tracking-[0.28em] sm:text-4xl"
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, ease: "easeOut" }}
-            >
-              {t("intro.title")}
-            </motion.h1>
+            <div className="flex flex-col items-center md:items-start gap-3">
+              <motion.div
+                initial={{ opacity: 0, y: 10, scale: 0.9 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                transition={{ duration: 0.45, ease: "easeOut", delay: 0.05 }}
+              >
+                <MapPin className="w-10 h-10 text-black" />
+              </motion.div>
+              <motion.h1
+                className="text-center md:text-left text-3xl font-black tracking-[0.28em] sm:text-4xl"
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, ease: "easeOut" }}
+              >
+                {t("intro.title")}
+              </motion.h1>
+            </div>
 
             <motion.div
               initial={{ opacity: 0, y: 16 }}

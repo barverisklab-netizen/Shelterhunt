@@ -97,24 +97,37 @@ export function QuestionDrawer({
     return t(`questions.${questionId}.options.${optionKey}`, { fallback: option });
   };
 
+  const hasShelterNearby = nearbyPOI !== null || nearbyShelterName !== null;
+  const hasAnyAmenityNearby =
+    Object.values(nearbyAmenityCounts).some((c) => (c ?? 0) > 0) ||
+    nearbyAmenityCategories.length > 0;
+  const selectedAmenityCount = nearbyAmenitySelection.amenityKey
+    ? nearbyAmenityCounts[nearbyAmenitySelection.amenityKey] ?? 0
+    : 0;
+  const isSelectedAmenityNearby =
+    !proximityEnabled ||
+    (nearbyAmenitySelection.amenityKey != null && selectedAmenityCount > 0);
+
   const isQuestionEligible = (question: Question) => {
-    if (question.id === "nearbyAmenity") {
-      return !lockedQuestions.includes(question.id);
+    if (lockedQuestions.includes(question.id)) return false;
+    if (!proximityEnabled) {
+      return true;
     }
-    const inRange = nearbyPOI !== null || question.category === "location";
-    return inRange && !lockedQuestions.includes(question.id);
+    if (question.id === "nearbyAmenity") {
+      return hasAnyAmenityNearby;
+    }
+    if (question.category === "nearby") {
+      const count = nearbyAmenityCounts[question.id];
+      return typeof count === "number" ? count > 0 : false;
+    }
+    return hasShelterNearby;
   };
 
   const filteredQuestions = selectedCategory
     ? questions.filter((q) => q.category === selectedCategory)
     : [];
 
-  const inRange =
-    !!nearbyPOI ||
-    !!nearbyShelterName ||
-    !proximityEnabled ||
-    Object.values(nearbyAmenityCounts).some((c) => (c ?? 0) > 0) ||
-    nearbyAmenityCategories.length > 0;
+  const inRange = !proximityEnabled || hasShelterNearby || hasAnyAmenityNearby;
 
   return (
     <motion.div
@@ -217,17 +230,13 @@ export function QuestionDrawer({
                     );
                     const translatedCategory = translateCategory(category);
                     const isNearbyCategory = category.id === "nearby";
-                    const requireProximity = category.id !== "location" && !isNearbyCategory;
-                    const hasNearbyAmenityAccess =
-                      isNearbyCategory &&
-                      (!proximityEnabled ||
-                        Object.values(nearbyAmenityCounts).some((c) => (c ?? 0) > 0) ||
-                        nearbyAmenityCategories.length > 0);
+                    const requiresShelterProximity = !isNearbyCategory;
+                    const lacksRequiredProximity =
+                      proximityEnabled &&
+                      ((requiresShelterProximity && !hasShelterNearby) ||
+                        (isNearbyCategory && !hasAnyAmenityNearby));
                     const isDisabled =
-                      (isNearbyCategory
-                        ? !hasNearbyAmenityAccess
-                        : requireProximity && !nearbyPOI) ||
-                      questionsInCategory.length === 0;
+                      lacksRequiredProximity || questionsInCategory.length === 0;
 
                     return (
                       <motion.button
@@ -364,7 +373,7 @@ export function QuestionDrawer({
                                   amenityKey: e.target.value || null,
                                 }))
                               }
-                              disabled={isLocked}
+                              disabled={!isEligible || isLocked}
                             >
                               <option value="" disabled>
                                 {t("questions.nearbyAmenity.selectAmenity", {
@@ -401,7 +410,7 @@ export function QuestionDrawer({
                                   count: e.target.value === "" ? null : Number(e.target.value),
                                 }))
                               }
-                              disabled={isLocked}
+                              disabled={!isEligible || isLocked}
                             >
                               <option value="" disabled>
                                 {t("questions.nearbyAmenity.selectCount", {
@@ -416,8 +425,7 @@ export function QuestionDrawer({
                           </select>
                             {nearbyAmenitySelection.amenityKey &&
                               proximityEnabled &&
-                              (nearbyAmenityCounts[nearbyAmenitySelection.amenityKey] ?? 0) <=
-                                0 && (
+                              !isSelectedAmenityNearby && (
                                 <div className="text-xs text-red-600 font-semibold">
                                   {t("questions.nearbyAmenity.unavailable", {
                                     fallback: "No amenities of this type within 250m. Move closer.",
@@ -442,6 +450,8 @@ export function QuestionDrawer({
                               disabled={
                                 !nearbyAmenitySelection.amenityKey ||
                                 nearbyAmenitySelection.count == null ||
+                                !isEligible ||
+                                !isSelectedAmenityNearby ||
                                 isLocked
                               }
                             >
