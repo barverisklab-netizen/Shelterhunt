@@ -14,6 +14,9 @@ This folder is the scaffold for your separate, version-controlled data repo. It 
 - `npm run seed:db`  
   Imports `geojson/ihi_shelters.geojson` into Postgres via `DATABASE_URL` (Supabase works). Optionally override the source with `SHELTER_DATA_PATH=...`.
 
+- `node scripts/buildIhiAnswers.mjs`  
+  Recalculates the `250m_*` amenity fields using the same 250m distance logic as the webapp (haversine, 0.25 km). Outputs `geojson/IHI_answers.geojson` with all other properties preserved from `ihi_shelters.geojson`.
+
 ## Environment
 - Export (`scripts/exportFromApi.mjs`):  
   - `DATA_API_BASE_URL` — API base to pull shelters from (default `http://localhost:4000`).  
@@ -75,3 +78,6 @@ It logs the path it uses and throws with setup guidance if none exist. Recommend
    or run `npm run seed:db` from `data/` with `DATABASE_URL` set.
 
 This keeps runtime data in the DB/API while keeping fixtures reproducible and versioned in a dedicated repo.
+
+### Refreshing 250m amenity fields
+If `250m_*` values were generated with degree-based buffering (e.g., in QGIS), use the script above to regenerate them with the app’s exact distance algorithm. This keeps the in-game proximity checks and the stored `250m_*` values consistent.

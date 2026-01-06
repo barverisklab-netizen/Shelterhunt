@@ -3,9 +3,7 @@
   "name": "ihi_shelter_with_hazards_questions",
   "crs": {
     "type": "name",
-    "properties": {
-      "name": "urn:ogc:def:crs:OGC:1.3:CRS84"
-    }
+    "properties": { "name": "urn:ogc:def:crs:OGC:1.3:CRS84" }
   },
   "features": [
     {
@@ -36,17 +34,11 @@
         "250m_Emergency_Supply_Storage": 0,
         "250m_Community_Center": 0,
         "250m_Train_Station": false,
-        "250m_Shrine_Temple": 5,
+        "250m_Shrine_Temple": 4,
         "250m_Floodgate": false,
         "250m_Bridge": 1
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          139.7917,
-          35.67046
-        ]
-      }
+      "geometry": { "type": "Point", "coordinates": [139.7917, 35.67046] }
     },
     {
       "type": "Feature",
@@ -72,7 +64,7 @@
         "Shelter_Capacity": 940,
         "250m_Water_Station": false,
         "250m_Hospital": false,
-        "250m_AED": 1,
+        "250m_AED": 0,
         "250m_Emergency_Supply_Storage": 0,
         "250m_Community_Center": 0,
         "250m_Train_Station": true,
@@ -80,13 +72,7 @@
         "250m_Floodgate": false,
         "250m_Bridge": 0
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          139.7918,
-          35.66795
-        ]
-      }
+      "geometry": { "type": "Point", "coordinates": [139.7918, 35.66795] }
     },
     {
       "type": "Feature",
@@ -120,13 +106,7 @@
         "250m_Floodgate": true,
         "250m_Bridge": 1
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          139.7956,
-          35.6629
-        ]
-      }
+      "geometry": { "type": "Point", "coordinates": [139.7956, 35.6629] }
     },
     {
       "type": "Feature",
@@ -160,13 +140,7 @@
         "250m_Floodgate": false,
         "250m_Bridge": 0
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          139.7964,
-          35.66617
-        ]
-      }
+      "geometry": { "type": "Point", "coordinates": [139.7964, 35.66617] }
     },
     {
       "type": "Feature",
@@ -200,13 +174,7 @@
         "250m_Floodgate": false,
         "250m_Bridge": 0
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          139.7956,
-          35.66652
-        ]
-      }
+      "geometry": { "type": "Point", "coordinates": [139.7956, 35.66652] }
     },
     {
       "type": "Feature",
@@ -238,15 +206,9 @@
         "250m_Train_Station": false,
         "250m_Shrine_Temple": 4,
         "250m_Floodgate": true,
-        "250m_Bridge": 3
+        "250m_Bridge": 1
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          139.8136,
-          35.68542
-        ]
-      }
+      "geometry": { "type": "Point", "coordinates": [139.8136, 35.68542] }
     },
     {
       "type": "Feature",
@@ -280,13 +242,7 @@
         "250m_Floodgate": true,
         "250m_Bridge": 4
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          139.8013,
-          35.66376
-        ]
-      }
+      "geometry": { "type": "Point", "coordinates": [139.8013, 35.66376] }
     },
     {
       "type": "Feature",
@@ -312,7 +268,7 @@
         "Shelter_Capacity": 1610,
         "250m_Water_Station": false,
         "250m_Hospital": false,
-        "250m_AED": 2,
+        "250m_AED": 1,
         "250m_Emergency_Supply_Storage": 0,
         "250m_Community_Center": 0,
         "250m_Train_Station": false,
@@ -320,13 +276,7 @@
         "250m_Floodgate": false,
         "250m_Bridge": 1
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          139.8121,
-          35.66476
-        ]
-      }
+      "geometry": { "type": "Point", "coordinates": [139.8121, 35.66476] }
     },
     {
       "type": "Feature",
@@ -352,7 +302,7 @@
         "Shelter_Capacity": 240,
         "250m_Water_Station": false,
         "250m_Hospital": false,
-        "250m_AED": 4,
+        "250m_AED": 3,
         "250m_Emergency_Supply_Storage": 0,
         "250m_Community_Center": 1,
         "250m_Train_Station": false,
@@ -360,13 +310,7 @@
         "250m_Floodgate": false,
         "250m_Bridge": 2
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          139.8087,
-          35.66093
-        ]
-      }
+      "geometry": { "type": "Point", "coordinates": [139.8087, 35.66093] }
     },
     {
       "type": "Feature",
@@ -400,13 +344,7 @@
         "250m_Floodgate": false,
         "250m_Bridge": 1
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          139.8212,
-          35.69516
-        ]
-      }
+      "geometry": { "type": "Point", "coordinates": [139.8212, 35.69516] }
     },
     {
       "type": "Feature",
@@ -440,13 +378,7 @@
         "250m_Floodgate": false,
         "250m_Bridge": 1
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          139.8243,
-          35.69473
-        ]
-      }
+      "geometry": { "type": "Point", "coordinates": [139.8243, 35.69473] }
     },
     {
       "type": "Feature",
@@ -480,13 +412,7 @@
         "250m_Floodgate": false,
         "250m_Bridge": 1
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          139.824,
-          35.69472
-        ]
-      }
+      "geometry": { "type": "Point", "coordinates": [139.824, 35.69472] }
     },
     {
       "type": "Feature",
@@ -512,7 +438,7 @@
         "Shelter_Capacity": 300,
         "250m_Water_Station": false,
         "250m_Hospital": false,
-        "250m_AED": 4,
+        "250m_AED": 3,
         "250m_Emergency_Supply_Storage": 1,
         "250m_Community_Center": 0,
         "250m_Train_Station": false,
@@ -520,13 +446,7 @@
         "250m_Floodgate": false,
         "250m_Bridge": 0
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          139.8224,
-          35.69677
-        ]
-      }
+      "geometry": { "type": "Point", "coordinates": [139.8224, 35.69677] }
     },
     {
       "type": "Feature",
@@ -560,13 +480,7 @@
         "250m_Floodgate": false,
         "250m_Bridge": 0
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          139.8217,
-          35.69781
-        ]
-      }
+      "geometry": { "type": "Point", "coordinates": [139.8217, 35.69781] }
     },
     {
       "type": "Feature",
@@ -593,20 +507,14 @@
         "250m_Water_Station": false,
         "250m_Hospital": false,
         "250m_AED": 1,
-        "250m_Emergency_Supply_Storage": 1,
+        "250m_Emergency_Supply_Storage": 0,
         "250m_Community_Center": 0,
         "250m_Train_Station": true,
         "250m_Shrine_Temple": 0,
         "250m_Floodgate": false,
         "250m_Bridge": 0
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          139.8246,
-          35.6976
-        ]
-      }
+      "geometry": { "type": "Point", "coordinates": [139.8246, 35.6976] }
     },
     {
       "type": "Feature",
@@ -640,13 +548,7 @@
         "250m_Floodgate": false,
         "250m_Bridge": 0
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          139.8222,
-          35.69886
-        ]
-      }
+      "geometry": { "type": "Point", "coordinates": [139.8222, 35.69886] }
     },
     {
       "type": "Feature",
@@ -680,13 +582,7 @@
         "250m_Floodgate": false,
         "250m_Bridge": 1
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          139.8194,
-          35.70727
-        ]
-      }
+      "geometry": { "type": "Point", "coordinates": [139.8194, 35.70727] }
     },
     {
       "type": "Feature",
@@ -720,13 +616,7 @@
         "250m_Floodgate": false,
         "250m_Bridge": 1
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          139.8201,
-          35.70659
-        ]
-      }
+      "geometry": { "type": "Point", "coordinates": [139.8201, 35.70659] }
     },
     {
       "type": "Feature",
@@ -760,13 +650,7 @@
         "250m_Floodgate": false,
         "250m_Bridge": 1
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          139.8201,
-          35.707
-        ]
-      }
+      "geometry": { "type": "Point", "coordinates": [139.8201, 35.707] }
     },
     {
       "type": "Feature",
@@ -800,13 +684,7 @@
         "250m_Floodgate": false,
         "250m_Bridge": 0
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          139.8265,
-          35.70265
-        ]
-      }
+      "geometry": { "type": "Point", "coordinates": [139.8265, 35.70265] }
     },
     {
       "type": "Feature",
@@ -840,13 +718,7 @@
         "250m_Floodgate": false,
         "250m_Bridge": 1
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          139.8261,
-          35.70387
-        ]
-      }
+      "geometry": { "type": "Point", "coordinates": [139.8261, 35.70387] }
     },
     {
       "type": "Feature",
@@ -874,19 +746,13 @@
         "250m_Hospital": false,
         "250m_AED": 1,
         "250m_Emergency_Supply_Storage": 0,
-        "250m_Community_Center": 1,
+        "250m_Community_Center": 0,
         "250m_Train_Station": false,
         "250m_Shrine_Temple": 2,
         "250m_Floodgate": false,
-        "250m_Bridge": 2
+        "250m_Bridge": 1
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          139.8315,
-          35.70246
-        ]
-      }
+      "geometry": { "type": "Point", "coordinates": [139.8315, 35.70246] }
     },
     {
       "type": "Feature",
@@ -920,13 +786,7 @@
         "250m_Floodgate": false,
         "250m_Bridge": 2
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          139.8326,
-          35.70262
-        ]
-      }
+      "geometry": { "type": "Point", "coordinates": [139.8326, 35.70262] }
     },
     {
       "type": "Feature",
@@ -956,17 +816,11 @@
         "250m_Emergency_Supply_Storage": 0,
         "250m_Community_Center": 0,
         "250m_Train_Station": false,
-        "250m_Shrine_Temple": 3,
+        "250m_Shrine_Temple": 2,
         "250m_Floodgate": false,
         "250m_Bridge": 0
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          139.8285,
-          35.70007
-        ]
-      }
+      "geometry": { "type": "Point", "coordinates": [139.8285, 35.70007] }
     },
     {
       "type": "Feature",
@@ -992,7 +846,7 @@
         "Shelter_Capacity": 2710,
         "250m_Water_Station": false,
         "250m_Hospital": false,
-        "250m_AED": 5,
+        "250m_AED": 4,
         "250m_Emergency_Supply_Storage": 0,
         "250m_Community_Center": 0,
         "250m_Train_Station": false,
@@ -1000,13 +854,7 @@
         "250m_Floodgate": false,
         "250m_Bridge": 1
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          139.8302,
-          35.69545
-        ]
-      }
+      "geometry": { "type": "Point", "coordinates": [139.8302, 35.69545] }
     },
     {
       "type": "Feature",
@@ -1032,21 +880,15 @@
         "Shelter_Capacity": 90,
         "250m_Water_Station": false,
         "250m_Hospital": false,
-        "250m_AED": 2,
+        "250m_AED": 1,
         "250m_Emergency_Supply_Storage": 0,
-        "250m_Community_Center": 1,
+        "250m_Community_Center": 0,
         "250m_Train_Station": false,
         "250m_Shrine_Temple": 0,
         "250m_Floodgate": false,
         "250m_Bridge": 0
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          139.8325,
-          35.69652
-        ]
-      }
+      "geometry": { "type": "Point", "coordinates": [139.8325, 35.69652] }
     },
     {
       "type": "Feature",
@@ -1072,7 +914,7 @@
         "Shelter_Capacity": 500,
         "250m_Water_Station": false,
         "250m_Hospital": false,
-        "250m_AED": 5,
+        "250m_AED": 4,
         "250m_Emergency_Supply_Storage": 0,
         "250m_Community_Center": 0,
         "250m_Train_Station": false,
@@ -1080,13 +922,7 @@
         "250m_Floodgate": false,
         "250m_Bridge": 0
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          139.8394,
-          35.69697
-        ]
-      }
+      "geometry": { "type": "Point", "coordinates": [139.8394, 35.69697] }
     },
     {
       "type": "Feature",
@@ -1114,19 +950,13 @@
         "250m_Hospital": false,
         "250m_AED": 4,
         "250m_Emergency_Supply_Storage": 0,
-        "250m_Community_Center": 1,
+        "250m_Community_Center": 0,
         "250m_Train_Station": false,
         "250m_Shrine_Temple": 0,
         "250m_Floodgate": false,
         "250m_Bridge": 0
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          139.8374,
-          35.69676
-        ]
-      }
+      "geometry": { "type": "Point", "coordinates": [139.8374, 35.69676] }
     },
     {
       "type": "Feature",
@@ -1152,7 +982,7 @@
         "Shelter_Capacity": 540,
         "250m_Water_Station": false,
         "250m_Hospital": false,
-        "250m_AED": 6,
+        "250m_AED": 4,
         "250m_Emergency_Supply_Storage": 0,
         "250m_Community_Center": 0,
         "250m_Train_Station": false,
@@ -1160,13 +990,7 @@
         "250m_Floodgate": false,
         "250m_Bridge": 0
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          139.8398,
-          35.69588
-        ]
-      }
+      "geometry": { "type": "Point", "coordinates": [139.8398, 35.69588] }
     },
     {
       "type": "Feature",
@@ -1200,13 +1024,7 @@
         "250m_Floodgate": false,
         "250m_Bridge": 0
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          139.8366,
-          35.70021
-        ]
-      }
+      "geometry": { "type": "Point", "coordinates": [139.8366, 35.70021] }
     },
     {
       "type": "Feature",
@@ -1232,21 +1050,15 @@
         "Shelter_Capacity": 1230,
         "250m_Water_Station": false,
         "250m_Hospital": false,
-        "250m_AED": 3,
+        "250m_AED": 2,
         "250m_Emergency_Supply_Storage": 0,
         "250m_Community_Center": 1,
         "250m_Train_Station": false,
-        "250m_Shrine_Temple": 1,
+        "250m_Shrine_Temple": 0,
         "250m_Floodgate": false,
         "250m_Bridge": 0
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          139.8418,
-          35.6953
-        ]
-      }
+      "geometry": { "type": "Point", "coordinates": [139.8418, 35.6953] }
     },
     {
       "type": "Feature",
@@ -1280,13 +1092,7 @@
         "250m_Floodgate": false,
         "250m_Bridge": 0
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          139.8417,
-          35.69874
-        ]
-      }
+      "geometry": { "type": "Point", "coordinates": [139.8417, 35.69874] }
     },
     {
       "type": "Feature",
@@ -1320,13 +1126,7 @@
         "250m_Floodgate": false,
         "250m_Bridge": 0
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          139.842,
-          35.6992
-        ]
-      }
+      "geometry": { "type": "Point", "coordinates": [139.842, 35.6992] }
     },
     {
       "type": "Feature",
@@ -1355,18 +1155,12 @@
         "250m_AED": 1,
         "250m_Emergency_Supply_Storage": 0,
         "250m_Community_Center": 0,
-        "250m_Train_Station": true,
+        "250m_Train_Station": false,
         "250m_Shrine_Temple": 2,
         "250m_Floodgate": false,
-        "250m_Bridge": 4
+        "250m_Bridge": 3
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          139.7947,
-          35.66926
-        ]
-      }
+      "geometry": { "type": "Point", "coordinates": [139.7947, 35.66926] }
     },
     {
       "type": "Feature",
@@ -1392,21 +1186,15 @@
         "Shelter_Capacity": 620,
         "250m_Water_Station": false,
         "250m_Hospital": false,
-        "250m_AED": 5,
+        "250m_AED": 3,
         "250m_Emergency_Supply_Storage": 0,
-        "250m_Community_Center": 1,
+        "250m_Community_Center": 0,
         "250m_Train_Station": false,
         "250m_Shrine_Temple": 0,
         "250m_Floodgate": false,
         "250m_Bridge": 3
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          139.799,
-          35.66691
-        ]
-      }
+      "geometry": { "type": "Point", "coordinates": [139.799, 35.66691] }
     },
     {
       "type": "Feature",
@@ -1432,21 +1220,15 @@
         "Shelter_Capacity": 320,
         "250m_Water_Station": false,
         "250m_Hospital": false,
-        "250m_AED": 4,
+        "250m_AED": 3,
         "250m_Emergency_Supply_Storage": 0,
         "250m_Community_Center": 1,
         "250m_Train_Station": false,
         "250m_Shrine_Temple": 0,
         "250m_Floodgate": false,
-        "250m_Bridge": 5
+        "250m_Bridge": 3
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          139.7999,
-          35.66683
-        ]
-      }
+      "geometry": { "type": "Point", "coordinates": [139.7999, 35.66683] }
     },
     {
       "type": "Feature",
@@ -1472,7 +1254,7 @@
         "Shelter_Capacity": 930,
         "250m_Water_Station": false,
         "250m_Hospital": false,
-        "250m_AED": 3,
+        "250m_AED": 2,
         "250m_Emergency_Supply_Storage": 0,
         "250m_Community_Center": 0,
         "250m_Train_Station": false,
@@ -1480,13 +1262,7 @@
         "250m_Floodgate": false,
         "250m_Bridge": 2
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          139.7994,
-          35.68579
-        ]
-      }
+      "geometry": { "type": "Point", "coordinates": [139.7994, 35.68579] }
     },
     {
       "type": "Feature",
@@ -1518,15 +1294,9 @@
         "250m_Train_Station": false,
         "250m_Shrine_Temple": 2,
         "250m_Floodgate": false,
-        "250m_Bridge": 1
+        "250m_Bridge": 0
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          139.7992,
-          35.68596
-        ]
-      }
+      "geometry": { "type": "Point", "coordinates": [139.7992, 35.68596] }
     },
     {
       "type": "Feature",
@@ -1560,13 +1330,7 @@
         "250m_Floodgate": false,
         "250m_Bridge": 1
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          139.8045,
-          35.65641
-        ]
-      }
+      "geometry": { "type": "Point", "coordinates": [139.8045, 35.65641] }
     },
     {
       "type": "Feature",
@@ -1600,13 +1364,7 @@
         "250m_Floodgate": false,
         "250m_Bridge": 2
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          139.8086,
-          35.65946
-        ]
-      }
+      "geometry": { "type": "Point", "coordinates": [139.8086, 35.65946] }
     },
     {
       "type": "Feature",
@@ -1638,15 +1396,9 @@
         "250m_Train_Station": false,
         "250m_Shrine_Temple": 0,
         "250m_Floodgate": false,
-        "250m_Bridge": 2
+        "250m_Bridge": 1
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          139.8095,
-          35.65968
-        ]
-      }
+      "geometry": { "type": "Point", "coordinates": [139.8095, 35.65968] }
     },
     {
       "type": "Feature",
@@ -1680,13 +1432,7 @@
         "250m_Floodgate": false,
         "250m_Bridge": 1
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          139.8103,
-          35.65849
-        ]
-      }
+      "geometry": { "type": "Point", "coordinates": [139.8103, 35.65849] }
     },
     {
       "type": "Feature",
@@ -1716,17 +1462,11 @@
         "250m_Emergency_Supply_Storage": 0,
         "250m_Community_Center": 1,
         "250m_Train_Station": false,
-        "250m_Shrine_Temple": 2,
+        "250m_Shrine_Temple": 1,
         "250m_Floodgate": false,
         "250m_Bridge": 0
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          139.8128,
-          35.6885
-        ]
-      }
+      "geometry": { "type": "Point", "coordinates": [139.8128, 35.6885] }
     },
     {
       "type": "Feature",
@@ -1760,13 +1500,7 @@
         "250m_Floodgate": false,
         "250m_Bridge": 0
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          139.8121,
-          35.68784
-        ]
-      }
+      "geometry": { "type": "Point", "coordinates": [139.8121, 35.68784] }
     },
     {
       "type": "Feature",
@@ -1796,17 +1530,11 @@
         "250m_Emergency_Supply_Storage": 0,
         "250m_Community_Center": 1,
         "250m_Train_Station": false,
-        "250m_Shrine_Temple": 4,
+        "250m_Shrine_Temple": 2,
         "250m_Floodgate": false,
         "250m_Bridge": 0
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          139.8126,
-          35.68763
-        ]
-      }
+      "geometry": { "type": "Point", "coordinates": [139.8126, 35.68763] }
     },
     {
       "type": "Feature",
@@ -1840,13 +1568,7 @@
         "250m_Floodgate": false,
         "250m_Bridge": 2
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          139.8195,
-          35.68845
-        ]
-      }
+      "geometry": { "type": "Point", "coordinates": [139.8195, 35.68845] }
     },
     {
       "type": "Feature",
@@ -1880,13 +1602,7 @@
         "250m_Floodgate": false,
         "250m_Bridge": 0
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          139.8329,
-          35.6667
-        ]
-      }
+      "geometry": { "type": "Point", "coordinates": [139.8329, 35.6667] }
     },
     {
       "type": "Feature",
@@ -1916,17 +1632,11 @@
         "250m_Emergency_Supply_Storage": 0,
         "250m_Community_Center": 1,
         "250m_Train_Station": false,
-        "250m_Shrine_Temple": 2,
+        "250m_Shrine_Temple": 1,
         "250m_Floodgate": false,
         "250m_Bridge": 1
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          139.7954,
-          35.68675
-        ]
-      }
+      "geometry": { "type": "Point", "coordinates": [139.7954, 35.68675] }
     },
     {
       "type": "Feature",
@@ -1952,21 +1662,15 @@
         "Shelter_Capacity": 1030,
         "250m_Water_Station": false,
         "250m_Hospital": false,
-        "250m_AED": 4,
+        "250m_AED": 2,
         "250m_Emergency_Supply_Storage": 0,
         "250m_Community_Center": 1,
         "250m_Train_Station": false,
-        "250m_Shrine_Temple": 2,
+        "250m_Shrine_Temple": 1,
         "250m_Floodgate": false,
         "250m_Bridge": 2
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          139.8021,
-          35.68514
-        ]
-      }
+      "geometry": { "type": "Point", "coordinates": [139.8021, 35.68514] }
     },
     {
       "type": "Feature",
@@ -2000,13 +1704,7 @@
         "250m_Floodgate": false,
         "250m_Bridge": 1
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          139.803,
-          35.68603
-        ]
-      }
+      "geometry": { "type": "Point", "coordinates": [139.803, 35.68603] }
     },
     {
       "type": "Feature",
@@ -2040,13 +1738,7 @@
         "250m_Floodgate": false,
         "250m_Bridge": 1
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          139.803,
-          35.68598
-        ]
-      }
+      "geometry": { "type": "Point", "coordinates": [139.803, 35.68598] }
     },
     {
       "type": "Feature",
@@ -2078,15 +1770,9 @@
         "250m_Train_Station": false,
         "250m_Shrine_Temple": 0,
         "250m_Floodgate": false,
-        "250m_Bridge": 2
+        "250m_Bridge": 1
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          139.8059,
-          35.68526
-        ]
-      }
+      "geometry": { "type": "Point", "coordinates": [139.8059, 35.68526] }
     },
     {
       "type": "Feature",
@@ -2118,15 +1804,9 @@
         "250m_Train_Station": false,
         "250m_Shrine_Temple": 0,
         "250m_Floodgate": false,
-        "250m_Bridge": 3
+        "250m_Bridge": 2
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          139.8073,
-          35.68532
-        ]
-      }
+      "geometry": { "type": "Point", "coordinates": [139.8073, 35.68532] }
     },
     {
       "type": "Feature",
@@ -2156,17 +1836,11 @@
         "250m_Emergency_Supply_Storage": 1,
         "250m_Community_Center": 1,
         "250m_Train_Station": false,
-        "250m_Shrine_Temple": 7,
+        "250m_Shrine_Temple": 5,
         "250m_Floodgate": false,
         "250m_Bridge": 2
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          139.7963,
-          35.67716
-        ]
-      }
+      "geometry": { "type": "Point", "coordinates": [139.7963, 35.67716] }
     },
     {
       "type": "Feature",
@@ -2200,13 +1874,7 @@
         "250m_Floodgate": false,
         "250m_Bridge": 0
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          139.7978,
-          35.67374
-        ]
-      }
+      "geometry": { "type": "Point", "coordinates": [139.7978, 35.67374] }
     },
     {
       "type": "Feature",
@@ -2238,15 +1906,9 @@
         "250m_Train_Station": false,
         "250m_Shrine_Temple": 7,
         "250m_Floodgate": false,
-        "250m_Bridge": 1
+        "250m_Bridge": 0
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          139.7982,
-          35.67604
-        ]
-      }
+      "geometry": { "type": "Point", "coordinates": [139.7982, 35.67604] }
     },
     {
       "type": "Feature",
@@ -2275,18 +1937,12 @@
         "250m_AED": 1,
         "250m_Emergency_Supply_Storage": 1,
         "250m_Community_Center": 0,
-        "250m_Train_Station": true,
-        "250m_Shrine_Temple": 8,
+        "250m_Train_Station": false,
+        "250m_Shrine_Temple": 7,
         "250m_Floodgate": false,
         "250m_Bridge": 0
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          139.7966,
-          35.68135
-        ]
-      }
+      "geometry": { "type": "Point", "coordinates": [139.7966, 35.68135] }
     },
     {
       "type": "Feature",
@@ -2320,13 +1976,7 @@
         "250m_Floodgate": false,
         "250m_Bridge": 2
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          139.7968,
-          35.67915
-        ]
-      }
+      "geometry": { "type": "Point", "coordinates": [139.7968, 35.67915] }
     },
     {
       "type": "Feature",
@@ -2358,15 +2008,9 @@
         "250m_Train_Station": false,
         "250m_Shrine_Temple": 0,
         "250m_Floodgate": false,
-        "250m_Bridge": 3
+        "250m_Bridge": 2
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          139.8117,
-          35.68118
-        ]
-      }
+      "geometry": { "type": "Point", "coordinates": [139.8117, 35.68118] }
     },
     {
       "type": "Feature",
@@ -2393,20 +2037,14 @@
         "250m_Water_Station": false,
         "250m_Hospital": false,
         "250m_AED": 1,
-        "250m_Emergency_Supply_Storage": 1,
+        "250m_Emergency_Supply_Storage": 0,
         "250m_Community_Center": 1,
         "250m_Train_Station": false,
         "250m_Shrine_Temple": 0,
         "250m_Floodgate": false,
         "250m_Bridge": 1
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          139.8125,
-          35.6788
-        ]
-      }
+      "geometry": { "type": "Point", "coordinates": [139.8125, 35.6788] }
     },
     {
       "type": "Feature",
@@ -2436,17 +2074,11 @@
         "250m_Emergency_Supply_Storage": 1,
         "250m_Community_Center": 1,
         "250m_Train_Station": false,
-        "250m_Shrine_Temple": 1,
+        "250m_Shrine_Temple": 0,
         "250m_Floodgate": false,
         "250m_Bridge": 0
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          139.8166,
-          35.67976
-        ]
-      }
+      "geometry": { "type": "Point", "coordinates": [139.8166, 35.67976] }
     },
     {
       "type": "Feature",
@@ -2472,21 +2104,15 @@
         "Shelter_Capacity": 870,
         "250m_Water_Station": false,
         "250m_Hospital": false,
-        "250m_AED": 3,
-        "250m_Emergency_Supply_Storage": 1,
-        "250m_Community_Center": 1,
+        "250m_AED": 2,
+        "250m_Emergency_Supply_Storage": 0,
+        "250m_Community_Center": 0,
         "250m_Train_Station": false,
         "250m_Shrine_Temple": 0,
         "250m_Floodgate": false,
-        "250m_Bridge": 2
+        "250m_Bridge": 1
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          139.8182,
-          35.67946
-        ]
-      }
+      "geometry": { "type": "Point", "coordinates": [139.8182, 35.67946] }
     },
     {
       "type": "Feature",
@@ -2520,13 +2146,7 @@
         "250m_Floodgate": false,
         "250m_Bridge": 0
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          139.8166,
-          35.68101
-        ]
-      }
+      "geometry": { "type": "Point", "coordinates": [139.8166, 35.68101] }
     },
     {
       "type": "Feature",
@@ -2556,17 +2176,11 @@
         "250m_Emergency_Supply_Storage": 1,
         "250m_Community_Center": 1,
         "250m_Train_Station": false,
-        "250m_Shrine_Temple": 2,
+        "250m_Shrine_Temple": 1,
         "250m_Floodgate": false,
         "250m_Bridge": 0
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          139.8166,
-          35.68062
-        ]
-      }
+      "geometry": { "type": "Point", "coordinates": [139.8166, 35.68062] }
     },
     {
       "type": "Feature",
@@ -2592,7 +2206,7 @@
         "Shelter_Capacity": 140,
         "250m_Water_Station": false,
         "250m_Hospital": false,
-        "250m_AED": 3,
+        "250m_AED": 2,
         "250m_Emergency_Supply_Storage": 0,
         "250m_Community_Center": 1,
         "250m_Train_Station": false,
@@ -2600,13 +2214,7 @@
         "250m_Floodgate": true,
         "250m_Bridge": 2
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          139.8192,
-          35.68453
-        ]
-      }
+      "geometry": { "type": "Point", "coordinates": [139.8192, 35.68453] }
     },
     {
       "type": "Feature",
@@ -2640,13 +2248,7 @@
         "250m_Floodgate": true,
         "250m_Bridge": 3
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          139.8202,
-          35.6841
-        ]
-      }
+      "geometry": { "type": "Point", "coordinates": [139.8202, 35.6841] }
     },
     {
       "type": "Feature",
@@ -2672,7 +2274,7 @@
         "Shelter_Capacity": 890,
         "250m_Water_Station": false,
         "250m_Hospital": false,
-        "250m_AED": 1,
+        "250m_AED": 0,
         "250m_Emergency_Supply_Storage": 0,
         "250m_Community_Center": 0,
         "250m_Train_Station": false,
@@ -2680,13 +2282,7 @@
         "250m_Floodgate": false,
         "250m_Bridge": 2
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          139.8214,
-          35.68716
-        ]
-      }
+      "geometry": { "type": "Point", "coordinates": [139.8214, 35.68716] }
     },
     {
       "type": "Feature",
@@ -2712,7 +2308,7 @@
         "Shelter_Capacity": 1380,
         "250m_Water_Station": false,
         "250m_Hospital": false,
-        "250m_AED": 2,
+        "250m_AED": 1,
         "250m_Emergency_Supply_Storage": 0,
         "250m_Community_Center": 0,
         "250m_Train_Station": false,
@@ -2720,13 +2316,7 @@
         "250m_Floodgate": false,
         "250m_Bridge": 1
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          139.8252,
-          35.68564
-        ]
-      }
+      "geometry": { "type": "Point", "coordinates": [139.8252, 35.68564] }
     },
     {
       "type": "Feature",
@@ -2752,7 +2342,7 @@
         "Shelter_Capacity": 1310,
         "250m_Water_Station": false,
         "250m_Hospital": false,
-        "250m_AED": 4,
+        "250m_AED": 3,
         "250m_Emergency_Supply_Storage": 1,
         "250m_Community_Center": 0,
         "250m_Train_Station": true,
@@ -2760,13 +2350,7 @@
         "250m_Floodgate": false,
         "250m_Bridge": 0
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          139.8254,
-          35.68974
-        ]
-      }
+      "geometry": { "type": "Point", "coordinates": [139.8254, 35.68974] }
     },
     {
       "type": "Feature",
@@ -2792,7 +2376,7 @@
         "Shelter_Capacity": 1860,
         "250m_Water_Station": false,
         "250m_Hospital": false,
-        "250m_AED": 3,
+        "250m_AED": 2,
         "250m_Emergency_Supply_Storage": 0,
         "250m_Community_Center": 0,
         "250m_Train_Station": false,
@@ -2800,13 +2384,7 @@
         "250m_Floodgate": false,
         "250m_Bridge": 0
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          139.8299,
-          35.69021
-        ]
-      }
+      "geometry": { "type": "Point", "coordinates": [139.8299, 35.69021] }
     },
     {
       "type": "Feature",
@@ -2838,15 +2416,9 @@
         "250m_Train_Station": false,
         "250m_Shrine_Temple": 2,
         "250m_Floodgate": false,
-        "250m_Bridge": 1
+        "250m_Bridge": 0
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          139.8293,
-          35.69282
-        ]
-      }
+      "geometry": { "type": "Point", "coordinates": [139.8293, 35.69282] }
     },
     {
       "type": "Feature",
@@ -2876,17 +2448,11 @@
         "250m_Emergency_Supply_Storage": 0,
         "250m_Community_Center": 0,
         "250m_Train_Station": false,
-        "250m_Shrine_Temple": 2,
+        "250m_Shrine_Temple": 1,
         "250m_Floodgate": false,
         "250m_Bridge": 1
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          139.8311,
-          35.69187
-        ]
-      }
+      "geometry": { "type": "Point", "coordinates": [139.8311, 35.69187] }
     },
     {
       "type": "Feature",
@@ -2920,13 +2486,7 @@
         "250m_Floodgate": false,
         "250m_Bridge": 1
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          139.8278,
-          35.68635
-        ]
-      }
+      "geometry": { "type": "Point", "coordinates": [139.8278, 35.68635] }
     },
     {
       "type": "Feature",
@@ -2952,21 +2512,15 @@
         "Shelter_Capacity": 150,
         "250m_Water_Station": false,
         "250m_Hospital": false,
-        "250m_AED": 5,
+        "250m_AED": 4,
         "250m_Emergency_Supply_Storage": 1,
         "250m_Community_Center": 0,
         "250m_Train_Station": false,
         "250m_Shrine_Temple": 0,
         "250m_Floodgate": false,
-        "250m_Bridge": 1
+        "250m_Bridge": 0
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          139.8282,
-          35.68734
-        ]
-      }
+      "geometry": { "type": "Point", "coordinates": [139.8282, 35.68734] }
     },
     {
       "type": "Feature",
@@ -2992,7 +2546,7 @@
         "Shelter_Capacity": 160,
         "250m_Water_Station": false,
         "250m_Hospital": false,
-        "250m_AED": 5,
+        "250m_AED": 3,
         "250m_Emergency_Supply_Storage": 0,
         "250m_Community_Center": 0,
         "250m_Train_Station": false,
@@ -3000,13 +2554,7 @@
         "250m_Floodgate": false,
         "250m_Bridge": 0
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          139.8304,
-          35.68676
-        ]
-      }
+      "geometry": { "type": "Point", "coordinates": [139.8304, 35.68676] }
     },
     {
       "type": "Feature",
@@ -3034,19 +2582,13 @@
         "250m_Hospital": false,
         "250m_AED": 4,
         "250m_Emergency_Supply_Storage": 0,
-        "250m_Community_Center": 1,
+        "250m_Community_Center": 0,
         "250m_Train_Station": false,
         "250m_Shrine_Temple": 1,
         "250m_Floodgate": false,
         "250m_Bridge": 1
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          139.8316,
-          35.68724
-        ]
-      }
+      "geometry": { "type": "Point", "coordinates": [139.8316, 35.68724] }
     },
     {
       "type": "Feature",
@@ -3072,7 +2614,7 @@
         "Shelter_Capacity": 270,
         "250m_Water_Station": false,
         "250m_Hospital": false,
-        "250m_AED": 8,
+        "250m_AED": 7,
         "250m_Emergency_Supply_Storage": 0,
         "250m_Community_Center": 0,
         "250m_Train_Station": false,
@@ -3080,13 +2622,7 @@
         "250m_Floodgate": false,
         "250m_Bridge": 1
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          139.8321,
-          35.68622
-        ]
-      }
+      "geometry": { "type": "Point", "coordinates": [139.8321, 35.68622] }
     },
     {
       "type": "Feature",
@@ -3120,13 +2656,7 @@
         "250m_Floodgate": false,
         "250m_Bridge": 0
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          139.827,
-          35.68908
-        ]
-      }
+      "geometry": { "type": "Point", "coordinates": [139.827, 35.68908] }
     },
     {
       "type": "Feature",
@@ -3160,13 +2690,7 @@
         "250m_Floodgate": false,
         "250m_Bridge": 1
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          139.8359,
-          35.68719
-        ]
-      }
+      "geometry": { "type": "Point", "coordinates": [139.8359, 35.68719] }
     },
     {
       "type": "Feature",
@@ -3200,13 +2724,7 @@
         "250m_Floodgate": false,
         "250m_Bridge": 2
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          139.838,
-          35.687
-        ]
-      }
+      "geometry": { "type": "Point", "coordinates": [139.838, 35.687] }
     },
     {
       "type": "Feature",
@@ -3240,13 +2758,7 @@
         "250m_Floodgate": false,
         "250m_Bridge": 2
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          139.8371,
-          35.68702
-        ]
-      }
+      "geometry": { "type": "Point", "coordinates": [139.8371, 35.68702] }
     },
     {
       "type": "Feature",
@@ -3272,7 +2784,7 @@
         "Shelter_Capacity": 240,
         "250m_Water_Station": false,
         "250m_Hospital": false,
-        "250m_AED": 2,
+        "250m_AED": 1,
         "250m_Emergency_Supply_Storage": 0,
         "250m_Community_Center": 0,
         "250m_Train_Station": false,
@@ -3280,13 +2792,7 @@
         "250m_Floodgate": false,
         "250m_Bridge": 2
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          139.8332,
-          35.69337
-        ]
-      }
+      "geometry": { "type": "Point", "coordinates": [139.8332, 35.69337] }
     },
     {
       "type": "Feature",
@@ -3320,13 +2826,7 @@
         "250m_Floodgate": false,
         "250m_Bridge": 0
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          139.834,
-          35.69123
-        ]
-      }
+      "geometry": { "type": "Point", "coordinates": [139.834, 35.69123] }
     },
     {
       "type": "Feature",
@@ -3360,13 +2860,7 @@
         "250m_Floodgate": false,
         "250m_Bridge": 0
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          139.8402,
-          35.69346
-        ]
-      }
+      "geometry": { "type": "Point", "coordinates": [139.8402, 35.69346] }
     },
     {
       "type": "Feature",
@@ -3400,13 +2894,7 @@
         "250m_Floodgate": false,
         "250m_Bridge": 0
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          139.8438,
-          35.69148
-        ]
-      }
+      "geometry": { "type": "Point", "coordinates": [139.8438, 35.69148] }
     },
     {
       "type": "Feature",
@@ -3433,20 +2921,14 @@
         "250m_Water_Station": false,
         "250m_Hospital": false,
         "250m_AED": 4,
-        "250m_Emergency_Supply_Storage": 1,
+        "250m_Emergency_Supply_Storage": 0,
         "250m_Community_Center": 0,
         "250m_Train_Station": false,
         "250m_Shrine_Temple": 0,
         "250m_Floodgate": false,
         "250m_Bridge": 1
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          139.8392,
-          35.68732
-        ]
-      }
+      "geometry": { "type": "Point", "coordinates": [139.8392, 35.68732] }
     },
     {
       "type": "Feature",
@@ -3480,13 +2962,7 @@
         "250m_Floodgate": false,
         "250m_Bridge": 1
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          139.8399,
-          35.68646
-        ]
-      }
+      "geometry": { "type": "Point", "coordinates": [139.8399, 35.68646] }
     },
     {
       "type": "Feature",
@@ -3512,7 +2988,7 @@
         "Shelter_Capacity": 890,
         "250m_Water_Station": false,
         "250m_Hospital": false,
-        "250m_AED": 2,
+        "250m_AED": 1,
         "250m_Emergency_Supply_Storage": 1,
         "250m_Community_Center": 0,
         "250m_Train_Station": false,
@@ -3520,13 +2996,7 @@
         "250m_Floodgate": false,
         "250m_Bridge": 0
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          139.8425,
-          35.68975
-        ]
-      }
+      "geometry": { "type": "Point", "coordinates": [139.8425, 35.68975] }
     },
     {
       "type": "Feature",
@@ -3560,13 +3030,7 @@
         "250m_Floodgate": false,
         "250m_Bridge": 1
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          139.8446,
-          35.6882
-        ]
-      }
+      "geometry": { "type": "Point", "coordinates": [139.8446, 35.6882] }
     },
     {
       "type": "Feature",
@@ -3600,13 +3064,7 @@
         "250m_Floodgate": false,
         "250m_Bridge": 0
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          139.8453,
-          35.69258
-        ]
-      }
+      "geometry": { "type": "Point", "coordinates": [139.8453, 35.69258] }
     },
     {
       "type": "Feature",
@@ -3640,13 +3098,7 @@
         "250m_Floodgate": false,
         "250m_Bridge": 0
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          139.8444,
-          35.69403
-        ]
-      }
+      "geometry": { "type": "Point", "coordinates": [139.8444, 35.69403] }
     },
     {
       "type": "Feature",
@@ -3672,7 +3124,7 @@
         "Shelter_Capacity": 1950,
         "250m_Water_Station": false,
         "250m_Hospital": false,
-        "250m_AED": 4,
+        "250m_AED": 3,
         "250m_Emergency_Supply_Storage": 0,
         "250m_Community_Center": 0,
         "250m_Train_Station": false,
@@ -3680,13 +3132,7 @@
         "250m_Floodgate": false,
         "250m_Bridge": 1
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          139.8084,
-          35.6483
-        ]
-      }
+      "geometry": { "type": "Point", "coordinates": [139.8084, 35.6483] }
     },
     {
       "type": "Feature",
@@ -3712,7 +3158,7 @@
         "Shelter_Capacity": 280,
         "250m_Water_Station": false,
         "250m_Hospital": false,
-        "250m_AED": 6,
+        "250m_AED": 4,
         "250m_Emergency_Supply_Storage": 0,
         "250m_Community_Center": 0,
         "250m_Train_Station": true,
@@ -3720,13 +3166,7 @@
         "250m_Floodgate": true,
         "250m_Bridge": 1
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          139.809,
-          35.64751
-        ]
-      }
+      "geometry": { "type": "Point", "coordinates": [139.809, 35.64751] }
     },
     {
       "type": "Feature",
@@ -3760,13 +3200,7 @@
         "250m_Floodgate": false,
         "250m_Bridge": 0
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          139.8118,
-          35.64698
-        ]
-      }
+      "geometry": { "type": "Point", "coordinates": [139.8118, 35.64698] }
     },
     {
       "type": "Feature",
@@ -3790,9 +3224,9 @@
         "InlandWaters_Depth": "該当なし",
         "Facility_Type": "その他",
         "Shelter_Capacity": 150,
-        "250m_Water_Station": true,
+        "250m_Water_Station": false,
         "250m_Hospital": false,
-        "250m_AED": 4,
+        "250m_AED": 2,
         "250m_Emergency_Supply_Storage": 0,
         "250m_Community_Center": 0,
         "250m_Train_Station": false,
@@ -3800,13 +3234,7 @@
         "250m_Floodgate": false,
         "250m_Bridge": 0
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          139.8107,
-          35.64898
-        ]
-      }
+      "geometry": { "type": "Point", "coordinates": [139.8107, 35.64898] }
     },
     {
       "type": "Feature",
@@ -3832,7 +3260,7 @@
         "Shelter_Capacity": 210,
         "250m_Water_Station": true,
         "250m_Hospital": false,
-        "250m_AED": 5,
+        "250m_AED": 4,
         "250m_Emergency_Supply_Storage": 0,
         "250m_Community_Center": 0,
         "250m_Train_Station": false,
@@ -3840,13 +3268,7 @@
         "250m_Floodgate": false,
         "250m_Bridge": 0
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          139.8114,
-          35.64821
-        ]
-      }
+      "geometry": { "type": "Point", "coordinates": [139.8114, 35.64821] }
     },
     {
       "type": "Feature",
@@ -3872,7 +3294,7 @@
         "Shelter_Capacity": 1200,
         "250m_Water_Station": false,
         "250m_Hospital": false,
-        "250m_AED": 5,
+        "250m_AED": 4,
         "250m_Emergency_Supply_Storage": 0,
         "250m_Community_Center": 0,
         "250m_Train_Station": true,
@@ -3880,13 +3302,7 @@
         "250m_Floodgate": true,
         "250m_Bridge": 0
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          139.81,
-          35.64658
-        ]
-      }
+      "geometry": { "type": "Point", "coordinates": [139.81, 35.64658] }
     },
     {
       "type": "Feature",
@@ -3920,13 +3336,7 @@
         "250m_Floodgate": false,
         "250m_Bridge": 1
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          139.8149,
-          35.65563
-        ]
-      }
+      "geometry": { "type": "Point", "coordinates": [139.8149, 35.65563] }
     },
     {
       "type": "Feature",
@@ -3960,13 +3370,7 @@
         "250m_Floodgate": false,
         "250m_Bridge": 2
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          139.8117,
-          35.65564
-        ]
-      }
+      "geometry": { "type": "Point", "coordinates": [139.8117, 35.65564] }
     },
     {
       "type": "Feature",
@@ -3992,21 +3396,15 @@
         "Shelter_Capacity": 1310,
         "250m_Water_Station": false,
         "250m_Hospital": false,
-        "250m_AED": 2,
+        "250m_AED": 1,
         "250m_Emergency_Supply_Storage": 0,
         "250m_Community_Center": 0,
         "250m_Train_Station": false,
-        "250m_Shrine_Temple": 3,
+        "250m_Shrine_Temple": 2,
         "250m_Floodgate": false,
-        "250m_Bridge": 3
+        "250m_Bridge": 2
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          139.8006,
-          35.67627
-        ]
-      }
+      "geometry": { "type": "Point", "coordinates": [139.8006, 35.67627] }
     },
     {
       "type": "Feature",
@@ -4040,13 +3438,7 @@
         "250m_Floodgate": false,
         "250m_Bridge": 0
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          139.8002,
-          35.64494
-        ]
-      }
+      "geometry": { "type": "Point", "coordinates": [139.8002, 35.64494] }
     },
     {
       "type": "Feature",
@@ -4078,15 +3470,9 @@
         "250m_Train_Station": false,
         "250m_Shrine_Temple": 0,
         "250m_Floodgate": false,
-        "250m_Bridge": 1
+        "250m_Bridge": 0
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          139.8035,
-          35.64919
-        ]
-      }
+      "geometry": { "type": "Point", "coordinates": [139.8035, 35.64919] }
     },
     {
       "type": "Feature",
@@ -4120,13 +3506,7 @@
         "250m_Floodgate": false,
         "250m_Bridge": 0
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          139.7981,
-          35.64206
-        ]
-      }
+      "geometry": { "type": "Point", "coordinates": [139.7981, 35.64206] }
     },
     {
       "type": "Feature",
@@ -4160,13 +3540,7 @@
         "250m_Floodgate": false,
         "250m_Bridge": 0
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          139.7991,
-          35.64253
-        ]
-      }
+      "geometry": { "type": "Point", "coordinates": [139.7991, 35.64253] }
     },
     {
       "type": "Feature",
@@ -4200,13 +3574,7 @@
         "250m_Floodgate": false,
         "250m_Bridge": 0
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          139.799,
-          35.64333
-        ]
-      }
+      "geometry": { "type": "Point", "coordinates": [139.799, 35.64333] }
     },
     {
       "type": "Feature",
@@ -4240,13 +3608,7 @@
         "250m_Floodgate": false,
         "250m_Bridge": 0
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          139.7993,
-          35.64333
-        ]
-      }
+      "geometry": { "type": "Point", "coordinates": [139.7993, 35.64333] }
     },
     {
       "type": "Feature",
@@ -4272,21 +3634,15 @@
         "Shelter_Capacity": 210,
         "250m_Water_Station": false,
         "250m_Hospital": false,
-        "250m_AED": 3,
+        "250m_AED": 2,
         "250m_Emergency_Supply_Storage": 0,
-        "250m_Community_Center": 2,
+        "250m_Community_Center": 1,
         "250m_Train_Station": false,
         "250m_Shrine_Temple": 4,
         "250m_Floodgate": false,
         "250m_Bridge": 0
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          139.8408,
-          35.68215
-        ]
-      }
+      "geometry": { "type": "Point", "coordinates": [139.8408, 35.68215] }
     },
     {
       "type": "Feature",
@@ -4320,13 +3676,7 @@
         "250m_Floodgate": true,
         "250m_Bridge": 0
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          139.8443,
-          35.6834
-        ]
-      }
+      "geometry": { "type": "Point", "coordinates": [139.8443, 35.6834] }
     },
     {
       "type": "Feature",
@@ -4358,15 +3708,9 @@
         "250m_Train_Station": false,
         "250m_Shrine_Temple": 1,
         "250m_Floodgate": false,
-        "250m_Bridge": 1
+        "250m_Bridge": 0
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          139.8416,
-          35.68603
-        ]
-      }
+      "geometry": { "type": "Point", "coordinates": [139.8416, 35.68603] }
     },
     {
       "type": "Feature",
@@ -4392,7 +3736,7 @@
         "Shelter_Capacity": 150,
         "250m_Water_Station": false,
         "250m_Hospital": false,
-        "250m_AED": 5,
+        "250m_AED": 3,
         "250m_Emergency_Supply_Storage": 0,
         "250m_Community_Center": 0,
         "250m_Train_Station": false,
@@ -4400,13 +3744,7 @@
         "250m_Floodgate": false,
         "250m_Bridge": 0
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          139.8417,
-          35.68512
-        ]
-      }
+      "geometry": { "type": "Point", "coordinates": [139.8417, 35.68512] }
     },
     {
       "type": "Feature",
@@ -4436,17 +3774,11 @@
         "250m_Emergency_Supply_Storage": 0,
         "250m_Community_Center": 0,
         "250m_Train_Station": false,
-        "250m_Shrine_Temple": 2,
+        "250m_Shrine_Temple": 1,
         "250m_Floodgate": false,
         "250m_Bridge": 0
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          139.843,
-          35.68446
-        ]
-      }
+      "geometry": { "type": "Point", "coordinates": [139.843, 35.68446] }
     },
     {
       "type": "Feature",
@@ -4480,13 +3812,7 @@
         "250m_Floodgate": false,
         "250m_Bridge": 0
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          139.8424,
-          35.6789
-        ]
-      }
+      "geometry": { "type": "Point", "coordinates": [139.8424, 35.6789] }
     },
     {
       "type": "Feature",
@@ -4520,13 +3846,7 @@
         "250m_Floodgate": true,
         "250m_Bridge": 0
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          139.8453,
-          35.68105
-        ]
-      }
+      "geometry": { "type": "Point", "coordinates": [139.8453, 35.68105] }
     },
     {
       "type": "Feature",
@@ -4556,17 +3876,11 @@
         "250m_Emergency_Supply_Storage": 0,
         "250m_Community_Center": 0,
         "250m_Train_Station": false,
-        "250m_Shrine_Temple": 2,
+        "250m_Shrine_Temple": 1,
         "250m_Floodgate": false,
         "250m_Bridge": 0
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          139.8394,
-          35.67839
-        ]
-      }
+      "geometry": { "type": "Point", "coordinates": [139.8394, 35.67839] }
     },
     {
       "type": "Feature",
@@ -4600,13 +3914,7 @@
         "250m_Floodgate": false,
         "250m_Bridge": 0
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          139.8395,
-          35.6792
-        ]
-      }
+      "geometry": { "type": "Point", "coordinates": [139.8395, 35.6792] }
     },
     {
       "type": "Feature",
@@ -4640,13 +3948,7 @@
         "250m_Floodgate": false,
         "250m_Bridge": 0
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          139.8397,
-          35.67451
-        ]
-      }
+      "geometry": { "type": "Point", "coordinates": [139.8397, 35.67451] }
     },
     {
       "type": "Feature",
@@ -4676,17 +3978,11 @@
         "250m_Emergency_Supply_Storage": 0,
         "250m_Community_Center": 0,
         "250m_Train_Station": false,
-        "250m_Shrine_Temple": 1,
+        "250m_Shrine_Temple": 0,
         "250m_Floodgate": false,
         "250m_Bridge": 0
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          139.8387,
-          35.67487
-        ]
-      }
+      "geometry": { "type": "Point", "coordinates": [139.8387, 35.67487] }
     },
     {
       "type": "Feature",
@@ -4720,13 +4016,7 @@
         "250m_Floodgate": false,
         "250m_Bridge": 0
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          139.8384,
-          35.67412
-        ]
-      }
+      "geometry": { "type": "Point", "coordinates": [139.8384, 35.67412] }
     },
     {
       "type": "Feature",
@@ -4752,7 +4042,7 @@
         "Shelter_Capacity": 880,
         "250m_Water_Station": false,
         "250m_Hospital": false,
-        "250m_AED": 3,
+        "250m_AED": 2,
         "250m_Emergency_Supply_Storage": 0,
         "250m_Community_Center": 0,
         "250m_Train_Station": false,
@@ -4760,13 +4050,7 @@
         "250m_Floodgate": false,
         "250m_Bridge": 0
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          139.837,
-          35.67374
-        ]
-      }
+      "geometry": { "type": "Point", "coordinates": [139.837, 35.67374] }
     },
     {
       "type": "Feature",
@@ -4800,13 +4084,7 @@
         "250m_Floodgate": false,
         "250m_Bridge": 0
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          139.8388,
-          35.67147
-        ]
-      }
+      "geometry": { "type": "Point", "coordinates": [139.8388, 35.67147] }
     },
     {
       "type": "Feature",
@@ -4840,13 +4118,7 @@
         "250m_Floodgate": false,
         "250m_Bridge": 0
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          139.8395,
-          35.66836
-        ]
-      }
+      "geometry": { "type": "Point", "coordinates": [139.8395, 35.66836] }
     },
     {
       "type": "Feature",
@@ -4880,13 +4152,7 @@
         "250m_Floodgate": false,
         "250m_Bridge": 0
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          139.8389,
-          35.66715
-        ]
-      }
+      "geometry": { "type": "Point", "coordinates": [139.8389, 35.66715] }
     },
     {
       "type": "Feature",
@@ -4920,13 +4186,7 @@
         "250m_Floodgate": false,
         "250m_Bridge": 0
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          139.8141,
-          35.66746
-        ]
-      }
+      "geometry": { "type": "Point", "coordinates": [139.8141, 35.66746] }
     },
     {
       "type": "Feature",
@@ -4960,13 +4220,7 @@
         "250m_Floodgate": false,
         "250m_Bridge": 1
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          139.815,
-          35.66587
-        ]
-      }
+      "geometry": { "type": "Point", "coordinates": [139.815, 35.66587] }
     },
     {
       "type": "Feature",
@@ -5000,13 +4254,7 @@
         "250m_Floodgate": false,
         "250m_Bridge": 0
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          139.8138,
-          35.66844
-        ]
-      }
+      "geometry": { "type": "Point", "coordinates": [139.8138, 35.66844] }
     },
     {
       "type": "Feature",
@@ -5040,13 +4288,7 @@
         "250m_Floodgate": false,
         "250m_Bridge": 0
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          139.814,
-          35.66696
-        ]
-      }
+      "geometry": { "type": "Point", "coordinates": [139.814, 35.66696] }
     },
     {
       "type": "Feature",
@@ -5080,13 +4322,7 @@
         "250m_Floodgate": false,
         "250m_Bridge": 1
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          139.8171,
-          35.66722
-        ]
-      }
+      "geometry": { "type": "Point", "coordinates": [139.8171, 35.66722] }
     },
     {
       "type": "Feature",
@@ -5116,17 +4352,11 @@
         "250m_Emergency_Supply_Storage": 1,
         "250m_Community_Center": 3,
         "250m_Train_Station": true,
-        "250m_Shrine_Temple": 3,
+        "250m_Shrine_Temple": 2,
         "250m_Floodgate": false,
         "250m_Bridge": 3
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          139.8086,
-          35.66859
-        ]
-      }
+      "geometry": { "type": "Point", "coordinates": [139.8086, 35.66859] }
     },
     {
       "type": "Feature",
@@ -5152,7 +4382,7 @@
         "Shelter_Capacity": 290,
         "250m_Water_Station": false,
         "250m_Hospital": false,
-        "250m_AED": 4,
+        "250m_AED": 3,
         "250m_Emergency_Supply_Storage": 0,
         "250m_Community_Center": 0,
         "250m_Train_Station": false,
@@ -5160,13 +4390,7 @@
         "250m_Floodgate": false,
         "250m_Bridge": 0
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          139.8137,
-          35.66919
-        ]
-      }
+      "geometry": { "type": "Point", "coordinates": [139.8137, 35.66919] }
     },
     {
       "type": "Feature",
@@ -5195,18 +4419,12 @@
         "250m_AED": 2,
         "250m_Emergency_Supply_Storage": 0,
         "250m_Community_Center": 0,
-        "250m_Train_Station": true,
+        "250m_Train_Station": false,
         "250m_Shrine_Temple": 0,
         "250m_Floodgate": false,
         "250m_Bridge": 0
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          139.8153,
-          35.6705
-        ]
-      }
+      "geometry": { "type": "Point", "coordinates": [139.8153, 35.6705] }
     },
     {
       "type": "Feature",
@@ -5240,13 +4458,7 @@
         "250m_Floodgate": false,
         "250m_Bridge": 0
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          139.8183,
-          35.67235
-        ]
-      }
+      "geometry": { "type": "Point", "coordinates": [139.8183, 35.67235] }
     },
     {
       "type": "Feature",
@@ -5280,13 +4492,7 @@
         "250m_Floodgate": false,
         "250m_Bridge": 0
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          139.8178,
-          35.67381
-        ]
-      }
+      "geometry": { "type": "Point", "coordinates": [139.8178, 35.67381] }
     },
     {
       "type": "Feature",
@@ -5318,15 +4524,9 @@
         "250m_Train_Station": false,
         "250m_Shrine_Temple": 1,
         "250m_Floodgate": false,
-        "250m_Bridge": 1
+        "250m_Bridge": 0
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          139.8118,
-          35.67141
-        ]
-      }
+      "geometry": { "type": "Point", "coordinates": [139.8118, 35.67141] }
     },
     {
       "type": "Feature",
@@ -5355,18 +4555,12 @@
         "250m_AED": 2,
         "250m_Emergency_Supply_Storage": 1,
         "250m_Community_Center": 0,
-        "250m_Train_Station": true,
+        "250m_Train_Station": false,
         "250m_Shrine_Temple": 0,
         "250m_Floodgate": false,
         "250m_Bridge": 0
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          139.8158,
-          35.67098
-        ]
-      }
+      "geometry": { "type": "Point", "coordinates": [139.8158, 35.67098] }
     },
     {
       "type": "Feature",
@@ -5398,15 +4592,9 @@
         "250m_Train_Station": false,
         "250m_Shrine_Temple": 1,
         "250m_Floodgate": false,
-        "250m_Bridge": 2
+        "250m_Bridge": 1
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          139.8124,
-          35.67469
-        ]
-      }
+      "geometry": { "type": "Point", "coordinates": [139.8124, 35.67469] }
     },
     {
       "type": "Feature",
@@ -5438,15 +4626,9 @@
         "250m_Train_Station": false,
         "250m_Shrine_Temple": 1,
         "250m_Floodgate": false,
-        "250m_Bridge": 3
+        "250m_Bridge": 1
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          139.8124,
-          35.67476
-        ]
-      }
+      "geometry": { "type": "Point", "coordinates": [139.8124, 35.67476] }
     },
     {
       "type": "Feature",
@@ -5472,7 +4654,7 @@
         "Shelter_Capacity": 1090,
         "250m_Water_Station": false,
         "250m_Hospital": false,
-        "250m_AED": 2,
+        "250m_AED": 1,
         "250m_Emergency_Supply_Storage": 0,
         "250m_Community_Center": 0,
         "250m_Train_Station": false,
@@ -5480,13 +4662,7 @@
         "250m_Floodgate": false,
         "250m_Bridge": 1
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          139.8146,
-          35.67454
-        ]
-      }
+      "geometry": { "type": "Point", "coordinates": [139.8146, 35.67454] }
     },
     {
       "type": "Feature",
@@ -5520,13 +4696,7 @@
         "250m_Floodgate": false,
         "250m_Bridge": 2
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          139.8213,
-          35.67795
-        ]
-      }
+      "geometry": { "type": "Point", "coordinates": [139.8213, 35.67795] }
     },
     {
       "type": "Feature",
@@ -5558,15 +4728,9 @@
         "250m_Train_Station": false,
         "250m_Shrine_Temple": 0,
         "250m_Floodgate": false,
-        "250m_Bridge": 2
+        "250m_Bridge": 1
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          139.822,
-          35.67503
-        ]
-      }
+      "geometry": { "type": "Point", "coordinates": [139.822, 35.67503] }
     },
     {
       "type": "Feature",
@@ -5600,13 +4764,7 @@
         "250m_Floodgate": false,
         "250m_Bridge": 0
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          139.822,
-          35.67029
-        ]
-      }
+      "geometry": { "type": "Point", "coordinates": [139.822, 35.67029] }
     },
     {
       "type": "Feature",
@@ -5634,19 +4792,13 @@
         "250m_Hospital": false,
         "250m_AED": 5,
         "250m_Emergency_Supply_Storage": 0,
-        "250m_Community_Center": 1,
+        "250m_Community_Center": 0,
         "250m_Train_Station": false,
         "250m_Shrine_Temple": 0,
         "250m_Floodgate": false,
         "250m_Bridge": 0
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          139.8213,
-          35.67212
-        ]
-      }
+      "geometry": { "type": "Point", "coordinates": [139.8213, 35.67212] }
     },
     {
       "type": "Feature",
@@ -5680,13 +4832,7 @@
         "250m_Floodgate": false,
         "250m_Bridge": 0
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          139.8232,
-          35.67107
-        ]
-      }
+      "geometry": { "type": "Point", "coordinates": [139.8232, 35.67107] }
     },
     {
       "type": "Feature",
@@ -5712,7 +4858,7 @@
         "Shelter_Capacity": 1270,
         "250m_Water_Station": false,
         "250m_Hospital": false,
-        "250m_AED": 6,
+        "250m_AED": 5,
         "250m_Emergency_Supply_Storage": 0,
         "250m_Community_Center": 0,
         "250m_Train_Station": false,
@@ -5720,13 +4866,7 @@
         "250m_Floodgate": false,
         "250m_Bridge": 0
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          139.8237,
-          35.67331
-        ]
-      }
+      "geometry": { "type": "Point", "coordinates": [139.8237, 35.67331] }
     },
     {
       "type": "Feature",
@@ -5752,7 +4892,7 @@
         "Shelter_Capacity": 1390,
         "250m_Water_Station": false,
         "250m_Hospital": false,
-        "250m_AED": 6,
+        "250m_AED": 4,
         "250m_Emergency_Supply_Storage": 0,
         "250m_Community_Center": 0,
         "250m_Train_Station": false,
@@ -5760,13 +4900,7 @@
         "250m_Floodgate": false,
         "250m_Bridge": 0
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          139.8251,
-          35.67187
-        ]
-      }
+      "geometry": { "type": "Point", "coordinates": [139.8251, 35.67187] }
     },
     {
       "type": "Feature",
@@ -5800,13 +4934,7 @@
         "250m_Floodgate": false,
         "250m_Bridge": 0
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          139.8229,
-          35.6727
-        ]
-      }
+      "geometry": { "type": "Point", "coordinates": [139.8229, 35.6727] }
     },
     {
       "type": "Feature",
@@ -5840,13 +4968,7 @@
         "250m_Floodgate": false,
         "250m_Bridge": 0
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          139.8227,
-          35.67334
-        ]
-      }
+      "geometry": { "type": "Point", "coordinates": [139.8227, 35.67334] }
     },
     {
       "type": "Feature",
@@ -5880,13 +5002,7 @@
         "250m_Floodgate": false,
         "250m_Bridge": 0
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          139.8235,
-          35.67218
-        ]
-      }
+      "geometry": { "type": "Point", "coordinates": [139.8235, 35.67218] }
     },
     {
       "type": "Feature",
@@ -5920,13 +5036,7 @@
         "250m_Floodgate": false,
         "250m_Bridge": 0
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          139.8229,
-          35.67086
-        ]
-      }
+      "geometry": { "type": "Point", "coordinates": [139.8229, 35.67086] }
     },
     {
       "type": "Feature",
@@ -5960,13 +5070,7 @@
         "250m_Floodgate": false,
         "250m_Bridge": 0
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          139.8239,
-          35.67043
-        ]
-      }
+      "geometry": { "type": "Point", "coordinates": [139.8239, 35.67043] }
     },
     {
       "type": "Feature",
@@ -5992,7 +5096,7 @@
         "Shelter_Capacity": 1300,
         "250m_Water_Station": false,
         "250m_Hospital": false,
-        "250m_AED": 3,
+        "250m_AED": 1,
         "250m_Emergency_Supply_Storage": 1,
         "250m_Community_Center": 0,
         "250m_Train_Station": true,
@@ -6000,13 +5104,7 @@
         "250m_Floodgate": false,
         "250m_Bridge": 0
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          139.8298,
-          35.67023
-        ]
-      }
+      "geometry": { "type": "Point", "coordinates": [139.8298, 35.67023] }
     },
     {
       "type": "Feature",
@@ -6032,7 +5130,7 @@
         "Shelter_Capacity": 160,
         "250m_Water_Station": true,
         "250m_Hospital": false,
-        "250m_AED": 5,
+        "250m_AED": 4,
         "250m_Emergency_Supply_Storage": 0,
         "250m_Community_Center": 0,
         "250m_Train_Station": true,
@@ -6040,13 +5138,7 @@
         "250m_Floodgate": false,
         "250m_Bridge": 0
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          139.832,
-          35.66887
-        ]
-      }
+      "geometry": { "type": "Point", "coordinates": [139.832, 35.66887] }
     },
     {
       "type": "Feature",
@@ -6080,13 +5172,7 @@
         "250m_Floodgate": false,
         "250m_Bridge": 1
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          139.8285,
-          35.67464
-        ]
-      }
+      "geometry": { "type": "Point", "coordinates": [139.8285, 35.67464] }
     },
     {
       "type": "Feature",
@@ -6116,17 +5202,11 @@
         "250m_Emergency_Supply_Storage": 0,
         "250m_Community_Center": 1,
         "250m_Train_Station": false,
-        "250m_Shrine_Temple": 1,
+        "250m_Shrine_Temple": 0,
         "250m_Floodgate": false,
         "250m_Bridge": 0
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          139.8333,
-          35.67261
-        ]
-      }
+      "geometry": { "type": "Point", "coordinates": [139.8333, 35.67261] }
     },
     {
       "type": "Feature",
@@ -6150,9 +5230,9 @@
         "InlandWaters_Depth": "該当なし",
         "Facility_Type": "その他",
         "Shelter_Capacity": 580,
-        "250m_Water_Station": true,
+        "250m_Water_Station": false,
         "250m_Hospital": false,
-        "250m_AED": 6,
+        "250m_AED": 5,
         "250m_Emergency_Supply_Storage": 0,
         "250m_Community_Center": 1,
         "250m_Train_Station": false,
@@ -6160,13 +5240,7 @@
         "250m_Floodgate": false,
         "250m_Bridge": 0
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          139.8341,
-          35.67183
-        ]
-      }
+      "geometry": { "type": "Point", "coordinates": [139.8341, 35.67183] }
     },
     {
       "type": "Feature",
@@ -6190,7 +5264,7 @@
         "InlandWaters_Depth": "0.5以上3.0m未満",
         "Facility_Type": "その他",
         "Shelter_Capacity": 220,
-        "250m_Water_Station": true,
+        "250m_Water_Station": false,
         "250m_Hospital": false,
         "250m_AED": 5,
         "250m_Emergency_Supply_Storage": 0,
@@ -6200,13 +5274,7 @@
         "250m_Floodgate": false,
         "250m_Bridge": 0
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          139.8349,
-          35.6712
-        ]
-      }
+      "geometry": { "type": "Point", "coordinates": [139.8349, 35.6712] }
     },
     {
       "type": "Feature",
@@ -6230,23 +5298,17 @@
         "InlandWaters_Depth": "0.5m未満",
         "Facility_Type": "その他",
         "Shelter_Capacity": 130,
-        "250m_Water_Station": true,
+        "250m_Water_Station": false,
         "250m_Hospital": false,
-        "250m_AED": 4,
+        "250m_AED": 3,
         "250m_Emergency_Supply_Storage": 0,
         "250m_Community_Center": 1,
         "250m_Train_Station": false,
-        "250m_Shrine_Temple": 1,
+        "250m_Shrine_Temple": 0,
         "250m_Floodgate": false,
         "250m_Bridge": 0
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          139.8352,
-          35.66983
-        ]
-      }
+      "geometry": { "type": "Point", "coordinates": [139.8352, 35.66983] }
     },
     {
       "type": "Feature",
@@ -6276,17 +5338,11 @@
         "250m_Emergency_Supply_Storage": 0,
         "250m_Community_Center": 0,
         "250m_Train_Station": true,
-        "250m_Shrine_Temple": 4,
+        "250m_Shrine_Temple": 1,
         "250m_Floodgate": false,
         "250m_Bridge": 2
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          139.8001,
-          35.68339
-        ]
-      }
+      "geometry": { "type": "Point", "coordinates": [139.8001, 35.68339] }
     },
     {
       "type": "Feature",
@@ -6316,17 +5372,11 @@
         "250m_Emergency_Supply_Storage": 0,
         "250m_Community_Center": 0,
         "250m_Train_Station": true,
-        "250m_Shrine_Temple": 6,
+        "250m_Shrine_Temple": 2,
         "250m_Floodgate": false,
         "250m_Bridge": 2
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          139.8004,
-          35.68294
-        ]
-      }
+      "geometry": { "type": "Point", "coordinates": [139.8004, 35.68294] }
     },
     {
       "type": "Feature",
@@ -6356,17 +5406,11 @@
         "250m_Emergency_Supply_Storage": 0,
         "250m_Community_Center": 0,
         "250m_Train_Station": true,
-        "250m_Shrine_Temple": 6,
+        "250m_Shrine_Temple": 3,
         "250m_Floodgate": false,
         "250m_Bridge": 2
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          139.7997,
-          35.6832
-        ]
-      }
+      "geometry": { "type": "Point", "coordinates": [139.7997, 35.6832] }
     },
     {
       "type": "Feature",
@@ -6392,21 +5436,15 @@
         "Shelter_Capacity": 0,
         "250m_Water_Station": false,
         "250m_Hospital": false,
-        "250m_AED": 4,
+        "250m_AED": 3,
         "250m_Emergency_Supply_Storage": 0,
-        "250m_Community_Center": 2,
+        "250m_Community_Center": 1,
         "250m_Train_Station": false,
-        "250m_Shrine_Temple": 2,
+        "250m_Shrine_Temple": 0,
         "250m_Floodgate": false,
         "250m_Bridge": 0
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          139.8058,
-          35.68218
-        ]
-      }
+      "geometry": { "type": "Point", "coordinates": [139.8058, 35.68218] }
     },
     {
       "type": "Feature",
@@ -6432,7 +5470,7 @@
         "Shelter_Capacity": 1590,
         "250m_Water_Station": false,
         "250m_Hospital": false,
-        "250m_AED": 4,
+        "250m_AED": 3,
         "250m_Emergency_Supply_Storage": 0,
         "250m_Community_Center": 1,
         "250m_Train_Station": false,
@@ -6440,13 +5478,7 @@
         "250m_Floodgate": false,
         "250m_Bridge": 2
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          139.8081,
-          35.6821
-        ]
-      }
+      "geometry": { "type": "Point", "coordinates": [139.8081, 35.6821] }
     },
     {
       "type": "Feature",
@@ -6478,15 +5510,9 @@
         "250m_Train_Station": false,
         "250m_Shrine_Temple": 0,
         "250m_Floodgate": false,
-        "250m_Bridge": 3
+        "250m_Bridge": 2
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          139.8077,
-          35.68276
-        ]
-      }
+      "geometry": { "type": "Point", "coordinates": [139.8077, 35.68276] }
     },
     {
       "type": "Feature",
@@ -6513,20 +5539,14 @@
         "250m_Water_Station": false,
         "250m_Hospital": false,
         "250m_AED": 3,
-        "250m_Emergency_Supply_Storage": 2,
+        "250m_Emergency_Supply_Storage": 1,
         "250m_Community_Center": 1,
         "250m_Train_Station": false,
         "250m_Shrine_Temple": 2,
         "250m_Floodgate": false,
         "250m_Bridge": 0
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          139.7999,
-          35.67281
-        ]
-      }
+      "geometry": { "type": "Point", "coordinates": [139.7999, 35.67281] }
     },
     {
       "type": "Feature",
@@ -6552,21 +5572,15 @@
         "Shelter_Capacity": 590,
         "250m_Water_Station": false,
         "250m_Hospital": false,
-        "250m_AED": 3,
-        "250m_Emergency_Supply_Storage": 1,
+        "250m_AED": 2,
+        "250m_Emergency_Supply_Storage": 0,
         "250m_Community_Center": 0,
         "250m_Train_Station": false,
-        "250m_Shrine_Temple": 16,
+        "250m_Shrine_Temple": 13,
         "250m_Floodgate": false,
         "250m_Bridge": 2
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          139.7987,
-          35.67846
-        ]
-      }
+      "geometry": { "type": "Point", "coordinates": [139.7987, 35.67846] }
     },
     {
       "type": "Feature",
@@ -6598,15 +5612,9 @@
         "250m_Train_Station": false,
         "250m_Shrine_Temple": 1,
         "250m_Floodgate": false,
-        "250m_Bridge": 3
+        "250m_Bridge": 2
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          139.8052,
-          35.67691
-        ]
-      }
+      "geometry": { "type": "Point", "coordinates": [139.8052, 35.67691] }
     },
     {
       "type": "Feature",
@@ -6636,17 +5644,11 @@
         "250m_Emergency_Supply_Storage": 0,
         "250m_Community_Center": 2,
         "250m_Train_Station": false,
-        "250m_Shrine_Temple": 2,
+        "250m_Shrine_Temple": 0,
         "250m_Floodgate": false,
         "250m_Bridge": 0
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          139.8057,
-          35.67888
-        ]
-      }
+      "geometry": { "type": "Point", "coordinates": [139.8057, 35.67888] }
     },
     {
       "type": "Feature",
@@ -6680,13 +5682,7 @@
         "250m_Floodgate": false,
         "250m_Bridge": 0
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          139.7953,
-          35.65423
-        ]
-      }
+      "geometry": { "type": "Point", "coordinates": [139.7953, 35.65423] }
     },
     {
       "type": "Feature",
@@ -6720,13 +5716,7 @@
         "250m_Floodgate": false,
         "250m_Bridge": 0
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          139.798,
-          35.65858
-        ]
-      }
+      "geometry": { "type": "Point", "coordinates": [139.798, 35.65858] }
     },
     {
       "type": "Feature",
@@ -6760,13 +5750,7 @@
         "250m_Floodgate": false,
         "250m_Bridge": 1
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          139.7955,
-          35.66088
-        ]
-      }
+      "geometry": { "type": "Point", "coordinates": [139.7955, 35.66088] }
     },
     {
       "type": "Feature",
@@ -6800,13 +5784,7 @@
         "250m_Floodgate": false,
         "250m_Bridge": 0
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          139.8028,
-          35.65404
-        ]
-      }
+      "geometry": { "type": "Point", "coordinates": [139.8028, 35.65404] }
     },
     {
       "type": "Feature",
@@ -6840,13 +5818,7 @@
         "250m_Floodgate": false,
         "250m_Bridge": 1
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          139.7996,
-          35.65232
-        ]
-      }
+      "geometry": { "type": "Point", "coordinates": [139.7996, 35.65232] }
     },
     {
       "type": "Feature",
@@ -6872,21 +5844,15 @@
         "Shelter_Capacity": 2930,
         "250m_Water_Station": false,
         "250m_Hospital": false,
-        "250m_AED": 5,
+        "250m_AED": 4,
         "250m_Emergency_Supply_Storage": 0,
         "250m_Community_Center": 0,
-        "250m_Train_Station": true,
+        "250m_Train_Station": false,
         "250m_Shrine_Temple": 0,
         "250m_Floodgate": false,
         "250m_Bridge": 0
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          139.7983,
-          35.65385
-        ]
-      }
+      "geometry": { "type": "Point", "coordinates": [139.7983, 35.65385] }
     },
     {
       "type": "Feature",
@@ -6920,13 +5886,7 @@
         "250m_Floodgate": false,
         "250m_Bridge": 0
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          139.7993,
-          35.65457
-        ]
-      }
+      "geometry": { "type": "Point", "coordinates": [139.7993, 35.65457] }
     },
     {
       "type": "Feature",
@@ -6960,13 +5920,7 @@
         "250m_Floodgate": false,
         "250m_Bridge": 0
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          139.795,
-          35.65116
-        ]
-      }
+      "geometry": { "type": "Point", "coordinates": [139.795, 35.65116] }
     },
     {
       "type": "Feature",
@@ -6992,7 +5946,7 @@
         "Shelter_Capacity": 60,
         "250m_Water_Station": false,
         "250m_Hospital": false,
-        "250m_AED": 8,
+        "250m_AED": 7,
         "250m_Emergency_Supply_Storage": 1,
         "250m_Community_Center": 0,
         "250m_Train_Station": true,
@@ -7000,13 +5954,7 @@
         "250m_Floodgate": false,
         "250m_Bridge": 0
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          139.796,
-          35.65353
-        ]
-      }
+      "geometry": { "type": "Point", "coordinates": [139.796, 35.65353] }
     },
     {
       "type": "Feature",
@@ -7032,7 +5980,7 @@
         "Shelter_Capacity": 150,
         "250m_Water_Station": false,
         "250m_Hospital": false,
-        "250m_AED": 5,
+        "250m_AED": 4,
         "250m_Emergency_Supply_Storage": 0,
         "250m_Community_Center": 1,
         "250m_Train_Station": false,
@@ -7040,13 +5988,7 @@
         "250m_Floodgate": false,
         "250m_Bridge": 3
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          139.8218,
-          35.68237
-        ]
-      }
+      "geometry": { "type": "Point", "coordinates": [139.8218, 35.68237] }
     },
     {
       "type": "Feature",
@@ -7072,21 +6014,15 @@
         "Shelter_Capacity": 2020,
         "250m_Water_Station": false,
         "250m_Hospital": false,
-        "250m_AED": 7,
+        "250m_AED": 4,
         "250m_Emergency_Supply_Storage": 0,
-        "250m_Community_Center": 1,
+        "250m_Community_Center": 0,
         "250m_Train_Station": false,
         "250m_Shrine_Temple": 0,
         "250m_Floodgate": true,
         "250m_Bridge": 2
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          139.8214,
-          35.68451
-        ]
-      }
+      "geometry": { "type": "Point", "coordinates": [139.8214, 35.68451] }
     },
     {
       "type": "Feature",
@@ -7120,13 +6056,7 @@
         "250m_Floodgate": false,
         "250m_Bridge": 0
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          139.8237,
-          35.68413
-        ]
-      }
+      "geometry": { "type": "Point", "coordinates": [139.8237, 35.68413] }
     },
     {
       "type": "Feature",
@@ -7158,15 +6088,9 @@
         "250m_Train_Station": false,
         "250m_Shrine_Temple": 0,
         "250m_Floodgate": false,
-        "250m_Bridge": 1
+        "250m_Bridge": 0
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          139.8235,
-          35.68312
-        ]
-      }
+      "geometry": { "type": "Point", "coordinates": [139.8235, 35.68312] }
     },
     {
       "type": "Feature",
@@ -7191,22 +6115,16 @@
         "Facility_Type": "小学校",
         "Shelter_Capacity": 1380,
         "250m_Water_Station": false,
-        "250m_Hospital": true,
+        "250m_Hospital": false,
         "250m_AED": 2,
         "250m_Emergency_Supply_Storage": 0,
         "250m_Community_Center": 1,
         "250m_Train_Station": false,
-        "250m_Shrine_Temple": 2,
+        "250m_Shrine_Temple": 0,
         "250m_Floodgate": false,
         "250m_Bridge": 0
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          139.8292,
-          35.67768
-        ]
-      }
+      "geometry": { "type": "Point", "coordinates": [139.8292, 35.67768] }
     },
     {
       "type": "Feature",
@@ -7232,21 +6150,15 @@
         "Shelter_Capacity": 250,
         "250m_Water_Station": false,
         "250m_Hospital": false,
-        "250m_AED": 2,
+        "250m_AED": 1,
         "250m_Emergency_Supply_Storage": 0,
         "250m_Community_Center": 1,
         "250m_Train_Station": false,
-        "250m_Shrine_Temple": 2,
+        "250m_Shrine_Temple": 1,
         "250m_Floodgate": false,
         "250m_Bridge": 0
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          139.8319,
-          35.67747
-        ]
-      }
+      "geometry": { "type": "Point", "coordinates": [139.8319, 35.67747] }
     },
     {
       "type": "Feature",
@@ -7272,7 +6184,7 @@
         "Shelter_Capacity": 1310,
         "250m_Water_Station": false,
         "250m_Hospital": false,
-        "250m_AED": 3,
+        "250m_AED": 2,
         "250m_Emergency_Supply_Storage": 0,
         "250m_Community_Center": 0,
         "250m_Train_Station": false,
@@ -7280,13 +6192,7 @@
         "250m_Floodgate": false,
         "250m_Bridge": 0
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          139.832,
-          35.68048
-        ]
-      }
+      "geometry": { "type": "Point", "coordinates": [139.832, 35.68048] }
     },
     {
       "type": "Feature",
@@ -7312,21 +6218,15 @@
         "Shelter_Capacity": 270,
         "250m_Water_Station": false,
         "250m_Hospital": false,
-        "250m_AED": 8,
+        "250m_AED": 6,
         "250m_Emergency_Supply_Storage": 1,
         "250m_Community_Center": 0,
         "250m_Train_Station": false,
-        "250m_Shrine_Temple": 2,
+        "250m_Shrine_Temple": 0,
         "250m_Floodgate": false,
         "250m_Bridge": 2
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          139.8344,
-          35.68537
-        ]
-      }
+      "geometry": { "type": "Point", "coordinates": [139.8344, 35.68537] }
     },
     {
       "type": "Feature",
@@ -7352,21 +6252,15 @@
         "Shelter_Capacity": 1350,
         "250m_Water_Station": false,
         "250m_Hospital": false,
-        "250m_AED": 8,
+        "250m_AED": 6,
         "250m_Emergency_Supply_Storage": 1,
         "250m_Community_Center": 0,
         "250m_Train_Station": false,
-        "250m_Shrine_Temple": 1,
+        "250m_Shrine_Temple": 0,
         "250m_Floodgate": false,
-        "250m_Bridge": 2
+        "250m_Bridge": 1
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          139.8341,
-          35.68497
-        ]
-      }
+      "geometry": { "type": "Point", "coordinates": [139.8341, 35.68497] }
     },
     {
       "type": "Feature",
@@ -7392,7 +6286,7 @@
         "Shelter_Capacity": 1230,
         "250m_Water_Station": false,
         "250m_Hospital": false,
-        "250m_AED": 8,
+        "250m_AED": 5,
         "250m_Emergency_Supply_Storage": 1,
         "250m_Community_Center": 0,
         "250m_Train_Station": false,
@@ -7400,13 +6294,7 @@
         "250m_Floodgate": false,
         "250m_Bridge": 1
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          139.8319,
-          35.68472
-        ]
-      }
+      "geometry": { "type": "Point", "coordinates": [139.8319, 35.68472] }
     },
     {
       "type": "Feature",
@@ -7440,13 +6328,7 @@
         "250m_Floodgate": false,
         "250m_Bridge": 0
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          139.832,
-          35.68196
-        ]
-      }
+      "geometry": { "type": "Point", "coordinates": [139.832, 35.68196] }
     },
     {
       "type": "Feature",
@@ -7472,7 +6354,7 @@
         "Shelter_Capacity": 240,
         "250m_Water_Station": false,
         "250m_Hospital": false,
-        "250m_AED": 4,
+        "250m_AED": 3,
         "250m_Emergency_Supply_Storage": 1,
         "250m_Community_Center": 0,
         "250m_Train_Station": false,
@@ -7480,13 +6362,7 @@
         "250m_Floodgate": false,
         "250m_Bridge": 0
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          139.8337,
-          35.68213
-        ]
-      }
+      "geometry": { "type": "Point", "coordinates": [139.8337, 35.68213] }
     },
     {
       "type": "Feature",
@@ -7520,13 +6396,7 @@
         "250m_Floodgate": false,
         "250m_Bridge": 1
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          139.8341,
-          35.68387
-        ]
-      }
+      "geometry": { "type": "Point", "coordinates": [139.8341, 35.68387] }
     },
     {
       "type": "Feature",
@@ -7560,13 +6430,7 @@
         "250m_Floodgate": false,
         "250m_Bridge": 1
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          139.833,
-          35.68449
-        ]
-      }
+      "geometry": { "type": "Point", "coordinates": [139.833, 35.68449] }
     },
     {
       "type": "Feature",
@@ -7592,7 +6456,7 @@
         "Shelter_Capacity": 1320,
         "250m_Water_Station": false,
         "250m_Hospital": false,
-        "250m_AED": 3,
+        "250m_AED": 2,
         "250m_Emergency_Supply_Storage": 1,
         "250m_Community_Center": 0,
         "250m_Train_Station": false,
@@ -7600,13 +6464,7 @@
         "250m_Floodgate": false,
         "250m_Bridge": 0
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          139.8311,
-          35.68239
-        ]
-      }
+      "geometry": { "type": "Point", "coordinates": [139.8311, 35.68239] }
     },
     {
       "type": "Feature",
@@ -7632,7 +6490,7 @@
         "Shelter_Capacity": 1520,
         "250m_Water_Station": false,
         "250m_Hospital": false,
-        "250m_AED": 3,
+        "250m_AED": 2,
         "250m_Emergency_Supply_Storage": 1,
         "250m_Community_Center": 0,
         "250m_Train_Station": false,
@@ -7640,13 +6498,7 @@
         "250m_Floodgate": false,
         "250m_Bridge": 2
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          139.837,
-          35.68525
-        ]
-      }
+      "geometry": { "type": "Point", "coordinates": [139.837, 35.68525] }
     },
     {
       "type": "Feature",
@@ -7672,21 +6524,15 @@
         "Shelter_Capacity": 0,
         "250m_Water_Station": false,
         "250m_Hospital": false,
-        "250m_AED": 5,
+        "250m_AED": 3,
         "250m_Emergency_Supply_Storage": 0,
         "250m_Community_Center": 1,
         "250m_Train_Station": false,
-        "250m_Shrine_Temple": 3,
+        "250m_Shrine_Temple": 1,
         "250m_Floodgate": false,
         "250m_Bridge": 0
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          139.8383,
-          35.683
-        ]
-      }
+      "geometry": { "type": "Point", "coordinates": [139.8383, 35.683] }
     },
     {
       "type": "Feature",
@@ -7712,21 +6558,15 @@
         "Shelter_Capacity": 930,
         "250m_Water_Station": false,
         "250m_Hospital": false,
-        "250m_AED": 4,
+        "250m_AED": 3,
         "250m_Emergency_Supply_Storage": 0,
         "250m_Community_Center": 1,
         "250m_Train_Station": false,
-        "250m_Shrine_Temple": 3,
+        "250m_Shrine_Temple": 1,
         "250m_Floodgate": false,
         "250m_Bridge": 0
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          139.8385,
-          35.68205
-        ]
-      }
+      "geometry": { "type": "Point", "coordinates": [139.8385, 35.68205] }
     },
     {
       "type": "Feature",
@@ -7752,7 +6592,7 @@
         "Shelter_Capacity": 1150,
         "250m_Water_Station": false,
         "250m_Hospital": false,
-        "250m_AED": 2,
+        "250m_AED": 1,
         "250m_Emergency_Supply_Storage": 0,
         "250m_Community_Center": 1,
         "250m_Train_Station": false,
@@ -7760,13 +6600,7 @@
         "250m_Floodgate": false,
         "250m_Bridge": 0
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          139.8136,
-          35.6912
-        ]
-      }
+      "geometry": { "type": "Point", "coordinates": [139.8136, 35.6912] }
     },
     {
       "type": "Feature",
@@ -7800,13 +6634,7 @@
         "250m_Floodgate": false,
         "250m_Bridge": 0
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          139.8165,
-          35.69054
-        ]
-      }
+      "geometry": { "type": "Point", "coordinates": [139.8165, 35.69054] }
     },
     {
       "type": "Feature",
@@ -7832,7 +6660,7 @@
         "Shelter_Capacity": 880,
         "250m_Water_Station": false,
         "250m_Hospital": false,
-        "250m_AED": 4,
+        "250m_AED": 3,
         "250m_Emergency_Supply_Storage": 0,
         "250m_Community_Center": 1,
         "250m_Train_Station": false,
@@ -7840,13 +6668,7 @@
         "250m_Floodgate": false,
         "250m_Bridge": 0
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          139.8165,
-          35.69154
-        ]
-      }
+      "geometry": { "type": "Point", "coordinates": [139.8165, 35.69154] }
     },
     {
       "type": "Feature",
@@ -7880,13 +6702,7 @@
         "250m_Floodgate": false,
         "250m_Bridge": 6
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          139.8025,
-          35.66819
-        ]
-      }
+      "geometry": { "type": "Point", "coordinates": [139.8025, 35.66819] }
     },
     {
       "type": "Feature",
@@ -7912,21 +6728,15 @@
         "Shelter_Capacity": 1160,
         "250m_Water_Station": false,
         "250m_Hospital": false,
-        "250m_AED": 2,
+        "250m_AED": 1,
         "250m_Emergency_Supply_Storage": 0,
         "250m_Community_Center": 1,
-        "250m_Train_Station": true,
+        "250m_Train_Station": false,
         "250m_Shrine_Temple": 7,
         "250m_Floodgate": false,
         "250m_Bridge": 2
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          139.7931,
-          35.67255
-        ]
-      }
+      "geometry": { "type": "Point", "coordinates": [139.7931, 35.67255] }
     },
     {
       "type": "Feature",
@@ -7960,13 +6770,7 @@
         "250m_Floodgate": false,
         "250m_Bridge": 0
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          139.7841,
-          35.63728
-        ]
-      }
+      "geometry": { "type": "Point", "coordinates": [139.7841, 35.63728] }
     },
     {
       "type": "Feature",
@@ -8000,13 +6804,7 @@
         "250m_Floodgate": false,
         "250m_Bridge": 0
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          139.7959,
-          35.64057
-        ]
-      }
+      "geometry": { "type": "Point", "coordinates": [139.7959, 35.64057] }
     },
     {
       "type": "Feature",
@@ -8040,13 +6838,7 @@
         "250m_Floodgate": false,
         "250m_Bridge": 1
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          139.7964,
-          35.63986
-        ]
-      }
+      "geometry": { "type": "Point", "coordinates": [139.7964, 35.63986] }
     },
     {
       "type": "Feature",
@@ -8080,13 +6872,7 @@
         "250m_Floodgate": false,
         "250m_Bridge": 0
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          139.7838,
-          35.63321
-        ]
-      }
+      "geometry": { "type": "Point", "coordinates": [139.7838, 35.63321] }
     },
     {
       "type": "Feature",
@@ -8112,7 +6898,7 @@
         "Shelter_Capacity": 0,
         "250m_Water_Station": false,
         "250m_Hospital": false,
-        "250m_AED": 1,
+        "250m_AED": 0,
         "250m_Emergency_Supply_Storage": 0,
         "250m_Community_Center": 0,
         "250m_Train_Station": false,
@@ -8122,10 +6908,7 @@
       },
       "geometry": {
         "type": "Point",
-        "coordinates": [
-          139.7932182,
-          35.65914257
-        ]
+        "coordinates": [139.793218200000013, 35.65914257]
       }
     },
     {
@@ -8152,7 +6935,7 @@
         "Shelter_Capacity": 0,
         "250m_Water_Station": false,
         "250m_Hospital": false,
-        "250m_AED": 1,
+        "250m_AED": 0,
         "250m_Emergency_Supply_Storage": 0,
         "250m_Community_Center": 0,
         "250m_Train_Station": false,
@@ -8162,10 +6945,7 @@
       },
       "geometry": {
         "type": "Point",
-        "coordinates": [
-          139.8199619,
-          35.66819726
-        ]
+        "coordinates": [139.81996190000001, 35.66819726]
       }
     },
     {
@@ -8200,13 +6980,7 @@
         "250m_Floodgate": false,
         "250m_Bridge": 2
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          139.820676,
-          35.69086514
-        ]
-      }
+      "geometry": { "type": "Point", "coordinates": [139.820676, 35.69086514] }
     },
     {
       "type": "Feature",
@@ -8240,13 +7014,7 @@
         "250m_Floodgate": false,
         "250m_Bridge": 0
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          139.8265705,
-          35.68983674
-        ]
-      }
+      "geometry": { "type": "Point", "coordinates": [139.8265705, 35.68983674] }
     },
     {
       "type": "Feature",
@@ -8276,16 +7044,13 @@
         "250m_Emergency_Supply_Storage": 0,
         "250m_Community_Center": 0,
         "250m_Train_Station": false,
-        "250m_Shrine_Temple": 5,
+        "250m_Shrine_Temple": 4,
         "250m_Floodgate": false,
         "250m_Bridge": 1
       },
       "geometry": {
         "type": "Point",
-        "coordinates": [
-          139.7912754,
-          35.67078863
-        ]
+        "coordinates": [139.791275399999989, 35.67078863]
       }
     },
     {
@@ -8312,20 +7077,17 @@
         "Shelter_Capacity": 0,
         "250m_Water_Station": false,
         "250m_Hospital": false,
-        "250m_AED": 3,
+        "250m_AED": 2,
         "250m_Emergency_Supply_Storage": 0,
         "250m_Community_Center": 0,
         "250m_Train_Station": false,
-        "250m_Shrine_Temple": 2,
+        "250m_Shrine_Temple": 0,
         "250m_Floodgate": false,
         "250m_Bridge": 1
       },
       "geometry": {
         "type": "Point",
-        "coordinates": [
-          139.8000033,
-          35.67479745
-        ]
+        "coordinates": [139.800003299999986, 35.67479745]
       }
     },
     {
@@ -8354,18 +7116,15 @@
         "250m_Hospital": false,
         "250m_AED": 3,
         "250m_Emergency_Supply_Storage": 0,
-        "250m_Community_Center": 1,
+        "250m_Community_Center": 0,
         "250m_Train_Station": false,
         "250m_Shrine_Temple": 0,
         "250m_Floodgate": false,
-        "250m_Bridge": 5
+        "250m_Bridge": 3
       },
       "geometry": {
         "type": "Point",
-        "coordinates": [
-          139.8034814,
-          35.66810296
-        ]
+        "coordinates": [139.80348140000001, 35.66810296]
       }
     },
     {
@@ -8392,7 +7151,7 @@
         "Shelter_Capacity": 0,
         "250m_Water_Station": false,
         "250m_Hospital": false,
-        "250m_AED": 3,
+        "250m_AED": 1,
         "250m_Emergency_Supply_Storage": 0,
         "250m_Community_Center": 0,
         "250m_Train_Station": false,
@@ -8400,13 +7159,7 @@
         "250m_Floodgate": false,
         "250m_Bridge": 0
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          139.825622,
-          35.68256887
-        ]
-      }
+      "geometry": { "type": "Point", "coordinates": [139.825622, 35.68256887] }
     },
     {
       "type": "Feature",
@@ -8440,13 +7193,7 @@
         "250m_Floodgate": false,
         "250m_Bridge": 1
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          139.8143244,
-          35.65925243
-        ]
-      }
+      "geometry": { "type": "Point", "coordinates": [139.8143244, 35.65925243] }
     },
     {
       "type": "Feature",
@@ -8482,10 +7229,7 @@
       },
       "geometry": {
         "type": "Point",
-        "coordinates": [
-          139.8202448,
-          35.69536488
-        ]
+        "coordinates": [139.820244800000012, 35.69536488]
       }
     },
     {
@@ -8512,7 +7256,7 @@
         "Shelter_Capacity": 0,
         "250m_Water_Station": false,
         "250m_Hospital": false,
-        "250m_AED": 5,
+        "250m_AED": 2,
         "250m_Emergency_Supply_Storage": 0,
         "250m_Community_Center": 1,
         "250m_Train_Station": false,
@@ -8520,13 +7264,7 @@
         "250m_Floodgate": false,
         "250m_Bridge": 0
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          139.8365321,
-          35.67192785
-        ]
-      }
+      "geometry": { "type": "Point", "coordinates": [139.8365321, 35.67192785] }
     },
     {
       "type": "Feature",
@@ -8560,13 +7298,7 @@
         "250m_Floodgate": false,
         "250m_Bridge": 0
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          139.8260387,
-          35.66743223
-        ]
-      }
+      "geometry": { "type": "Point", "coordinates": [139.8260387, 35.66743223] }
     },
     {
       "type": "Feature",
@@ -8592,7 +7324,7 @@
         "Shelter_Capacity": 0,
         "250m_Water_Station": false,
         "250m_Hospital": false,
-        "250m_AED": 1,
+        "250m_AED": 0,
         "250m_Emergency_Supply_Storage": 0,
         "250m_Community_Center": 0,
         "250m_Train_Station": false,
@@ -8602,10 +7334,7 @@
       },
       "geometry": {
         "type": "Point",
-        "coordinates": [
-          139.8065663,
-          35.65820796
-        ]
+        "coordinates": [139.806566299999986, 35.65820796]
       }
     },
     {
@@ -8640,13 +7369,7 @@
         "250m_Floodgate": false,
         "250m_Bridge": 0
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          139.8188324,
-          35.66040233
-        ]
-      }
+      "geometry": { "type": "Point", "coordinates": [139.8188324, 35.66040233] }
     },
     {
       "type": "Feature",
@@ -8672,20 +7395,17 @@
         "Shelter_Capacity": 0,
         "250m_Water_Station": false,
         "250m_Hospital": false,
-        "250m_AED": 3,
+        "250m_AED": 2,
         "250m_Emergency_Supply_Storage": 1,
         "250m_Community_Center": 1,
         "250m_Train_Station": false,
-        "250m_Shrine_Temple": 6,
+        "250m_Shrine_Temple": 4,
         "250m_Floodgate": false,
         "250m_Bridge": 2
       },
       "geometry": {
         "type": "Point",
-        "coordinates": [
-          139.7960518,
-          35.67748897
-        ]
+        "coordinates": [139.796051799999987, 35.67748897]
       }
     },
     {
@@ -8720,13 +7440,7 @@
         "250m_Floodgate": false,
         "250m_Bridge": 0
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          139.8288809,
-          35.68697911
-        ]
-      }
+      "geometry": { "type": "Point", "coordinates": [139.8288809, 35.68697911] }
     },
     {
       "type": "Feature",
@@ -8756,17 +7470,11 @@
         "250m_Emergency_Supply_Storage": 0,
         "250m_Community_Center": 0,
         "250m_Train_Station": false,
-        "250m_Shrine_Temple": 1,
+        "250m_Shrine_Temple": 0,
         "250m_Floodgate": false,
         "250m_Bridge": 0
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          139.8327898,
-          35.69169256
-        ]
-      }
+      "geometry": { "type": "Point", "coordinates": [139.8327898, 35.69169256] }
     },
     {
       "type": "Feature",
@@ -8796,16 +7504,13 @@
         "250m_Emergency_Supply_Storage": 1,
         "250m_Community_Center": 0,
         "250m_Train_Station": false,
-        "250m_Shrine_Temple": 1,
+        "250m_Shrine_Temple": 0,
         "250m_Floodgate": false,
         "250m_Bridge": 0
       },
       "geometry": {
         "type": "Point",
-        "coordinates": [
-          139.8330089,
-          35.68279909
-        ]
+        "coordinates": [139.83300890000001, 35.68279909]
       }
     },
     {
@@ -8840,13 +7545,7 @@
         "250m_Floodgate": false,
         "250m_Bridge": 0
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          139.8204408,
-          35.69967916
-        ]
-      }
+      "geometry": { "type": "Point", "coordinates": [139.8204408, 35.69967916] }
     },
     {
       "type": "Feature",
@@ -8872,21 +7571,15 @@
         "Shelter_Capacity": 0,
         "250m_Water_Station": false,
         "250m_Hospital": false,
-        "250m_AED": 2,
+        "250m_AED": 1,
         "250m_Emergency_Supply_Storage": 0,
-        "250m_Community_Center": 1,
+        "250m_Community_Center": 0,
         "250m_Train_Station": false,
         "250m_Shrine_Temple": 0,
         "250m_Floodgate": false,
         "250m_Bridge": 0
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          139.8364464,
-          35.69195521
-        ]
-      }
+      "geometry": { "type": "Point", "coordinates": [139.8364464, 35.69195521] }
     },
     {
       "type": "Feature",
@@ -8920,13 +7613,7 @@
         "250m_Floodgate": false,
         "250m_Bridge": 0
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          139.8401275,
-          35.69345521
-        ]
-      }
+      "geometry": { "type": "Point", "coordinates": [139.8401275, 35.69345521] }
     },
     {
       "type": "Feature",
@@ -8956,17 +7643,11 @@
         "250m_Emergency_Supply_Storage": 1,
         "250m_Community_Center": 0,
         "250m_Train_Station": false,
-        "250m_Shrine_Temple": 1,
+        "250m_Shrine_Temple": 0,
         "250m_Floodgate": false,
         "250m_Bridge": 0
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          139.8435623,
-          35.69128086
-        ]e
-      }
+      "geometry": { "type": "Point", "coordinates": [139.8435623, 35.69128086] }
     },
     {
       "type": "Feature",
@@ -8997,15 +7678,12 @@
         "250m_Community_Center": 0,
         "250m_Train_Station": false,
         "250m_Shrine_Temple": 1,
-        "250m_Floodgate": true,
+        "250m_Floodgate": false,
         "250m_Bridge": 3
       },
       "geometry": {
         "type": "Point",
-        "coordinates": [
-          139.8108879,
-          35.68399731
-        ]
+        "coordinates": [139.810887900000012, 35.68399731]
       }
     }
   ]
