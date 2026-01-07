@@ -12,7 +12,7 @@ export interface POI {
 export interface Question {
   id: string;
   text: string;
-  category: "location" | "facility" | "nearby" | "capacity";
+  category: "location" | "facility" | "nearby";
   paramType: "number" | "select";
   options?: (string | number)[];
   requiredPOIType?: string[];

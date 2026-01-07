@@ -5,7 +5,6 @@ import {
   Unlock,
   MapPin,
   Home,
-  Users,
   Radar,
   ArrowLeft,
 } from "lucide-react";
@@ -36,7 +35,6 @@ const CATEGORY_ICONS = {
   location: MapPin,
   facility: Home,
   nearby: Radar,
-  capacity: Users,
 };
 
 export function QuestionDrawer({

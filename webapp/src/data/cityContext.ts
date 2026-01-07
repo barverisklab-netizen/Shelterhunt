@@ -1,5 +1,5 @@
 export interface QuestionCategory {
-  id: "location" | "facility" | "nearby" | "capacity";
+  id: "location" | "facility" | "nearby";
   name: string;
   description: string;
   icon: string;
@@ -39,8 +39,8 @@ export const kotoTokyoCityContext: CityContext = {
     },
     {
       id: "facility",
-      name: "Facility Type",
-      description: "Ask about the type and purpose of this facility",
+      name: "Facility & Resources",
+      description: "Ask about facility type, capacity, and resources",
       icon: "Home",
     },
     {
@@ -48,12 +48,6 @@ export const kotoTokyoCityContext: CityContext = {
       name: "Nearby Amenities",
       description: "Ask about facilities and services in the area",
       icon: "Radar",
-    },
-    {
-      id: "capacity",
-      name: "Capacity & Resources",
-      description: "Ask about the shelter's capacity and resources",
-      icon: "Users",
     },
   ],
 };

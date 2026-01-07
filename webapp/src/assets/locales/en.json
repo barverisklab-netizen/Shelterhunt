@@ -217,6 +217,7 @@
     "chooseCategory": "Choose a Category",
     "availableCount": "{count} question{suffix} available",
     "askNow": "Ask Now",
+    "enterNumber": "Enter a number",
     "correct": "Correct clue unlocked!",
     "cooldown": "Question available again in {seconds}s",
     "disabledProximityHint": "Move around the city and questions will unlock when this asset type is within 250m of your location.",
@@ -311,16 +312,16 @@
         "description": "Clues about surge inundation and environmental factors"
       },
       "facility": {
-        "name": "Facility Type",
-        "description": "Clues about the type and purpose of this facility"
+        "name": "Facility & Resources",
+        "description": "Clues about facility type, capacity, and resources"
       },
       "nearby": {
         "name": "Nearby Amenities",
         "description": "Clues about facilities and services in the area"
       },
       "capacity": {
-        "name": "Capacity & Resources",
-        "description": "Clues about the shelter's capacity and resources"
+        "name": "Facility & Resources",
+        "description": "Clues about facility type, capacity, and resources"
       }
     }
   },

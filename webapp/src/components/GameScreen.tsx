@@ -492,7 +492,7 @@ export function GameScreen({
     floodDuration: "location",
     inlandWatersDepth: "location",
     facilityType: "facility",
-    shelterCapacity: "capacity",
+    shelterCapacity: "facility",
     waterStation250m: "nearby",
     hospital250m: "nearby",
     aed250m: "nearby",

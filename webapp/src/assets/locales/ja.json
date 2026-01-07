@@ -217,6 +217,7 @@
     "chooseCategory": "カテゴリーを選ぶ",
     "availableCount": "{count}個の質問が聞けます",
     "askNow": "今すぐ質問する",
+    "enterNumber": "数値を入力",
     "correct": "正しい手がかりを手に入れました！",
     "cooldown": "{seconds}秒後に再び質問できます",
     "disabledProximityHint": "街を移動して、対象のスポットが250m以内に入ると質問ができるようになります。",
@@ -311,16 +312,16 @@
         "description": "浸水リスクや周辺環境について聞く"
       },
       "facility": {
-        "name": "施設の種類",
-        "description": "施設の種類や目的について聞く"
+        "name": "施設・収容人数",
+        "description": "施設の種類や収容人数・備えについて聞く"
       },
       "nearby": {
         "name": "周辺施設",
         "description": "近隣の施設やサービスについて聞く"
       },
       "capacity": {
-        "name": "収容人数",
-        "description": "避難所の収容人数や備えについて聞く"
+        "name": "施設・収容人数",
+        "description": "施設の種類や収容人数・備えについて聞く"
       }
     }
   },
