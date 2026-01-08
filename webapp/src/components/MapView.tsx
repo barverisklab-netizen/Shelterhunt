@@ -308,6 +308,8 @@ export function MapView({
 const infoPopup = useRef<mapboxgl.Popup | null>(null);
 const hasSelectedShelter = useRef(false);
 const hasEmittedShelterOptions = useRef(false);
+const pendingPoiRefreshRef = useRef<POI[] | null>(null);
+const pendingPoiRefreshHandlerRef = useRef<(() => void) | null>(null);
 const filteredPoiPopupHandlerRef = useRef<
   ((event: mapboxgl.MapLayerMouseEvent & mapboxgl.EventData) => void) | null
 >(null);
@@ -713,6 +715,30 @@ const measureMarkerRef = useRef<mapboxgl.Marker | null>(null);
     (poisToRender: POI[]) => {
       const m = map.current;
       if (!m) return;
+      if (typeof m.isStyleLoaded === "function" && !m.isStyleLoaded()) {
+        pendingPoiRefreshRef.current = poisToRender;
+        if (!pendingPoiRefreshHandlerRef.current) {
+          const handler = () => {
+            const activeMap = map.current;
+            if (!activeMap) return;
+            if (typeof activeMap.isStyleLoaded === "function" && !activeMap.isStyleLoaded()) {
+              return;
+            }
+            if (pendingPoiRefreshHandlerRef.current) {
+              activeMap.off("idle", pendingPoiRefreshHandlerRef.current);
+              pendingPoiRefreshHandlerRef.current = null;
+            }
+            const pending = pendingPoiRefreshRef.current;
+            pendingPoiRefreshRef.current = null;
+            if (pending) {
+              refreshFilteredPoiLayers(pending);
+            }
+          };
+          pendingPoiRefreshHandlerRef.current = handler;
+          m.on("idle", handler);
+        }
+        return;
+      }
 
       if (!poisToRender.length) {
         if (m.getLayer(FILTER_POIS_LABEL_LAYER_ID)) m.removeLayer(FILTER_POIS_LABEL_LAYER_ID);
@@ -1406,6 +1432,10 @@ const measureMarkerRef = useRef<mapboxgl.Marker | null>(null);
         if (filteredPoiPopupHandlerRef.current) {
           map.current?.off("click", FILTER_POIS_LAYER_ID, filteredPoiPopupHandlerRef.current);
           filteredPoiPopupHandlerRef.current = null;
+        }
+        if (pendingPoiRefreshHandlerRef.current) {
+          map.current.off("idle", pendingPoiRefreshHandlerRef.current);
+          pendingPoiRefreshHandlerRef.current = null;
         }
         map.current?.off("styledata", moveAttributionToBottomLeft);
         map.current.remove();

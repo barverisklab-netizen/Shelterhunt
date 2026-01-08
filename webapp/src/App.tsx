@@ -1440,13 +1440,19 @@ export default function App() {
     }
   };
 
-  const handleSelectCitywide = () => {
+  const handleSelectCitywide = async () => {
     if (modeProcessing) return;
     setModeProcessing(true);
     setShelterOptions([]);
     setSecretShelter(null);
     setLockSecretShelter(false);
     setLockShelterOptions(false);
+    let playerCoords: { lat: number; lng: number } | undefined;
+    try {
+      playerCoords = await requestUserLocation();
+    } catch (error) {
+      console.warn("[Citywide] Unable to fetch player location", error);
+    }
     startSoloMatch({
       mode: "citywide",
       timerSeconds: null,
@@ -1454,6 +1460,7 @@ export default function App() {
       options: [],
       lockSecret: false,
       lockOptions: false,
+      playerCoords,
     });
     setModeProcessing(false);
   };

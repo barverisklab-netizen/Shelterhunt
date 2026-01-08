@@ -32,7 +32,7 @@ export function TerminalScreen({ onRestart }: TerminalScreenProps) {
         </div>
         <Button
           onClick={onRestart}
-          className="w-full rounded border-4 border-black bg-red-500 py-4 text-sm font-bold uppercase text-white transition-colors hover:bg-red-600"
+          className="w-full rounded border-4 border-black bg-neutral-800 py-4 text-sm font-bold uppercase text-white transition-colors hover:bg-red-600"
         >
           {t("terminal.back")}
         </Button>

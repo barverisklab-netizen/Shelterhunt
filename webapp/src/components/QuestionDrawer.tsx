@@ -91,7 +91,12 @@ export function QuestionDrawer({
 
   const translateQuestionOption = (questionId: string, option: string | number) => {
     if (typeof option === "number") return option;
-    const optionKey = option.toString().replace(/\s+/g, "_").toLowerCase();
+    const optionKey = option
+      .toString()
+      .trim()
+      .replace(/\s+/g, "_")
+      .replace(/\./g, "_")
+      .toLowerCase();
     return t(`questions.${questionId}.options.${optionKey}`, { fallback: option });
   };
 
