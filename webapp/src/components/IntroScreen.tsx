@@ -3,7 +3,7 @@ import { motion } from "motion/react";
 import { MapPin } from "lucide-react";
 import { Button } from "./ui/button";
 import { useI18n } from "@/i18n";
-import introIllustration from "../assets/graphics/bosaisensai_w.svg";
+import introIllustration from "../assets/graphics/character-guide.svg";
 
 interface IntroScreenProps {
   onContinue: () => void;
@@ -44,7 +44,7 @@ export function IntroScreen({ onContinue }: IntroScreenProps) {
               <img
                 className="block h-full w-full object-cover"
                 src={introIllustration}
-                alt={t("intro.imageAlt", { fallback: "Bosai Sensei illustration" })}
+                alt={t("intro.imageAlt", { fallback: "Guide illustration" })}
               />
             </div>
           </motion.div>

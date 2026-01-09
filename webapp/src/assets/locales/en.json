@@ -89,7 +89,7 @@
   "help": {
     "title": "How to Play",
     "subtitle": "Master the art of urban deduction",
-    "catImageAlt": "Cat playing illustration",
+    "mascotImageAlt": "Mascot playing illustration",
     "overviewTitle": "Game Overview",
     "overviewBody": "A hurricane is approaching! Your team must find the secret emergency shelter hidden in the city. Visit various locations, answer trivia questions about disaster preparedness, and collect clues to deduce which shelter is the secret one. The first team to find it wins!",
     "stepLabel": "Step {number}",
@@ -142,7 +142,8 @@
     },
     "processing": {
       "title": "Preparing multiplayer session…",
-      "subtitle": "Checking your location & locking a nearby shelter"
+      "subtitle": "Checking your location & locking a nearby shelter",
+      "loadingMascotAlt": "Mascot animation showing the game is loading"
     }
   },
   "guess": {
@@ -162,7 +163,7 @@
     "title": "Wrong Shelter",
     "subtitle": "That was your final guess. Try again with a new hunt.",
     "subtitleWinner": "{{winner}} reached the shelter first. Try harder next time!",
-    "imageAlt": "Sad cat illustration"
+    "imageAlt": "Sad mascot illustration"
   },
   "penalty": {
     "first": {
@@ -350,16 +351,16 @@
         "description": "Clues about surge inundation and environmental factors"
       },
       "facility": {
-        "name": "Facility & Resources",
-        "description": "Clues about facility type, capacity, and resources"
+        "name": "Facility Information",
+        "description": "Clues about facility type, and capacity"
       },
       "nearby": {
         "name": "Nearby Amenities",
         "description": "Clues about facilities and services in the area"
       },
       "capacity": {
-        "name": "Facility & Resources",
-        "description": "Clues about facility type, capacity, and resources"
+        "name": "Facility Resources",
+        "description": "Clues about facility capacity, and resources"
       }
     }
   },

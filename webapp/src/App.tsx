@@ -46,7 +46,7 @@ import { getQuestionAttributes } from "./services/questionAttributeService";
 import { useI18n } from "./i18n";
 import { LanguageToggle } from "./components/LanguageToggle";
 import { Clock } from "lucide-react";
-import loadingCat from "./assets/graphics/Loading Cat.gif";
+import loadingMascot from "./assets/graphics/character-mascot-loading.gif";
 
 type GameState =
   | "intro"
@@ -1631,9 +1631,9 @@ export default function App() {
           <div className="w-full max-w-[320px] text-center px-6 py-8 rounded-2xl border-4 border-black bg-white shadow-[8px_8px_0_#000]">
             <div className="mb-4 flex justify-center">
               <img
-                src={loadingCat}
-                alt={t("app.processing.loadingCatAlt", {
-                  fallback: "Cat animation showing the game is loading",
+                src={loadingMascot}
+                alt={t("app.processing.loadingMascotAlt", {
+                  fallback: "Mascot animation showing the game is loading",
                 })}
                 className="h-28 w-28 object-contain"
               />

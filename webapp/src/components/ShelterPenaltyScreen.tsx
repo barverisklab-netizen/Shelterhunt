@@ -1,7 +1,7 @@
 import { motion } from "motion/react";
 import { Button } from "./ui/button";
 import { useI18n } from "@/i18n";
-import catCrying from "../assets/graphics/cat_crying.svg";
+import mascotCrying from "../assets/graphics/character-mascot-crying.svg";
 
 type PenaltyStage = "first" | "second" | "third";
 
@@ -43,8 +43,8 @@ export function ShelterPenaltyScreen({
       <div className="w-full max-w-lg text-center space-y-6 rounded-lg bg-background p-10 shadow-xl">
         <div className="inline-flex items-center justify-center rounded-full bg-black p-4">
           <img
-            src={catCrying}
-            alt={t("penalty.imageAlt", { fallback: "Sad cat illustration for wrong answer" })}
+            src={mascotCrying}
+            alt={t("penalty.imageAlt", { fallback: "Sad mascot illustration for wrong answer" })}
             className="h-max w-full object-contain"
             style={{ width: 200, height: 200 }}
           />

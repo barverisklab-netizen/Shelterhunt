@@ -1,7 +1,7 @@
 import { motion } from "motion/react";
 import { Button } from "./ui/button";
-import catHappy from "../assets/graphics/cat_happy.svg";
-import catCrying from "../assets/graphics/cat_crying.svg";
+import mascotHappy from "../assets/graphics/character-mascot-happy.svg";
+import mascotCrying from "../assets/graphics/character-mascot-crying.svg";
 import { useI18n } from "@/i18n";
 
 interface ShelterVictoryScreenProps {
@@ -38,9 +38,9 @@ export function ShelterVictoryScreen({
           fallback: "That was your final guess. Try again with a new hunt.",
         });
   const imageAlt = isWin
-    ? t("victory.imageAlt", { fallback: "Celebration cat illustration" })
-    : t("defeat.imageAlt", { fallback: "Sad cat illustration" });
-  const imageSrc = isWin ? catHappy : catCrying;
+    ? t("victory.imageAlt", { fallback: "Celebration mascot illustration" })
+    : t("defeat.imageAlt", { fallback: "Sad mascot illustration" });
+  const imageSrc = isWin ? mascotHappy : mascotCrying;
   const titleClass = isWin ? "text-green-600" : "text-red-600";
 
   return (

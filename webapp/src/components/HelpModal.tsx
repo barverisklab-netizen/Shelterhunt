@@ -2,7 +2,7 @@ import { motion, AnimatePresence } from "motion/react";
 import { X, MapPin, Brain, Lightbulb, Trophy } from "lucide-react";
 import { Button } from "./ui/button";
 import { useI18n } from "@/i18n";
-import catPlaying from "../assets/graphics/cat_playing.svg";
+import mascotPlaying from "../assets/graphics/character-mascot-playing.svg";
 
 interface HelpModalProps {
   isOpen: boolean;
@@ -91,8 +91,8 @@ export function HelpModal({ isOpen, onClose }: HelpModalProps) {
                 >
                   <div className="flex justify-center mb-6">
                     <img
-                      src={catPlaying}
-                      alt={t("help.catImageAlt", { fallback: "Cat playing illustration" })}
+                      src={mascotPlaying}
+                      alt={t("help.mascotImageAlt", { fallback: "Mascot playing illustration" })}
                       className="h-max object-contain"
                       style={{ width: 200, height: 200 }}
                     />
@@ -112,22 +112,17 @@ export function HelpModal({ isOpen, onClose }: HelpModalProps) {
                     return (
                       <motion.div
                         key={index}
-                        className="rounded border border-neutral-900 bg-background p-5"
+                        className="rounded bg-background p-5"
                         initial={{ opacity: 0, x: -20 }}
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ delay: 0.2 + index * 0.1 }}
                       >
                         <div className="flex gap-4">
-                          <div className="flex-shrink-0 rounded-full bg-neutral-900 p-3">
-                            <Icon className="w-6 h-6 text-white" />
+                          <div className="flex-shrink-0 rounded-full p-3">
+                            <Icon className="w-6 h-6 text-black" />
                           </div>
                           <div>
                         <div className="flex items-center gap-3 mb-2">
-                              <span className="text-black/70 text-sm font-bold">
-                                {t("help.stepLabel", {
-                                  replacements: { number: index + 1 },
-                                })}
-                              </span>
                               <h4 className="text-lg text-black font-bold uppercase">
                                 {step.title}
                               </h4>
