@@ -12,104 +12,104 @@
   },
   "intro": {
     "title": "マップれんぼ",
-    "paragraph1": "ようこそ、ヒーローのみなさん。防災先生です。大型ハリケーンが江東区に迫っています。マスコットのコトちゃんは安全な場所に避難しているはずですが、連絡が途絶えています。",
-    "paragraph2": "ミッション: 街を巡り、防災情報を理解し、手がかりを集めて、嵐が来る前にコトちゃんの居場所を特定してください。",
-    "paragraph3": "正しい行動を重ねるほどコトちゃんに近づき、実際の緊急時に役立つ力が身につきます。油断せず、覚えておいてください！備えこそ力です。",
-    "imageAlt": "コトちゃんと防災先生のイラスト",
-    "play": "プレイ"
+    "paragraph1": "ようこそ！大型台風が江東区に迫っています。猫のチャコちゃんは安全な場所に避難しているはずですが、連絡がとれません。",
+    "paragraph2": "ミッション: まちを巡りながら、手がかりを集めて、嵐が来る前にチャコちゃんを見つけましょう！",
+    "paragraph3": "ゲームをプレイして、避難に役立つ情報を学びましょう！",
+    "play": "プレイ",
+    "imageAlt": ""
   },
   "onboarding": {
     "title": "マップれんぼ",
-    "tagline": "嵐が来る前に避難所を見つけよう！",
+    "tagline": "嵐が来る前に避難所を見つけましょう！",
     "playSolo": "ひとりで遊ぶ",
-    "joinGame": "ゲームに参加",
-    "hostGame": "マルチプレイをホスト",
+    "joinGame": "マルチプレイに参加する",
+    "hostGame": "マルチプレイを開催する",
     "howToPlay": "遊び方"
   },
   "footer": {
     "madeBy": "制作",
-    "support": "協力 - IHI株式会社"
+    "support": "協力 IHI株式会社"
   },
   "solo": {
     "soloPlay": "ひとりで遊ぶ",
-    "lightningHunt": "ライトニングハント",
-    "lightningMeta": "時間制限・位置情報が必要",
+    "lightningHunt": "近所を探索する",
+    "lightningMeta": "時間制限あり・位置情報が必要",
     "citywideSearch": "まち全体を探索する",
-    "citywideMeta": "タイマーなし・自由に移動",
-    "lightningPrompt": "ライトニングハントを始める？",
-    "lightningDetails": "{minutes}分カウントダウン · 半径{radius}km",
-    "lightningDescription": "位置情報が確認でき次第、範囲内の避難所をロックします。近くに無い場合は移動をしてください。",
-    "startLightning": "ライトニングハント開始"
+    "citywideMeta": "時間制限なし・自由に移動",
+    "lightningPrompt": "近所を探索する",
+    "lightningDetails": "制限時間{minutes}分 · 半径{radius}kmで遊ぶ",
+    "lightningDescription": "近くの避難所のどこかにチャコちゃんが隠れています。エラーが出る場合は、チャコちゃんから離れすぎているので、避難所があるエリアに移動してください。",
+    "startLightning": "ゲームをはじめる"
   },
   "waiting": {
     "title": "待機ルーム",
-    "shelterCode": "シェルターコード",
+    "shelterCode": "避難所コード",
     "players": "プレイヤー",
     "waitingForPlayers": "他のプレイヤーを待っています…",
     "player": "プレイヤー",
     "you": "あなた",
     "ready": "準備完了！",
-    "markReady": "準備OKにする",
-    "startGame": "ゲーム開始",
+    "markReady": "準備OK",
+    "startGame": "ゲームをはじめる",
     "waitingForEveryone": "全員の準備を待っています…",
-    "waitingForHost": "ホストがゲームを開始するのを待っています",
+    "waitingForHost": "ホストがゲームをはじめるのを待っています",
     "leaveGame": "ゲームをやめる",
     "playerCount": "待機ルームに{count}人"
   },
   "profile": {
-    "defaultTitle": "自己紹介をしてください。",
-    "defaultSubtitle": "マルチプレイに入る前にニックネームを設定。",
+    "defaultTitle": "自己紹介をしてください",
+    "defaultSubtitle": "ゲーム用のニックネームを決めましょう",
     "defaultLabel": "表示名",
     "defaultSubmit": "名前を保存",
-    "defaultPlaceholder": "例: スカイスカウト",
+    "defaultPlaceholder": "例: コトちゃん",
     "setCallsignTitle": "ニックネームを設定",
-    "setCallsignSubtitle": "マルチプレイ参加前に表示名を追加してください。",
-    "createSessionTitle": "マルチプレイを作成",
-    "createSessionSubtitle": "チームをホストする前にニックネームを入力。",
+    "setCallsignSubtitle": "ゲーム用のニックネームを決めましょう",
+    "createSessionTitle": "マルチプレイを開催",
+    "createSessionSubtitle": "ゲーム用のニックネームを決めましょう",
     "joinGameTitle": "マルチプレイに参加",
-    "joinGameSubtitle": "ホストから共有されたシェルターコードを入力してください。",
-    "callsignPlaceholder": "例: スカイスカウト",
+    "joinGameSubtitle": "ホストから共有された避難所コードを入力してください。",
+    "callsignPlaceholder": "例: コトちゃん",
     "submitContinue": "続ける",
     "submitStart": "ホスト開始",
     "submitJoin": "ゲームに参加する",
     "joining": "参加中...",
-    "codeLabel": "シェルターコード",
+    "codeLabel": "避難所コード",
     "codePlaceholder": "例: 9F2X"
   },
   "hostShare": {
     "title": "セッション準備完了",
-    "subtitle": "このシェルターコードをチームに共有して参加してもらいましょう。",
+    "subtitle": "避難所コードを他の参加者に共有しましょう",
     "copyCode": "コードをコピー"
   },
   "terminal": {
     "title": "時間切れ",
-    "message": "次はもっと頑張って！準備ができたらまた戻ってきてね！",
+    "message": "次はもっと頑張って！",
     "back": "タイトルに戻る"
   },
   "help": {
     "title": "遊び方",
     "subtitle": "まち探索のマスターになろう",
-    "mascotImageAlt": "遊んでいるマスコットのイラスト",
+    "mascotImageAlt": "遊んでいる猫のイラスト",
     "overviewTitle": "ゲームの概要",
-    "overviewBody": "台風が接近中！チームで街に隠された避難所を探そう。さまざまな場所を訪れ、防災トリビアに答えて手がかりを集めながら、政界の避難所を見つけ出そう。最初に見つけたチームの勝ち！",
+    "overviewBody": "台風が接近しています！いろいろな場所を訪れ、手がかりを集めながら、相手よりも先にどこかの避難所に隠れているチャコちゃんを見つけ出しましょう。",
     "stepLabel": "ステップ {number}",
     "steps": {
       "visit": "場所を訪れる",
-      "visitDesc": "地図に記された洪水関連スポットを巡りましょう。",
+      "visitDesc": "まちを歩いて、地図上のいろんなスポットを巡りましょう。",
       "answer": "トリビアに回答",
-      "answerDesc": "気になる洪水関連スポット付近で質問を選び、トリビアに答えて手がかりを集めよう！",
+      "answerDesc": "地図上のスポットに近づくと、質問ができます。たくさんの場所を巡って、手がかりを集めましょう。",
       "collect": "手がかりを集める",
-      "collectDesc": "正解で得た情報を使って、探してる避難所の特徴を絞り込もう！",
+      "collectDesc": "手がかりを使って、避難所を絞り込みましょう。",
       "find": "避難所を見つける",
-      "findDesc": "手がかりをもとに正しい避難所を見つけ、先にたどりついた方の勝ち！"
+      "findDesc": "手がかりを使って、避難所を絞り込み、相手よりも先に避難所にたどりつきましょう。"
     },
     "proTips": "ヒント",
     "tips": {
       "greenRed": "緑は避難所に関連が「ある」、赤は関連が「ない」を示します",
-      "cooldown": "答えを間違えるとその質問は2分間ロックされます。回答は慎重に！",
-      "visitPoi": "いろいろな洪水関連スポットを巡って、さまざまな質問をしよう",
-      "oneGuess": "回答チャンスは3回まで。答えるときは自信を持って！",
-      "teamwork": "いろいろなレイヤーを見比べながら、手がかりを集めましょう。"
+      "cooldown": "一度聞くと、その質問は2分間ロックされます。回答は慎重に！",
+      "visitPoi": "いろんなスポットを巡って、さまざまな質問をしよう",
+      "oneGuess": "回答は3回まで送信できます。慎重に！",
+      "teamwork": "いろいろなレイヤーを見比べながら、手がかりを集めましょう"
     }
   },
   "app": {
@@ -118,36 +118,36 @@
       "soloPlayer": "ソロプレイヤー"
     },
     "errors": {
-      "invalidCode": "有効なシェルターコードを入力してください。",
-      "callsignRequired": "ニックネームが必要です。",
-      "readyStatus": "準備状況を更新できませんでした。",
+      "invalidCode": "正しい避難所コードを入力してください",
+      "callsignRequired": "ニックネームは必須です",
+      "readyStatus": "更新できません",
       "startRace": "レースを開始できません。もう一度試してください。",
       "noSheltersNearby": "半径{radius}km内に避難所がありません。別の場所へ移動してください。",
       "loadShelters": "避難所データを読み込めませんでした。時間をおいてから、もう一度試してください。",
       "locationAccess": "位置情報にアクセスできません。もう一度試してください。",
-      "locationDenied": "位置情報が共有されていません。ライトニングハントを始めるには、位置情報の共有が必要です。",
+      "locationDenied": "位置情報が共有されていません。このモードで遊ぶには、位置情報の共有が必要です。",
       "locationUnknown": "位置情報を特定できませんでした。もう一度試してください。",
       "shelterUnavailable": "選択した避難所が利用できません。もう一度試してください。",
-      "startMultiplayer": "マルチプレイセッションを開始できませんでした。",
-      "joinSession": "セッションに参加できませんでした。"
+      "startMultiplayer": "マルチプレイを開始できませんでした。",
+      "joinSession": "マルチプレイに参加できませんでした。"
     },
     "toasts": {
       "timeUp": "時間切れです！ここでゲームオーバー。",
       "raceFinished": "避難所に到達！ゲーム終了です。",
       "joinedGame": "{code}のゲームに参加しました",
       "lightningReady": "ライトニングハント準備完了！",
-      "citywideReady": "まち全体モード開始！自由に探索しよう。",
-      "gameStarted": "ゲーム開始！秘密の避難所を見つけよう！",
+      "citywideReady": "江東区全体を探索しよう！",
+      "gameStarted": "ゲーム開始！チャコちゃんが隠れている避難所を見つけよう！",
       "leftGame": "ゲームから退出しました"
     },
     "processing": {
       "title": "マルチプレイを準備中…",
-      "subtitle": "位置情報を確認し、近くの避難所をロックしています",
-      "loadingMascotAlt": "ゲーム読み込み中のマスコットアニメーション"
+      "subtitle": "位置情報を確認し、避難所を決めています。",
+      "loadingMascotAlt": "ゲーム読み込み中のマスコットアニメーション\n"
     }
   },
   "guess": {
-    "confirmTitle": "この避難所で回答する",
+    "confirmTitle": "この避難所に決める",
     "confirmPrompt": "この避難所に決めていいですか？",
     "confirmWarning": "回答は3回までです。十分に手がかりを集めて、回答を決めてください。",
     "lockIn": "この避難所に決める",
@@ -155,28 +155,28 @@
   },
   "victory": {
     "title": "避難所探し成功！",
-    "subtitle": "秘密の避難所を見つけました！ {shelter}",
+    "subtitle": "チャコちゃんが隠れている避難所を見つけました！ {shelter}",
     "clues": "集めた手がかり",
     "playAgain": "もう一度遊ぶ"
   },
   "defeat": {
     "title": "不正解の避難所",
-    "subtitle": "最後の回答でした。新しいゲームで再挑戦してください。",
+    "subtitle": "最後の回答チャンスでした。新しいゲームで再挑戦してください。",
     "subtitleWinner": "{{winner}} が先に避難所へ到達しました。手がかりを見直してもう一度チャレンジしましょう。",
-    "imageAlt": "悲しいマスコットのイラスト"
+    "imageAlt": "悲しい猫のイラスト"
   },
   "penalty": {
     "first": {
       "title": "あと少し",
-      "message": "ここは秘密の避難所ではありません。タイマーは10分にリセットされました。"
+      "message": "チャコちゃんはここにいませんでした！タイマーは10分にリセットされました。"
     },
     "second": {
       "title": "プレッシャー上昇",
-      "message": "また不正解、タイマーは残り5分です。次が最後のチャンス、慎重に選んで！"
+      "message": "ここにもチャコちゃんはいません。タイマーは残り5分です。次が最後のチャンス、慎重に選んで！"
     },
     "third": {
       "title": "ゲームオーバー",
-      "message": "3回すべて不正解。いったん仕切り直して、最初からやり直そう。"
+      "message": "チャコちゃんを見つけることはできませんでした。仕切り直して、最初からやり直そう。"
     },
     "keepPlaying": "プレイを続ける"
   },
@@ -186,21 +186,21 @@
     "closePanel": "パネルを閉じる",
     "clues": "手がかり",
     "logged": "{count}件記録",
-    "clueHint": "それぞれの手がかりで、候補となる避難所が絞られていきます。緑の正解と赤の間違いを見比べて、秘密の避難所を見つけましょう！",
+    "clueHint": "それぞれの手がかりで、候補の避難所が絞られていきます。緑の正解と赤の間違いを見比べて、チャコちゃんが隠れている避難所を見つけましょう！",
     "noCluesTitle": "まだ手がかりなし",
-    "noCluesSubtitle": "場所を訪れてトリビアに答えると秘密の避難所の情報が得られます。",
+    "noCluesSubtitle": "地図上のスポットを訪れて質問をすると、避難所のヒントが得られます。",
     "strategyTitle": "攻略のヒント",
-    "strategyTip1": "洪水深や高潮エリアなど広域レイヤーを使って避難所を素早く絞り込みましょう。",
-    "strategyTip2": "移動すると、現在地から250m以内にある施設についての質問が聞けるようになります。",
+    "strategyTip1": "洪水深や高潮エリアなどのハザード情報を使って避難所を絞り込みましょう。",
+    "strategyTip2": "街を移動して、避難所（緑のアイコン）に近づくと、避難所の種類や収容人数についての質問が聞けるようになります。",
     "strategyTip3": "ツールを使って、いろんなレイヤーを見たり、距離を測ったりして、手がかりに合う避難所を見つけましょう。",
     "correctClues": "正しい手がかり",
     "wrongClues": "間違った手がかり",
     "applyWrongClueFilter": "すべての間違った手がかりで絞り込む",
     "finalDecision": "避難所を特定",
     "selectShelter": "避難所を選択",
-    "selectShelterHint": "正解だと思う避難所を選んでください。回答するには、その避難所の250m以内にいる必要があります。",
+    "selectShelterHint": "正解だと思う避難所を選んでください。回答するには、その避難所の近くにいる必要があります。",
     "selectPlaceholder": "避難所を選んでください",
-    "guessWarning": "回答できるのは3回まで! 手がかりを十分に確認してから答えを出しましょう。",
+    "guessWarning": "回答できるのは3回まで！手がかりを十分に確認してから答えを出しましょう。",
     "filterUnavailable": "この手がかりでは地図を絞り込めません。",
     "filterNoMatches": "この手がかりに合う避難所はありません。",
     "showInMap": "地図で表示",
@@ -214,21 +214,20 @@
     "inRange": "範囲内",
     "inRangeCopy": "この場所で質問できます",
     "outOfRange": "範囲外",
-    "outOfRangeCopy": "洪水関連スポットに移動すると質問ができるようになります",
+    "outOfRangeCopy": "マップ上のスポットに移動すると質問ができるようになります",
     "chooseCategory": "カテゴリーを選ぶ",
     "availableCount": "{count}個の質問が聞けます",
     "askNow": "今すぐ質問する",
-    "enterNumber": "数値を入力",
     "correct": "正しい手がかりを手に入れました！",
     "cooldown": "{seconds}秒後に再び質問できます",
-    "disabledProximityHint": "街を移動して、対象のスポットが250m以内に入ると質問ができるようになります。",
+    "disabledProximityHint": "街を移動して、避難所（緑のアイコン）に近づくと、ハザードエリアに関する質問ができるようになります。候補を大きく絞り込める、便利な質問です。",
     "incorrect": "残念ながら不正解です。別の質問を試しましょう。",
     "nearbyAmenity": {
       "selectAmenity": "施設の種類",
       "selectCount": "正確な数",
-      "unavailable": "この種類の施設が250m以内にありません。近づいてください。",
-      "availableCategories": "250m以内にある施設: {categories}",
-      "noneWithinRadius": "まだ250m以内に施設はありません。"
+      "unavailable": "この種類の施設が近くにありません。近づいてください。",
+      "availableCategories": "近くにある施設: {categories}",
+      "noneWithinRadius": "近くに施設はありません。"
     },
     "dynamic": {
       "floodDepth": {
@@ -307,18 +306,37 @@
         }
       }
     },
+    "categories": {
+      "location": {
+        "name": "ハザードエリア",
+        "description": "浸水リスクや周辺環境について聞く"
+      },
+      "facility": {
+        "name": "施設の種類",
+        "description": "避難所の種類や収容人数について聞く"
+      },
+      "nearby": {
+        "name": "周辺施設",
+        "description": "近隣の施設やサービスについて聞く"
+      },
+      "capacity": {
+        "name": "収容人数",
+        "description": "避難所の収容人数や備えについて聞く"
+      }
+    },
+    "enterNumber": "数字を入れる",
     "floodDepth": {
-      "text": "浸水深は{param}ですか？",
+      "text": "洪水の浸水新は{param}mですか？",
       "options": {
         "0_5m未満": "0.5m未満",
-        "0_5以上3_0m未満": "0.5以上3.0m未満",
+        "0_5以上3_0m未満": "0.5以上3_0m未満.",
         "3_0m以上5_0未満": "3.0m以上5.0未満",
         "5_0以上10_0未満": "5.0以上10.0未満",
         "該当なし": "該当なし"
       }
     },
     "stormSurgeDepth": {
-      "text": "高潮深は{param}ですか？",
+      "text": "高潮の浸水深は{param}mですか？",
       "options": {
         "0_5m以上1m未満": "0.5m以上1m未満",
         "1m以上3m未満": "1m以上3m未満",
@@ -328,7 +346,7 @@
       }
     },
     "floodDuration": {
-      "text": "浸水継続時間は{param}ですか？",
+      "text": "洪水の浸水継続時間は{param}mですか？",
       "options": {
         "12時間以上1日未満": "12時間以上1日未満",
         "12時間未満": "12時間未満",
@@ -338,29 +356,11 @@
       }
     },
     "inlandWatersDepth": {
-      "text": "内水氾濫深は{param}ですか？",
+      "text": "内水氾濫の浸水深は{param}mですか？",
       "options": {
         "0_5m未満": "0.5m未満",
         "0_5以上3_0m未満": "0.5以上3.0m未満",
         "該当なし": "該当なし"
-      }
-    },
-    "categories": {
-      "location": {
-        "name": "場所の詳細",
-        "description": "浸水リスクや周辺環境について聞く"
-      },
-      "facility": {
-        "name": "施設・収容人数",
-        "description": "施設の種類や収容人数・備えについて聞く"
-      },
-      "nearby": {
-        "name": "周辺施設",
-        "description": "近隣の施設やサービスについて聞く"
-      },
-      "capacity": {
-        "name": "施設・収容人数",
-        "description": "施設の種類や収容人数・備えについて聞く"
       }
     }
   },
@@ -423,7 +423,6 @@
       "startSubtitle": "中心を決めて、計測します。",
       "featuresTitle": "{radius}m以内の地点",
       "featuresSubtitle": "合計{count}件",
-      "layerCountsNote": "表示中のレイヤーだけが集計対象です。",
       "noFeatures": "この範囲に表示中のポイントが見当たりません。",
       "table": {
         "count": "件数",
@@ -432,7 +431,8 @@
       "popup": {
         "move": "中心を移動",
         "delete": "削除"
-      }
+      },
+      "layerCountsNote": "場所の数を数えるには、そのレイヤーを表示する必要があります"
     },
     "popup": {
       "name": "名称",
@@ -454,16 +454,16 @@
     "exitConfirmLeave": "終わる",
     "secretShelter": "秘密の避難所",
     "secretShelterName": "手がかりを解くと、避難所が表示されます",
-    "tapToAsk": "テストモード作動中",
     "toasts": {
       "selectShelterFirst": "回答を送る前に避難所を選んでください。",
-      "shelterPreparing": "秘密の避難所を準備しています。少し待ってから、もういちど試してください。",
+      "shelterPreparing": "避難所を決めています。少し待ってから、もういちど試してください。",
       "submitError": "回答を送れません。もういちど試してください。",
-      "correctShelter": "正しい避難所を見つけました！",
-      "tooFarForGuess": "回答を送るには、避難所の250m以内に移動してください。",
+      "correctShelter": "正しい避難所でチャコちゃんを見つけました！",
+      "tooFarForGuess": "回答を送るには、避難所の近くに移動してください。",
       "finalGuess": "不正解！ここでゲームオーバーです。",
       "penaltyFirst": "不正解！あと2回、回答できます。",
       "penaltySecond": "不正解！あと1回、回答できます。"
-    }
+    },
+    "testingModeActive": "テストモード中"
   }
 }
