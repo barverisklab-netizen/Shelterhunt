@@ -77,17 +77,20 @@ export function QuestionDrawer({
   const AMENITY_COUNT_OPTIONS = Array.from({ length: 11 }, (_, index) => index);
   const currentTime = Date.now();
 
-  const translateCategory = (category: QuestionCategory) => ({
-    name: t(`questions.categories.${category.id}.name`, {
-      fallback: category.name,
-    }),
-    description: t(`questions.categories.${category.id}.description`, {
+  const translateCategory = (category: QuestionCategory) => {
+    const description = t(`questions.categories.${category.id}.description`, {
       fallback: category.description,
-    }),
-    subtitle: t(`questions.categories.${category.id}.subtitle`, {
-      fallback: category.description,
-    }),
-  });
+    });
+    return {
+      name: t(`questions.categories.${category.id}.name`, {
+        fallback: category.name,
+      }),
+      description,
+      subtitle: t(`questions.categories.${category.id}.subtitle`, {
+        fallback: description,
+      }),
+    };
+  };
 
   const translateQuestionText = (question: Question) =>
     t(`questions.${question.id}.text`, { fallback: question.text });
