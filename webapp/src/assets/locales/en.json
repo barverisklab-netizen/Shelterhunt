@@ -234,14 +234,14 @@
       }
     },
     "shelter": {
-      "noneWithinRadius": "No shelter detected within 250m of your location."
+      "noneWithinRadius": "No shelter detected within 100m of your location."
     },
     "nearbyAmenity": {
       "selectAmenity": "Amenity type",
       "selectCount": "Exact count",
       "unavailable": "No amenities of this type within 250m. Move closer.",
       "availableCategories": "Available nearby: {categories}",
-      "noneWithinRadius": "No amenities within 250m yet."
+      "noneWithinRadius": "No amenities within 100m yet."
     },
     "dynamic": {
       "floodDepth": {
