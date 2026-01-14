@@ -484,7 +484,7 @@ export function QuestionDrawer({
                           <div className="flex flex-col gap-2">
                             {question.id === "shelterCapacity" && (
                               <span className="text-xs font-semibold uppercase text-black/70">
-                                {t("questions.enterNumber", { fallback: "Enter a number" })} (must be greater than 0)
+                                {t("questions.enterNumber", { fallback: "Enter a number" })}
                               </span>
                             )}
                             <input
@@ -493,7 +493,7 @@ export function QuestionDrawer({
                               min={question.id === "shelterCapacity" ? 1 : 0}
                               step={question.id === "shelterCapacity" ? 1 : 1}
                               className="w-full rounded border-2 border-black px-3 py-2"
-                              placeholder={t("questions.enterNumber", { fallback: "Enter a number" })}
+                              placeholder={t("questions.nonzero", { fallback: "Enter a number" })}
                               value={selectedParam ?? ""}
                               onChange={(event) => {
                                 const rawValue = event.target.value;

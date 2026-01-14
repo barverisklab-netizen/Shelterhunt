@@ -221,6 +221,7 @@
     "correct": "正しい手がかりを手に入れました！",
     "cooldown": "{seconds}秒後に再び質問できます",
     "incorrect": "残念ながら不正解です。別の質問を試しましょう。",
+    "enterNumber": "0以上の数字を入れてください",
     "shelter": {
       "noneWithinRadius": "現在地から100m以内に避難所がありません。"
     },
@@ -253,7 +254,7 @@
         "clue": "施設の種類は{param}です"
       },
       "shelterCapacity": {
-        "question": "収容人数が少なくとも{param}ですか？",
+        "question": "収容人数が＿人ですか？",
         "clue": "収容人数が少なくとも{param}です"
       },
       "waterStation250m": {
@@ -327,6 +328,7 @@
       }
     },
     "enterNumber": "数字を入れる",
+    "nonzero": "0以上の数字を入れてください。",
     "floodDepth": {
       "text": "洪水の浸水新は{param}mですか？",
       "options": {
@@ -438,7 +440,7 @@
     },
     "popup": {
       "name": "名称",
-      "category": "カテゴリ",
+      "category": "カテゴリー",
       "address": "住所",
       "shelterCapacity": "収容人数",
       "floodDepth": "浸水深",

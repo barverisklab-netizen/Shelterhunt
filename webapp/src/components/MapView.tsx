@@ -1837,6 +1837,7 @@ const measureMarkerRef = useRef<mapboxgl.Marker | null>(null);
         {
           template?: string;
           label: string;
+          labelJp?: string;
           layerNumericId?: number;
           legendItems?: (typeof kotoLayers)[number]["metadata"]["legendItems"];
         }
@@ -1941,6 +1942,7 @@ const measureMarkerRef = useRef<mapboxgl.Marker | null>(null);
           layerMetaRegistry[layerId] = {
             template,
             label: layer.label,
+            labelJp: layer.labelJp,
             layerNumericId: layer.id,
             legendItems: layer.metadata?.legendItems,
           };
@@ -2008,30 +2010,22 @@ const measureMarkerRef = useRef<mapboxgl.Marker | null>(null);
               (meta.layerNumericId
                 ? `map.layers.items.${meta.layerNumericId}`
                 : undefined);
-            const descriptionKey =
-              legend?.descriptionKey ??
-              (meta.layerNumericId
-                ? `map.layers.descriptions.${meta.layerNumericId}`
-                : undefined);
+            const fallbackLabel =
+              legend?.label ??
+              (localeRef.current === "ja"
+                ? meta.labelJp ?? meta.label
+                : meta.label);
+            const translate = translateRef.current;
             const headerLabel = labelKey
-              ? t(labelKey, {
-                  fallback: legend?.label ?? meta.label,
-                })
-              : legend?.label ?? meta.label;
-            const description = descriptionKey
-              ? t(descriptionKey, { fallback: legend?.description ?? "" })
-              : legend?.description ?? "";
-
+              ? typeof translate === "function"
+                ? translate(labelKey, { fallback: fallbackLabel })
+                : fallbackLabel
+              : fallbackLabel;
             const headerHtml = `
               <div style="padding: 12px;">
                 <div style="font-weight:700; margin-bottom:6px; font-size:14px;">
                   ${escapeHtml(headerLabel)}
                 </div>
-                ${
-                  description
-                    ? `<div style="opacity:0.9; font-size:12px; margin-bottom:8px;">${escapeHtml(description)}</div>`
-                    : ""
-                }
                 <div style="font-size:12px;">
             `;
             const bodyHtml = renderTemplate(

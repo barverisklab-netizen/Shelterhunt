@@ -220,7 +220,7 @@
     "askNow": "Ask Now",
     "correct": "Correct clue unlocked!",
     "cooldown": "Question available again in {seconds}s",
-    "incorrect": "That clue was incorrect. Try another guess.",
+    "incorrect": "That clue was incorrect. Try another guess.", 
     "nearbyAmenity": {
       "selectAmenity": "Amenity type",
       "selectCount": "Exact count",
@@ -324,6 +324,7 @@
       }
     },
     "enterNumber": "Enter a number",
+    "nonzero": "must be greater than 0",
     "floodDepth": {
       "text": "Is the flood depth {param}?",
       "options": {
