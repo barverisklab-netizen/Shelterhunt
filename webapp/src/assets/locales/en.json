@@ -221,8 +221,21 @@
     "enterNumber": "Enter a number",
     "correct": "Correct clue unlocked!",
     "cooldown": "Question available again in {seconds}s",
-    "disabledProximityHint": "Move around the city and questions will unlock when this asset type is within 250m of your location.",
     "incorrect": "That clue was incorrect. Try another guess.",
+    "categories": {
+      "location": {
+        "subtitle": "Surge inundation, flood hazards, and environmental clues."
+      },
+      "facility": {
+        "subtitle": "Shelter type, capacity, and resources."
+      },
+      "nearby": {
+        "subtitle": "Nearby facilities and services within 250m."
+      }
+    },
+    "shelter": {
+      "noneWithinRadius": "No shelter detected within 250m of your location."
+    },
     "nearbyAmenity": {
       "selectAmenity": "Amenity type",
       "selectCount": "Exact count",
@@ -252,8 +265,8 @@
         "clue": "Facility type is {param}"
       },
       "shelterCapacity": {
-        "question": "Is the shelter capacity at least {param}?",
-        "clue": "Shelter capacity is at least {param}"
+        "question": "Capacity of the shelter is {param}?",
+        "clue": "Shelter capacity is {param}"
       },
       "waterStation250m": {
         "question": "Are there exactly {param} water stations within 250m?",

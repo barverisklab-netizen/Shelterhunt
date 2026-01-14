@@ -84,6 +84,9 @@ export function QuestionDrawer({
     description: t(`questions.categories.${category.id}.description`, {
       fallback: category.description,
     }),
+    subtitle: t(`questions.categories.${category.id}.subtitle`, {
+      fallback: category.description,
+    }),
   });
 
   const translateQuestionText = (question: Question) =>
@@ -238,6 +241,10 @@ export function QuestionDrawer({
                       proximityEnabled &&
                       ((requiresShelterProximity && !hasShelterNearby) ||
                         (isNearbyCategory && !hasAnyAmenityNearby));
+                    const showShelterUnavailable =
+                      proximityEnabled && requiresShelterProximity && !hasShelterNearby;
+                    const showNearbyUnavailable =
+                      proximityEnabled && isNearbyCategory && !hasAnyAmenityNearby;
                     const isDisabled =
                       lacksRequiredProximity || questionsInCategory.length === 0;
 
@@ -266,16 +273,24 @@ export function QuestionDrawer({
                             {isDisabled ? (
                               <div className="mt-1 flex items-start gap-3 rounded border border-neutral-300 bg-neutral-100 p-3 text-sm text-neutral-600">
                                 <IconComponent className="w-5 h-5 text-neutral-500 mt-0.5" />
-                                <span>
-                                  {isNearbyCategory
-                                    ? t("questions.nearbyAmenity.noneWithinRadius", {
+                                <div>
+                                  <div>{translatedCategory.subtitle}</div>
+                                  {showNearbyUnavailable && (
+                                    <div className="mt-2">
+                                      {t("questions.nearbyAmenity.noneWithinRadius", {
                                         fallback: "No amenities within 250m yet.",
-                                      })
-                                    : t("questions.disabledProximityHint", {
-                                        fallback:
-                                          "Move around the city and questions will unlock when this asset type is within 250m of your location.",
                                       })}
-                                </span>
+                                    </div>
+                                  )}
+                                  {showShelterUnavailable && (
+                                    <div className="mt-2">
+                                      {t("questions.shelter.noneWithinRadius", {
+                                        fallback:
+                                          "No shelter detected within 250m of your location.",
+                                      })}
+                                    </div>
+                                  )}
+                                </div>
                               </div>
                             ) : (
                               <>
