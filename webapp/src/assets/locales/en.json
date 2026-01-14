@@ -15,8 +15,8 @@
     "paragraph1": "Welcome, heroes. I’m Bosai-Sensei, your guide through Koto City as a major hurricane closes in. Our mascot, Koto-chan, is sheltering somewhere safe; but we’ve lost contact.",
     "paragraph2": "Your task: explore the city, understand the disaster-preparedness information, and gather clues to pinpoint Koto-chan’s location before the storm hits.",
     "paragraph3": "Each correct move brings you closer and strengthens the skills you’ll need in real emergencies. Stay alert, and remember: preparedness is power.",
-    "imageAlt": "Koto-chan and Bosai-Sensei illustration",
-    "play": "Play"
+    "play": "Play",
+    "imageAlt": "Koto-chan and Bosai-Sensei illustration"
   },
   "onboarding": {
     "title": "Map n' Seek",
@@ -191,14 +191,14 @@
     "noCluesSubtitle": "Visit locations and answer trivia questions to unlock intelligence about the secret shelter.",
     "strategyTitle": "Strategy Tips",
     "strategyTip1": "Quickly isolate shelters using wide-area layers like flood depth and storm surge zones.",
-    "strategyTip2": "Move around the map to unlock facility questions for anything within 250m of you.",
+    "strategyTip2": "Move around the map to unlock facility questions for anything within 100m of you.",
     "strategyTip3": "Use layer toggles and the Measure button on the map to analyze shelters that match your clues.",
     "correctClues": "Correct clues",
     "wrongClues": "Wrong clues",
     "applyWrongClueFilter": "Filter using all wrong clues",
     "finalDecision": "Identify Shelter",
     "selectShelter": "Select target shelter",
-    "selectShelterHint": "Pick the shelter you believe is correct. You must be within 250m when you submit.",
+    "selectShelterHint": "Pick the shelter you believe is correct. You must be within 100m when you submit.",
     "selectPlaceholder": "Select a shelter",
     "guessWarning": "You have three guesses. Use your clues wisely before you submit.",
     "filterUnavailable": "Unable to filter map for this clue.",
@@ -218,28 +218,13 @@
     "chooseCategory": "Choose a Category",
     "availableCount": "{count} question{suffix} available",
     "askNow": "Ask Now",
-    "enterNumber": "Enter a number",
     "correct": "Correct clue unlocked!",
     "cooldown": "Question available again in {seconds}s",
     "incorrect": "That clue was incorrect. Try another guess.",
-    "categories": {
-      "location": {
-        "subtitle": "Surge inundation, flood hazards, and environmental clues."
-      },
-      "facility": {
-        "subtitle": "Shelter type, capacity, and resources."
-      },
-      "nearby": {
-        "subtitle": "Nearby facilities and services within 250m."
-      }
-    },
-    "shelter": {
-      "noneWithinRadius": "No shelter detected within 100m of your location."
-    },
     "nearbyAmenity": {
       "selectAmenity": "Amenity type",
       "selectCount": "Exact count",
-      "unavailable": "No amenities of this type within 250m. Move closer.",
+      "unavailable": "No amenities of this type within 100m. Move closer.",
       "availableCategories": "Available nearby: {categories}",
       "noneWithinRadius": "No amenities within 100m yet."
     },
@@ -320,6 +305,25 @@
         }
       }
     },
+    "categories": {
+      "location": {
+        "name": "Location Details",
+        "description": "Clues about surge inundation and environmental factors"
+      },
+      "facility": {
+        "name": "Facility Information",
+        "description": "Clues about facility type, and capacity"
+      },
+      "nearby": {
+        "name": "Nearby Amenities",
+        "description": "Clues about facilities and services in the area"
+      },
+      "capacity": {
+        "name": "Facility Resources",
+        "description": "Clues about facility capacity, and resources"
+      }
+    },
+    "enterNumber": "Enter a number",
     "floodDepth": {
       "text": "Is the flood depth {param}?",
       "options": {
@@ -358,23 +362,8 @@
         "該当なし": "None"
       }
     },
-    "categories": {
-      "location": {
-        "name": "Location Details",
-        "description": "Clues about surge inundation and environmental factors"
-      },
-      "facility": {
-        "name": "Facility Information",
-        "description": "Clues about facility type, and capacity"
-      },
-      "nearby": {
-        "name": "Nearby Amenities",
-        "description": "Clues about facilities and services in the area"
-      },
-      "capacity": {
-        "name": "Facility Resources",
-        "description": "Clues about facility capacity, and resources"
-      }
+    "shelter": {
+      "noneWithinRadius": "No shelter detected within 100m of your location."
     }
   },
   "map": {
@@ -392,42 +381,42 @@
         "2": "Voluntary Evacuation Centers",
         "3": "Temporary Evacuation Centers",
         "4": "Special Needs Shelter",
-    "5": "Evacuation Centers",
-    "6": "AED Locations",
-    "7": "Flood Risk Zones",
-    "8": "Inland Waters Depth",
-    "9": "Flood Duration",
-    "10": "Storm Surge Depth",
-    "11": "Bridges",
-    "12": "Shrines/Temples",
-    "13": "Community Centers",
-    "14": "Water Stations",
-    "15": "Hospitals",
-    "16": "Emergency Supply Storage",
-    "17": "Flood Gates",
-    "18": "Train Stations"
-  },
-  "descriptions": {
-    "1": "Designated evacuation center.",
-    "2": "Voluntary evacuation center.",
-    "3": "Temporary evacuation center location.",
-    "4": "Special needs shelter location.",
-    "5": "General evacuation center.",
-    "6": "Evacuation support facility with AED.",
-    "7": "Flood depth zones from hazard modeling.",
-    "8": "Inland waters depth zones.",
-    "9": "Flood duration zones.",
-    "10": "Storm surge depth zones.",
-    "11": "City bridge landmark.",
-    "12": "Religious or cultural landmark.",
-    "13": "Designated community center facility.",
-    "14": "Water supply station landmark.",
-    "15": "Hospital or medical facility landmark.",
-    "16": "Emergency supply storage facility.",
-    "17": "City flood gate landmark.",
-    "18": "City rail or metro station."
-  }
-},
+        "5": "Evacuation Centers",
+        "6": "AED Locations",
+        "7": "Flood Risk Zones",
+        "8": "Inland Waters Depth",
+        "9": "Flood Duration",
+        "10": "Storm Surge Depth",
+        "11": "Bridges",
+        "12": "Shrines/Temples",
+        "13": "Community Centers",
+        "14": "Water Stations",
+        "15": "Hospitals",
+        "16": "Emergency Supply Storage",
+        "17": "Flood Gates",
+        "18": "Train Stations"
+      },
+      "descriptions": {
+        "1": "Designated evacuation center.",
+        "2": "Voluntary evacuation center.",
+        "3": "Temporary evacuation center location.",
+        "4": "Special needs shelter location.",
+        "5": "General evacuation center.",
+        "6": "Evacuation support facility with AED.",
+        "7": "Flood depth zones from hazard modeling.",
+        "8": "Inland waters depth zones.",
+        "9": "Flood duration zones.",
+        "10": "Storm surge depth zones.",
+        "11": "City bridge landmark.",
+        "12": "Religious or cultural landmark.",
+        "13": "Designated community center facility.",
+        "14": "Water supply station landmark.",
+        "15": "Hospital or medical facility landmark.",
+        "16": "Emergency supply storage facility.",
+        "17": "City flood gate landmark.",
+        "18": "City rail or metro station."
+      }
+    },
     "measure": {
       "placePrompt": "Tap the map to place a new measurement point.",
       "dropPrompt": "Tap the map to drop a measurement point.",
@@ -436,7 +425,6 @@
       "startSubtitle": "Drop a center point to begin",
       "featuresTitle": "Features within {radius}m",
       "featuresSubtitle": "{count} features total",
-      "layerCountsNote": "Counts reflect only the currently active layers you have toggled on.",
       "noFeatures": "No visible point-layer features in this radius.",
       "table": {
         "count": "Count",
@@ -445,7 +433,8 @@
       "popup": {
         "move": "Move center",
         "delete": "Delete"
-      }
+      },
+      "layerCountsNote": "Counts reflect only the currently active layers you have toggled on."
     },
     "popup": {
       "name": "Name",
@@ -467,16 +456,16 @@
     "exitConfirmLeave": "Exit",
     "secretShelter": "Hidden target",
     "secretShelterName": "Solve clues to reveal the shelter",
-    "testingModeActive": "Testing mode active",
     "toasts": {
       "selectShelterFirst": "Select a shelter before submitting a guess.",
       "shelterPreparing": "The secret shelter is still being prepared. Try again in a moment.",
       "submitError": "Unable to submit your guess right now. Please try again.",
       "correctShelter": "You found the correct shelter!",
-      "tooFarForGuess": "Move within 250m of the shelter to submit a guess.",
+      "tooFarForGuess": "Move within 100m of the shelter to submit a guess.",
       "finalGuess": "That was your final guess. Game over.",
       "penaltyFirst": "Wrong guess! 2 guesses remaining.",
       "penaltySecond": "Wrong guess! 1 guess remaining."
-    }
+    },
+    "testingModeActive": "Testing mode active"
   }
 }
