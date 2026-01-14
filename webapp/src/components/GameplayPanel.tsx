@@ -173,7 +173,7 @@ export function GameplayPanel({
                     </p>
                     <Button
                       onClick={onGuessRequest}
-                      className="w-full border border-black bg-white text-black transition-colors hover:bg-neutral-200 hover:text-black hover:border-black active:bg-neutral-800 active:text-black active:border-black disabled:bg-neutral-200 disabled:text-black-40 disabled:border-neutral-400 disabled:opacity-100"
+                      className="w-full border-4 border-neutral-900 bg-neutral-100 p-4 text-black shadow-sm transition-colors hover:bg-red-600 hover:text-white active:bg-red-700 active:text-white disabled:bg-neutral-200 disabled:text-black/50 disabled:border-neutral-400 disabled:opacity-100"
                       disabled={
                         isGuessDisabled || !selectedShelterId || !shelterOptions.length
                       }

@@ -8,7 +8,7 @@ import { ShelterVictoryScreen } from './ShelterVictoryScreen';
 import { ShelterPenaltyScreen } from './ShelterPenaltyScreen';
 import { POI, Question, Clue, QuestionAttribute } from "@/types/game";
 import { defaultCityContext } from '../data/cityContext';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { toast } from "sonner@2.0.3";
 import { useI18n } from "@/i18n";
 import type { Shelter } from "@/services/shelterDataService";
@@ -96,7 +96,7 @@ export function GameScreen({
   lightningRadiusKm,
   resumeId,
 }: GameScreenProps) {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const proximityEnabled = PROXIMITY_ENABLED;
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [cluesOpen, setCluesOpen] = useState(false);
@@ -133,7 +133,7 @@ export function GameScreen({
   const lastAmenityQueryLocationRef = useRef<{ lat: number; lng: number } | null>(null);
   const secretShelterLogRef = useRef<string | null>(null);
   const secretShelterId = secretShelter?.id ?? null;
-  const secretShelterName = secretShelter?.name ?? null;
+  const secretShelterRawName = secretShelter?.name ?? null;
   const DESIGNATED_CATEGORY = "designated ec";
   const normalizeValue = (value: unknown) =>
     typeof value === "number" ? String(value) : String(value ?? "").trim().toLowerCase();
@@ -244,14 +244,14 @@ export function GameScreen({
   ]);
 
   useEffect(() => {
-    if (secretShelterName && secretShelterLogRef.current !== secretShelterName) {
-      secretShelterLogRef.current = secretShelterName;
+    if (secretShelterRawName && secretShelterLogRef.current !== secretShelterRawName) {
+      secretShelterLogRef.current = secretShelterRawName;
       console.info("[SecretShelter] Target updated", {
         id: secretShelterId,
-        name: secretShelterName,
+        name: secretShelterRawName,
       });
     }
-  }, [secretShelterId, secretShelterName]);
+  }, [secretShelterId, secretShelterRawName]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -529,17 +529,68 @@ export function GameScreen({
     return { questionText, clueTemplate };
   };
 
-  const normalizeName = (value?: string | null) =>
-    (value ?? '').trim().toLowerCase();
+  const normalizeName = useCallback(
+    (value?: string | null) => (value ?? "").trim().toLowerCase(),
+    [],
+  );
+  const resolveLocalizedName = useCallback(
+    (names: { name?: string | null; nameEn?: string | null; nameJp?: string | null }) => {
+      const fallback = names.name ?? names.nameEn ?? names.nameJp ?? "";
+      if (locale === "ja") {
+        return names.nameJp ?? names.nameEn ?? fallback;
+      }
+      return names.nameEn ?? names.nameJp ?? fallback;
+    },
+    [locale],
+  );
+  const optionMatchesShelter = useCallback(
+    (option: { id?: string | null; name?: string | null }, shelter: Shelter) => {
+      const optionId = option?.id ? normalizeName(option.id) : null;
+      if (
+        optionId &&
+        [shelter.shareCode, shelter.code, shelter.id].some(
+          (id) => id && normalizeName(id) === optionId,
+        )
+      ) {
+        return true;
+      }
+      const optionName = option?.name;
+      if (!optionName) return false;
+      const candidates = [
+        shelter.nameEn,
+        shelter.nameJp,
+        shelter.externalId,
+        shelter.code,
+        shelter.shareCode,
+        shelter.id,
+      ].filter(Boolean) as string[];
+      return candidates.some((name) => normalizeName(name) === normalizeName(optionName));
+    },
+    [normalizeName],
+  );
+  const optionMatchesPoi = useCallback(
+    (option: { id?: string | null; name?: string | null }, poi: POI) => {
+      const optionId = option?.id ? normalizeName(option.id) : null;
+      if (optionId && normalizeName(poi.id) === optionId) {
+        return true;
+      }
+      const optionName = option?.name;
+      if (!optionName) return false;
+      const candidates = [poi.name, poi.nameEn, poi.nameJp].filter(Boolean) as string[];
+      return candidates.some((name) => normalizeName(name) === normalizeName(optionName));
+    },
+    [normalizeName],
+  );
   const secretShelterRecord = secretShelter
-    ? shelters.find(
-        (shelter) =>
-          shelter.shareCode === secretShelter.id ||
-          shelter.code === secretShelter.id ||
-          normalizeName(shelter.nameEn ?? shelter.nameJp ?? shelter.externalId ?? shelter.id) ===
-            normalizeName(secretShelter.name),
-      )
+    ? shelters.find((shelter) => optionMatchesShelter(secretShelter, shelter))
     : undefined;
+  const secretShelterDisplayName = secretShelter
+    ? resolveLocalizedName({
+        name: secretShelter.name,
+        nameEn: secretShelterRecord?.nameEn ?? null,
+        nameJp: secretShelterRecord?.nameJp ?? null,
+      })
+    : null;
   const attributeValueLookup: Record<string, (shelter: Shelter) => string | number | null> = {
     floodDepth: (shelter) => shelter.floodDepth,
     stormSurgeDepth: (shelter) => shelter.stormSurgeDepth,
@@ -811,12 +862,48 @@ export function GameScreen({
     }
     startQuestionCooldown(questionId);
   };
+  const localizedShelterOptions = useMemo(() => {
+    if (!shelterOptions.length) return [];
+    return shelterOptions.map((option) => {
+      const shelterMatch = shelters.find((shelter) => optionMatchesShelter(option, shelter));
+      if (shelterMatch) {
+        const name = resolveLocalizedName({
+          name: option.name,
+          nameEn: shelterMatch.nameEn,
+          nameJp: shelterMatch.nameJp,
+        });
+        return { ...option, name };
+      }
+      const poiMatch = pois.find((poi) => optionMatchesPoi(option, poi));
+      if (poiMatch) {
+        const name = resolveLocalizedName({
+          name: option.name,
+          nameEn: poiMatch.nameEn,
+          nameJp: poiMatch.nameJp,
+        });
+        return { ...option, name };
+      }
+      return option;
+    });
+  }, [
+    optionMatchesPoi,
+    optionMatchesShelter,
+    pois,
+    resolveLocalizedName,
+    shelterOptions,
+    shelters,
+  ]);
   const selectedShelterOption = selectedShelterId
-    ? shelterOptions.find((option) => option.id === selectedShelterId) ?? null
+    ? localizedShelterOptions.find((option) => option.id === selectedShelterId) ?? null
     : null;
 
   const buildShelterMatchContext = useCallback(
-    (option: { id: string; name: string; lat?: number; lng?: number } | null | undefined) => {
+    (
+      option:
+        | { id?: string | null; name?: string | null; lat?: number; lng?: number }
+        | null
+        | undefined,
+    ) => {
       const altIds = new Set<string>();
       const altNames = new Set<string>();
       let coords: { lat: number; lng: number } | null = null;
@@ -831,13 +918,8 @@ export function GameScreen({
         coords = { lat: option.lat as number, lng: option.lng as number };
       }
 
-      const matchFromShelters = shelters.find(
-        (shelter) =>
-          shelter.id === option.id ||
-          shelter.code === option.id ||
-          shelter.shareCode === option.id ||
-          normalizeName(shelter.nameEn ?? shelter.nameJp ?? shelter.externalId ?? shelter.id) ===
-            normalizeName(option.name),
+      const matchFromShelters = shelters.find((shelter) =>
+        optionMatchesShelter(option, shelter),
       );
       if (matchFromShelters) {
         if (Number.isFinite(matchFromShelters.latitude) && Number.isFinite(matchFromShelters.longitude)) {
@@ -849,23 +931,20 @@ export function GameScreen({
         [matchFromShelters.shareCode, matchFromShelters.code, matchFromShelters.id, matchFromShelters.externalId]
           .filter(Boolean)
           .forEach((id) => altIds.add(id as string));
-        [matchFromShelters.nameEn, matchFromShelters.nameJp]
+        [matchFromShelters.nameEn, matchFromShelters.nameJp, matchFromShelters.externalId]
           .filter(Boolean)
           .forEach((name) => altNames.add(name as string));
       }
 
-      const matchFromPois = pois.find(
-        (poi) =>
-          poi.id === option.id ||
-          normalizeName(poi.name) === normalizeName(option.name),
-      );
+      const matchFromPois = pois.find((poi) => optionMatchesPoi(option, poi));
       if (matchFromPois) {
         if (Number.isFinite(matchFromPois.lat) && Number.isFinite(matchFromPois.lng)) {
           coords = coords ?? { lat: matchFromPois.lat, lng: matchFromPois.lng };
         }
-        if (matchFromPois.name) {
-          altNames.add(matchFromPois.name);
-        }
+        if (matchFromPois.id) altIds.add(matchFromPois.id);
+        [matchFromPois.name, matchFromPois.nameEn, matchFromPois.nameJp]
+          .filter(Boolean)
+          .forEach((name) => altNames.add(name as string));
       }
 
       return {
@@ -874,7 +953,7 @@ export function GameScreen({
         altNames: Array.from(altNames).filter(Boolean),
       };
     },
-    [normalizeName, pois, shelters],
+    [optionMatchesPoi, optionMatchesShelter, pois, shelters],
   );
 
   useEffect(() => {
@@ -898,7 +977,7 @@ export function GameScreen({
   const formattedTimer = `${Math.floor(timeRemaining / 60)}:${(timeRemaining % 60)
     .toString()
     .padStart(2, "0")}`;
-  const isGuessDisabled = !secretShelter || shelterOptions.length === 0;
+  const isGuessDisabled = !secretShelter || localizedShelterOptions.length === 0;
 
   const handleGuessRequest = async () => {
     if (isGuessDisabled) {
@@ -1060,10 +1139,16 @@ export function GameScreen({
       return;
     }
 
+    const selectedContext = buildShelterMatchContext(selectedShelterOption);
+    const secretContext = buildShelterMatchContext(secretShelter);
+    const hasOverlap = (left: string[], right: string[]) => {
+      if (!left.length || !right.length) return false;
+      const rightSet = new Set(right.map((value) => normalizeName(value)));
+      return left.some((value) => rightSet.has(normalizeName(value)));
+    };
     const matches =
-      selectedShelterOption.id === secretShelter.id ||
-      normalizeName(selectedShelterOption.name) ===
-        normalizeName(secretShelter.name);
+      hasOverlap(selectedContext.altIds, secretContext.altIds) ||
+      hasOverlap(selectedContext.altNames, secretContext.altNames);
 
     activatePanel(null);
     setSelectedShelterId(null);
@@ -1281,7 +1366,7 @@ export function GameScreen({
         isOpen={cluesOpen}
         clues={clues}
         onClose={() => activatePanel(null)}
-        shelterOptions={shelterOptions}
+        shelterOptions={localizedShelterOptions}
         selectedShelterId={selectedShelterId}
         onShelterSelect={setSelectedShelterId}
         onGuessRequest={handleGuessRequest}
@@ -1387,7 +1472,7 @@ export function GameScreen({
         {outcome === 'win' && (
           <ShelterVictoryScreen
             key="victory"
-            shelterName={secretShelter?.name}
+            shelterName={secretShelterDisplayName ?? undefined}
             clueCount={clues.length}
             onPlayAgain={onEndGame}
             result="win"
@@ -1396,7 +1481,7 @@ export function GameScreen({
         {outcome === 'lose' && (
           <ShelterVictoryScreen
             key="defeat"
-            shelterName={secretShelter?.name}
+            shelterName={secretShelterDisplayName ?? undefined}
             clueCount={clues.length}
             onPlayAgain={onEndGame}
             result="lose"
