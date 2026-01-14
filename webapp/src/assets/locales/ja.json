@@ -222,7 +222,7 @@
     "cooldown": "{seconds}秒後に再び質問できます",
     "incorrect": "残念ながら不正解です。別の質問を試しましょう。",
     "shelter": {
-      "noneWithinRadius": "現在地から250m以内に避難所がありません。"
+      "noneWithinRadius": "現在地から100m以内に避難所がありません。"
     },
     "nearbyAmenity": {
       "selectAmenity": "施設の種類",
