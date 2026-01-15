@@ -1,7 +1,8 @@
 import { motion, AnimatePresence } from "motion/react";
-import { X, MapPin, Brain, Lightbulb, Trophy } from "lucide-react";
+import { X, MapPin, Brain, Lightbulb, Trophy, Play } from "lucide-react";
 import { Button } from "./ui/button";
 import { useI18n } from "@/i18n";
+import { defaultCityContext } from "@/data/cityContext";
 import mascotPlaying from "../assets/graphics/character-mascot-playing.svg";
 
 interface HelpModalProps {
@@ -9,8 +10,40 @@ interface HelpModalProps {
   onClose: () => void;
 }
 
+const getVimeoVideoLink = (rawUrl?: string) => {
+  if (!rawUrl) return "";
+  const trimmed = rawUrl.trim();
+  if (!trimmed) return "";
+
+  const iframeMatch = trimmed.match(/<iframe[^>]*src=["']([^"']+)["']/i);
+  const embedCandidate = iframeMatch?.[1] ?? trimmed;
+
+  if (/^\d+$/.test(embedCandidate)) {
+    return `https://vimeo.com/${embedCandidate}`;
+  }
+
+  try {
+    const url = new URL(embedCandidate);
+    if (url.hostname.includes("player.vimeo.com")) {
+      const match = url.pathname.match(/\/video\/(\d+)/) || url.pathname.match(/\/(\d+)/);
+      if (match?.[1]) {
+        return `https://vimeo.com/${match[1]}`;
+      }
+      return embedCandidate;
+    }
+    if (url.hostname.includes("vimeo.com")) {
+      return embedCandidate;
+    }
+    return embedCandidate;
+  } catch {
+    return embedCandidate;
+  }
+};
+
 export function HelpModal({ isOpen, onClose }: HelpModalProps) {
   const { t } = useI18n();
+  const helpVideoUrl = defaultCityContext.helpVideoUrl;
+  const helpVideoLink = getVimeoVideoLink(helpVideoUrl);
   const steps = [
     {
       icon: MapPin,
@@ -89,13 +122,26 @@ export function HelpModal({ isOpen, onClose }: HelpModalProps) {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.1 }}
                 >
-                  <div className="flex justify-center mb-6">
+                  <div className="flex flex-col items-center mb-6 gap-3">
                     <img
                       src={mascotPlaying}
                       alt={t("help.mascotImageAlt", { fallback: "Mascot playing illustration" })}
                       className="h-max object-contain"
                       style={{ width: 200, height: 200 }}
                     />
+                    {helpVideoLink ? (
+                      <Button
+                        asChild
+                        variant="outline"
+                        size="sm"
+                        className="uppercase border-black bg-white text-black shadow-[2px_2px_0_rgba(0,0,0,0.6)] hover:bg-neutral-100 hover:shadow-[3px_3px_0_rgba(0,0,0,0.8)]"
+                      >
+                        <a href={helpVideoLink} target="_blank" rel="noreferrer noopener">
+                          <Play className="h-4 w-4" />
+                          {t("help.videoCta", { fallback: "Play video" })}
+                        </a>
+                      </Button>
+                    ) : null}
                   </div>
                   <h3 className="text-xl text-black mb-3 font-bold uppercase">
                     {t("help.overviewTitle")}
@@ -201,6 +247,7 @@ export function HelpModal({ isOpen, onClose }: HelpModalProps) {
               </div>
             </motion.div>
           </div>
+
         </>
       )}
     </AnimatePresence>

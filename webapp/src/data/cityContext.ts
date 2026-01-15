@@ -7,6 +7,7 @@ export interface QuestionCategory {
 
 export interface CityContext {
   cityName: string;
+  helpVideoUrl?: string;
   mapConfig: {
     basemapUrl: string;
     startLocation: {
@@ -21,6 +22,7 @@ export interface CityContext {
 
 export const kotoTokyoCityContext: CityContext = {
   cityName: "Koto, Tokyo",
+  helpVideoUrl: "https://vimeo.com/1154694542",
   mapConfig: {
     basemapUrl: "mapbox://styles/mitfluxmap/cmebgcxpe001001qm0ek1491l",
     startLocation: {

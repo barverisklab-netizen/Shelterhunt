@@ -90,6 +90,8 @@
     "title": "How to Play",
     "subtitle": "Master the art of urban deduction",
     "mascotImageAlt": "Mascot playing illustration",
+    "videoCta": "Play video",
+    "videoTitle": "How to play video",
     "overviewTitle": "Game Overview",
     "overviewBody": "A hurricane is approaching! Your team must find the secret emergency shelter hidden in the city. Visit various locations, answer trivia questions about disaster preparedness, and collect clues to deduce which shelter is the secret one. The first team to find it wins!",
     "stepLabel": "Step {number}",
