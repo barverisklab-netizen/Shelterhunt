@@ -31,11 +31,15 @@ Environment variables of note:
 - `SESSION_TTL_MINUTES` (default `20`)
 - `SESSION_MAX_PLAYERS` (default `8`)
 - `SESSION_MAX_DISTANCE_KM` (default `2`) — max km radius for auto-selected fallback shelters when the requested shelter is already in an active race
+- `DB_CONNECT_TIMEOUT_MS` (default `5000`) — fail fast when a DB connection cannot be established
+- `DB_QUERY_TIMEOUT_MS` (default `10000`) — client-side timeout for queries
+- `DB_STATEMENT_TIMEOUT_MS` (default `10000`) — server-side statement timeout (ms)
 
 ### Troubleshooting
 
-- Supabase projects can pause due to inactivity. When paused, this API process can still run and return `200` on `/health`, but DB-backed routes (for example `/shelters` and `/question-attributes`) may return `500`.
+- Supabase projects can pause due to inactivity. When paused, this API process can still run and return `200` on `/health`, but DB-backed routes (for example `/shelters` and `/question-attributes`) may return `503`.
 - Resume/wake the Supabase project, then retry the request.
+- If your connection string uses pooler port `6543` and requests hang or time out, switch to port `5432` for the same host and credentials.
 
 ## Database schema
 

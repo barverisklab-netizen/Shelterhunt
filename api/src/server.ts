@@ -8,7 +8,7 @@ import { logger, loggerConfig } from "./logger.js";
 import sessionRoutes from "./routes/sessions.js";
 import sheltersRoutes from "./routes/shelters.js";
 import { SessionHub } from "./realtime/sessionHub.js";
-import { ApiError } from "./services/errors.js";
+import { ApiError, isDatabaseUnavailableError } from "./services/errors.js";
 import { createRequire } from "node:module";
 const require = createRequire(import.meta.url);
 const pkg = require("../package.json") as { version: string };
@@ -69,6 +69,14 @@ export function buildServer() {
       reply.status(error.statusCode).send({
         message: error.message,
         details: error.details,
+      });
+      return;
+    }
+
+    if (isDatabaseUnavailableError(error)) {
+      request.log.error({ err: error }, "Database unavailable");
+      reply.status(503).send({
+        message: "Database unavailable",
       });
       return;
     }

@@ -8,6 +8,9 @@ const envSchema = z.object({
   SUPABASE_SERVICE_ROLE_KEY: z.string().min(10),
   JWT_SECRET: z.string().min(10),
   PORT: z.coerce.number().default(4000),
+  DB_CONNECT_TIMEOUT_MS: z.coerce.number().int().positive().default(5000),
+  DB_QUERY_TIMEOUT_MS: z.coerce.number().int().positive().default(10000),
+  DB_STATEMENT_TIMEOUT_MS: z.coerce.number().int().positive().default(10000),
   SESSION_TTL_MINUTES: z.coerce.number().positive().default(20),
   SESSION_MAX_PLAYERS: z.coerce.number().min(2).default(8),
   SESSION_MAX_DISTANCE_KM: z.coerce.number().positive().default(2),
@@ -19,6 +22,9 @@ export const env = envSchema.parse({
   SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY,
   JWT_SECRET: process.env.JWT_SECRET,
   PORT: process.env.PORT,
+  DB_CONNECT_TIMEOUT_MS: process.env.DB_CONNECT_TIMEOUT_MS,
+  DB_QUERY_TIMEOUT_MS: process.env.DB_QUERY_TIMEOUT_MS,
+  DB_STATEMENT_TIMEOUT_MS: process.env.DB_STATEMENT_TIMEOUT_MS,
   SESSION_TTL_MINUTES: process.env.SESSION_TTL_MINUTES,
   SESSION_MAX_PLAYERS: process.env.SESSION_MAX_PLAYERS,
   SESSION_MAX_DISTANCE_KM: process.env.SESSION_MAX_DISTANCE_KM,
@@ -39,4 +45,10 @@ export const sessionDefaults = {
   ttlMinutes: env.SESSION_TTL_MINUTES,
   maxPlayers: env.SESSION_MAX_PLAYERS,
   maxDistanceKm: env.SESSION_MAX_DISTANCE_KM,
+};
+
+export const dbDefaults = {
+  connectTimeoutMs: env.DB_CONNECT_TIMEOUT_MS,
+  queryTimeoutMs: env.DB_QUERY_TIMEOUT_MS,
+  statementTimeoutMs: env.DB_STATEMENT_TIMEOUT_MS,
 };
