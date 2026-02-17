@@ -240,11 +240,78 @@ const LIGHTNING_RANGE_FILL_LAYER_ID = "lightning-range-fill-layer";
 const LIGHTNING_RANGE_OUTLINE_LAYER_ID = "lightning-range-outline-layer";
 const GEOLOCATE_STYLE_ID = "mapbox-geolocate-circle-style";
 const ATTRIBUTION_STYLE_ID = "mapbox-attribution-position-style";
+const TERRAIN_DEM_SOURCE_ID = "mapbox-terrain-dem-source";
+const TERRAIN_DEM_TILESET = "mapbox://mapbox.mapbox-terrain-dem-v1";
+const TERRAIN_RGB_TILESET_ID = "mapbox.terrain-rgb";
+const TERRAIN_RGB_ZOOM = 14;
+const ELEVATION_CACHE_LIMIT = 1024;
 const DEFAULT_START_LOCATION = defaultCityContext.mapConfig.startLocation;
 
 type MeasureStatus = "idle" | "placing" | "active";
 const FIXED_MEASURE_RADIUS_METERS = 250;
 const PLAYER_RADIUS_METERS = Math.max(1, PROXIMITY_RADIUS_KM * 1000);
+
+const clampLatitude = (lat: number) => Math.max(-85.05112878, Math.min(85.05112878, lat));
+
+const toTerrainTilePoint = (coords: { lat: number; lng: number }, zoom: number) => {
+  const lat = clampLatitude(coords.lat);
+  const lng = ((((coords.lng + 180) % 360) + 360) % 360) - 180;
+  const scale = 2 ** zoom;
+  const x = ((lng + 180) / 360) * scale;
+  const latRad = (lat * Math.PI) / 180;
+  const y =
+    ((1 - Math.log(Math.tan(latRad) + 1 / Math.cos(latRad)) / Math.PI) / 2) * scale;
+
+  const tileX = Math.floor(x);
+  const tileY = Math.floor(y);
+  const pixelX = Math.max(0, Math.min(255, Math.floor((x - tileX) * 256)));
+  const pixelY = Math.max(0, Math.min(255, Math.floor((y - tileY) * 256)));
+
+  return { tileX, tileY, pixelX, pixelY };
+};
+
+const decodeTerrainRgbElevation = (r: number, g: number, b: number) =>
+  -10000 + (r * 256 * 256 + g * 256 + b) * 0.1;
+
+const loadImage = (url: string) =>
+  new Promise<HTMLImageElement>((resolve, reject) => {
+    const image = new Image();
+    image.crossOrigin = "anonymous";
+    image.onload = () => resolve(image);
+    image.onerror = () => reject(new Error(`Failed to load terrain tile: ${url}`));
+    image.src = url;
+  });
+
+const queryTerrainRgbElevation = async (
+  coords: { lat: number; lng: number },
+  accessToken: string,
+): Promise<number | null> => {
+  if (typeof document === "undefined" || !accessToken) {
+    return null;
+  }
+
+  const { tileX, tileY, pixelX, pixelY } = toTerrainTilePoint(coords, TERRAIN_RGB_ZOOM);
+  const tileUrl =
+    `https://api.mapbox.com/v4/${TERRAIN_RGB_TILESET_ID}/${TERRAIN_RGB_ZOOM}/${tileX}/${tileY}.pngraw` +
+    `?access_token=${encodeURIComponent(accessToken)}`;
+
+  const image = await loadImage(tileUrl);
+  const canvas = document.createElement("canvas");
+  canvas.width = 256;
+  canvas.height = 256;
+  const context = canvas.getContext("2d", { willReadFrequently: true });
+  if (!context) {
+    return null;
+  }
+
+  context.drawImage(image, 0, 0);
+  const pixel = context.getImageData(pixelX, pixelY, 1, 1).data;
+  if (!pixel || pixel.length < 4 || pixel[3] === 0) {
+    return null;
+  }
+
+  return decodeTerrainRgbElevation(pixel[0], pixel[1], pixel[2]);
+};
 
 interface MapViewProps {
   pois: POI[];
@@ -265,6 +332,12 @@ interface MapViewProps {
   lightningRadiusKm?: number;
   onAmenitiesWithinRadius?: (info: { counts: Record<string, number>; matchedCategories: string[] }) => void;
   amenityQueryTrigger?: number;
+  secretShelterCoords?: { lat: number; lng: number } | null;
+  onElevationSample?: (info: {
+    playerElevationMeters: number | null;
+    shelterElevationMeters: number | null;
+  }) => void;
+  elevationSampleTrigger?: number;
 }
 
 // const POI_ICONS = {
@@ -296,6 +369,9 @@ export function MapView({
   lightningRadiusKm = 2,
   onAmenitiesWithinRadius,
   amenityQueryTrigger,
+  secretShelterCoords,
+  onElevationSample,
+  elevationSampleTrigger = 0,
 }: MapViewProps) {
   const { t, locale } = useI18n();
   const translateRef = useRef(t);
@@ -332,6 +408,9 @@ const measureMarkerRef = useRef<mapboxgl.Marker | null>(null);
   const amenitiesCallbackRef = useRef<
     ((info: { counts: Record<string, number>; matchedCategories: string[] }) => void) | undefined
   >(onAmenitiesWithinRadius);
+  const elevationCallbackRef = useRef(onElevationSample);
+  const elevationCacheRef = useRef<Map<string, number | null>>(new Map());
+  const elevationSampleVersionRef = useRef(0);
 
   // Koto layer visibility state
   const [kotoLayersVisible, setKotoLayersVisible] = useState<
@@ -358,6 +437,124 @@ const measureMarkerRef = useRef<mapboxgl.Marker | null>(null);
   useEffect(() => {
     localeRef.current = locale;
   }, [locale]);
+
+  useEffect(() => {
+    elevationCallbackRef.current = onElevationSample;
+  }, [onElevationSample]);
+
+  const fetchFallbackElevation = useCallback(async (coords?: { lat: number; lng: number } | null) => {
+    if (!coords) return null;
+
+    const key = `${coords.lat.toFixed(5)},${coords.lng.toFixed(5)}`;
+    const cached = elevationCacheRef.current.get(key);
+    if (cached !== undefined) {
+      return cached;
+    }
+
+    try {
+      const fallbackElevation = await queryTerrainRgbElevation(coords, MAPBOX_CONFIG.accessToken);
+      elevationCacheRef.current.set(key, fallbackElevation);
+      if (elevationCacheRef.current.size > ELEVATION_CACHE_LIMIT) {
+        const oldestKey = elevationCacheRef.current.keys().next().value;
+        if (oldestKey) {
+          elevationCacheRef.current.delete(oldestKey);
+        }
+      }
+      return fallbackElevation;
+    } catch (error) {
+      console.warn("[Map] Terrain fallback elevation query failed", { coords, error });
+      elevationCacheRef.current.set(key, null);
+      return null;
+    }
+  }, []);
+
+  const ensureTerrainEnabled = useCallback(() => {
+    const m = map.current;
+    if (!m) return;
+    try {
+      if (!m.getSource(TERRAIN_DEM_SOURCE_ID)) {
+        m.addSource(TERRAIN_DEM_SOURCE_ID, {
+          type: "raster-dem",
+          url: TERRAIN_DEM_TILESET,
+          tileSize: 512,
+          maxzoom: 14,
+        });
+      }
+      const currentTerrain = (m as any).getTerrain?.();
+      if (!currentTerrain || currentTerrain.source !== TERRAIN_DEM_SOURCE_ID) {
+        m.setTerrain({ source: TERRAIN_DEM_SOURCE_ID, exaggeration: 1 });
+      }
+    } catch (error) {
+      console.warn("[Map] Failed to enable terrain source", error);
+    }
+  }, []);
+
+  const sampleTerrainElevation = useCallback(() => {
+    const m = map.current;
+    const callback = elevationCallbackRef.current;
+    if (!m || !callback) return;
+    const sampleVersion = ++elevationSampleVersionRef.current;
+
+    const query = (coords?: { lat: number; lng: number } | null): number | null => {
+      if (!coords) return null;
+      try {
+        const value = (m as any).queryTerrainElevation?.(
+          [coords.lng, coords.lat],
+          { exaggerated: false },
+        );
+        return typeof value === "number" && Number.isFinite(value) ? value : null;
+      } catch {
+        return null;
+      }
+    };
+
+    const currentPlayerCoords = { lat: playerLocation.lat, lng: playerLocation.lng };
+    const currentShelterCoords = secretShelterCoords
+      ? { lat: secretShelterCoords.lat, lng: secretShelterCoords.lng }
+      : null;
+
+    const emit = (playerElevationMeters: number | null, shelterElevationMeters: number | null) => {
+      if (sampleVersion !== elevationSampleVersionRef.current) return;
+      callback({ playerElevationMeters, shelterElevationMeters });
+    };
+
+    const playerElevationMeters = query(currentPlayerCoords);
+    const shelterElevationMeters = query(currentShelterCoords);
+    emit(playerElevationMeters, shelterElevationMeters);
+
+    const needsRetry =
+      playerElevationMeters == null ||
+      (currentShelterCoords != null && shelterElevationMeters == null);
+    if (!needsRetry) return;
+
+    const resolveWithFallback = async (afterIdle: boolean) => {
+      let resolvedPlayer = afterIdle ? query(currentPlayerCoords) : playerElevationMeters;
+      let resolvedShelter = afterIdle ? query(currentShelterCoords) : shelterElevationMeters;
+
+      if (resolvedPlayer == null) {
+        resolvedPlayer = await fetchFallbackElevation(currentPlayerCoords);
+      }
+      if (currentShelterCoords && resolvedShelter == null) {
+        resolvedShelter = await fetchFallbackElevation(currentShelterCoords);
+      }
+
+      emit(resolvedPlayer, resolvedShelter);
+    };
+
+    if (m.isStyleLoaded()) {
+      m.once("idle", () => {
+        void resolveWithFallback(true);
+      });
+    } else {
+      void resolveWithFallback(false);
+    }
+  }, [
+    fetchFallbackElevation,
+    playerLocation.lat,
+    playerLocation.lng,
+    secretShelterCoords?.lat,
+    secretShelterCoords?.lng,
+  ]);
 
   const localizeTextFieldExpression = useCallback(
     (expr: any, currentLocale: typeof locale): any => {
@@ -1319,6 +1516,7 @@ const measureMarkerRef = useRef<mapboxgl.Marker | null>(null);
     if (!mapContainer.current || map.current) return;
 
     hasEmittedShelterOptions.current = false;
+    let handleStyleData: (() => void) | null = null;
 
     try {
       map.current = new mapboxgl.Map({
@@ -1332,6 +1530,7 @@ const measureMarkerRef = useRef<mapboxgl.Marker | null>(null);
       map.current.on("load", () => {
         console.log("Mapbox map loaded successfully!");
         setMapLoaded(true);
+        ensureTerrainEnabled();
         // Add Koto layer sources and layers
         addKotoLayers();
         if (reapplyPlayerRangeRef.current) {
@@ -1379,8 +1578,9 @@ const measureMarkerRef = useRef<mapboxgl.Marker | null>(null);
         }
 
         moveAttributionToBottomLeft();
-        map.current?.on("styledata", () => {
+        handleStyleData = () => {
           moveAttributionToBottomLeft();
+          ensureTerrainEnabled();
           const reapply = reapplyPlayerRangeRef.current;
           const mInner = map.current;
           if (!reapply || !mInner) return;
@@ -1397,7 +1597,8 @@ const measureMarkerRef = useRef<mapboxgl.Marker | null>(null);
           } else {
             mInner.once("idle", () => reapply());
           }
-        });
+        };
+        map.current?.on("styledata", handleStyleData);
       });
 
       console.log("Mapbox map created successfully");
@@ -1437,7 +1638,9 @@ const measureMarkerRef = useRef<mapboxgl.Marker | null>(null);
           map.current.off("idle", pendingPoiRefreshHandlerRef.current);
           pendingPoiRefreshHandlerRef.current = null;
         }
-        map.current?.off("styledata", moveAttributionToBottomLeft);
+        if (handleStyleData) {
+          map.current.off("styledata", handleStyleData);
+        }
         map.current.remove();
         map.current = null;
         hasSelectedShelter.current = false;
@@ -1445,7 +1648,8 @@ const measureMarkerRef = useRef<mapboxgl.Marker | null>(null);
         setMapLoaded(false);
       }
     };
-  }, []);
+    // Intentionally initialize once per basemap style.
+  }, [basemapUrl]);
 
   // Recenter camera when playerLocation changes (no reinit)
   useEffect(() => {
@@ -1467,7 +1671,27 @@ const measureMarkerRef = useRef<mapboxgl.Marker | null>(null);
     if (!isDefaultStart) {
       setHasUserLocationFix(true);
     }
-  }, [playerLocation.lng, playerLocation.lat, hasUserLocationFix]);
+    sampleTerrainElevation();
+  }, [playerLocation.lng, playerLocation.lat, hasUserLocationFix, sampleTerrainElevation]);
+
+  useEffect(() => {
+    if (!mapLoaded) return;
+    ensureTerrainEnabled();
+    sampleTerrainElevation();
+  }, [
+    ensureTerrainEnabled,
+    mapLoaded,
+    playerLocation.lat,
+    playerLocation.lng,
+    sampleTerrainElevation,
+    secretShelterCoords?.lat,
+    secretShelterCoords?.lng,
+  ]);
+
+  useEffect(() => {
+    if (!mapLoaded) return;
+    sampleTerrainElevation();
+  }, [elevationSampleTrigger, mapLoaded, sampleTerrainElevation]);
 
   useEffect(() => {
     const m = map.current;

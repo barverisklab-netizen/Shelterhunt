@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from 'motion/react';
-import { Clock, Lightbulb, MapPin, Ruler, X} from 'lucide-react';
+import { ChevronDown, ChevronUp, ChevronsUpDown, Clock, Lightbulb, MapPin, Ruler, X} from 'lucide-react';
 import { MapView } from './MapView';
 import { QuestionDrawer } from './QuestionDrawer';
 import { GameplayPanel } from './GameplayPanel';
@@ -134,6 +134,11 @@ export function GameScreen({
   const [, setCooldownTick] = useState(0);
   const [questionCooldowns, setQuestionCooldowns] = useState<Record<string, number>>({});
   const [lastQuestionLocationKey, setLastQuestionLocationKey] = useState<string | null>(null);
+  const [playerElevationMeters, setPlayerElevationMeters] = useState<number | null>(null);
+  const [shelterElevationMeters, setShelterElevationMeters] = useState<number | null>(null);
+  const [playerElevationResolved, setPlayerElevationResolved] = useState(false);
+  const [shelterElevationResolved, setShelterElevationResolved] = useState(false);
+  const [elevationSampleTrigger, setElevationSampleTrigger] = useState(0);
   const staleLocationTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastGeoStatusRef = useRef<string>("unknown");
   const hasLoggedProximityRef = useRef(false);
@@ -592,6 +597,13 @@ export function GameScreen({
   const secretShelterRecord = secretShelter
     ? shelters.find((shelter) => optionMatchesShelter(secretShelter, shelter))
     : undefined;
+  const secretShelterCoords = useMemo(() => {
+    if (!secretShelterRecord) return null;
+    const lat = Number(secretShelterRecord.latitude);
+    const lng = Number(secretShelterRecord.longitude);
+    if (!Number.isFinite(lat) || !Number.isFinite(lng)) return null;
+    return { lat, lng };
+  }, [secretShelterRecord]);
   const secretShelterDisplayName = secretShelter
     ? resolveLocalizedName({
         name: secretShelter.name,
@@ -599,6 +611,108 @@ export function GameScreen({
         nameJp: secretShelterRecord?.nameJp ?? null,
       })
     : null;
+  const roundTo3 = (value: number) => {
+    const rounded = Number(value.toFixed(3));
+    return Object.is(rounded, -0) ? 0 : rounded;
+  };
+
+  const handleElevationSample = useCallback(
+    ({
+      playerElevationMeters: nextPlayerElevationMeters,
+      shelterElevationMeters: nextShelterElevationMeters,
+    }: {
+      playerElevationMeters: number | null;
+      shelterElevationMeters: number | null;
+    }) => {
+      const deltaMeters =
+        nextPlayerElevationMeters != null && nextShelterElevationMeters != null
+          ? roundTo3(nextPlayerElevationMeters - nextShelterElevationMeters)
+          : null;
+      console.info("[Elevation Debug] Sample", {
+        player: {
+          lat: playerLocation.lat,
+          lng: playerLocation.lng,
+          elevationMeters: nextPlayerElevationMeters,
+        },
+        shelter: secretShelterCoords
+          ? {
+              lat: secretShelterCoords.lat,
+              lng: secretShelterCoords.lng,
+              elevationMeters: nextShelterElevationMeters,
+            }
+          : null,
+        deltaMeters,
+      });
+
+      setPlayerElevationMeters(nextPlayerElevationMeters);
+      setPlayerElevationResolved(true);
+
+      if (!secretShelterCoords) {
+        setShelterElevationMeters(null);
+        setShelterElevationResolved(false);
+        return;
+      }
+
+      setShelterElevationMeters(nextShelterElevationMeters);
+      setShelterElevationResolved(true);
+    },
+    [
+      playerLocation.lat,
+      playerLocation.lng,
+      roundTo3,
+      secretShelterCoords?.lat,
+      secretShelterCoords?.lng,
+    ],
+  );
+
+  useEffect(() => {
+    if (!secretShelterCoords) {
+      setShelterElevationMeters(null);
+      setShelterElevationResolved(false);
+      return;
+    }
+    setShelterElevationResolved(false);
+  }, [secretShelterCoords?.lat, secretShelterCoords?.lng]);
+
+  useEffect(() => {
+    setPlayerElevationResolved(false);
+  }, [playerLocation.lat, playerLocation.lng]);
+
+  const elevationDeltaMeters =
+    playerElevationMeters != null && shelterElevationMeters != null
+      ? roundTo3(playerElevationMeters - shelterElevationMeters)
+      : null;
+  const elevationDeltaAbsDisplay =
+    elevationDeltaMeters != null ? Math.abs(elevationDeltaMeters).toFixed(3) : null;
+  const isBelowShelterElevation = elevationDeltaMeters != null && elevationDeltaMeters < 0;
+  const isAboveShelterElevation = elevationDeltaMeters != null && elevationDeltaMeters > 0;
+  const elevationUnavailable =
+    elevationDeltaMeters == null && playerElevationResolved && shelterElevationResolved;
+  const elevationSummaryLabel =
+    elevationDeltaMeters != null
+      ? elevationDeltaMeters < 0
+        ? t("game.elevationBelow", {
+            replacements: { meters: elevationDeltaAbsDisplay ?? "0.000" },
+            fallback: `Elevation: ${elevationDeltaAbsDisplay ?? "0.000"}m below shelter`,
+          })
+        : elevationDeltaMeters > 0
+          ? t("game.elevationAbove", {
+              replacements: { meters: elevationDeltaAbsDisplay ?? "0.000" },
+              fallback: `Elevation: ${elevationDeltaAbsDisplay ?? "0.000"}m above shelter`,
+            })
+          : t("game.elevationSame", { fallback: "Elevation: same as shelter" })
+      : elevationUnavailable
+        ? t("game.elevationUnavailable", {
+            fallback: "Elevation data unavailable.",
+          })
+        : t("game.elevationLoading", { fallback: "Checking elevation..." });
+  const handleElevationPillClick = () => {
+    setPlayerElevationResolved(false);
+    if (secretShelterCoords) {
+      setShelterElevationResolved(false);
+    }
+    setElevationSampleTrigger((prev) => prev + 1);
+  };
   const attributeValueLookup: Record<string, (shelter: Shelter) => string | number | null> = {
     floodDepth: (shelter) => shelter.floodDepth,
     stormSurgeDepth: (shelter) => shelter.stormSurgeDepth,
@@ -1320,6 +1434,9 @@ export function GameScreen({
           setNearbyAmenityCategories(info.matchedCategories ?? []);
         }}
         amenityQueryTrigger={amenityQueryTrigger}
+        secretShelterCoords={secretShelterCoords}
+        onElevationSample={handleElevationSample}
+        elevationSampleTrigger={elevationSampleTrigger}
           onLayerPanelToggle={(open) => {
             if (open) {
               activatePanel("layers");
@@ -1329,6 +1446,39 @@ export function GameScreen({
           }}
           layerPanelCloseSignal={layerPanelCloseSignal}
         />
+
+        <div className="pointer-events-none absolute top-4 left-1/2 z-20 max-w-[calc(100%-8rem)] -translate-x-1/2">
+          <button
+            type="button"
+            onClick={handleElevationPillClick}
+            className={`min-w-[100px] rounded-full border bg-white px-4 py-1.5 text-center text-s font-semibold uppercase tracking-[0.08em] shadow-[0_3px_10px_rgba(0,0,0,0.18)] ${
+              isBelowShelterElevation
+                ? "border-red-400/50 bg-red-500/20 text-red-400"
+                : isAboveShelterElevation
+                  ? "border-green-400/50 bg-green-500/20 text-green-400"
+                  : "border-neutral-300 text-neutral-700"
+            } pointer-events-auto transition hover:scale-[1.01] active:scale-[0.99]`}
+            title={elevationSummaryLabel}
+            aria-label={elevationSummaryLabel}
+          >
+            {elevationDeltaMeters != null ? (
+              <span className="inline-flex items-center gap-1">
+                {elevationDeltaMeters < 0 ? (
+                  <ChevronDown className="h-4 w-4" />
+                ) : elevationDeltaMeters > 0 ? (
+                  <ChevronUp className="h-4 w-4" />
+                ) : (
+                  <ChevronsUpDown className="h-4 w-4" />
+                )}
+                <span>{elevationDeltaAbsDisplay}m</span>
+              </span>
+            ) : elevationUnavailable ? (
+              <span>n/a</span>
+            ) : (
+              <span>...</span>
+            )}
+          </button>
+        </div>
 
         {/* Floating Action Buttons */}
         <div className="absolute top-4 right-4 flex flex-col gap-3 items-end">
