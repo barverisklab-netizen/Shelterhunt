@@ -460,6 +460,11 @@
     "exitConfirmLeave": "Exit",
     "secretShelter": "Hidden target",
     "secretShelterName": "Solve clues to reveal the shelter",
+    "elevationLoading": "Checking elevation...",
+    "elevationUnavailable": "Elevation data unavailable.",
+    "elevationAbove": "Elevation: {meters}m above shelter",
+    "elevationBelow": "Elevation: {meters}m below shelter",
+    "elevationSame": "Elevation: same as shelter",
     "toasts": {
       "selectShelterFirst": "Select a shelter before submitting a guess.",
       "shelterPreparing": "The secret shelter is still being prepared. Try again in a moment.",
