@@ -2314,76 +2314,87 @@ const measureMarkerRef = useRef<mapboxgl.Marker | null>(null);
        {/* Koto Layer Control Panel */}
       <AnimatePresence>
         {showLayerControl && (
-          <motion.div
-            className="absolute top-16 left-4 z-10 w-[300px] max-w-[90vw] min-w-[220px] space-y-3 rounded-lg border border-black bg-background p-4 shadow-lg"
-            initial={{ opacity: 0, y: -10, scale: 0.95 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -10, scale: 0.95 }}
-            style={{
-              width: "300px",
-              minWidth: "220px",
-              maxWidth: "90vw",
-              marginTop: "10px",
-              maxHeight: "min(80vh, 320px)",
-              overflowY: "auto",
-            }}
-          >
-            <div className="mb-2 flex items-center justify-between">
-              <span className="text-sm font-semibold uppercase text-black">
-                {t("map.layers.title", { fallback: "Map Layers" })}
-              </span>
-              <button
-                type="button"
-                onClick={clearAllLayers}
-                disabled={!anyLayerActive}
-                className="rounded border border-black bg-background px-3 py-1 text-xs font-semibold uppercase text-black transition-colors hover:bg-neutral-100 disabled:cursor-not-allowed disabled:border-neutral-400 disabled:bg-neutral-200 disabled:text-neutral-500"
-              >
-                {t("map.layers.clearAll", { fallback: "Clear All" })}
-              </button>
-            </div>
-
-            <div className="space-y-2">
-              {groupedKotoLayers.map(({ group, layers }) => (
-                <div
-                  key={group}
-                  className="rounded-md bg-white"
+          <>
+            <motion.button
+              type="button"
+              aria-label={t("map.layers.title", { fallback: "Map Layers" })}
+              className="absolute inset-0 z-[9] bg-transparent"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => handleLayerControlToggle(false)}
+            />
+            <motion.div
+              className="absolute top-16 left-4 z-10 w-[300px] max-w-[90vw] min-w-[220px] space-y-3 rounded-lg border border-black bg-background p-4 shadow-lg"
+              initial={{ opacity: 0, y: -10, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -10, scale: 0.95 }}
+              style={{
+                width: "300px",
+                minWidth: "220px",
+                maxWidth: "90vw",
+                marginTop: "10px",
+                maxHeight: "min(80vh, 320px)",
+                overflowY: "auto",
+              }}
+            >
+              <div className="mb-2 flex items-center justify-between">
+                <span className="text-sm font-semibold uppercase text-black">
+                  {t("map.layers.title", { fallback: "Map Layers" })}
+                </span>
+                <button
+                  type="button"
+                  onClick={clearAllLayers}
+                  disabled={!anyLayerActive}
+                  className="rounded border border-black bg-background px-3 py-1 text-xs font-semibold uppercase text-black transition-colors hover:bg-neutral-100 disabled:cursor-not-allowed disabled:border-neutral-400 disabled:bg-neutral-200 disabled:text-neutral-500"
                 >
-                  <button
-                    type="button"
-                    onClick={() => toggleLayerGroupOpen(group)}
-                    className="flex w-full items-center justify-between px-3 py-2 text-left text-sm font-semibold text-black"
+                  {t("map.layers.clearAll", { fallback: "Clear All" })}
+                </button>
+              </div>
+
+              <div className="space-y-2">
+                {groupedKotoLayers.map(({ group, layers }) => (
+                  <div
+                    key={group}
+                    className="rounded-md bg-white"
                   >
-                    <span>{translateGroup(group)}</span>
-                    <span className="text-lg leading-none">
-                      {layerGroupOpenState[group] ? "-" : "+"}
-                    </span>
-                  </button>
-                  <AnimatePresence initial={false}>
-                    {layerGroupOpenState[group] && (
-                      <motion.div
-                        key={`${group}-content`}
-                        initial={{ opacity: 0, y: -6 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -6 }}
-                        transition={{ duration: 0.15 }}
-                        className="space-y-1 border-t border-neutral-200 px-2 py-2"
-                      >
-                        {layers.map((layer) => (
-                          <LayerToggle
-                            key={layer.id}
-                            label={translateLayerLabel(layer.id, layer.label)}
-                            icon={getKotoLayerIcon(layer)}
-                            checked={kotoLayersVisible[layer.label]}
-                            onChange={() => toggleKotoLayer(layer.label)}
-                          />
-                        ))}
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </div>
-              ))}
-            </div>
-          </motion.div>
+                    <button
+                      type="button"
+                      onClick={() => toggleLayerGroupOpen(group)}
+                      className="flex w-full items-center justify-between px-3 py-2 text-left text-sm font-semibold text-black"
+                    >
+                      <span>{translateGroup(group)}</span>
+                      <span className="text-lg leading-none">
+                        {layerGroupOpenState[group] ? "-" : "+"}
+                      </span>
+                    </button>
+                    <AnimatePresence initial={false}>
+                      {layerGroupOpenState[group] && (
+                        <motion.div
+                          key={`${group}-content`}
+                          initial={{ opacity: 0, y: -6 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: -6 }}
+                          transition={{ duration: 0.15 }}
+                          className="space-y-1 border-t border-neutral-200 px-2 py-2"
+                        >
+                          {layers.map((layer) => (
+                            <LayerToggle
+                              key={layer.id}
+                              label={translateLayerLabel(layer.id, layer.label)}
+                              icon={getKotoLayerIcon(layer)}
+                              checked={kotoLayersVisible[layer.label]}
+                              onChange={() => toggleKotoLayer(layer.label)}
+                            />
+                          ))}
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                ))}
+              </div>
+            </motion.div>
+          </>
         )}
       </AnimatePresence>
 

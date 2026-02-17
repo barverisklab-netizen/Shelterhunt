@@ -12,7 +12,12 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { toast } from "sonner@2.0.3";
 import { useI18n } from "@/i18n";
 import type { Shelter } from "@/services/shelterDataService";
-import { ENABLE_WRONG_GUESS_PENALTY, LIGHTNING_RADIUS_KM, PROXIMITY_RADIUS_KM } from "@/config/runtime";
+import {
+  ENABLE_WRONG_GUESS_PENALTY,
+  LIGHTNING_RADIUS_KM,
+  ONE_QUESTION_PER_LOCATION,
+  PROXIMITY_RADIUS_KM,
+} from "@/config/runtime";
 import { haversineDistanceKm } from "@/utils/lightningSelection";
 import { hasShelterWithinRadius, matchShelterWithinRadius } from "@/services/proximityIndex";
 
@@ -70,6 +75,7 @@ interface GameScreenProps {
   lightningCenter?: { lat: number; lng: number } | null;
   lightningRadiusKm?: number;
   resumeId?: string;
+  onShowHelp?: () => void;
 }
 
 export function GameScreen({
@@ -95,6 +101,7 @@ export function GameScreen({
   lightningCenter = null,
   lightningRadiusKm,
   resumeId,
+  onShowHelp,
 }: GameScreenProps) {
   const { t, locale } = useI18n();
   const proximityEnabled = PROXIMITY_ENABLED;
@@ -126,6 +133,7 @@ export function GameScreen({
   const [nearbyShelterName, setNearbyShelterName] = useState<string | null>(null);
   const [, setCooldownTick] = useState(0);
   const [questionCooldowns, setQuestionCooldowns] = useState<Record<string, number>>({});
+  const [lastQuestionLocationKey, setLastQuestionLocationKey] = useState<string | null>(null);
   const staleLocationTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastGeoStatusRef = useRef<string>("unknown");
   const hasLoggedProximityRef = useRef(false);
@@ -762,6 +770,13 @@ export function GameScreen({
   const hasNearbyAmenities =
     PROXIMITY_DISABLED_FOR_TESTING ||
     Object.values(nearbyAmenityCounts).some((count) => (count ?? 0) > 0);
+  const currentQuestionLocationKey = nearbyPOI?.id
+    ? `poi:${nearbyPOI.id}`
+    : `coord:${playerLocation.lat.toFixed(4)}:${playerLocation.lng.toFixed(4)}`;
+  const isQuestionLocationLocked =
+    ONE_QUESTION_PER_LOCATION &&
+    lastQuestionLocationKey !== null &&
+    lastQuestionLocationKey === currentQuestionLocationKey;
 
   const questions: (Question & { clueTemplate?: string })[] = hasNearbyAmenities
     ? [...baseQuestions, nearbyAmenityQuestion]
@@ -779,6 +794,15 @@ export function GameScreen({
   );
 
   const handleAskQuestion = (questionId: string, param: string | number) => {
+    if (isQuestionLocationLocked) {
+      toast.error(
+        t("questions.onePerLocationLimit", {
+          fallback: "Move to a new location before asking another question.",
+        }),
+      );
+      return;
+    }
+
     const question = questions.find((q) => q.id === questionId);
     const expected = getSecretAnswer(questionId);
 
@@ -861,6 +885,9 @@ export function GameScreen({
       );
     }
     startQuestionCooldown(questionId);
+    if (ONE_QUESTION_PER_LOCATION) {
+      setLastQuestionLocationKey(currentQuestionLocationKey);
+    }
   };
   const localizedShelterOptions = useMemo(() => {
     if (!shelterOptions.length) return [];
@@ -1056,6 +1083,15 @@ export function GameScreen({
     amenityKey: string;
     count: number;
   }) => {
+    if (isQuestionLocationLocked) {
+      toast.error(
+        t("questions.onePerLocationLimit", {
+          fallback: "Move to a new location before asking another question.",
+        }),
+      );
+      return;
+    }
+
     if (solvedNearbyAmenityKeys.includes(amenityKey)) {
       toast.error(
         t("questions.nearbyAmenity.unavailable", {
@@ -1125,6 +1161,9 @@ export function GameScreen({
       );
     }
     startQuestionCooldown("nearbyAmenity");
+    if (ONE_QUESTION_PER_LOCATION) {
+      setLastQuestionLocationKey(currentQuestionLocationKey);
+    }
   };
 
   const resolveGuess = () => {
@@ -1366,6 +1405,7 @@ export function GameScreen({
         isOpen={cluesOpen}
         clues={clues}
         onClose={() => activatePanel(null)}
+        onShowHelp={onShowHelp}
         shelterOptions={localizedShelterOptions}
         selectedShelterId={selectedShelterId}
         onShelterSelect={setSelectedShelterId}

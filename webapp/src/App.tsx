@@ -1549,6 +1549,7 @@ export default function App() {
             lightningCenter={lightningCenter}
             lightningRadiusKm={lightningRadiusKm ?? undefined}
             resumeId={resumeId}
+            onShowHelp={() => setShowHelp(true)}
           />
         )}
 

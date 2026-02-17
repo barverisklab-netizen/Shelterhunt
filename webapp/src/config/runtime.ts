@@ -56,3 +56,8 @@ export const ENABLE_WRONG_GUESS_PENALTY = toBool(
   env.VITE_ENABLE_WRONG_GUESS_PENALTY as string | undefined,
   false,
 );
+
+export const ONE_QUESTION_PER_LOCATION = toBool(
+  env.VITE_ONE_QUESTION_PER_LOCATION as string | undefined,
+  false,
+);

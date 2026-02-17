@@ -139,16 +139,30 @@ export function QuestionDrawer({
   const inRange = !proximityEnabled || hasShelterNearby || hasAnyAmenityNearby;
 
   return (
-    <motion.div
-      className="fixed bottom-0 left-0 right-0 z-40"
-      initial={{ y: "100%" }}
-      animate={{ y: isOpen ? 0 : "calc(100% - 60px)" }}
-      transition={{ type: "spring", damping: 25, stiffness: 300 }}
-      style={{
-        backgroundColor: "#FFF", //FIXME: Use Bauhaus color variable
-      }}
-    >
-      <div className="bg-background border-t-4 border-black">
+    <>
+      <AnimatePresence>
+        {isOpen && (
+          <motion.button
+            type="button"
+            aria-label={t("questions.ask")}
+            className="fixed inset-0 z-30 bg-transparent"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={onToggle}
+          />
+        )}
+      </AnimatePresence>
+      <motion.div
+        className="fixed bottom-0 left-0 right-0 z-40"
+        initial={{ y: "100%" }}
+        animate={{ y: isOpen ? 0 : "calc(100% - 60px)" }}
+        transition={{ type: "spring", damping: 25, stiffness: 300 }}
+        style={{
+          backgroundColor: "#FFF", //FIXME: Use Bauhaus color variable
+        }}
+      >
+        <div className="bg-background border-t-4 border-black">
         {/* Drawer Handle */}
         <button
           onClick={onToggle}
@@ -572,7 +586,8 @@ export function QuestionDrawer({
             </motion.div>
           )}
         </AnimatePresence>
-      </div>
-    </motion.div>
+        </div>
+      </motion.div>
+    </>
   );
 }

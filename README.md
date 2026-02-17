@@ -37,6 +37,7 @@ Optional webapp env toggles:
 - `VITE_ENABLE_PROXIMITY` (default `true`) — set to `false` to bypass proximity gating (and question cooldowns) for local testing
 - `VITE_PROXIMITY_RADIUS_KM` (default `0.25`) — radius (in km) for proximity checks and nearby amenity counts
 - `VITE_ENABLE_WRONG_GUESS_PENALTY` (default `false`) — when `true`, wrong guesses apply timer penalties (legacy mode); when `false`, you still have 3 attempts but the timer is unchanged
+- `VITE_ONE_QUESTION_PER_LOCATION` (default `false`) — when `true`, players can ask only one question at their current location and must move before asking again
 - `VITE_MAPBOX_STYLE_URL` (optional) — override the default Mapbox style
 - `VITE_WS_BASE_URL` (defaults to `VITE_API_BASE_URL` with `ws` scheme) — explicit WebSocket host if it differs from the REST API
 
@@ -90,6 +91,11 @@ Configure `.env` using the template in `api/.env.example` before booting the ser
 - `SESSION_TTL_MINUTES` (default `20`)
 - `SESSION_MAX_PLAYERS` (default `8`)
 - `SESSION_MAX_DISTANCE_KM` (default `2`) — max km radius for auto-selected fallback shelters when the requested shelter is already active
+
+### API troubleshooting
+
+- If your Supabase Postgres instance is paused due to inactivity, the API may still report `/health` as OK while data endpoints like `/shelters` and `/question-attributes` return `500`.
+- In that case, resume the Supabase project (or wait for wake-up), then retry the API requests.
 
 To build/start the compiled server (mirrors production):
 

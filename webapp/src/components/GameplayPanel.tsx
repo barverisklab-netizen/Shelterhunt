@@ -1,5 +1,5 @@
 import { AnimatePresence, motion } from "motion/react";
-import { X, Lightbulb, CheckCircle, XCircle, Sparkles } from "lucide-react";
+import { X, Lightbulb, CheckCircle, XCircle, Sparkles, Info } from "lucide-react";
 import { Button } from "./ui/button";
 import { LanguageToggle } from "./LanguageToggle";
 import {
@@ -27,6 +27,7 @@ interface GameplayPanelProps {
   onApplyWrongClueFilter?: () => void;
   canApplyWrongClueFilter?: boolean;
   onPollProximity?: () => void;
+  onShowHelp?: () => void;
 }
 
 export function GameplayPanel({
@@ -44,6 +45,7 @@ export function GameplayPanel({
   onApplyWrongClueFilter,
   canApplyWrongClueFilter = false,
   onPollProximity,
+  onShowHelp,
 }: GameplayPanelProps) {
   const { t } = useI18n();
   const sortedClues = [...clues].sort((a, b) => (b.timestamp ?? 0) - (a.timestamp ?? 0));
@@ -353,6 +355,17 @@ export function GameplayPanel({
               <div className="mt-2 flex items-center justify-between gap-3">
                 <div className="flex items-center gap-2">
                   <LanguageToggle inline />
+                  {onShowHelp && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="border border-black text-black text-xs font-semibold uppercase tracking-wide hover:bg-neutral-200"
+                      onClick={onShowHelp}
+                    >
+                      <Info className="h-4 w-4" />
+                      {t("help.title", { fallback: "How to Play" })}
+                    </Button>
+                  )}
                   {isMapFilterActive && onClearMapFilter && (
                     <Button
                       type="button"

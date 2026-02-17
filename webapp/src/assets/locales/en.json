@@ -222,6 +222,7 @@
     "askNow": "Ask Now",
     "correct": "Correct clue unlocked!",
     "cooldown": "Question available again in {seconds}s",
+    "onePerLocationLimit": "Move to a new location before asking another question.",
     "incorrect": "That clue was incorrect. Try another guess.", 
     "nearbyAmenity": {
       "selectAmenity": "Amenity type",

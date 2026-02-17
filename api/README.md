@@ -32,6 +32,11 @@ Environment variables of note:
 - `SESSION_MAX_PLAYERS` (default `8`)
 - `SESSION_MAX_DISTANCE_KM` (default `2`) — max km radius for auto-selected fallback shelters when the requested shelter is already in an active race
 
+### Troubleshooting
+
+- Supabase projects can pause due to inactivity. When paused, this API process can still run and return `200` on `/health`, but DB-backed routes (for example `/shelters` and `/question-attributes`) may return `500`.
+- Resume/wake the Supabase project, then retry the request.
+
 ## Database schema
 
 The SQL in `api/sql/001_init_sessions.sql` creates the required `sessions`/`players` tables and `session_state` enum (including a partial unique index so only one active race exists per shelter). Run it once against your Supabase project using their SQL editor or CLI:
