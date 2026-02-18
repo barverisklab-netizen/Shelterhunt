@@ -315,19 +315,23 @@
     "categories": {
       "location": {
         "name": "ハザードエリア",
-        "description": "浸水リスクや周辺環境について聞く"
+        "description": "浸水リスクや周辺環境について聞く",
+        "subtitle": "浸水リスクや周辺環境について聞く"
       },
       "facility": {
         "name": "施設の種類",
-        "description": "避難所の種類や収容人数について聞く"
+        "description": "避難所の種類や収容人数について聞く",
+        "subtitle": "避難所の種類や収容人数について聞く"
       },
       "nearby": {
         "name": "周辺施設",
-        "description": "近隣の施設やサービスについて聞く"
+        "description": "近隣の施設やサービスについて聞く",
+        "subtitle": "近隣の施設やサービスについて聞く"
       },
       "capacity": {
         "name": "収容人数",
-        "description": "避難所の収容人数や備えについて聞く"
+        "description": "避難所の収容人数や備えについて聞く",
+        "subtitle": "避難所の収容人数や備えについて聞く"
       }
     },
     "enterNumber": "数字を入れる",
