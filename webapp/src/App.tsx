@@ -365,9 +365,10 @@ export default function App() {
         : snapshot.timeRemaining;
       const shouldEnd =
         snapshot.timerEnabled && snapshot.gameState === "playing" && nextTimeRemaining <= 0;
+      const nextGameState = shouldEnd ? "ended" : snapshot.gameState;
 
       setResumeId(snapshot.resumeId || crypto.randomUUID());
-      setGameState(shouldEnd ? "ended" : snapshot.gameState);
+      setGameState(nextGameState);
       setGameCode(snapshot.gameCode ?? "");
       setPlayers(snapshot.players ?? defaultPlayers);
       setIsHost(snapshot.isHost ?? false);

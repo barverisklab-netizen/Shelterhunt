@@ -26,6 +26,31 @@
     "hostGame": "Host Multiplayer",
     "howToPlay": "How to Play"
   },
+  "tutorial": {
+    "title": "Quick Tutorial",
+    "progress": "Step {current} of {total}",
+    "skip": "Skip",
+    "back": "Back",
+    "next": "Next",
+    "start": "Start Game",
+    "slides": {
+      "one": {
+        "title": "Move and explore",
+        "body": "Walk around to update your position. You unlock better clues when you move.",
+        "imageAlt": "Guide mascot introducing map exploration"
+      },
+      "two": {
+        "title": "Ask questions nearby",
+        "body": "Get close to shelters and nearby facilities to unlock location-based questions.",
+        "imageAlt": "Mascot showing nearby question prompts"
+      },
+      "three": {
+        "title": "Use clues to win",
+        "body": "Combine correct and wrong clues, then make your best shelter guess before time runs out.",
+        "imageAlt": "Mascot racing toward the final shelter"
+      }
+    }
+  },
   "footer": {
     "madeBy": "Made by",
     "support": "Support from IHI Corporation"
