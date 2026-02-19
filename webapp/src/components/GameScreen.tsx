@@ -75,6 +75,13 @@ interface GameScreenProps {
   gameMode?: "lightning" | "citywide" | null;
   lightningCenter?: { lat: number; lng: number } | null;
   lightningRadiusKm?: number;
+  otherPlayerLocations?: {
+    userId: string;
+    name: string;
+    lat: number;
+    lng: number;
+    isStale: boolean;
+  }[];
   resumeId?: string;
   onShowHelp?: () => void;
 }
@@ -101,6 +108,7 @@ export function GameScreen({
   gameMode = null,
   lightningCenter = null,
   lightningRadiusKm,
+  otherPlayerLocations = [],
   resumeId,
   onShowHelp,
 }: GameScreenProps) {
@@ -1324,6 +1332,7 @@ export function GameScreen({
         gameMode={gameMode}
         lightningCenter={lightningCenter}
         lightningRadiusKm={lightningRadiusKm ?? LIGHTNING_RADIUS_KM}
+        otherPlayerLocations={otherPlayerLocations}
         onAmenitiesWithinRadius={(info) => {
           setNearbyAmenityCounts(info.counts ?? {});
           setNearbyAmenityCategories(info.matchedCategories ?? []);

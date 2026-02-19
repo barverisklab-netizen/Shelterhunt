@@ -68,12 +68,34 @@ The GeoJSON is intentionally kept in a separate data repo (not deployed with the
 | POST   | `/sessions`             | Host creates a new shelter session        |
 | POST   | `/sessions/join`        | Join an existing session by shelter code  |
 | POST   | `/sessions/:id/ready`   | Toggle ready state (auth required)        |
+| POST   | `/sessions/:id/heartbeat`| Presence heartbeat (`204` no response body) |
 | POST   | `/sessions/:id/start`   | Host starts the race                      |
 | GET    | `/sessions/:id`         | Fetch lobby snapshot (auth required)      |
 | POST   | `/sessions/:id/finish`  | Mark race finished                        |
 | POST   | `/tasks/expire-sessions`| Cron endpoint to close expired sessions   |
 
 Subscribe to `ws://.../sessions/:id/stream?token=...` using the returned JWT token to receive lobby events (`player_joined`, `ready_updated`, etc.).
+
+### Live location stream (V1)
+
+The same WebSocket session stream is used for multiplayer player locations.
+
+Behavior:
+
+- Location sharing is active only when the session is in `racing` state.
+- Clients send `location_update` every 5 seconds with `{ lat, lng }`.
+- Server rounds coordinates to a 50m grid before broadcast.
+- Because of 50m rounding, sub-50m movement may not produce a visible marker change.
+- Server emits:
+  - `player_location_updated` (single player update)
+  - `player_locations_snapshot` (latest known locations on connect)
+  - `player_location_removed` (player leaves/disconnects)
+
+Notes:
+
+- Location state is held in memory in `SessionHub` (not persisted in Postgres).
+- Clients treat location entries as stale after 1 minute without update.
+- `POST /sessions/:id/heartbeat` intentionally returns `204 No Content`; this updates `players.last_seen` only.
 
 ## Deployment (Render)
 

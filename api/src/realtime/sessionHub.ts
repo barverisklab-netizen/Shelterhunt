@@ -6,8 +6,16 @@ export interface SessionEvent {
   payload: Record<string, unknown>;
 }
 
+export interface SessionPlayerLocation {
+  user_id: string;
+  lat: number;
+  lng: number;
+  updated_at: number;
+}
+
 export class SessionHub {
   private rooms = new Map<string, Set<WebSocket>>();
+  private playerLocations = new Map<string, Map<string, SessionPlayerLocation>>();
 
   subscribe(sessionId: string, socket: WebSocket) {
     const sockets = this.rooms.get(sessionId) ?? new Set<WebSocket>();
@@ -59,6 +67,32 @@ export class SessionHub {
       }
     }
     this.rooms.delete(sessionId);
+    this.playerLocations.delete(sessionId);
     logger.info({ sessionId }, "Closed session connections");
+  }
+
+  upsertPlayerLocation(sessionId: string, location: SessionPlayerLocation) {
+    const roomLocations = this.playerLocations.get(sessionId) ?? new Map<string, SessionPlayerLocation>();
+    roomLocations.set(location.user_id, location);
+    this.playerLocations.set(sessionId, roomLocations);
+  }
+
+  removePlayerLocation(sessionId: string, userId: string) {
+    const roomLocations = this.playerLocations.get(sessionId);
+    if (!roomLocations) return;
+    roomLocations.delete(userId);
+    if (!roomLocations.size) {
+      this.playerLocations.delete(sessionId);
+    }
+  }
+
+  getPlayerLocations(sessionId: string): SessionPlayerLocation[] {
+    const roomLocations = this.playerLocations.get(sessionId);
+    if (!roomLocations) return [];
+    return Array.from(roomLocations.values());
+  }
+
+  clearPlayerLocations(sessionId: string) {
+    this.playerLocations.delete(sessionId);
   }
 }

@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { IntroScreen } from "./components/IntroScreen";
 import { OnboardingScreen } from "./components/OnboardingScreen";
 import { SoloModeScreen } from "./components/SoloModeScreen";
@@ -71,6 +71,9 @@ const GAME_SNAPSHOT_KEY = "shelterhunt.gameSnapshot.v1";
 const GAMEPLAY_SNAPSHOT_KEY = "shelterhunt.gameplaySnapshot.v1";
 const GAME_SNAPSHOT_VERSION = 1;
 const RESUME_GRACE_MS = 10 * 60 * 1000;
+const MULTIPLAYER_LOCATION_UPDATE_MS = 5_000;
+const MULTIPLAYER_LOCATION_STALE_MS = 60_000;
+const MULTIPLAYER_LOCATION_ROUNDING_METERS = 50;
 
 type SessionRole = "host" | "player";
 
@@ -81,6 +84,13 @@ interface MultiplayerSessionContext {
   userId: string;
   role: SessionRole;
   shelterCode: string;
+}
+
+interface MultiplayerPlayerLocation {
+  userId: string;
+  lat: number;
+  lng: number;
+  updatedAt: number;
 }
 
 interface GameSnapshot {
@@ -122,6 +132,27 @@ const mapSessionPlayersToUI = (
       (record.user_id === hostId ? "Host" : `Player ${index + 1}`),
     ready: record.ready,
   }));
+};
+
+const isDefaultStartLocation = (location: { lat: number; lng: number }) => {
+  return (
+    Math.abs(location.lat - defaultCityContext.mapConfig.startLocation.lat) < 1e-6 &&
+    Math.abs(location.lng - defaultCityContext.mapConfig.startLocation.lng) < 1e-6
+  );
+};
+
+const roundLocationToGrid = (location: { lat: number; lng: number }, meters = MULTIPLAYER_LOCATION_ROUNDING_METERS) => {
+  const metersPerLatDegree = 111_320;
+  const safeLatCos = Math.max(0.000001, Math.cos((location.lat * Math.PI) / 180));
+  const metersPerLngDegree = metersPerLatDegree * safeLatCos;
+
+  const lat = Math.round((location.lat * metersPerLatDegree) / meters) * (meters / metersPerLatDegree);
+  const lng = Math.round((location.lng * metersPerLngDegree) / meters) * (meters / metersPerLngDegree);
+
+  return {
+    lat: Number(lat.toFixed(6)),
+    lng: Number(lng.toFixed(6)),
+  };
 };
 
 const buildLocalDesignatedShelters = async (
@@ -226,6 +257,12 @@ export default function App() {
   const [sessionContext, setSessionContext] = useState<MultiplayerSessionContext | null>(null);
   const sessionSocketRef = useRef<WebSocket | null>(null);
   const [socketReconnectKey, setSocketReconnectKey] = useState(0);
+  const latestPlayerLocationRef = useRef(playerLocation);
+  const locationBroadcastInFlightRef = useRef(false);
+  const [multiplayerPlayerLocations, setMultiplayerPlayerLocations] = useState<
+    Record<string, MultiplayerPlayerLocation>
+  >({});
+  const [locationClockTick, setLocationClockTick] = useState(0);
   const [sessionHostId, setSessionHostId] = useState<string | null>(null);
   const [currentShelter, setCurrentShelter] = useState<Shelter | null>(null);
   const [joinCodeScreenOpen, setJoinCodeScreenOpen] = useState(false);
@@ -240,6 +277,42 @@ export default function App() {
     : profileName || defaultSoloName;
   const currentSessionUserId = sessionContext?.userId ?? currentUserId;
   const restoredFromSnapshotRef = useRef(false);
+
+  useEffect(() => {
+    latestPlayerLocationRef.current = playerLocation;
+  }, [playerLocation.lat, playerLocation.lng]);
+
+  useEffect(() => {
+    if (!sessionContext || gameState !== "playing") {
+      return;
+    }
+    const interval = setInterval(() => {
+      setLocationClockTick((tick) => tick + 1);
+    }, 15_000);
+    return () => clearInterval(interval);
+  }, [gameState, sessionContext]);
+
+  const otherPlayerLocations = useMemo(() => {
+    if (!sessionContext || gameState !== "playing") {
+      return [];
+    }
+    const now = Date.now();
+    void locationClockTick;
+    return Object.values(multiplayerPlayerLocations)
+      .filter((location) => location.userId !== currentSessionUserId)
+      .map((location) => {
+        const playerName =
+          players.find((player) => player.id === location.userId)?.name ??
+          t("waiting.player", { fallback: "Player" });
+        return {
+          userId: location.userId,
+          name: playerName,
+          lat: location.lat,
+          lng: location.lng,
+          isStale: now - location.updatedAt >= MULTIPLAYER_LOCATION_STALE_MS,
+        };
+      });
+  }, [currentSessionUserId, gameState, multiplayerPlayerLocations, players, sessionContext, t, locationClockTick]);
 
   const handleTimeUp = useCallback(() => {
     setGameState("ended");
@@ -256,6 +329,31 @@ export default function App() {
     setTimerEnabled(enabled);
     setTimerEndsAt(enabled ? Date.now() + seconds * 1000 : null);
   }, []);
+
+  const requestBroadcastLocation = useCallback(
+    () =>
+      new Promise<{ lat: number; lng: number } | null>((resolve) => {
+        if (typeof navigator === "undefined" || !navigator.geolocation) {
+          resolve(null);
+          return;
+        }
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            resolve({
+              lat: position.coords.latitude,
+              lng: position.coords.longitude,
+            });
+          },
+          () => resolve(null),
+          {
+            enableHighAccuracy: false,
+            maximumAge: 5_000,
+            timeout: 8_000,
+          },
+        );
+      }),
+    [],
+  );
 
   const buildGameSnapshot = useCallback(
     (): GameSnapshot => ({
@@ -502,6 +600,7 @@ export default function App() {
     setLockSecretShelter(false);
     setLockShelterOptions(false);
     setRemoteOutcome(null);
+    setMultiplayerPlayerLocations({});
   };
 
   const disconnectSession = useCallback(
@@ -528,6 +627,7 @@ export default function App() {
       setSessionContext(null);
       setCurrentShelter(null);
       setSessionHostId(null);
+      setMultiplayerPlayerLocations({});
     },
     [sessionContext],
   );
@@ -556,6 +656,7 @@ export default function App() {
       setHostShareCode(null);
       setHostSetupModalOpen(false);
       setJoinNameModalOpen(false);
+      setMultiplayerPlayerLocations({});
 
       if (!options?.skipToast) {
         toast.info(
@@ -736,6 +837,7 @@ export default function App() {
     if (!currentShelter) {
       return;
     }
+    setMultiplayerPlayerLocations({});
     setResumeId(crypto.randomUUID());
 
     const label =
@@ -840,6 +942,7 @@ export default function App() {
   const handleSessionEvent = useCallback(
     (message: any) => {
       if (!sessionContext) return;
+      const payload = (message as any)?.payload ?? {};
       switch (message.type) {
         case "player_joined":
         case "ready_updated":
@@ -847,11 +950,59 @@ export default function App() {
           break;
         case "player_left":
         case "player_disconnected":
+          if (payload?.user_id) {
+            setMultiplayerPlayerLocations((previous) => {
+              const next = { ...previous };
+              delete next[String(payload.user_id)];
+              return next;
+            });
+          }
           refreshSessionPlayers(sessionContext.sessionId, sessionContext.token, {
             announceDeparture: true,
-            departedUserId: message.player_id ?? message.user_id,
+            departedUserId: payload.player_id ?? payload.user_id,
           });
           break;
+        case "player_location_removed":
+          if (payload?.user_id) {
+            setMultiplayerPlayerLocations((previous) => {
+              const next = { ...previous };
+              delete next[String(payload.user_id)];
+              return next;
+            });
+          }
+          break;
+        case "player_locations_snapshot": {
+          const locations = Array.isArray(payload?.locations) ? payload.locations : [];
+          setMultiplayerPlayerLocations(() => {
+            const next: Record<string, MultiplayerPlayerLocation> = {};
+            locations.forEach((entry) => {
+              const userId = typeof entry?.user_id === "string" ? entry.user_id : null;
+              const lat = typeof entry?.lat === "number" ? entry.lat : NaN;
+              const lng = typeof entry?.lng === "number" ? entry.lng : NaN;
+              const updatedAt =
+                typeof entry?.updated_at === "number" ? entry.updated_at : Date.now();
+              if (!userId || !Number.isFinite(lat) || !Number.isFinite(lng)) return;
+              next[userId] = { userId, lat, lng, updatedAt };
+            });
+            return next;
+          });
+          break;
+        }
+        case "player_location_updated": {
+          const userId = typeof payload?.user_id === "string" ? payload.user_id : null;
+          const lat = typeof payload?.lat === "number" ? payload.lat : NaN;
+          const lng = typeof payload?.lng === "number" ? payload.lng : NaN;
+          const updatedAt =
+            typeof payload?.updated_at === "number" ? payload.updated_at : Date.now();
+          if (!userId || !Number.isFinite(lat) || !Number.isFinite(lng)) {
+            break;
+          }
+          setMultiplayerPlayerLocations((previous) => ({
+            ...previous,
+            [userId]: { userId, lat, lng, updatedAt },
+          }));
+          break;
+        }
         case "session_closed":
           toast.error(
             t("app.toasts.hostLeft", {
@@ -867,7 +1018,6 @@ export default function App() {
           beginMultiplayerRace();
           break;
         case "race_finished": {
-          const payload = (message as any)?.payload ?? {};
           const winner = payload.winner ?? {};
           console.log("[Multiplayer] race_finished event", payload);
           const winnerName =
@@ -929,6 +1079,70 @@ export default function App() {
       socket.close();
     };
   }, [handleSessionEvent, sessionContext, socketReconnectKey]);
+
+  useEffect(() => {
+    if (!sessionContext || gameState !== "playing") {
+      return undefined;
+    }
+
+    const sendLocationUpdate = async () => {
+      if (locationBroadcastInFlightRef.current) {
+        return;
+      }
+      const socket = sessionSocketRef.current;
+      if (!socket || socket.readyState !== WebSocket.OPEN) {
+        return;
+      }
+
+      locationBroadcastInFlightRef.current = true;
+      try {
+        let location = latestPlayerLocationRef.current;
+        if (!Number.isFinite(location.lat) || !Number.isFinite(location.lng)) {
+          return;
+        }
+
+        const freshLocation = await requestBroadcastLocation();
+        if (
+          freshLocation &&
+          Number.isFinite(freshLocation.lat) &&
+          Number.isFinite(freshLocation.lng)
+        ) {
+          const previousLocation = latestPlayerLocationRef.current;
+          location = freshLocation;
+          latestPlayerLocationRef.current = freshLocation;
+          if (
+            Math.abs(previousLocation.lat - freshLocation.lat) > 1e-6 ||
+            Math.abs(previousLocation.lng - freshLocation.lng) > 1e-6
+          ) {
+            setPlayerLocation(freshLocation);
+          }
+        }
+
+        if (isDefaultStartLocation(location)) {
+          return;
+        }
+
+        const rounded = roundLocationToGrid(location);
+        socket.send(
+          JSON.stringify({
+            type: "location_update",
+            payload: {
+              lat: rounded.lat,
+              lng: rounded.lng,
+            },
+          }),
+        );
+      } finally {
+        locationBroadcastInFlightRef.current = false;
+      }
+    };
+
+    void sendLocationUpdate();
+    const interval = setInterval(() => {
+      void sendLocationUpdate();
+    }, MULTIPLAYER_LOCATION_UPDATE_MS);
+    return () => clearInterval(interval);
+  }, [gameState, requestBroadcastLocation, sessionContext]);
 
   useEffect(() => {
     if (!sessionContext) {
@@ -1549,6 +1763,7 @@ export default function App() {
             gameMode={gameMode}
             lightningCenter={lightningCenter}
             lightningRadiusKm={lightningRadiusKm ?? undefined}
+            otherPlayerLocations={otherPlayerLocations}
             resumeId={resumeId}
             onShowHelp={() => setShowHelp(true)}
           />

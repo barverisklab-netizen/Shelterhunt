@@ -6,6 +6,7 @@ import {
   finishSession,
   getSessionWithPlayers,
   heartbeatPlayer,
+  isSessionRacing,
   joinSession,
   leaveSession,
   startSession,
@@ -50,6 +51,14 @@ const streamQuerySchema = z.object({
   token: z.string().optional(),
 });
 
+const locationUpdateSchema = z.object({
+  type: z.literal("location_update"),
+  payload: z.object({
+    lat: z.number(),
+    lng: z.number(),
+  }),
+});
+
 const paramsSchema = z.object({
   id: z.string().uuid(),
 });
@@ -61,6 +70,21 @@ function ensureSessionAccess(tokenSessionId: string, requestedId: string) {
 }
 
 const TOKEN_TTL = "3h";
+const LOCATION_ROUNDING_METERS = 50;
+
+const roundToNearestGrid = (lat: number, lng: number, meters = LOCATION_ROUNDING_METERS) => {
+  const metersPerLatDegree = 111_320;
+  const safeLatCos = Math.max(0.000001, Math.cos((lat * Math.PI) / 180));
+  const metersPerLngDegree = metersPerLatDegree * safeLatCos;
+
+  const latRounded = Math.round((lat * metersPerLatDegree) / meters) * (meters / metersPerLatDegree);
+  const lngRounded = Math.round((lng * metersPerLngDegree) / meters) * (meters / metersPerLngDegree);
+
+  return {
+    lat: Number(latRounded.toFixed(6)),
+    lng: Number(lngRounded.toFixed(6)),
+  };
+};
 
 const sessionRoutes: FastifyPluginAsync<{ sessionHub: SessionHub }> = async (fastify, { sessionHub }) => {
   fastify.post("/sessions", async (request, reply) => {
@@ -148,6 +172,7 @@ const sessionRoutes: FastifyPluginAsync<{ sessionHub: SessionHub }> = async (fas
       }
 
       const session = await startSession(params.id, request.user.userId);
+      sessionHub.clearPlayerLocations(params.id);
 
       sessionHub.broadcast(params.id, {
         type: "race_started",
@@ -215,6 +240,11 @@ const sessionRoutes: FastifyPluginAsync<{ sessionHub: SessionHub }> = async (fas
           player_id: result.departedPlayer.id,
         },
       });
+      sessionHub.removePlayerLocation(params.id, request.user.userId);
+      sessionHub.broadcast(params.id, {
+        type: "player_location_removed",
+        payload: { user_id: request.user.userId },
+      });
 
       if (result.promotedHostId) {
         sessionHub.broadcast(params.id, {
@@ -272,6 +302,73 @@ const sessionRoutes: FastifyPluginAsync<{ sessionHub: SessionHub }> = async (fas
             playerId: payload.playerId,
           }),
         );
+
+        const knownLocations = sessionHub.getPlayerLocations(params.id);
+        if (knownLocations.length) {
+          socket.send(
+            JSON.stringify({
+              type: "player_locations_snapshot",
+              sessionId: params.id,
+              timestamp: new Date().toISOString(),
+              payload: { locations: knownLocations },
+            }),
+          );
+        }
+
+        socket.on("message", async (rawMessage) => {
+          const rawText =
+            typeof rawMessage === "string"
+              ? rawMessage
+              : Buffer.isBuffer(rawMessage)
+                ? rawMessage.toString("utf8")
+                : Array.isArray(rawMessage)
+                  ? Buffer.concat(rawMessage).toString("utf8")
+                  : String(rawMessage);
+
+          let parsed: unknown;
+          try {
+            parsed = JSON.parse(rawText);
+          } catch {
+            return;
+          }
+
+          const parsedUpdate = locationUpdateSchema.safeParse(parsed);
+          if (!parsedUpdate.success) {
+            return;
+          }
+
+          const { lat, lng } = parsedUpdate.data.payload;
+          if (
+            !Number.isFinite(lat) ||
+            !Number.isFinite(lng) ||
+            Math.abs(lat) > 90 ||
+            Math.abs(lng) > 180
+          ) {
+            return;
+          }
+
+          try {
+            const racing = await isSessionRacing(params.id);
+            if (!racing) {
+              return;
+            }
+
+            const rounded = roundToNearestGrid(lat, lng);
+            const locationPayload = {
+              user_id: payload.userId,
+              lat: rounded.lat,
+              lng: rounded.lng,
+              updated_at: Date.now(),
+            };
+            sessionHub.upsertPlayerLocation(params.id, locationPayload);
+            sessionHub.broadcast(params.id, {
+              type: "player_location_updated",
+              payload: locationPayload,
+            });
+          } catch (error) {
+            request.log.warn({ err: error }, "Failed to process location update");
+          }
+        });
       } catch (error) {
         socket.close(4403, "Invalid token");
       }
