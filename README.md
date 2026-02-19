@@ -136,6 +136,7 @@ The importer assigns a random six-character `share_code` to every shelter and up
 | POST   | `/sessions`              | Host creates a new shelter session        |
 | POST   | `/sessions/join`         | Join an existing session by shelter code  |
 | POST   | `/sessions/:id/ready`    | Toggle ready state (auth required)        |
+| POST   | `/sessions/:id/heartbeat`| Presence heartbeat (`204` no response body) |
 | POST   | `/sessions/:id/start`    | Host starts the race                      |
 | GET    | `/sessions/:id`          | Fetch lobby snapshot (auth required)      |
 | POST   | `/sessions/:id/finish`   | Mark race finished                        |
@@ -144,6 +145,27 @@ The importer assigns a random six-character `share_code` to every shelter and up
 | GET    | `/question-attributes`   | List question attribute metadata (kind/options) |
 
 Subscribe to `ws://…/sessions/:id/stream?token=…` using the returned JWT token to receive lobby events (`player_joined`, `ready_updated`, etc.).
+
+### Multiplayer live locations (V1)
+
+- Live player markers are shown only after the race starts (`state = racing`).
+- Each client requests a fresh geolocation fix and sends `location_update` every 5 seconds over the existing session WebSocket.
+- Server rounds incoming coordinates to a 50m grid before broadcasting to all players in the same session.
+- Clients render remote players (not self) as labeled map markers and mark them stale after 1 minute without update.
+- If a player has no valid location update, no marker is shown for that player.
+- Small movement under the 50m grid can appear unchanged on the map until the player crosses into the next rounded cell.
+
+WebSocket events used in V1:
+
+- Client to server: `location_update` with `{ lat, lng }`
+- Server to clients:
+  - `player_location_updated`
+  - `player_locations_snapshot` (sent on stream connect)
+  - `player_location_removed` (on leave/disconnect)
+
+Current limitation:
+
+- Location state is in-memory in the API process (no DB persistence). On API restart, live markers rebuild from new client updates.
 
 ## Deployment
 
