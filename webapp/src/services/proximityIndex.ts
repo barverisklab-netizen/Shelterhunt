@@ -19,6 +19,8 @@ type AmenityFeature = {
 
 type NearbyShelterFeature = AmenityFeature & { distanceKm: number };
 
+const DEFAULT_GEOJSON_SOURCES = [landmarkGeoJsonRaw, supportGeoJsonRaw, sheltersGeoJsonRaw];
+
 const isFiniteNumber = (value: unknown): value is number =>
   typeof value === "number" && Number.isFinite(value);
 
@@ -48,6 +50,7 @@ class ProximityIndex {
   private bucketSizeDeg = 0.005; // ~550m at this latitude
   private buckets = new Map<string, AmenityFeature[]>();
   private loadPromise: Promise<void> | null = null;
+  private rawSources: string[] = DEFAULT_GEOJSON_SOURCES;
 
   private bucketKey(lat: number, lng: number) {
     const latBucket = Math.floor(lat / this.bucketSizeDeg);
@@ -107,14 +110,33 @@ class ProximityIndex {
     });
   }
 
+  private resetBuckets() {
+    this.buckets.clear();
+    this.loadPromise = null;
+  }
+
   private async ensureLoaded() {
     if (this.loadPromise) return this.loadPromise;
     this.loadPromise = Promise.resolve().then(() => {
-      this.ingestCollection(parseGeoJson(landmarkGeoJsonRaw));
-      this.ingestCollection(parseGeoJson(supportGeoJsonRaw));
-      this.ingestCollection(parseGeoJson(sheltersGeoJsonRaw));
+      this.rawSources.forEach((raw) => {
+        this.ingestCollection(parseGeoJson(raw));
+      });
     });
     return this.loadPromise;
+  }
+
+  resetForTests() {
+    this.resetBuckets();
+  }
+
+  setRawSourcesForTests(rawSources: string[]) {
+    this.rawSources = [...rawSources];
+    this.resetBuckets();
+  }
+
+  restoreDefaultSourcesForTests() {
+    this.rawSources = DEFAULT_GEOJSON_SOURCES;
+    this.resetBuckets();
   }
 
   async queryWithin(
@@ -159,6 +181,12 @@ class ProximityIndex {
 }
 
 export const proximityIndex = new ProximityIndex();
+export const __setProximityIndexRawSourcesForTests = (rawSources: string[]) => {
+  proximityIndex.setRawSourcesForTests(rawSources);
+};
+export const __resetProximityIndexForTests = () => {
+  proximityIndex.restoreDefaultSourcesForTests();
+};
 export const SHELTER_CATEGORY_MAP: Record<string, string> = {
   "Designated Evacuation Center": "shelter",
   "Voluntary Evacuation Center": "shelter",
