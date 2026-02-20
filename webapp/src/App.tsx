@@ -277,6 +277,8 @@ export default function App() {
     : profileName || defaultSoloName;
   const currentSessionUserId = sessionContext?.userId ?? currentUserId;
   const restoredFromSnapshotRef = useRef(false);
+  const sessionSnapshotRequestSequenceRef = useRef(0);
+  const activeSessionSnapshotRequestRef = useRef<AbortController | null>(null);
 
   useEffect(() => {
     latestPlayerLocationRef.current = playerLocation;
@@ -580,13 +582,26 @@ export default function App() {
     [],
   );
 
+  const invalidateSessionSnapshotRequests = useCallback((reason: string) => {
+    sessionSnapshotRequestSequenceRef.current += 1;
+    if (activeSessionSnapshotRequestRef.current) {
+      activeSessionSnapshotRequestRef.current.abort();
+      activeSessionSnapshotRequestRef.current = null;
+      console.debug("[Multiplayer] Cancelled session snapshot request", {
+        reason,
+        requestSequence: sessionSnapshotRequestSequenceRef.current,
+      });
+    }
+  }, []);
+
   useEffect(() => {
     return () => {
+      invalidateSessionSnapshotRequests("app-unmount");
       if (sessionSocketRef.current) {
         sessionSocketRef.current.close();
       }
     };
-  }, []);
+  }, [invalidateSessionSnapshotRequests]);
 
   const resetGameContext = () => {
     clearGameSnapshots();
@@ -605,6 +620,7 @@ export default function App() {
 
   const disconnectSession = useCallback(
     async (options?: { finish?: boolean }) => {
+      invalidateSessionSnapshotRequests("disconnect-session");
       if (sessionContext) {
         if (options?.finish && sessionContext.role === "host") {
           try {
@@ -629,7 +645,7 @@ export default function App() {
       setSessionHostId(null);
       setMultiplayerPlayerLocations({});
     },
-    [sessionContext],
+    [invalidateSessionSnapshotRequests, sessionContext],
   );
 
   const performSessionReset = useCallback(
@@ -674,8 +690,29 @@ export default function App() {
       token: string,
       options?: { announceDeparture?: boolean; departedUserId?: string },
     ) => {
+      const requestSequence = sessionSnapshotRequestSequenceRef.current + 1;
+      sessionSnapshotRequestSequenceRef.current = requestSequence;
+
+      if (activeSessionSnapshotRequestRef.current) {
+        activeSessionSnapshotRequestRef.current.abort();
+      }
+
+      const requestController = new AbortController();
+      activeSessionSnapshotRequestRef.current = requestController;
+
       try {
-        const snapshot = await fetchSessionSnapshot(sessionId, token);
+        const snapshot = await fetchSessionSnapshot(
+          sessionId,
+          token,
+          requestController.signal,
+        );
+        if (requestSequence !== sessionSnapshotRequestSequenceRef.current) {
+          console.debug("[Multiplayer] Ignoring stale session snapshot response", {
+            requestSequence,
+            latestSequence: sessionSnapshotRequestSequenceRef.current,
+          });
+          return;
+        }
         const nextPlayers = mapSessionPlayersToUI(
           snapshot.players,
           snapshot.session.host_id,
@@ -684,6 +721,9 @@ export default function App() {
         let promotedHostId: string | null = null;
 
         setPlayers((previous) => {
+          if (requestSequence !== sessionSnapshotRequestSequenceRef.current) {
+            return previous;
+          }
           const removed = previous.filter(
             (player) => !nextPlayers.some((next) => next.id === player.id),
           );
@@ -745,11 +785,25 @@ export default function App() {
           return nextPlayers;
         });
 
+        if (requestSequence !== sessionSnapshotRequestSequenceRef.current) {
+          return;
+        }
+
         const nextHostId = promotedHostId ?? snapshot.session.host_id;
         setSessionHostId(nextHostId);
         setIsHost(nextHostId === currentUserId);
       } catch (error) {
+        if (requestController.signal.aborted) {
+          return;
+        }
+        if (requestSequence !== sessionSnapshotRequestSequenceRef.current) {
+          return;
+        }
         console.warn("[Multiplayer] Failed to refresh session snapshot:", error);
+      } finally {
+        if (activeSessionSnapshotRequestRef.current === requestController) {
+          activeSessionSnapshotRequestRef.current = null;
+        }
       }
     },
     [currentUserId, gameState, performSessionReset, sessionHostId, t],

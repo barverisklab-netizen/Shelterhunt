@@ -3,11 +3,18 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import process from "node:process";
 
-const apiBase =
-  process.env.DATA_API_BASE_URL?.replace(/\/+$/, "") || "http://localhost:4000";
+const LOCAL_API_HOSTS = new Set(["localhost", "127.0.0.1", "::1"]);
+const apiBase = process.env.DATA_API_BASE_URL?.replace(/\/+$/, "") || "http://localhost:4000";
 const outputPath = path.resolve(
   process.env.OUTPUT_PATH ?? path.join(process.cwd(), "geojson/ihi_shelters.geojson"),
 );
+const apiUrl = new URL(apiBase);
+
+if (apiUrl.protocol !== "https:" && !LOCAL_API_HOSTS.has(apiUrl.hostname.toLowerCase())) {
+  throw new Error(
+    "DATA_API_BASE_URL must use https:// for non-local hosts. Only localhost/loopback may use http://.",
+  );
+}
 
 const toNumber = (value) => {
   const num = typeof value === "number" ? value : Number(value);

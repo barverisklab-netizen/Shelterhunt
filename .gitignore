@@ -49,3 +49,7 @@ data/.env
 data/geojson/*.zip
 data/geojson/*.tar.gz
 data/geojson/*.tmp
+
+# Local planning notes
+codex_plan
+codex_plan.md

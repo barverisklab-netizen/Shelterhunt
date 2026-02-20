@@ -167,9 +167,6 @@ const sessionRoutes: FastifyPluginAsync<{ sessionHub: SessionHub }> = async (fas
     async (request, reply) => {
       const params = paramsSchema.parse(request.params);
       ensureSessionAccess(request.user.sessionId, params.id);
-      if (request.user.role !== "host") {
-        throw new ApiError(403, "Only host can start session");
-      }
 
       const session = await startSession(params.id, request.user.userId);
       sessionHub.clearPlayerLocations(params.id);
@@ -378,7 +375,7 @@ const sessionRoutes: FastifyPluginAsync<{ sessionHub: SessionHub }> = async (fas
   fastify.post("/tasks/expire-sessions", async (request, reply) => {
     const cronKeyHeader = request.headers["x-cron-key"];
     const cronKey = Array.isArray(cronKeyHeader) ? cronKeyHeader[0] : cronKeyHeader;
-    if (cronKey !== env.SUPABASE_SERVICE_ROLE_KEY) {
+    if (cronKey !== env.TASKS_CRON_SECRET) {
       throw new ApiError(401, "Unauthorized cron request");
     }
     const closedSessions = await expireStaleSessions();

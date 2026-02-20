@@ -375,6 +375,7 @@ export async function joinSession({
        where shelter_code = $1
          and state = any($2)
          and expires_at > now()
+       for update
        limit 1`,
       [normalizedCode, ACTIVE_STATES],
     );

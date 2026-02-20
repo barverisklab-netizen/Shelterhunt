@@ -117,10 +117,15 @@ export function finishMultiplayerRace(
   });
 }
 
-export function fetchSessionSnapshot(sessionId: string, token: string) {
+export function fetchSessionSnapshot(
+  sessionId: string,
+  token: string,
+  signal?: AbortSignal,
+) {
   return apiFetch<{ session: Session; players: Player[] }>(`/sessions/${sessionId}`, {
     method: "GET",
     headers: { Authorization: `Bearer ${token}` },
+    signal,
   });
 }
 

@@ -6,6 +6,7 @@ import crypto from "node:crypto";
 import { Client } from "pg";
 
 const databaseUrl = process.env.DATABASE_URL;
+const LOCAL_DB_HOSTS = new Set(["", "localhost", "127.0.0.1", "::1"]);
 const geojsonPath = path.resolve(
   process.env.SHELTER_DATA_PATH ?? path.join(process.cwd(), "geojson/ihi_shelters.geojson"),
 );
@@ -14,6 +15,40 @@ if (!databaseUrl) {
   console.error("[Data] DATABASE_URL is required to import shelters.");
   process.exit(1);
 }
+
+const resolvePgConnection = (connectionString) => {
+  const parsed = new URL(connectionString);
+  const hostname = parsed.hostname.toLowerCase();
+  const isLocalHost = LOCAL_DB_HOSTS.has(hostname);
+  const sslMode = parsed.searchParams.get("sslmode")?.toLowerCase();
+  const sslFlag = parsed.searchParams.get("ssl")?.toLowerCase();
+
+  if (sslMode === "no-verify") {
+    throw new Error(
+      "DATABASE_URL must not use sslmode=no-verify. Use sslmode=require (hosted DB) or sslmode=disable (localhost only).",
+    );
+  }
+
+  if (sslMode === "disable" && !isLocalHost) {
+    throw new Error(
+      "DATABASE_URL sslmode=disable is only allowed for localhost/loopback databases.",
+    );
+  }
+
+  const wantsSslFromMode = Boolean(sslMode && sslMode !== "disable");
+  const wantsSslFromFlag = sslFlag === "1" || sslFlag === "true";
+  const shouldUseSsl = sslMode === "disable" ? false : !isLocalHost || wantsSslFromMode || wantsSslFromFlag;
+  if (shouldUseSsl) {
+    parsed.searchParams.delete("sslmode");
+    parsed.searchParams.delete("ssl");
+    return {
+      connectionString: parsed.toString(),
+      ssl: { rejectUnauthorized: true },
+    };
+  }
+
+  return { connectionString: parsed.toString(), ssl: undefined };
+};
 
 const normalizeText = (value) => {
   if (typeof value !== "string") {
@@ -181,7 +216,8 @@ const insertShelters = async (rows) => {
     return;
   }
 
-  const client = new Client({ connectionString: databaseUrl });
+  const connection = resolvePgConnection(databaseUrl);
+  const client = new Client(connection);
   await client.connect();
   try {
     await client.query("BEGIN");
