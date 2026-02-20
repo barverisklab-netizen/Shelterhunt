@@ -11,7 +11,7 @@ This service powers the multiplayer MVP described in the work plan. It exposes R
 
 ## Getting started
 
-1. Copy `.env.example` to `.env` and fill in Supabase credentials plus a `JWT_SECRET`.
+1. Copy `.env.example` to `.env` and fill in `DATABASE_URL`, `JWT_SECRET`, and `TASKS_CRON_SECRET`.
 2. Install dependencies:
 
    ```bash
@@ -28,6 +28,8 @@ This service powers the multiplayer MVP described in the work plan. It exposes R
 
 Environment variables of note:
 
+- `TASKS_CRON_SECRET` — shared secret expected in `x-cron-key` for `POST /tasks/expire-sessions`
+- `DB_SSL_ALLOW_SELF_SIGNED` (default `false`) — set to `true` only for local development environments that intercept TLS with a custom/self-signed certificate chain
 - `SESSION_TTL_MINUTES` (default `20`)
 - `SESSION_MAX_PLAYERS` (default `8`)
 - `SESSION_MAX_DISTANCE_KM` (default `2`) — max km radius for auto-selected fallback shelters when the requested shelter is already in an active race
@@ -100,9 +102,9 @@ Notes:
 ## Deployment (Render)
 
 1. Create a Render Web Service, point to this `api` folder.
-2. Set environment variables (`DATABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `JWT_SECRET`, `SESSION_TTL_MINUTES`, `SESSION_MAX_PLAYERS`, `SESSION_MAX_DISTANCE_KM`).
+2. Set environment variables (`DATABASE_URL`, `JWT_SECRET`, `TASKS_CRON_SECRET`, `SESSION_TTL_MINUTES`, `SESSION_MAX_PLAYERS`, `SESSION_MAX_DISTANCE_KM`).
 3. Configure a deploy hook or Docker image (`render.yaml` optional) and ensure migrations are run (via Supabase SQL).
-4. Optionally create a Render cron job hitting `/tasks/expire-sessions` with header `x-cron-key: <SUPABASE_SERVICE_ROLE_KEY>` for cleanup.
+4. Optionally create a Render cron job hitting `/tasks/expire-sessions` with header `x-cron-key: <TASKS_CRON_SECRET>` for cleanup.
 
 ## Testing
 

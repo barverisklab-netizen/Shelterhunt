@@ -1,13 +1,17 @@
 import { config as loadEnv } from "dotenv";
+import { dirname, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 import { z } from "zod";
 
-loadEnv();
+const configDir = dirname(fileURLToPath(import.meta.url));
+loadEnv({ path: resolve(configDir, "../.env") });
 
 const envSchema = z.object({
   DATABASE_URL: z.string().url(),
-  SUPABASE_SERVICE_ROLE_KEY: z.string().min(10),
+  TASKS_CRON_SECRET: z.string().min(10),
   JWT_SECRET: z.string().min(10),
   PORT: z.coerce.number().default(4000),
+  DB_SSL_ALLOW_SELF_SIGNED: z.coerce.boolean().default(false),
   DB_CONNECT_TIMEOUT_MS: z.coerce.number().int().positive().default(5000),
   DB_QUERY_TIMEOUT_MS: z.coerce.number().int().positive().default(10000),
   DB_STATEMENT_TIMEOUT_MS: z.coerce.number().int().positive().default(10000),
@@ -19,9 +23,10 @@ const envSchema = z.object({
 
 export const env = envSchema.parse({
   DATABASE_URL: process.env.DATABASE_URL,
-  SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY,
+  TASKS_CRON_SECRET: process.env.TASKS_CRON_SECRET,
   JWT_SECRET: process.env.JWT_SECRET,
   PORT: process.env.PORT,
+  DB_SSL_ALLOW_SELF_SIGNED: process.env.DB_SSL_ALLOW_SELF_SIGNED,
   DB_CONNECT_TIMEOUT_MS: process.env.DB_CONNECT_TIMEOUT_MS,
   DB_QUERY_TIMEOUT_MS: process.env.DB_QUERY_TIMEOUT_MS,
   DB_STATEMENT_TIMEOUT_MS: process.env.DB_STATEMENT_TIMEOUT_MS,
@@ -48,6 +53,7 @@ export const sessionDefaults = {
 };
 
 export const dbDefaults = {
+  sslAllowSelfSigned: env.DB_SSL_ALLOW_SELF_SIGNED,
   connectTimeoutMs: env.DB_CONNECT_TIMEOUT_MS,
   queryTimeoutMs: env.DB_QUERY_TIMEOUT_MS,
   statementTimeoutMs: env.DB_STATEMENT_TIMEOUT_MS,

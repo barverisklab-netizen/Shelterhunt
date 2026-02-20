@@ -378,7 +378,7 @@ const sessionRoutes: FastifyPluginAsync<{ sessionHub: SessionHub }> = async (fas
   fastify.post("/tasks/expire-sessions", async (request, reply) => {
     const cronKeyHeader = request.headers["x-cron-key"];
     const cronKey = Array.isArray(cronKeyHeader) ? cronKeyHeader[0] : cronKeyHeader;
-    if (cronKey !== env.SUPABASE_SERVICE_ROLE_KEY) {
+    if (cronKey !== env.TASKS_CRON_SECRET) {
       throw new ApiError(401, "Unauthorized cron request");
     }
     const closedSessions = await expireStaleSessions();
