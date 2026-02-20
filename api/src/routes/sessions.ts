@@ -167,9 +167,6 @@ const sessionRoutes: FastifyPluginAsync<{ sessionHub: SessionHub }> = async (fas
     async (request, reply) => {
       const params = paramsSchema.parse(request.params);
       ensureSessionAccess(request.user.sessionId, params.id);
-      if (request.user.role !== "host") {
-        throw new ApiError(403, "Only host can start session");
-      }
 
       const session = await startSession(params.id, request.user.userId);
       sessionHub.clearPlayerLocations(params.id);
