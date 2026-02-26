@@ -6,6 +6,7 @@ import { GameplayPanel } from './GameplayPanel';
 import { GuessConfirmScreen } from './GuessConfirmScreen';
 import { ShelterVictoryScreen } from './ShelterVictoryScreen';
 import { ShelterPenaltyScreen } from './ShelterPenaltyScreen';
+import { TutorialCarousel } from "./TutorialCarousel";
 import { POI, Question, Clue, QuestionAttribute } from "@/types/game";
 import { defaultCityContext } from '../data/cityContext';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -74,6 +75,13 @@ interface GameScreenProps {
   gameMode?: "lightning" | "citywide" | null;
   lightningCenter?: { lat: number; lng: number } | null;
   lightningRadiusKm?: number;
+  otherPlayerLocations?: {
+    userId: string;
+    name: string;
+    lat: number;
+    lng: number;
+    isStale: boolean;
+  }[];
   resumeId?: string;
   onShowHelp?: () => void;
 }
@@ -100,6 +108,7 @@ export function GameScreen({
   gameMode = null,
   lightningCenter = null,
   lightningRadiusKm,
+  otherPlayerLocations = [],
   resumeId,
   onShowHelp,
 }: GameScreenProps) {
@@ -131,6 +140,7 @@ export function GameScreen({
   const [nearbyAmenityCategories, setNearbyAmenityCategories] = useState<string[]>([]);
   const [solvedNearbyAmenityKeys, setSolvedNearbyAmenityKeys] = useState<string[]>([]);
   const [nearbyShelterName, setNearbyShelterName] = useState<string | null>(null);
+  const [tutorialOpen, setTutorialOpen] = useState(true);
   const [, setCooldownTick] = useState(0);
   const [questionCooldowns, setQuestionCooldowns] = useState<Record<string, number>>({});
   const [lastQuestionLocationKey, setLastQuestionLocationKey] = useState<string | null>(null);
@@ -1378,8 +1388,15 @@ export function GameScreen({
     setMeasureTrigger((prev) => prev + 1);
   };
 
+  useEffect(() => {
+    setTutorialOpen(true);
+  }, [resumeId]);
+
   return (
     <div className="fixed inset-0 flex flex-col bg-neutral-950">
+      {tutorialOpen && (
+        <TutorialCarousel onComplete={() => setTutorialOpen(false)} />
+      )}
       {/* Top Bar */}
       <motion.div
         className="bg-background text-neutral-900 p-4 border-b border-neutral-400"
@@ -1429,6 +1446,7 @@ export function GameScreen({
         gameMode={gameMode}
         lightningCenter={lightningCenter}
         lightningRadiusKm={lightningRadiusKm ?? LIGHTNING_RADIUS_KM}
+        otherPlayerLocations={otherPlayerLocations}
         onAmenitiesWithinRadius={(info) => {
           setNearbyAmenityCounts(info.counts ?? {});
           setNearbyAmenityCategories(info.matchedCategories ?? []);

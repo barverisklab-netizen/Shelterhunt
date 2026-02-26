@@ -11,6 +11,18 @@ This repository contains the Map n' Seek (マップれんぼ) prototype, a brows
 
 Unless noted otherwise, all paths in the sections below are relative to their directory (`webapp/` or `api/`).
 
+## Environment files and secrets
+
+Create local env files from templates:
+
+```bash
+cp webapp/.env.example webapp/.env.local
+cp api/.env.example api/.env
+cp data/.env.example data/.env
+```
+
+Never commit real credentials or tokens. Commit only `*.env.example` files with placeholder values.
+
 ## Webapp (Vite client)
 
 - **Structure**: `src/App.tsx` orchestrates the end-to-end flow (Onboarding → Waiting Room → Gameplay) and injects the default game content from `src/data`.
@@ -27,7 +39,7 @@ npm install
 npm run dev          # Vite dev server
 ```
 
-Create `webapp/.env.local` with at least `VITE_MAPBOX_TOKEN` and point `VITE_API_BASE_URL` at your API deployment. For detailed Mapbox setup guidance, see `src/MAPBOX_SETUP.md`.
+Copy `webapp/.env.example` to `webapp/.env.local`, then set at least `VITE_MAPBOX_TOKEN` and point `VITE_API_BASE_URL` at your API deployment. For detailed Mapbox setup guidance, see `src/MAPBOX_SETUP.md`.
 
 Optional webapp env toggles:
 
@@ -85,9 +97,9 @@ npm install
 npm run dev          # Fastify + TSX watch
 ```
 
-Configure `.env` using the template in `api/.env.example` before booting the service. Key vars:
+Copy `api/.env.example` to `api/.env` before booting the service. Key vars:
 
-- `DATABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `JWT_SECRET`
+- `DATABASE_URL`, `JWT_SECRET`, `TASKS_CRON_SECRET`
 - `SESSION_TTL_MINUTES` (default `20`)
 - `SESSION_MAX_PLAYERS` (default `8`)
 - `SESSION_MAX_DISTANCE_KM` (default `2`) — max km radius for auto-selected fallback shelters when the requested shelter is already active
@@ -136,6 +148,7 @@ The importer assigns a random six-character `share_code` to every shelter and up
 | POST   | `/sessions`              | Host creates a new shelter session        |
 | POST   | `/sessions/join`         | Join an existing session by shelter code  |
 | POST   | `/sessions/:id/ready`    | Toggle ready state (auth required)        |
+| POST   | `/sessions/:id/heartbeat`| Presence heartbeat (`204` no response body) |
 | POST   | `/sessions/:id/start`    | Host starts the race                      |
 | GET    | `/sessions/:id`          | Fetch lobby snapshot (auth required)      |
 | POST   | `/sessions/:id/finish`   | Mark race finished                        |
@@ -144,6 +157,27 @@ The importer assigns a random six-character `share_code` to every shelter and up
 | GET    | `/question-attributes`   | List question attribute metadata (kind/options) |
 
 Subscribe to `ws://…/sessions/:id/stream?token=…` using the returned JWT token to receive lobby events (`player_joined`, `ready_updated`, etc.).
+
+### Multiplayer live locations (V1)
+
+- Live player markers are shown only after the race starts (`state = racing`).
+- Each client requests a fresh geolocation fix and sends `location_update` every 5 seconds over the existing session WebSocket.
+- Server rounds incoming coordinates to a 50m grid before broadcasting to all players in the same session.
+- Clients render remote players (not self) as labeled map markers and mark them stale after 1 minute without update.
+- If a player has no valid location update, no marker is shown for that player.
+- Small movement under the 50m grid can appear unchanged on the map until the player crosses into the next rounded cell.
+
+WebSocket events used in V1:
+
+- Client to server: `location_update` with `{ lat, lng }`
+- Server to clients:
+  - `player_location_updated`
+  - `player_locations_snapshot` (sent on stream connect)
+  - `player_location_removed` (on leave/disconnect)
+
+Current limitation:
+
+- Location state is in-memory in the API process (no DB persistence). On API restart, live markers rebuild from new client updates.
 
 ## Deployment
 

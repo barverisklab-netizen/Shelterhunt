@@ -375,6 +375,7 @@ export async function joinSession({
        where shelter_code = $1
          and state = any($2)
          and expires_at > now()
+       for update
        limit 1`,
       [normalizedCode, ACTIVE_STATES],
     );
@@ -525,6 +526,14 @@ export async function getSessionWithPlayers(sessionId: string): Promise<SessionW
   }
 
   return { session, players: playersResult.rows };
+}
+
+export async function isSessionRacing(sessionId: string): Promise<boolean> {
+  const result = await pool.query<Pick<SessionRecord, "state">>(
+    "select state from public.sessions where id = $1 limit 1",
+    [sessionId],
+  );
+  return result.rows[0]?.state === "racing";
 }
 
 export async function expireStaleSessions(): Promise<string[]> {

@@ -26,6 +26,31 @@
     "hostGame": "Host Multiplayer",
     "howToPlay": "How to Play"
   },
+  "tutorial": {
+    "title": "Quick Tutorial",
+    "progress": "Step {current} of {total}",
+    "skip": "Skip",
+    "back": "Back",
+    "next": "Next",
+    "start": "Start Game",
+    "slides": {
+      "one": {
+        "title": "Move and explore",
+        "body": "Walk around to update your position. You unlock better clues when you move.",
+        "imageAlt": "Guide mascot introducing map exploration"
+      },
+      "two": {
+        "title": "Ask questions nearby",
+        "body": "Get close to shelters and nearby facilities to unlock location-based questions.",
+        "imageAlt": "Mascot showing nearby question prompts"
+      },
+      "three": {
+        "title": "Use clues to win",
+        "body": "Combine correct and wrong clues, then make your best shelter guess before time runs out.",
+        "imageAlt": "Mascot racing toward the final shelter"
+      }
+    }
+  },
   "footer": {
     "madeBy": "Made by",
     "support": "Support from IHI Corporation"
@@ -311,19 +336,23 @@
     "categories": {
       "location": {
         "name": "Location Details",
-        "description": "Clues about surge inundation and environmental factors"
+        "description": "Clues about surge inundation and environmental factors",
+        "subtitle": "Clues about surge inundation and environmental factors"
       },
       "facility": {
         "name": "Facility Information",
-        "description": "Clues about facility type, and capacity"
+        "description": "Clues about facility type, and capacity",
+        "subtitle": "Clues about facility type, and capacity"
       },
       "nearby": {
         "name": "Nearby Amenities",
-        "description": "Clues about facilities and services in the area"
+        "description": "Clues about facilities and services in the area",
+        "subtitle": "Clues about facilities and services in the area"
       },
       "capacity": {
         "name": "Facility Resources",
-        "description": "Clues about facility capacity, and resources"
+        "description": "Clues about facility capacity, and resources",
+        "subtitle": "Clues about facility capacity, and resources"
       }
     },
     "enterNumber": "Enter a number",

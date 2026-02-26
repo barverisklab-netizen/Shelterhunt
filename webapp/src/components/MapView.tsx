@@ -330,6 +330,13 @@ interface MapViewProps {
   gameMode?: "lightning" | "citywide" | null;
   lightningCenter?: { lat: number; lng: number } | null;
   lightningRadiusKm?: number;
+  otherPlayerLocations?: {
+    userId: string;
+    name: string;
+    lat: number;
+    lng: number;
+    isStale: boolean;
+  }[];
   onAmenitiesWithinRadius?: (info: { counts: Record<string, number>; matchedCategories: string[] }) => void;
   amenityQueryTrigger?: number;
   secretShelterCoords?: { lat: number; lng: number } | null;
@@ -367,6 +374,7 @@ export function MapView({
   gameMode,
   lightningCenter,
   lightningRadiusKm = 2,
+  otherPlayerLocations = [],
   onAmenitiesWithinRadius,
   amenityQueryTrigger,
   secretShelterCoords,
@@ -382,6 +390,7 @@ export function MapView({
   const playerMarker = useRef<mapboxgl.Marker | null>(null);
   const geolocateControl = useRef<mapboxgl.GeolocateControl | null>(null);
 const infoPopup = useRef<mapboxgl.Popup | null>(null);
+const otherPlayerMarkersRef = useRef<Record<string, mapboxgl.Marker>>({});
 const hasSelectedShelter = useRef(false);
 const hasEmittedShelterOptions = useRef(false);
 const pendingPoiRefreshRef = useRef<POI[] | null>(null);
@@ -411,6 +420,62 @@ const measureMarkerRef = useRef<mapboxgl.Marker | null>(null);
   const elevationCallbackRef = useRef(onElevationSample);
   const elevationCacheRef = useRef<Map<string, number | null>>(new Map());
   const elevationSampleVersionRef = useRef(0);
+
+  const createOtherPlayerMarkerElement = useCallback(
+    (player: { name: string; isStale: boolean }) => {
+      const wrapper = document.createElement("div");
+      wrapper.style.display = "flex";
+      wrapper.style.flexDirection = "column";
+      wrapper.style.alignItems = "center";
+      wrapper.style.pointerEvents = "none";
+      wrapper.style.opacity = player.isStale ? "0.6" : "1";
+
+      const label = document.createElement("div");
+      label.setAttribute("data-role", "label");
+      label.textContent = player.name;
+      label.style.fontSize = "11px";
+      label.style.fontWeight = "700";
+      label.style.padding = "2px 6px";
+      label.style.marginBottom = "4px";
+      label.style.border = "1px solid #000";
+      label.style.borderRadius = "999px";
+      label.style.background = player.isStale ? "#e5e7eb" : "#ffffff";
+      label.style.color = "#000";
+      label.style.whiteSpace = "nowrap";
+      label.style.maxWidth = "140px";
+      label.style.overflow = "hidden";
+      label.style.textOverflow = "ellipsis";
+
+      const dot = document.createElement("div");
+      dot.setAttribute("data-role", "dot");
+      dot.style.width = "14px";
+      dot.style.height = "14px";
+      dot.style.borderRadius = "999px";
+      dot.style.border = "2px solid #000";
+      dot.style.background = player.isStale ? "#9ca3af" : "#ef4444";
+
+      wrapper.appendChild(label);
+      wrapper.appendChild(dot);
+      return wrapper;
+    },
+    [],
+  );
+
+  const updateOtherPlayerMarkerElement = useCallback(
+    (element: HTMLElement, player: { name: string; isStale: boolean }) => {
+      const label = element.querySelector<HTMLElement>("[data-role='label']");
+      const dot = element.querySelector<HTMLElement>("[data-role='dot']");
+      element.style.opacity = player.isStale ? "0.6" : "1";
+      if (label) {
+        label.textContent = player.name;
+        label.style.background = player.isStale ? "#e5e7eb" : "#ffffff";
+      }
+      if (dot) {
+        dot.style.background = player.isStale ? "#9ca3af" : "#ef4444";
+      }
+    },
+    [],
+  );
 
   // Koto layer visibility state
   const [kotoLayersVisible, setKotoLayersVisible] = useState<
@@ -1641,6 +1706,9 @@ const measureMarkerRef = useRef<mapboxgl.Marker | null>(null);
         if (handleStyleData) {
           map.current.off("styledata", handleStyleData);
         }
+        Object.values(otherPlayerMarkersRef.current).forEach((marker) => marker.remove());
+        otherPlayerMarkersRef.current = {};
+        map.current?.off("styledata", moveAttributionToBottomLeft);
         map.current.remove();
         map.current = null;
         hasSelectedShelter.current = false;
@@ -1692,6 +1760,44 @@ const measureMarkerRef = useRef<mapboxgl.Marker | null>(null);
     if (!mapLoaded) return;
     sampleTerrainElevation();
   }, [elevationSampleTrigger, mapLoaded, sampleTerrainElevation]);
+
+  useEffect(() => {
+    const m = map.current;
+    if (!m) return;
+
+    const nextIds = new Set(otherPlayerLocations.map((player) => player.userId));
+
+    Object.entries(otherPlayerMarkersRef.current).forEach(([userId, marker]) => {
+      if (nextIds.has(userId)) return;
+      marker.remove();
+      delete otherPlayerMarkersRef.current[userId];
+    });
+
+    otherPlayerLocations.forEach((player) => {
+      if (!Number.isFinite(player.lat) || !Number.isFinite(player.lng)) {
+        return;
+      }
+
+      const existingMarker = otherPlayerMarkersRef.current[player.userId];
+      if (existingMarker) {
+        existingMarker.setLngLat([player.lng, player.lat]);
+        updateOtherPlayerMarkerElement(existingMarker.getElement(), player);
+        return;
+      }
+
+      const markerElement = createOtherPlayerMarkerElement(player);
+      otherPlayerMarkersRef.current[player.userId] = new mapboxgl.Marker({
+        element: markerElement,
+        anchor: "bottom",
+      })
+        .setLngLat([player.lng, player.lat])
+        .addTo(m);
+    });
+  }, [
+    createOtherPlayerMarkerElement,
+    otherPlayerLocations,
+    updateOtherPlayerMarkerElement,
+  ]);
 
   useEffect(() => {
     const m = map.current;

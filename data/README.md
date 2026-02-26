@@ -9,7 +9,7 @@ This folder is the scaffold for your separate, version-controlled data repo. It 
 
 ## Scripts
 - `npm run export:api`  
-  Pulls shelters from the API (`DATA_API_BASE_URL`, default `http://localhost:4000`) and writes `geojson/ihi_shelters.geojson`. Override output with `OUTPUT_PATH=...`.
+  Pulls shelters from the API (`DATA_API_BASE_URL`, default `http://localhost:4000`) and writes `geojson/ihi_shelters.geojson`. Non-local API URLs must use `https://`. Override output with `OUTPUT_PATH=...`.
 
 - `npm run seed:db`  
   Imports `geojson/ihi_shelters.geojson` into Postgres via `DATABASE_URL` (Supabase works). Optionally override the source with `SHELTER_DATA_PATH=...`.
@@ -19,34 +19,35 @@ This folder is the scaffold for your separate, version-controlled data repo. It 
 
 ## Environment
 - Export (`scripts/exportFromApi.mjs`):  
-  - `DATA_API_BASE_URL` — API base to pull shelters from (default `http://localhost:4000`).  
+  - `DATA_API_BASE_URL` — API base to pull shelters from (default `http://localhost:4000`; non-local hosts must use `https://`).  
   - `OUTPUT_PATH` — optional; where to write the GeoJSON (default `geojson/ihi_shelters.geojson`).  
   - Node 18+ recommended (uses built-in `fetch`).
 - Import (`scripts/importToSupabase.mjs`):  
-  - `DATABASE_URL` — Postgres/Supabase connection string (required).  
+  - `DATABASE_URL` — Postgres/Supabase connection string (required). Use `sslmode=require` for hosted databases. `sslmode=disable` is allowed only for localhost/loopback DBs. `sslmode=no-verify` is not allowed.  
   - `SHELTER_DATA_PATH` — optional; GeoJSON path (default `geojson/ihi_shelters.geojson`).  
 
 Both scripts load environment variables via `dotenv`, so you can create a local `.env` in `data/` instead of exporting values every time, e.g.:
 ```
-DATABASE_URL=postgres://...
+DATABASE_URL=postgresql://user:password@db.example.com:5432/dbname?sslmode=require
 SHELTER_DATA_PATH=geojson/ihi_shelters.geojson
 DATA_API_BASE_URL=https://your-api.example.com
 OUTPUT_PATH=geojson/ihi_shelters.geojson
 ```
+Local-only DB example (no TLS): `DATABASE_URL=postgresql://postgres:postgres@localhost:5432/shelterhunt?sslmode=disable`.
 See `.env.example` for a template; keep your real `.env` out of git.
 
 ### Two ways to seed the DB with this GeoJSON
 - From the API folder (uses `api/scripts/importShelters.ts`):  
   ```
   cd api
-  DATABASE_URL=postgres://... \
+  DATABASE_URL=postgresql://user:password@db.example.com:5432/dbname?sslmode=require \
   SHELTER_DATA_PATH=../data/geojson/ihi_shelters.geojson \
   npm run seed:shelters
   ```
 - From this data folder (uses `scripts/importToSupabase.mjs`):  
   ```
   cd data
-  DATABASE_URL=postgres://... \
+  DATABASE_URL=postgresql://user:password@db.example.com:5432/dbname?sslmode=require \
   SHELTER_DATA_PATH=geojson/ihi_shelters.geojson \
   npm run seed:db
   ```
