@@ -250,13 +250,15 @@ export function useCityLayers({
                       : "none",
                 } as Record<string, unknown>;
                 if (layout["icon-allow-overlap"] === true) {
-                  layout["icon-ignore-placement"] = true;
+                  // Prevent dense icon stacking at lower zooms.
+                  layout["icon-allow-overlap"] = false;
                 }
                 if (layer.layerType === "symbol") {
                   layout["icon-optional"] = true;
                   layout["text-optional"] = true;
-                  layout["text-allow-overlap"] = true;
-                  layout["text-ignore-placement"] = true;
+                  layout["text-allow-overlap"] = false;
+                  layout["text-ignore-placement"] = false;
+                  layout["icon-ignore-placement"] = false;
                   layout["text-font"] = ["Open Sans Bold", "Arial Unicode MS Bold"];
                 }
                 return layout;

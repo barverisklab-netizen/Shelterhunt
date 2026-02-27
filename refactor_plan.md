@@ -1,236 +1,147 @@
-# Maintainability Refactor Plan
 
-## Goal
-Refactor `webapp` so `App.tsx` and `GameScreen.tsx` become thin coordinators, with domain logic moved into feature hooks/services, while preserving current behavior.
+## Phase 2: GameScreen Segmentation (Parallel-Safe)
 
-## Scope
-- In scope: frontend refactor only (`webapp/src`).
-- Out of scope: backend schema/API changes, gameplay rules redesign, visual redesign.
+### Objective
+Reduce `webapp/src/components/GameScreen.tsx` to a thin orchestration shell by extracting:
+- panel orchestration,
+- question engine,
+- shelter matching/guess flow,
+- clue map filtering,
+- HUD and overlay rendering blocks.
 
-## Monolith Hotspots (Current)
-- `webapp/src/App.tsx`: session lifecycle, socket management, timers, persistence, routing, and UI orchestration are mixed.
-- `webapp/src/components/GameScreen.tsx`: proximity, geolocation, snapshot persistence, question cooldowns, elevation logic, and gameplay UI are mixed.
-- `webapp/src/index.css`: very large global CSS surface area.
+### New Branches
+- `refactor/rf-11-gamescreen-contracts`
+- `refactor/rf-12-panel-coordinator`
+- `refactor/rf-13-question-engine`
+- `refactor/rf-14-shelter-matching`
+- `refactor/rf-15-clue-map-filtering`
+- `refactor/rf-16-gamescreen-ui-blocks`
+- `refactor/rf-17-gamescreen-cutover`
+- `refactor/rf-18-gamescreen-tests`
 
-## Working Model For Multiple Developers
-- Each task has exclusive file ownership.
-- Shared contracts are frozen first.
-- Every PR is behavior-preserving and small.
-- Prefer additive extraction first, then cutover/removal.
-
-## Branch Strategy
-- Base branch: `refactor/maintainable-structure`
-- Short-lived branches per task:
-  - `refactor/rf-01-shared-contracts`
-  - `refactor/rf-02-gameplay-snapshot`
-  - `refactor/rf-03-gameplay-cooldowns`
-  - `refactor/rf-04-gameplay-proximity`
-  - `refactor/rf-05-gameplay-elevation`
-  - `refactor/rf-06-session-timer`
-  - `refactor/rf-07-session-socket`
-  - `refactor/rf-08-app-shell`
-  - `refactor/rf-09-style-scope`
-  - `refactor/rf-10-integration-tests`
-
-## Directory Target
-```text
-webapp/src/
-  app/
-    AppShell.tsx
-  features/
-    gameplay/
-      hooks/
-        useGameplaySnapshot.ts
-        useQuestionCooldowns.ts
-        useProximityAndAmenities.ts
-        useElevation.ts
-      services/
-        gameplaySnapshot.ts
-    session/
-      hooks/
-        useSessionState.ts
-        useSessionTimer.ts
-        useMultiplayerSocket.ts
-        useSnapshotPersistence.ts
-    location/
-      hooks/
-        usePlayerLocation.ts
-        useLocationBroadcast.ts
-  styles/
-    theme.css
-    gameplay.css
-```
-
-## Shared Contract Freeze (Must Be First)
-### [x] RF-01: Define and freeze shared contracts
+### RF-11 Contract Freeze (Must Be First)
+#### [ ] RF-11: Freeze GameScreen extraction contracts
 - Files:
-  - `webapp/src/types/game.ts` (extend with extracted hook input/output types)
-  - `webapp/src/components/GameScreen.tsx` (type-only integration points)
-  - `webapp/src/App.tsx` (type-only integration points)
+  - New: `webapp/src/features/gameplay/types/gameScreen.ts`
+  - Edit: `webapp/src/components/GameScreen.tsx` (type-only usage)
 - Deliverables:
-  - Explicit ownership contract:
-    - Session-owned: `timer`, `wrongGuessCount`, `remoteOutcome`, `resumeId`, `playerLocation`.
-    - Gameplay-owned: clue list, filters, panel state, cooldown map, elevation state.
-  - Typed interfaces for hook boundaries.
-- Depends on: none.
+  - Typed interfaces for:
+    - panel coordinator input/output
+    - question engine input/output
+    - guess resolution input/output
+    - clue filter service input/output
+  - Stable function signatures for extracted hooks/services.
+- Depends on: RF-01.
 - Can run in parallel with: none.
 - Done when:
-  - Hook signatures are agreed and compiled, with no behavior changes.
+  - All new extraction boundaries are represented as explicit types.
+  - No behavior change.
 
-## Parallel Lanes After RF-01
+## Parallel Lanes After RF-11
 
-## Lane A (Gameplay Extraction)
-### [x] RF-02: Extract gameplay snapshot persistence
+### Lane A (Domain Logic Extraction)
+#### [ ] RF-12: Extract panel coordinator hook
 - Files:
-  - New: `webapp/src/features/gameplay/services/gameplaySnapshot.ts`
-  - New: `webapp/src/features/gameplay/hooks/useGameplaySnapshot.ts`
+  - New: `webapp/src/features/gameplay/hooks/usePanelCoordinator.ts`
   - Edit: `webapp/src/components/GameScreen.tsx`
 - Move out:
-  - `GAMEPLAY_SNAPSHOT_KEY`, versioning, save/restore, visibility/pagehide handlers.
-- Depends on: RF-01.
-- Can run in parallel with: RF-06, RF-07, RF-09.
-- Done when:
-  - `GameScreen` no longer directly reads/writes gameplay snapshot storage.
-  - Resume behavior unchanged.
+  - `activePanel`, `drawerOpen`, `cluesOpen`, layer panel open/close signals.
+  - `activatePanel`, `handleLayerPanelButtonClick`, measure/panel interaction rule.
+- Depends on: RF-11.
+- Can run in parallel with: RF-14, RF-15, RF-16.
 
-### [x] RF-03: Extract question cooldown logic
+#### [ ] RF-13: Extract question engine hook
 - Files:
-  - New: `webapp/src/features/gameplay/hooks/useQuestionCooldowns.ts`
+  - New: `webapp/src/features/gameplay/hooks/useQuestionEngine.ts`
+  - New: `webapp/src/features/gameplay/constants/questionAttributes.ts`
   - Edit: `webapp/src/components/GameScreen.tsx`
 - Move out:
-  - Cooldown interval ticker, lock map, cooldown start helper.
-- Depends on: RF-01.
-- Can run in parallel with: RF-02, RF-06, RF-07, RF-09.
-- Done when:
-  - `GameScreen` consumes `lockedQuestionIds`, `questionCooldowns`, `startQuestionCooldown` from hook.
+  - question text/template assembly
+  - question list derivation and one-question-per-location lock logic
+  - `handleAskQuestion` and `handleAskNearbyAmenity`
+- Depends on: RF-11.
+- Can run in parallel with: RF-14, RF-15, RF-16.
 
-### [x] RF-04: Extract proximity + amenities logic
+### Lane B (Matching + Filtering Services)
+#### [ ] RF-14: Extract shelter identity/matching service
 - Files:
-  - New: `webapp/src/features/gameplay/hooks/useProximityAndAmenities.ts`
+  - New: `webapp/src/features/gameplay/services/shelterMatching.ts`
   - Edit: `webapp/src/components/GameScreen.tsx`
 - Move out:
-  - Nearby shelter detection, amenity query triggers, stale location reset, poll helpers.
-- Depends on: RF-01.
-- Can run in parallel with: RF-02, RF-03, RF-06, RF-07, RF-09.
-- Done when:
-  - `GameScreen` only uses returned proximity/amenity state and actions.
+  - normalize/resolve name helpers
+  - option/shelter/POI match helpers
+  - match context builder and overlap checks used in guess resolution
+- Depends on: RF-11.
+- Can run in parallel with: RF-12, RF-13, RF-16.
 
-### [x] RF-05: Extract elevation logic
+#### [ ] RF-15: Extract clue map filtering service
 - Files:
-  - New: `webapp/src/features/gameplay/hooks/useElevation.ts`
+  - New: `webapp/src/features/gameplay/services/clueMapFiltering.ts`
   - Edit: `webapp/src/components/GameScreen.tsx`
 - Move out:
-  - Elevation sample handling and all derived elevation labels/status flags.
-- Depends on: RF-01.
-- Can run in parallel with: RF-02, RF-03, RF-04, RF-06, RF-07, RF-09.
-- Done when:
-  - Elevation badge uses hook outputs only.
+  - filter-by-single-clue flow (currently inline in `GameplayPanel.onFilterByClue`)
+  - apply-wrong-clues flow (`handleApplyWrongClueFilter`)
+  - shared designated-shelter filtering utility path
+- Depends on: RF-11, RF-14.
+- Can run in parallel with: RF-12, RF-13, RF-16.
 
-## Lane B (Session/App Extraction)
-### [x] RF-06: Extract session timer + penalties
+### Lane C (UI Block Extraction)
+#### [ ] RF-16: Extract GameScreen UI blocks into presentational components
 - Files:
-  - New: `webapp/src/features/session/hooks/useSessionTimer.ts`
-  - New: `webapp/src/features/session/hooks/useSessionState.ts`
-  - Edit: `webapp/src/App.tsx`
+  - New: `webapp/src/components/layout/GameTopBar.tsx`
+  - New: `webapp/src/components/controls/MapHudControls.tsx`
+  - New: `webapp/src/components/overlays/GameOverlayStack.tsx`
+  - New: `webapp/src/components/overlays/ExitConfirmDialog.tsx`
+  - Edit: `webapp/src/components/GameScreen.tsx`
 - Move out:
-  - Timer state, critical threshold, time-up handling, penalty count ownership.
-- Depends on: RF-01.
-- Can run in parallel with: RF-02, RF-03, RF-04, RF-05, RF-09.
-- Done when:
-  - `App.tsx` does not implement timer state machine inline.
-  - `wrongGuessCount` has one owner in session layer.
+  - top bar and timer UI block
+  - floating map HUD controls (layers, gameplay, measure, elevation pill)
+  - overlay stack rendering and exit confirm modal
+- Constraints:
+  - No visual styling changes.
+- Depends on: RF-11.
+- Can run in parallel with: RF-12, RF-13, RF-14, RF-15.
 
-### [x] RF-07: Extract multiplayer socket lifecycle
+## Integration + Stabilization
+#### [ ] RF-17: GameScreen cutover and cleanup
 - Files:
-  - New: `webapp/src/features/session/hooks/useMultiplayerSocket.ts`
-  - Edit: `webapp/src/App.tsx`
-- Move out:
-  - Socket connect/reconnect, session event routing, heartbeat behavior.
-- Depends on: RF-01.
-- Can run in parallel with: RF-02, RF-03, RF-04, RF-05, RF-09.
-- Done when:
-  - `App.tsx` consumes socket hook outputs and actions only.
+  - Edit: `webapp/src/components/GameScreen.tsx`
+  - Edit: extracted files as needed
+- Do:
+  - wire all new hooks/services/components
+  - delete obsolete in-file helpers/constants duplicated by extracted modules
+  - keep current behavior parity
+- Depends on: RF-12 through RF-16.
+- Can run in parallel with: none (single owner).
 
-### [x] RF-08: Introduce app shell
+#### [ ] RF-18: Add targeted tests for extracted GameScreen domains
 - Files:
-  - New: `webapp/src/app/AppShell.tsx`
-  - Edit: `webapp/src/App.tsx`
-- Move out:
-  - Screen routing/render orchestration.
-- Depends on: RF-06, RF-07 (recommended), RF-02 through RF-05 (optional but preferred).
-- Can run in parallel with: RF-09 (partial), RF-10 prep.
-- Done when:
-  - `App.tsx` becomes bootstrap/composition entrypoint.
-  - `AppShell.tsx` handles route-like state rendering.
-
-## Lane C (Styling and Tests)
-### [ ] RF-09: Scope style layers
-- Files:
-  - New: `webapp/src/styles/theme.css`
-  - New: `webapp/src/styles/gameplay.css`
-  - Edit: `webapp/src/index.css`
-  - Edit: touched components as needed
-- Move out:
-  - Feature-specific styling from global CSS.
-- Depends on: RF-01.
-- Can run in parallel with RF-02 through RF-07.
-- Done when:
-  - `index.css` contains only global/base/theme foundations.
-  - Feature-specific overrides live in feature/style files.
-
-### [x] RF-10: Add integration coverage for extracted flows
-- Files:
-  - New tests under `webapp/src` (integration-focused)
-  - Existing updates as needed:
-    - `webapp/src/services/multiplayerSessionService.race.test.ts`
-    - `webapp/src/services/proximityIndex.test.ts`
-    - `webapp/src/utils/lightningSelection.test.ts`
+  - New tests under:
+    - `webapp/src/features/gameplay/hooks/*.test.ts`
+    - `webapp/src/features/gameplay/services/*.test.ts`
+    - integration test for GameScreen orchestration path
 - Focus:
-  - Resume from snapshot.
-  - Wrong-guess penalty progression.
-  - Multiplayer win/loss propagation to gameplay screen.
-  - Proximity + cooldown behavior parity.
-- Depends on: RF-02 through RF-08.
-- Can run in parallel with: final cleanup.
-- Done when:
-  - Critical flows have automated assertions and pass in CI.
+  - panel exclusivity rules
+  - question lock + cooldown behavior parity
+  - clue filtering parity for single-clue and wrong-clue flows
+  - guess resolution parity (correct/wrong/penalty/final)
+- Depends on: RF-17.
 
-## Touch Map (Conflict Avoidance)
+## Conflict Avoidance (Phase 2)
 - `webapp/src/components/GameScreen.tsx`:
-  - Primary owner during RF-02 to RF-05: Lane A lead.
-  - No other lane edits this file during active Lane A PRs.
-- `webapp/src/App.tsx`:
-  - Primary owner during RF-06 to RF-08: Lane B lead.
-  - Lane A should not edit this file except type import fixes.
-- `webapp/src/index.css`:
-  - Primary owner during RF-09: Lane C lead.
-- Shared type files:
-  - Changes only in RF-01 or by explicit joint PR.
+  - Single active owner at a time.
+  - Preferred model: each lane delivers new files first; tech lead performs/queues cutovers.
+- `webapp/src/features/gameplay/types/gameScreen.ts`:
+  - RF-11 only (contract freeze).
+- `webapp/src/features/gameplay/services/*`:
+  - Lane B exclusive ownership.
+- `webapp/src/components/layout|controls|overlays/*`:
+  - Lane C exclusive ownership.
 
-## Merge Order
-1. RF-01 (contract freeze)
-2. RF-02, RF-03, RF-04, RF-05, RF-06, RF-07, RF-09 in parallel (independent PRs)
-3. RF-08 (app shell consolidation)
-4. RF-10 (integration coverage and final stabilization)
-
-## PR Template (Use For Every Task)
-- Summary of extracted responsibility.
-- Files changed.
-- Contract impact (if any).
-- Behavior parity checklist.
-- Manual test evidence.
-- Automated test results.
-- Known risks.
-
-## Behavior Parity Checklist
-- Solo mode start, gameplay, and end flow unchanged.
-- Multiplayer host/create/join/start flow unchanged.
-- Resume from refresh restores expected state.
-- Timer and penalty logic unchanged.
-- Map proximity and amenities still update correctly.
-
-## Suggested Team Assignment
-- Dev A: Lane A (RF-02 to RF-05).
-- Dev B: Lane B (RF-06 to RF-08).
-- Dev C: Lane C (RF-09 and RF-10).
-- Tech lead/reviewer: owns RF-01 and final merge sequencing.
+## Merge Order (Phase 2)
+1. RF-11
+2. RF-14 and RF-16 in parallel
+3. RF-12 and RF-13 in parallel
+4. RF-15
+5. RF-17
+6. RF-18

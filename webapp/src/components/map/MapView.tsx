@@ -32,14 +32,19 @@ import { useI18n } from "@/i18n";
 import { MeasurePanel } from "@/components/map/MeasurePanel";
 import { MapLayerPanel } from "@/components/map/MapLayerPanel";
 
-// Set Mapbox access token from config
-mapboxgl.accessToken = MAPBOX_CONFIG.accessToken;
-// console.log(
-//   "Mapbox token loaded",
-// );
-// console.log("Mapbox username configured:");
+/**
+ * MapView is the runtime map container for gameplay.
+ * Responsibilities:
+ * - initialize and own the Mapbox instance lifecycle
+ * - coordinate feature hooks (city layers, measurement, terrain/elevation)
+ * - render dynamic overlays (player range, lightning range, filtered POIs)
+ * - emit gameplay-facing callbacks (amenity counts, shelter selection, elevation samples)
+ */
 
-// Replace the whole function with this
+// Set Mapbox access token from runtime config.
+mapboxgl.accessToken = MAPBOX_CONFIG.accessToken;
+
+// Normalize fallback icon color values from layer metadata.
 const sanitizeToBauhausColor = (color?: string): string => {
   return (color ?? "#000000").trim();
 };
@@ -54,6 +59,7 @@ const createCircleFeature = (
   radiusMeters: number,
   steps = 64,
 ) => {
+  // Approximate a geodesic circle polygon in WGS84 for Mapbox sources.
   const coordinates: [number, number][] = [];
   const earthRadius = 6378137;
   const latRad = (center.lat * Math.PI) / 180;
@@ -92,7 +98,7 @@ const LAYER_ICON_BY_LABEL: Record<string, React.ReactNode> = {
   "Emergency Supply Storage": <Archive className="w-4 h-4" />,
 };
 
-// Helper function to get icons for Koto layers based on label
+// Resolve a map-layer icon from known labels, with a colorized fallback pin.
 const getKotoLayerIcon = (layer: (typeof kotoLayers)[0]): React.ReactNode => {
   const icon = LAYER_ICON_BY_LABEL[layer.label];
   if (icon) return icon;
@@ -134,21 +140,28 @@ const DEFAULT_START_LOCATION = defaultCityContext.mapConfig.startLocation;
 const PLAYER_RADIUS_METERS = Math.max(1, PROXIMITY_RADIUS_KM * 1000);
 
 interface MapViewProps {
+  // Base POI data + player state.
   pois: POI[];
   playerLocation: { lat: number; lng: number };
   onPlayerLocationChange?: (location: { lat: number; lng: number }) => void;
   visitedPOIs: string[];
   gameEnded?: boolean;
   onPOIClick?: (poi: POI) => void;
+
+  // Basemap and shelter callbacks.
   basemapUrl?: string;
   onSecretShelterChange?: (info: { id: string; name: string }) => void;
   onShelterOptionsChange?: (options: { id: string; name: string; lat?: number; lng?: number }[]) => void;
+
+  // Measurement + layer panel coordination.
   measureTrigger?: number;
   onMeasurementActiveChange?: (active: boolean) => void;
   isFiltered?: boolean;
   onLayerPanelToggle?: (open: boolean) => void;
   layerPanelOpenSignal?: number;
   layerPanelCloseSignal?: number;
+
+  // Mode-specific overlays.
   gameMode?: "lightning" | "citywide" | null;
   lightningCenter?: { lat: number; lng: number } | null;
   lightningRadiusKm?: number;
@@ -159,6 +172,8 @@ interface MapViewProps {
     lng: number;
     isStale: boolean;
   }[];
+
+  // Derived gameplay telemetry.
   onAmenitiesWithinRadius?: (info: { counts: Record<string, number>; matchedCategories: string[] }) => void;
   amenityQueryTrigger?: number;
   secretShelterCoords?: { lat: number; lng: number } | null;
@@ -168,16 +183,6 @@ interface MapViewProps {
   }) => void;
   elevationSampleTrigger?: number;
 }
-
-// const POI_ICONS = {
-//   shelter: Home,
-//   fire_station: Flame,
-//   hospital: Hospital,
-//   park: Trees,
-//   library: Library,
-//   school: School,
-// };
-
 
 export function MapView({
   pois,
@@ -229,6 +234,7 @@ export function MapView({
     ((info: { counts: Record<string, number>; matchedCategories: string[] }) => void) | undefined
   >(onAmenitiesWithinRadius);
 
+  // Lightweight DOM markers for other players (no React mount per marker).
   const createOtherPlayerMarkerElement = useCallback(
     (player: { name: string; isStale: boolean }) => {
       const wrapper = document.createElement("div");
@@ -293,6 +299,7 @@ export function MapView({
     localeRef.current = locale;
   }, [locale]);
 
+  // Shared map state used by overlay effects.
   const [userCircleCenter, setUserCircleCenter] = useState<{ lat: number; lng: number } | null>(
     null,
   );
@@ -300,6 +307,8 @@ export function MapView({
   const [mapLoaded, setMapLoaded] = useState(false);
 
   const [visiblePois, setVisiblePois] = useState<POI[]>([]);
+
+  // Terrain and elevation sampling lifecycle.
   const { ensureTerrainEnabled, sampleTerrainElevation } = useTerrainElevation({
     accessToken: MAPBOX_CONFIG.accessToken,
     mapRef: map,
@@ -307,6 +316,8 @@ export function MapView({
     playerLocation,
     secretShelterCoords,
   });
+
+  // City layer state/events extracted from MapView to reduce monolith complexity.
   const {
     cityLayersVisible,
     layerGroupOpenState,
@@ -327,6 +338,8 @@ export function MapView({
     layerPanelOpenSignal,
     layerPanelCloseSignal,
   });
+
+  // Measurement feature state/events.
   const {
     clearMeasurement,
     handleDeleteMeasurement,
@@ -344,6 +357,7 @@ export function MapView({
     t,
   });
 
+  // Build standardized popup content for designated shelter results.
   const buildDesignatedShelterPopupHtml = useCallback((props: Record<string, any>) => {
     const translate = translateRef.current;
     const currentLocale = localeRef.current;
@@ -409,6 +423,8 @@ export function MapView({
 
     return buildPopupCardHtml([sectionHtml]);
   }, []);
+
+  // Keep filtered view POIs in a dedicated local list.
   useEffect(() => {
     if (isFiltered) {
       setVisiblePois(pois);
@@ -419,6 +435,7 @@ export function MapView({
 
   const refreshFilteredPoiLayers = useCallback(
     (poisToRender: POI[]) => {
+      // Maintains a map-only source/layer pair for filtered POI rendering and popup behavior.
       const m = map.current;
       if (!m) return;
       if (typeof m.isStyleLoaded === "function" && !m.isStyleLoaded()) {
@@ -587,6 +604,7 @@ export function MapView({
   }, []);
 
   const selectShelterFromLocalData = useCallback(() => {
+    // Select once per map lifecycle; emit all options + chosen shelter for game state.
     if (hasSelectedShelter.current) {
       return;
     }
@@ -653,7 +671,8 @@ export function MapView({
       }
     })();
   }, [onSecretShelterChange, onShelterOptionsChange]);
-  // Initialize map
+
+  // Initialize/destroy the Mapbox instance once per basemap style.
   useEffect(() => {
     if (!mapContainer.current || map.current) return;
 
@@ -809,7 +828,7 @@ export function MapView({
     // Intentionally initialize once per basemap style.
   }, [basemapUrl]);
 
-  // Recenter camera when playerLocation changes (no reinit)
+  // Keep camera center in sync with latest player location.
   useEffect(() => {
     const m = map.current;
     if (!m) return;
@@ -837,6 +856,7 @@ export function MapView({
     ensureTerrainEnabled();
   }, [ensureTerrainEnabled, mapLoaded]);
 
+  // Re-sample terrain when map, player, or shelter sample trigger changes.
   useEffect(() => {
     if (!mapLoaded) return;
     sampleTerrainElevation();
@@ -889,6 +909,7 @@ export function MapView({
     const m = map.current;
     if (!m) return;
 
+    // Draw/update player proximity radius overlay.
     const applyRange = () => {
       if (!userCircleCenter) return;
       // Style can briefly be undefined during reloads; skip until ready
@@ -976,6 +997,7 @@ export function MapView({
     const m = map.current;
     if (!m) return;
 
+    // Manage lightning mode boundary overlay and style reload recovery.
     const removeLightningCircle = () => {
       if (!map.current || m !== map.current) return;
       if (m.getLayer(LIGHTNING_RANGE_FILL_LAYER_ID)) m.removeLayer(LIGHTNING_RANGE_FILL_LAYER_ID);
@@ -1104,6 +1126,7 @@ export function MapView({
     };
   }, [handleMapClick]);
 
+  // Adapt city-layer model into UI-friendly grouped sections.
   const translateGroup = (group: CityLayerGroup) =>
     t(`map.layers.groups.${group}`, { fallback: group });
   const translateLayerLabel = (layerId: number, label: string) =>
@@ -1127,6 +1150,7 @@ export function MapView({
   const isPanelCollapsed =
     measureState.status === "active" && isMeasurePanelCollapsed;
 
+  // Mapbox control positioning helpers (kept local to map view ownership).
   const moveAttributionToBottomLeft = useCallback(() => {
     const m = map.current;
     if (!m) return;
@@ -1220,67 +1244,7 @@ export function MapView({
         style={{ width: "100%", height: "100%" }}
       />
 
-      {/* Add CSS animations */}
-      { <style>{`
-        .mapboxgl-popup-content {
-          background: transparent !important;
-          padding: 0 !important;
-          box-shadow: none !important;
-        }
-        .mapboxgl-popup-tip {
-          display: none;
-        }
-        .measure-marker {
-          width: 20px;
-          height: 20px;
-          border: 3px solid #c1272d;
-          background: #ffffff;
-          border-radius: 50%;
-          box-shadow: 0 0 0 2px #000000;
-          position: relative;
-        }
-        .measure-marker::after {
-          content: "";
-          position: absolute;
-          inset: 4px;
-          background: #c1272d;
-          border-radius: 50%;
-          opacity: 0.85;
-        }
-        .measure-popup {
-          display: flex;
-          flex-direction: column;
-          gap: 6px;
-          background: #ffffff;
-          color: #0f0f0f;
-          border: 1px solid #0f0f0f;
-          border-radius: 8px;
-          padding: 10px;
-          min-width: 160px;
-          font-family: 'Noto Sans', sans-serif;
-        }
-        .measure-popup button {
-          border: 1px solid #0f0f0f;
-          background: #f5f5f5;
-          font-size: 12px;
-          font-weight: 600;
-          padding: 6px 8px;
-          text-transform: uppercase;
-          cursor: pointer;
-          transition: background 0.15s ease;
-        }
-        .measure-popup button:hover {
-          background: #e2e2e2;
-        }
-        .measure-popup button.danger {
-          background: #0f0f0f;
-          color: #ffffff;
-          border-color: #000000;
-        }
-        .measure-popup button.danger:hover {
-          background: #1a1a1a;
-        }
-      `}</style> }
+     
 
       <MapLayerPanel
         showLayerControl={showLayerControl}
