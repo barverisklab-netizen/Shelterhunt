@@ -1469,11 +1469,11 @@ export function GameScreen({
           <button
             type="button"
             onClick={handleElevationPillClick}
-            className={`min-w-[100px] rounded-full border bg-white px-4 py-1.5 text-center text-s font-semibold uppercase tracking-[0.08em] shadow-[0_3px_10px_rgba(0,0,0,0.18)] ${
+            className={`min-w-[100px] rounded-full border bg-background px-4 py-1.5 text-center text-s font-semibold uppercase tracking-[0.08em] shadow-[0_3px_10px_rgba(0,0,0,0.18)] ${
               isBelowShelterElevation
-                ? "border-red-400/50 bg-red-500/20 text-red-400"
+                ? "border-red-400/30 bg-red-500/20 text-red-400"
                 : isAboveShelterElevation
-                  ? "border-green-400/50 bg-green-500/20 text-green-400"
+                  ? "border-green-400/50 bg-green-500 text-green-400"
                   : "border-neutral-300 text-neutral-700"
             } pointer-events-auto transition hover:scale-[1.01] active:scale-[0.99]`}
             title={elevationSummaryLabel}
