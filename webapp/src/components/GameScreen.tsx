@@ -163,6 +163,7 @@ export function GameScreen({
 
   const lastLocationRequestRef = useRef<number>(0);
   const lastHighAccuracyRequestRef = useRef<number>(0);
+  const lastWatchLocationRef = useRef<{ lat: number; lng: number; sampledAt: number } | null>(null);
   const restoredGameplayRef = useRef(false);
   const hasAnnouncedTestingModeRef = useRef(false);
   const requestLatestLocation = useCallback(() => {
@@ -222,6 +223,50 @@ export function GameScreen({
       }),
     [onLocationChange],
   );
+
+  useEffect(() => {
+    if (PROXIMITY_DISABLED_FOR_TESTING) return;
+    if (typeof navigator === "undefined" || !navigator.geolocation || !onLocationChange) return;
+
+    const watchId = navigator.geolocation.watchPosition(
+      (pos) => {
+        lastGeoStatusRef.current = "ok";
+        const now = Date.now();
+        const next = {
+          lat: pos.coords.latitude,
+          lng: pos.coords.longitude,
+        };
+        const previous = lastWatchLocationRef.current;
+        if (previous) {
+          const movedMeters = haversineDistanceKm(previous, next) * 1000;
+          if (movedMeters < 1 && now - previous.sampledAt < 3000) {
+            return;
+          }
+        }
+        lastWatchLocationRef.current = {
+          ...next,
+          sampledAt: now,
+        };
+        lastLocationRequestRef.current = now;
+        onLocationChange(next);
+      },
+      (err) => {
+        lastGeoStatusRef.current = `error:${err.code ?? "unknown"}`;
+        if (err.code !== 1) {
+          console.warn("[Geo] watchPosition update failed", err);
+        }
+      },
+      {
+        enableHighAccuracy: true,
+        maximumAge: 2000,
+        timeout: 10000,
+      },
+    );
+
+    return () => {
+      navigator.geolocation.clearWatch(watchId);
+    };
+  }, [onLocationChange]);
 
   const saveGameplaySnapshot = useCallback(() => {
     if (typeof window === "undefined") return;
@@ -1435,6 +1480,7 @@ export function GameScreen({
         <MapView
           pois={filteredPois ?? pois}
           playerLocation={playerLocation}
+          onPlayerLocationChange={onLocationChange}
           visitedPOIs={visitedPOIs}
           gameEnded={outcome === 'win' || outcome === 'lose'}
           onPOIClick={simulateMove}

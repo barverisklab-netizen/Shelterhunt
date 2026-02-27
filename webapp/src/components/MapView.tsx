@@ -316,6 +316,7 @@ const queryTerrainRgbElevation = async (
 interface MapViewProps {
   pois: POI[];
   playerLocation: { lat: number; lng: number };
+  onPlayerLocationChange?: (location: { lat: number; lng: number }) => void;
   visitedPOIs: string[];
   gameEnded?: boolean;
   onPOIClick?: (poi: POI) => void;
@@ -360,6 +361,7 @@ interface MapViewProps {
 export function MapView({
   pois,
   playerLocation,
+  onPlayerLocationChange,
   visitedPOIs,
   gameEnded,
   onPOIClick,
@@ -585,12 +587,14 @@ const measureMarkerRef = useRef<mapboxgl.Marker | null>(null);
 
     const playerElevationMeters = query(currentPlayerCoords);
     const shelterElevationMeters = query(currentShelterCoords);
-    emit(playerElevationMeters, shelterElevationMeters);
 
     const needsRetry =
       playerElevationMeters == null ||
       (currentShelterCoords != null && shelterElevationMeters == null);
-    if (!needsRetry) return;
+    if (!needsRetry) {
+      emit(playerElevationMeters, shelterElevationMeters);
+      return;
+    }
 
     const resolveWithFallback = async (afterIdle: boolean) => {
       let resolvedPlayer = afterIdle ? query(currentPlayerCoords) : playerElevationMeters;
@@ -1626,6 +1630,7 @@ const measureMarkerRef = useRef<mapboxgl.Marker | null>(null);
             const { latitude, longitude } = event.coords;
             setUserCircleCenter({ lat: latitude, lng: longitude });
             setHasUserLocationFix(true);
+            onPlayerLocationChange?.({ lat: latitude, lng: longitude });
           };
           geolocateHandlerRef.current = handleGeolocate;
           control.on("geolocate", handleGeolocate);
