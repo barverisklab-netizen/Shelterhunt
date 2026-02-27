@@ -8,9 +8,9 @@ import {
   Radar,
   ArrowLeft,
 } from "lucide-react";
-import { Button } from "./ui/button";
+import { Button } from "../ui/button";
 import { Question } from "@/types/game";
-import { QuestionCategory } from "../data/cityContext";
+import { QuestionCategory } from "@/data/cityContext";
 import { useState } from "react";
 import { useI18n } from "@/i18n";
 

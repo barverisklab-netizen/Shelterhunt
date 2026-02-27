@@ -1,7 +1,7 @@
 import { motion } from "motion/react";
-import { Button } from "./ui/button";
-import mascotHappy from "../assets/graphics/character-mascot-happy.svg";
-import mascotCrying from "../assets/graphics/character-mascot-crying.svg";
+import { Button } from "../ui/button";
+import mascotHappy from "@/assets/graphics/character-mascot-happy.svg";
+import mascotCrying from "@/assets/graphics/character-mascot-crying.svg";
 import { useI18n } from "@/i18n";
 
 interface ShelterVictoryScreenProps {

@@ -1,8 +1,8 @@
 import { Users, Info, User } from 'lucide-react';
 import { motion } from 'motion/react';
 import packageInfo from '../../package.json';
-import { MenuHeader } from './MenuHeader';
-import { AcknowledgementFooter } from './AcknowledgementFooter';
+import { MenuHeader } from './layout/MenuHeader';
+import { AcknowledgementFooter } from './layout/AcknowledgementFooter';
 import { useI18n } from "@/i18n";
 
 interface OnboardingScreenProps {

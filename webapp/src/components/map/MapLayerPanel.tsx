@@ -70,7 +70,7 @@ export function MapLayerPanel({
         whileHover={{ scale: 1.02 }}
         whileTap={{ scale: 0.98 }}
       >
-        <Layers className="w-5 h-5 text-black" />
+        <Layers className="w-6 h-6 text-black" />
       </motion.button>
 
       <AnimatePresence>

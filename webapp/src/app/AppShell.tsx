@@ -1,12 +1,12 @@
 import { Clock } from "lucide-react";
 import loadingMascot from "@/assets/graphics/character-mascot-loading.gif";
 import { GameScreen, type WrongGuessStage } from "@/components/GameScreen";
-import { HelpModal } from "@/components/HelpModal";
-import { HostShareModal } from "@/components/HostShareModal";
+import { HelpModal } from "@/components/overlays/HelpModal";
+import { HostShareModal } from "@/components/overlays/HostShareModal";
 import { IntroScreen } from "@/components/IntroScreen";
-import { LanguageToggle } from "@/components/LanguageToggle";
+import { LanguageToggle } from "@/components/controls/LanguageToggle";
 import { OnboardingScreen } from "@/components/OnboardingScreen";
-import { ProfileNameModal } from "@/components/ProfileNameModal";
+import { ProfileNameModal } from "@/components/overlays/ProfileNameModal";
 import { SoloModeScreen } from "@/components/SoloModeScreen";
 import { TerminalScreen } from "@/components/TerminalScreen";
 import { Toaster } from "@/components/ui/sonner";

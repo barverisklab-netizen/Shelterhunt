@@ -18,9 +18,9 @@ import {
 import { POI } from "@/types/game";
 import { kotoLayers } from "@/cityContext/koto/layers";
 import { KotoLayerGroup } from "@/types/kotoLayers";
-import { MAPBOX_CONFIG, getTilesetUrl } from "../config/mapbox";
+import { MAPBOX_CONFIG, getTilesetUrl } from "@/config/mapbox";
 import { MAPBOX_STYLE_URL, PROXIMITY_RADIUS_KM } from "@/config/runtime";
-import { defaultCityContext } from "../data/cityContext";
+import { defaultCityContext } from "@/data/cityContext";
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
 import { getLocalShelters } from "@/services/mapLayerQueryService";
@@ -28,8 +28,8 @@ import { countAmenitiesWithinRadius } from "@/services/proximityIndex";
 import { useTerrainElevation } from "@/features/elevation/hooks/useTerrainElevation";
 import { useMeasurementTool } from "@/features/measurement/hooks/useMeasurementTool";
 import { useI18n } from "@/i18n";
-import { MeasurePanel } from "./MeasurePanel";
-import { MapLayerPanel } from "./MapLayerPanel";
+import { MeasurePanel } from "@/components/map/MeasurePanel";
+import { MapLayerPanel } from "@/components/map/MapLayerPanel";
 
 // Set Mapbox access token from config
 mapboxgl.accessToken = MAPBOX_CONFIG.accessToken;
@@ -935,16 +935,12 @@ const filteredPoiPopupHandlerRef = useRef<
   useEffect(() => {
     if (!mapLoaded) return;
     ensureTerrainEnabled();
+  }, [ensureTerrainEnabled, mapLoaded]);
+
+  useEffect(() => {
+    if (!mapLoaded) return;
     sampleTerrainElevation();
-  }, [
-    ensureTerrainEnabled,
-    mapLoaded,
-    playerLocation.lat,
-    playerLocation.lng,
-    sampleTerrainElevation,
-    secretShelterCoords?.lat,
-    secretShelterCoords?.lng,
-  ]);
+  }, [mapLoaded, sampleTerrainElevation, secretShelterCoords?.lat, secretShelterCoords?.lng]);
 
   useEffect(() => {
     if (!mapLoaded) return;

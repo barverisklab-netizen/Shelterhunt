@@ -1,12 +1,12 @@
 import { motion, AnimatePresence } from 'motion/react';
 import { ChevronDown, ChevronUp, ChevronsUpDown, Clock, Lightbulb, Ruler, X} from 'lucide-react';
-import { MapView } from './MapView';
-import { QuestionDrawer } from './QuestionDrawer';
-import { GameplayPanel } from './GameplayPanel';
-import { GuessConfirmScreen } from './GuessConfirmScreen';
-import { ShelterVictoryScreen } from './ShelterVictoryScreen';
-import { ShelterPenaltyScreen } from './ShelterPenaltyScreen';
-import { TutorialCarousel } from "./TutorialCarousel";
+import { MapView } from './map/MapView';
+import { QuestionDrawer } from './panels/QuestionDrawer';
+import { GameplayPanel } from './panels/GameplayPanel';
+import { GuessConfirmScreen } from './overlays/GuessConfirmScreen';
+import { ShelterVictoryScreen } from './overlays/ShelterVictoryScreen';
+import { ShelterPenaltyScreen } from './overlays/ShelterPenaltyScreen';
+import { TutorialCarousel } from "./overlays/TutorialCarousel";
 import {
   POI,
   Question,

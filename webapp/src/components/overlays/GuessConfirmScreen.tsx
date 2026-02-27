@@ -1,8 +1,8 @@
 import { motion } from "motion/react";
 import { AlertTriangle } from "lucide-react";
-import { Button } from "./ui/button";
+import { Button } from "../ui/button";
 import { useI18n } from "@/i18n";
-import mascotWaving from "../assets/graphics/character-mascot-waving.svg";
+import mascotWaving from "@/assets/graphics/character-mascot-waving.svg";
 
 interface GuessConfirmScreenProps {
   shelterName: string;

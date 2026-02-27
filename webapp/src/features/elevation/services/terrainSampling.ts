@@ -110,6 +110,9 @@ export const queryMapTerrainElevation = (
 
 export const ensureMapTerrainEnabled = (map: MapboxMap) => {
   try {
+    if (typeof map.isStyleLoaded === "function" && !map.isStyleLoaded()) {
+      return;
+    }
     if (!map.getSource(TERRAIN_DEM_SOURCE_ID)) {
       map.addSource(TERRAIN_DEM_SOURCE_ID, {
         type: "raster-dem",

@@ -32,6 +32,7 @@ export function useTerrainElevation({
   const elevationCallbackRef = useRef(onElevationSample);
   const elevationCacheRef = useRef<Map<string, number | null>>(new Map());
   const elevationSampleVersionRef = useRef(0);
+  const terrainEnablePendingRef = useRef(false);
 
   useEffect(() => {
     elevationCallbackRef.current = onElevationSample;
@@ -73,7 +74,27 @@ export function useTerrainElevation({
   const ensureTerrainEnabled = useCallback(() => {
     const m = mapRef.current;
     if (!m) return;
-    ensureMapTerrainEnabled(m);
+    if (terrainEnablePendingRef.current) return;
+    terrainEnablePendingRef.current = true;
+
+    const applyTerrain = () => {
+      const activeMap = mapRef.current;
+      if (!activeMap || activeMap !== m) {
+        terrainEnablePendingRef.current = false;
+        return;
+      }
+
+      if (typeof activeMap.isStyleLoaded === "function" && !activeMap.isStyleLoaded()) {
+        activeMap.once("style.load", applyTerrain);
+        return;
+      }
+
+      ensureMapTerrainEnabled(activeMap);
+      terrainEnablePendingRef.current = false;
+    };
+
+    // Avoid mutating style sources during an active render frame.
+    m.once("idle", applyTerrain);
   }, [mapRef]);
 
   const sampleTerrainElevation = useCallback(() => {
