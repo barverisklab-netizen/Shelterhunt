@@ -1,15 +1,6 @@
 import { AnimatePresence, motion } from "motion/react";
 import { ChevronUp, Ruler } from "lucide-react";
-
-type MeasureStatus = "idle" | "placing" | "active";
-
-type MeasureState = {
-  status: MeasureStatus;
-  radius: number;
-  count: number;
-  featureNames: string[];
-  layerCounts: Record<string, number>;
-};
+import type { MeasureState } from "@/features/measurement/hooks/useMeasurementTool";
 
 type TranslateFn = (
   key: string,

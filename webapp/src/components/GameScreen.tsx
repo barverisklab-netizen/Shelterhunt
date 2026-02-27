@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from 'motion/react';
-import { ChevronDown, ChevronUp, ChevronsUpDown, Clock, Lightbulb, MapPin, Ruler, X} from 'lucide-react';
+import { ChevronDown, ChevronUp, ChevronsUpDown, Clock, Lightbulb, Ruler, X} from 'lucide-react';
 import { MapView } from './MapView';
 import { QuestionDrawer } from './QuestionDrawer';
 import { GameplayPanel } from './GameplayPanel';
@@ -7,7 +7,19 @@ import { GuessConfirmScreen } from './GuessConfirmScreen';
 import { ShelterVictoryScreen } from './ShelterVictoryScreen';
 import { ShelterPenaltyScreen } from './ShelterPenaltyScreen';
 import { TutorialCarousel } from "./TutorialCarousel";
-import { POI, Question, Clue, QuestionAttribute } from "@/types/game";
+import {
+  POI,
+  Question,
+  Clue,
+  QuestionAttribute,
+  type LatLng,
+  type MultiplayerWinInfo,
+  type OtherPlayerLocation,
+  type RemoteOutcome,
+  type SecretShelterInfo,
+  type ShelterOption,
+  type WrongGuessStage as SharedWrongGuessStage,
+} from "@/types/game";
 import { defaultCityContext } from '../data/cityContext';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { toast } from "sonner@2.0.3";
@@ -19,69 +31,45 @@ import {
   ONE_QUESTION_PER_LOCATION,
   PROXIMITY_RADIUS_KM,
 } from "@/config/runtime";
-import { haversineDistanceKm } from "@/utils/lightningSelection";
-import { hasShelterWithinRadius, matchShelterWithinRadius } from "@/services/proximityIndex";
+import { matchShelterWithinRadius } from "@/services/proximityIndex";
+import { useGameplaySnapshot } from "@/features/gameplay/hooks/useGameplaySnapshot";
+import { useQuestionCooldowns } from "@/features/gameplay/hooks/useQuestionCooldowns";
+import { useProximityAndAmenities } from "@/features/gameplay/hooks/useProximityAndAmenities";
+import { useElevation } from "@/features/gameplay/hooks/useElevation";
+import type {
+  SnapshotFilterSource,
+  SnapshotOutcome,
+} from "@/features/gameplay/services/gameplaySnapshot";
 
 
 const PROXIMITY_DISABLED_FOR_TESTING =
   import.meta.env?.VITE_ENABLE_PROXIMITY === "false";
 const PROXIMITY_ENABLED = !PROXIMITY_DISABLED_FOR_TESTING;
-const QUESTION_COOLDOWN_MS = 120_000;
-const GAMEPLAY_SNAPSHOT_KEY = "shelterhunt.gameplaySnapshot.v1";
-const GAMEPLAY_SNAPSHOT_VERSION = 1;
-const RESUME_GRACE_MS = 10 * 60 * 1000;
-
-export type WrongGuessStage = 'first' | 'second' | 'third';
-
-interface GameplaySnapshot {
-  version: number;
-  savedAt: number;
-  resumeId: string;
-  data: {
-    clues: Clue[];
-    visitedPOIs: string[];
-    filteredPois: POI[] | null;
-    filterSource: "correct" | "wrong" | null;
-    penaltyStage: WrongGuessStage | null;
-    wrongGuessCount: number;
-    solvedQuestions: string[];
-    solvedNearbyAmenityKeys: string[];
-    questionCooldowns: Record<string, number>;
-    outcome: "none" | "win" | "lose" | "penalty";
-    externalWinnerName?: string;
-    selectedShelterId: string | null;
-  };
-}
+export type WrongGuessStage = SharedWrongGuessStage;
 
 interface GameScreenProps {
   pois: POI[];
   questionAttributes: QuestionAttribute[];
   shelters: Shelter[];
-  playerLocation: { lat: number; lng: number };
+  playerLocation: LatLng;
   timeRemaining: number;
-  secretShelter?: { id: string; name: string } | null;
-  shelterOptions: { id: string; name: string }[];
+  secretShelter?: SecretShelterInfo | null;
+  shelterOptions: ShelterOption[];
   isTimerCritical: boolean;
   isTimerEnabled: boolean;
   onApplyPenalty: () => WrongGuessStage;
   onEndGame: () => void;
-  onLocationChange?: (location: { lat: number; lng: number }) => void;
-  onSecretShelterChange?: (info: { id: string; name: string }) => void;
-  onShelterOptionsChange?: (options: { id: string; name: string }[]) => void;
+  onLocationChange?: (location: LatLng) => void;
+  onSecretShelterChange?: (info: SecretShelterInfo) => void;
+  onShelterOptionsChange?: (options: ShelterOption[]) => void;
   currentPlayerName?: string;
   currentPlayerId?: string;
-  onMultiplayerWin?: (info: { winnerName: string; winnerUserId?: string }) => void;
-  remoteOutcome?: { result: "win" | "lose"; winnerName?: string } | null;
+  onMultiplayerWin?: (info: MultiplayerWinInfo) => void;
+  remoteOutcome?: RemoteOutcome | null;
   gameMode?: "lightning" | "citywide" | null;
-  lightningCenter?: { lat: number; lng: number } | null;
+  lightningCenter?: LatLng | null;
   lightningRadiusKm?: number;
-  otherPlayerLocations?: {
-    userId: string;
-    name: string;
-    lat: number;
-    lng: number;
-    isStale: boolean;
-  }[];
+  otherPlayerLocations?: OtherPlayerLocation[];
   resumeId?: string;
   onShowHelp?: () => void;
 }
@@ -118,15 +106,13 @@ export function GameScreen({
   const [cluesOpen, setCluesOpen] = useState(false);
   const [clues, setClues] = useState<Clue[]>([]);
   const [visitedPOIs, setVisitedPOIs] = useState<string[]>([]);
-  const [nearbyPOI, setNearbyPOI] = useState<POI | null>(null);
-  const previousNearbyPOIRef = useRef<POI | null>(null);
   const [selectedShelterId, setSelectedShelterId] = useState<string | null>(null);
   const [confirmGuessOpen, setConfirmGuessOpen] = useState(false);
-  const [outcome, setOutcome] = useState<'none' | 'win' | 'lose' | 'penalty'>('none');
+  const [outcome, setOutcome] = useState<SnapshotOutcome>('none');
   const [measureTrigger, setMeasureTrigger] = useState(0);
   const [isMeasureActive, setIsMeasureActive] = useState(false);
   const [filteredPois, setFilteredPois] = useState<POI[] | null>(null);
-  const [filterSource, setFilterSource] = useState<"correct" | "wrong" | null>(null);
+  const [filterSource, setFilterSource] = useState<SnapshotFilterSource>(null);
   const [showExitConfirm, setShowExitConfirm] = useState(false);
   const [penaltyStage, setPenaltyStage] = useState<WrongGuessStage | null>(null); // retained for compatibility
   const [wrongGuessCount, setWrongGuessCount] = useState(0);
@@ -136,180 +122,43 @@ export function GameScreen({
     null,
   );
   const [layerPanelCloseSignal, setLayerPanelCloseSignal] = useState(0);
-  const [nearbyAmenityCounts, setNearbyAmenityCounts] = useState<Record<string, number>>({});
-  const [nearbyAmenityCategories, setNearbyAmenityCategories] = useState<string[]>([]);
   const [solvedNearbyAmenityKeys, setSolvedNearbyAmenityKeys] = useState<string[]>([]);
-  const [nearbyShelterName, setNearbyShelterName] = useState<string | null>(null);
   const [tutorialOpen, setTutorialOpen] = useState(true);
-  const [, setCooldownTick] = useState(0);
-  const [questionCooldowns, setQuestionCooldowns] = useState<Record<string, number>>({});
   const [lastQuestionLocationKey, setLastQuestionLocationKey] = useState<string | null>(null);
-  const [playerElevationMeters, setPlayerElevationMeters] = useState<number | null>(null);
-  const [shelterElevationMeters, setShelterElevationMeters] = useState<number | null>(null);
-  const [playerElevationResolved, setPlayerElevationResolved] = useState(false);
-  const [shelterElevationResolved, setShelterElevationResolved] = useState(false);
-  const [elevationSampleTrigger, setElevationSampleTrigger] = useState(0);
-  const staleLocationTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const lastGeoStatusRef = useRef<string>("unknown");
-  const hasLoggedProximityRef = useRef(false);
-  const [amenityQueryTrigger, setAmenityQueryTrigger] = useState(0);
-  const lastAmenityQueryLocationRef = useRef<{ lat: number; lng: number } | null>(null);
   const secretShelterLogRef = useRef<string | null>(null);
   const secretShelterId = secretShelter?.id ?? null;
   const secretShelterRawName = secretShelter?.name ?? null;
   const DESIGNATED_CATEGORY = "designated ec";
   const normalizeValue = (value: unknown) =>
     typeof value === "number" ? String(value) : String(value ?? "").trim().toLowerCase();
-
-  const lastLocationRequestRef = useRef<number>(0);
-  const lastHighAccuracyRequestRef = useRef<number>(0);
-  const lastWatchLocationRef = useRef<{ lat: number; lng: number; sampledAt: number } | null>(null);
-  const restoredGameplayRef = useRef(false);
   const hasAnnouncedTestingModeRef = useRef(false);
-  const requestLatestLocation = useCallback(() => {
-    if (PROXIMITY_DISABLED_FOR_TESTING) return;
-    if (typeof navigator === "undefined" || !navigator.geolocation || !onLocationChange) return;
-    const now = Date.now();
-    if (now - lastLocationRequestRef.current < 4000) return;
-    lastLocationRequestRef.current = now;
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        lastGeoStatusRef.current = "ok";
-        onLocationChange({
-          lat: pos.coords.latitude,
-          lng: pos.coords.longitude,
-        });
-      },
-      (err) => {
-        lastGeoStatusRef.current = `error:${err.code ?? "unknown"}`;
-        console.warn("[Geo] Unable to refresh location", err);
-      },
-      { enableHighAccuracy: true, maximumAge: 2000, timeout: 10000 },
-    );
-  }, [onLocationChange]);
-
-  const requestHighAccuracyLocation = useCallback(
-    () =>
-      new Promise<{ lat: number; lng: number } | null>((resolve) => {
-        if (PROXIMITY_DISABLED_FOR_TESTING) {
-          resolve(null);
-          return;
-        }
-        if (typeof navigator === "undefined" || !navigator.geolocation) {
-          resolve(null);
-          return;
-        }
-        const now = Date.now();
-        if (now - lastHighAccuracyRequestRef.current < 4000) {
-          resolve(null);
-          return;
-        }
-        lastHighAccuracyRequestRef.current = now;
-        navigator.geolocation.getCurrentPosition(
-          (pos) => {
-            lastGeoStatusRef.current = "ok";
-            lastLocationRequestRef.current = Date.now();
-            const next = { lat: pos.coords.latitude, lng: pos.coords.longitude };
-            onLocationChange?.(next);
-            resolve(next);
-          },
-          (err) => {
-            lastGeoStatusRef.current = `error:${err.code ?? "unknown"}`;
-            console.warn("[Geo] High-accuracy refresh failed", err);
-            resolve(null);
-          },
-          { enableHighAccuracy: true, maximumAge: 0, timeout: 8000 },
-        );
-      }),
-    [onLocationChange],
-  );
-
-  useEffect(() => {
-    if (PROXIMITY_DISABLED_FOR_TESTING) return;
-    if (typeof navigator === "undefined" || !navigator.geolocation || !onLocationChange) return;
-
-    const watchId = navigator.geolocation.watchPosition(
-      (pos) => {
-        lastGeoStatusRef.current = "ok";
-        const now = Date.now();
-        const next = {
-          lat: pos.coords.latitude,
-          lng: pos.coords.longitude,
-        };
-        const previous = lastWatchLocationRef.current;
-        if (previous) {
-          const movedMeters = haversineDistanceKm(previous, next) * 1000;
-          if (movedMeters < 1 && now - previous.sampledAt < 3000) {
-            return;
-          }
-        }
-        lastWatchLocationRef.current = {
-          ...next,
-          sampledAt: now,
-        };
-        lastLocationRequestRef.current = now;
-        onLocationChange(next);
-      },
-      (err) => {
-        lastGeoStatusRef.current = `error:${err.code ?? "unknown"}`;
-        if (err.code !== 1) {
-          console.warn("[Geo] watchPosition update failed", err);
-        }
-      },
-      {
-        enableHighAccuracy: true,
-        maximumAge: 2000,
-        timeout: 10000,
-      },
-    );
-
-    return () => {
-      navigator.geolocation.clearWatch(watchId);
-    };
-  }, [onLocationChange]);
-
-  const saveGameplaySnapshot = useCallback(() => {
-    if (typeof window === "undefined") return;
-    if (!resumeId) return;
-    const snapshot: GameplaySnapshot = {
-      version: GAMEPLAY_SNAPSHOT_VERSION,
-      savedAt: Date.now(),
-      resumeId,
-      data: {
-        clues,
-        visitedPOIs,
-        filteredPois,
-        filterSource,
-        penaltyStage,
-        wrongGuessCount,
-        solvedQuestions,
-        solvedNearbyAmenityKeys,
-        questionCooldowns,
-        outcome,
-        externalWinnerName,
-        selectedShelterId,
-      },
-    };
-    try {
-      localStorage.setItem(GAMEPLAY_SNAPSHOT_KEY, JSON.stringify(snapshot));
-    } catch (error) {
-      console.warn("[Resume] Failed to save gameplay snapshot", error);
-    }
-  }, [
-    clues,
-    externalWinnerName,
-    filterSource,
-    filteredPois,
-    outcome,
-    penaltyStage,
+  const {
+    lockedQuestionIds,
     questionCooldowns,
-    resumeId,
-    selectedShelterId,
-    solvedNearbyAmenityKeys,
-    solvedQuestions,
+    setQuestionCooldowns,
+    startQuestionCooldown,
+  } = useQuestionCooldowns({
+    proximityDisabledForTesting: PROXIMITY_DISABLED_FOR_TESTING,
+  });
+  const {
+    amenityQueryTrigger,
+    checkNearbyPOI,
+    handleAmenitiesWithinRadius,
+    nearbyAmenityCategories,
+    nearbyAmenityCounts,
+    nearbyPOI,
+    nearbyShelterName,
+    pollNearbyShelter,
+    pollProximityAndAmenities,
+    requestHighAccuracyLocation,
+  } = useProximityAndAmenities({
+    drawerOpen,
+    onLocationChange,
+    playerLocation,
+    proximityDisabledForTesting: PROXIMITY_DISABLED_FOR_TESTING,
+    setVisitedPOIs,
     visitedPOIs,
-    wrongGuessCount,
-  ]);
+  });
 
   useEffect(() => {
     if (secretShelterRawName && secretShelterLogRef.current !== secretShelterRawName) {
@@ -320,135 +169,37 @@ export function GameScreen({
       });
     }
   }, [secretShelterId, secretShelterRawName]);
-
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    if (!resumeId || restoredGameplayRef.current) return;
-    const raw = localStorage.getItem(GAMEPLAY_SNAPSHOT_KEY);
-    if (!raw) return;
-    try {
-      const snapshot = JSON.parse(raw) as GameplaySnapshot;
-      if (snapshot.version !== GAMEPLAY_SNAPSHOT_VERSION) return;
-      if (snapshot.resumeId !== resumeId) return;
-      if (Date.now() - snapshot.savedAt > RESUME_GRACE_MS) return;
-      const data = snapshot.data ?? {};
-      setClues(Array.isArray(data.clues) ? data.clues : []);
-      setVisitedPOIs(Array.isArray(data.visitedPOIs) ? data.visitedPOIs : []);
-      setFilteredPois(Array.isArray(data.filteredPois) ? data.filteredPois : null);
-      setFilterSource(data.filterSource ?? null);
-      setPenaltyStage(data.penaltyStage ?? null);
-      setWrongGuessCount(typeof data.wrongGuessCount === "number" ? data.wrongGuessCount : 0);
-      setSolvedQuestions(Array.isArray(data.solvedQuestions) ? data.solvedQuestions : []);
-      setSolvedNearbyAmenityKeys(
-        Array.isArray(data.solvedNearbyAmenityKeys) ? data.solvedNearbyAmenityKeys : [],
-      );
-      setQuestionCooldowns(
-        data.questionCooldowns && typeof data.questionCooldowns === "object"
-          ? data.questionCooldowns
-          : {},
-      );
-      const restoredOutcome =
-        data.outcome === "win" ||
-        data.outcome === "lose" ||
-        data.outcome === "penalty" ||
-        data.outcome === "none"
-          ? data.outcome
-          : "none";
-      setOutcome(restoredOutcome);
-      setExternalWinnerName(data.externalWinnerName);
-      setSelectedShelterId(data.selectedShelterId ?? null);
-      restoredGameplayRef.current = true;
-    } catch (error) {
-      console.warn("[Resume] Failed to parse gameplay snapshot", error);
-    }
-  }, [resumeId]);
-
-  useEffect(() => {
-    if (typeof document === "undefined") return;
-
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === "hidden") {
-        saveGameplaySnapshot();
-      }
-    };
-
-    const handlePageHide = () => {
-      saveGameplaySnapshot();
-    };
-
-    document.addEventListener("visibilitychange", handleVisibilityChange);
-    window.addEventListener("pagehide", handlePageHide);
-    return () => {
-      document.removeEventListener("visibilitychange", handleVisibilityChange);
-      window.removeEventListener("pagehide", handlePageHide);
-    };
-  }, [saveGameplaySnapshot]);
+  useGameplaySnapshot({
+    clues,
+    externalWinnerName,
+    filterSource,
+    filteredPois,
+    outcome,
+    penaltyStage,
+    questionCooldowns,
+    resumeId,
+    selectedShelterId,
+    setClues,
+    setExternalWinnerName,
+    setFilterSource,
+    setFilteredPois,
+    setOutcome,
+    setPenaltyStage,
+    setQuestionCooldowns,
+    setSelectedShelterId,
+    setSolvedNearbyAmenityKeys,
+    setSolvedQuestions,
+    setVisitedPOIs,
+    setWrongGuessCount,
+    solvedNearbyAmenityKeys,
+    solvedQuestions,
+    visitedPOIs,
+    wrongGuessCount,
+  });
 
   const closeLayerPanel = useCallback(() => {
     setLayerPanelCloseSignal((prev) => prev + 1);
   }, []);
-
-  // Check if player is near a shelter (using geojson index, within proximity radius)
-  const checkNearbyPOI = useCallback(async ({ forceLog = false }: { forceLog?: boolean } = {}) => {
-    try {
-      const result = await hasShelterWithinRadius(playerLocation, PROXIMITY_RADIUS_KM);
-      let closest: POI | null = null;
-      let closestDistanceKm = Number.POSITIVE_INFINITY;
-
-      if (result.found && result.nearest) {
-        closest = {
-          id: `shelter-proximity-${result.nearest.lat}-${result.nearest.lng}`,
-          name: result.nearest.category || "Nearby shelter",
-          lat: result.nearest.lat,
-          lng: result.nearest.lng,
-          type: "shelter",
-        };
-        closestDistanceKm = haversineDistanceKm(playerLocation, {
-          lat: result.nearest.lat,
-          lng: result.nearest.lng,
-        });
-      }
-
-      const previous = previousNearbyPOIRef.current;
-      const changed = (previous?.id || null) !== (closest?.id || null);
-      if (changed || forceLog || !hasLoggedProximityRef.current) {
-        if (closest) {
-          console.info("[Proximity] Nearby shelter detected", {
-            id: closest.id,
-            name: closest.name,
-            distanceMeters: Math.round(closestDistanceKm * 1000),
-            radiusKm: PROXIMITY_RADIUS_KM,
-          });
-        } else {
-          console.info("[Proximity] No shelter within radius", {
-            radiusKm: PROXIMITY_RADIUS_KM,
-          });
-        }
-        previousNearbyPOIRef.current = closest;
-        hasLoggedProximityRef.current = true;
-      }
-
-      setNearbyPOI(closest);
-      setNearbyShelterName(closest?.name ?? null);
-      if (closest && !visitedPOIs.includes(closest.id)) {
-        setVisitedPOIs((prev) => [...prev, closest!.id]);
-      }
-    } catch (error) {
-      console.warn("[Proximity] Failed to check nearby shelter", error);
-    }
-  }, [playerLocation.lat, playerLocation.lng, visitedPOIs]);
-
-  const pollNearbyShelter = useCallback(() => {
-    if (PROXIMITY_DISABLED_FOR_TESTING) return;
-    requestLatestLocation();
-    void checkNearbyPOI({ forceLog: true });
-  }, [checkNearbyPOI, requestLatestLocation]);
-
-  const pollProximityAndAmenities = useCallback(() => {
-    pollNearbyShelter();
-    if (PROXIMITY_DISABLED_FOR_TESTING) return;
-    setAmenityQueryTrigger((prev) => prev + 1);
-  }, [pollNearbyShelter]);
 
   const activatePanel = useCallback(
     (panel: "layers" | "questions" | "gameplay" | null) => {
@@ -478,81 +229,11 @@ export function GameScreen({
   }, [activatePanel, activePanel, isMeasureActive]);
 
   useEffect(() => {
-    void checkNearbyPOI();
-  }, [checkNearbyPOI]);
-
-  // Align proximity gating with amenities: refresh proximity when opening questions or moving
-  useEffect(() => {
-    if (drawerOpen) {
-      void checkNearbyPOI({ forceLog: true });
-    }
-  }, [drawerOpen, playerLocation.lat, playerLocation.lng, checkNearbyPOI]);
-
-  useEffect(() => {
     if (!remoteOutcome) return;
     console.log("[GameScreen] remoteOutcome received", remoteOutcome);
     setOutcome(remoteOutcome.result);
     setExternalWinnerName(remoteOutcome.winnerName);
   }, [remoteOutcome]);
-
-  useEffect(() => {
-    console.info("[GameScreen] Player location updated", playerLocation);
-    if (staleLocationTimerRef.current) {
-      clearTimeout(staleLocationTimerRef.current);
-    }
-    staleLocationTimerRef.current = setTimeout(() => {
-      console.info("[NearbyAmenity] Location stale, clearing amenity counts");
-      setNearbyAmenityCounts({});
-      setNearbyAmenityCategories([]);
-    }, 15000);
-  }, [playerLocation.lat, playerLocation.lng]);
-
-  // Re-run amenity query if location changes while questions panel is open
-  useEffect(() => {
-    if (!drawerOpen) return;
-    const prev = lastAmenityQueryLocationRef.current;
-    if (!prev || prev.lat !== playerLocation.lat || prev.lng !== playerLocation.lng) {
-      setAmenityQueryTrigger((n) => n + 1);
-      lastAmenityQueryLocationRef.current = { lat: playerLocation.lat, lng: playerLocation.lng };
-    }
-  }, [drawerOpen, playerLocation.lat, playerLocation.lng]);
-
-  useEffect(() => {
-    // logging trimmed per request
-  }, [playerLocation.lat, playerLocation.lng, nearbyAmenityCounts]);
-
-  useEffect(() => {
-    if (PROXIMITY_DISABLED_FOR_TESTING) return;
-    const intervalId = window.setInterval(() => {
-      setQuestionCooldowns((prev) => {
-        const now = Date.now();
-        let changed = false;
-        const next: Record<string, number> = {};
-        Object.entries(prev).forEach(([id, expiresAt]) => {
-          if (expiresAt > now) {
-            next[id] = expiresAt;
-          } else {
-            changed = true;
-          }
-        });
-        return changed ? next : prev;
-      });
-      setCooldownTick((tick) => (tick + 1) % Number.MAX_SAFE_INTEGER);
-    }, 1000);
-    return () => {
-      window.clearInterval(intervalId);
-    };
-  }, []);
-
-  const startQuestionCooldown = useCallback((questionId: string) => {
-    if (PROXIMITY_DISABLED_FOR_TESTING) return;
-    setQuestionCooldowns((prev) => ({
-      ...prev,
-      [questionId]: Date.now() + QUESTION_COOLDOWN_MS,
-    }));
-  }, []);
-
-  const lockedQuestionIds = Object.keys(questionCooldowns);
 
   const attributeCategoryMap: Record<string, Question["category"]> = {
     floodDepth: "location",
@@ -666,108 +347,21 @@ export function GameScreen({
         nameJp: secretShelterRecord?.nameJp ?? null,
       })
     : null;
-  const roundTo3 = (value: number) => {
-    const rounded = Number(value.toFixed(3));
-    return Object.is(rounded, -0) ? 0 : rounded;
-  };
-
-  const handleElevationSample = useCallback(
-    ({
-      playerElevationMeters: nextPlayerElevationMeters,
-      shelterElevationMeters: nextShelterElevationMeters,
-    }: {
-      playerElevationMeters: number | null;
-      shelterElevationMeters: number | null;
-    }) => {
-      const deltaMeters =
-        nextPlayerElevationMeters != null && nextShelterElevationMeters != null
-          ? roundTo3(nextPlayerElevationMeters - nextShelterElevationMeters)
-          : null;
-      console.info("[Elevation Debug] Sample", {
-        player: {
-          lat: playerLocation.lat,
-          lng: playerLocation.lng,
-          elevationMeters: nextPlayerElevationMeters,
-        },
-        shelter: secretShelterCoords
-          ? {
-              lat: secretShelterCoords.lat,
-              lng: secretShelterCoords.lng,
-              elevationMeters: nextShelterElevationMeters,
-            }
-          : null,
-        deltaMeters,
-      });
-
-      setPlayerElevationMeters(nextPlayerElevationMeters);
-      setPlayerElevationResolved(true);
-
-      if (!secretShelterCoords) {
-        setShelterElevationMeters(null);
-        setShelterElevationResolved(false);
-        return;
-      }
-
-      setShelterElevationMeters(nextShelterElevationMeters);
-      setShelterElevationResolved(true);
-    },
-    [
-      playerLocation.lat,
-      playerLocation.lng,
-      roundTo3,
-      secretShelterCoords?.lat,
-      secretShelterCoords?.lng,
-    ],
-  );
-
-  useEffect(() => {
-    if (!secretShelterCoords) {
-      setShelterElevationMeters(null);
-      setShelterElevationResolved(false);
-      return;
-    }
-    setShelterElevationResolved(false);
-  }, [secretShelterCoords?.lat, secretShelterCoords?.lng]);
-
-  useEffect(() => {
-    setPlayerElevationResolved(false);
-  }, [playerLocation.lat, playerLocation.lng]);
-
-  const elevationDeltaMeters =
-    playerElevationMeters != null && shelterElevationMeters != null
-      ? roundTo3(playerElevationMeters - shelterElevationMeters)
-      : null;
-  const elevationDeltaAbsDisplay =
-    elevationDeltaMeters != null ? Math.abs(elevationDeltaMeters).toFixed(3) : null;
-  const isBelowShelterElevation = elevationDeltaMeters != null && elevationDeltaMeters < 0;
-  const isAboveShelterElevation = elevationDeltaMeters != null && elevationDeltaMeters > 0;
-  const elevationUnavailable =
-    elevationDeltaMeters == null && playerElevationResolved && shelterElevationResolved;
-  const elevationSummaryLabel =
-    elevationDeltaMeters != null
-      ? elevationDeltaMeters < 0
-        ? t("game.elevationBelow", {
-            replacements: { meters: elevationDeltaAbsDisplay ?? "0.000" },
-            fallback: `Elevation: ${elevationDeltaAbsDisplay ?? "0.000"}m below shelter`,
-          })
-        : elevationDeltaMeters > 0
-          ? t("game.elevationAbove", {
-              replacements: { meters: elevationDeltaAbsDisplay ?? "0.000" },
-              fallback: `Elevation: ${elevationDeltaAbsDisplay ?? "0.000"}m above shelter`,
-            })
-          : t("game.elevationSame", { fallback: "Elevation: same as shelter" })
-      : elevationUnavailable
-        ? t("game.elevationUnavailable", {
-            fallback: "Elevation data unavailable.",
-          })
-        : t("game.elevationLoading", { fallback: "Checking elevation..." });
-  const handleElevationPillClick = () => {
-    setPlayerElevationResolved(false);
-    if (secretShelterCoords) {
-      setShelterElevationResolved(false);
-    }
-    setElevationSampleTrigger((prev) => prev + 1);
-  };
+  const {
+    elevationDeltaAbsDisplay,
+    elevationDeltaMeters,
+    elevationSampleTrigger,
+    elevationSummaryLabel,
+    elevationUnavailable,
+    handleElevationPillClick,
+    handleElevationSample,
+    isAboveShelterElevation,
+    isBelowShelterElevation,
+  } = useElevation({
+    playerLocation,
+    secretShelterCoords,
+    t,
+  });
   const attributeValueLookup: Record<string, (shelter: Shelter) => string | number | null> = {
     floodDepth: (shelter) => shelter.floodDepth,
     stormSurgeDepth: (shelter) => shelter.stormSurgeDepth,
@@ -1493,10 +1087,7 @@ export function GameScreen({
         lightningCenter={lightningCenter}
         lightningRadiusKm={lightningRadiusKm ?? LIGHTNING_RADIUS_KM}
         otherPlayerLocations={otherPlayerLocations}
-        onAmenitiesWithinRadius={(info) => {
-          setNearbyAmenityCounts(info.counts ?? {});
-          setNearbyAmenityCategories(info.matchedCategories ?? []);
-        }}
+        onAmenitiesWithinRadius={handleAmenitiesWithinRadius}
         amenityQueryTrigger={amenityQueryTrigger}
         secretShelterCoords={secretShelterCoords}
         onElevationSample={handleElevationSample}

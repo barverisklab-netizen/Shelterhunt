@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState, useCallback } from "react";
-import type { Feature, FeatureCollection, Point, MultiPoint } from "geojson";
-import { motion, AnimatePresence } from "motion/react";
+import { AnimatePresence } from "motion/react";
 import {
   MapPin,
   Home,
@@ -9,7 +8,6 @@ import {
   Trees,
   Library,
   School,
-  Layers,
   Heart,
   Building2,
   Cable,
@@ -25,12 +23,13 @@ import { MAPBOX_STYLE_URL, PROXIMITY_RADIUS_KM } from "@/config/runtime";
 import { defaultCityContext } from "../data/cityContext";
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
-import { toast } from "sonner@2.0.3"
-import { haversineDistanceKm } from "@/utils/lightningSelection";
 import { getLocalShelters } from "@/services/mapLayerQueryService";
 import { countAmenitiesWithinRadius } from "@/services/proximityIndex";
+import { useTerrainElevation } from "@/features/elevation/hooks/useTerrainElevation";
+import { useMeasurementTool } from "@/features/measurement/hooks/useMeasurementTool";
 import { useI18n } from "@/i18n";
 import { MeasurePanel } from "./MeasurePanel";
+import { MapLayerPanel } from "./MapLayerPanel";
 
 // Set Mapbox access token from config
 mapboxgl.accessToken = MAPBOX_CONFIG.accessToken;
@@ -80,101 +79,6 @@ const createCircleFeature = (
   };
 };
 
-type PointLikeGeometry = Point | MultiPoint;
-type PointLikeFeature = Feature<PointLikeGeometry, Record<string, any>>;
-
-const getFeatureCoordinates = (feature: PointLikeFeature): [number, number][] => {
-  const geometry = feature.geometry;
-  if (!geometry) return [];
-
-  if (geometry.type === "Point") {
-    const [lng, lat] = geometry.coordinates;
-    return Number.isFinite(lng) && Number.isFinite(lat) ? [[lng, lat]] : [];
-  }
-
-  if (geometry.type === "MultiPoint") {
-    return geometry.coordinates.filter(
-      (coords): coords is [number, number] =>
-        Array.isArray(coords) &&
-        Number.isFinite(coords[0]) &&
-        Number.isFinite(coords[1]),
-    );
-  }
-
-  return [];
-};
-
-const resolveFilterExpression = (
-  expression: unknown,
-  properties: Record<string, any>,
-): unknown => {
-  if (!Array.isArray(expression)) {
-    return expression;
-  }
-
-  const [op, ...args] = expression;
-  if (op === "get") {
-    const key = args[0];
-    if (typeof key === "string") {
-      return properties?.[key];
-    }
-    return undefined;
-  }
-
-  if (op === "literal") {
-    return args[0];
-  }
-
-  return expression;
-};
-
-const evaluateLayerFilter = (
-  filter: unknown,
-  properties: Record<string, any>,
-): boolean => {
-  if (!filter) return true;
-  if (!Array.isArray(filter)) return true;
-
-  const [op, ...args] = filter;
-
-  if (op === "==") {
-    if (args.length < 2) return true;
-    return (
-      resolveFilterExpression(args[0], properties) ===
-      resolveFilterExpression(args[1], properties)
-    );
-  }
-
-  if (op === "in") {
-    if (args.length < 2) return true;
-    const needle = resolveFilterExpression(args[0], properties);
-    const haystack = args.slice(1).flatMap((arg) => {
-      const resolved = resolveFilterExpression(arg, properties);
-      if (Array.isArray(resolved)) {
-        return resolved;
-      }
-      return [resolved];
-    });
-    return haystack.some((value) => value === needle);
-  }
-
-  if (op === "all") {
-    return args.every((clause) => evaluateLayerFilter(clause, properties));
-  }
-
-  if (op === "any") {
-    return args.some((clause) => evaluateLayerFilter(clause, properties));
-  }
-
-  if (op === "!") {
-    if (!args.length) return true;
-    return !evaluateLayerFilter(args[0], properties);
-  }
-
-  return true;
-};
-
-
 const LAYER_ICON_BY_LABEL: Record<string, React.ReactNode> = {
   "AED Locations": <Heart className="w-4 h-4" />,
   "Bridges": <Cable className="w-4 h-4" />,
@@ -208,9 +112,6 @@ const KOTO_LAYER_GROUPS: KotoLayerGroup[] = [
   "Hazard Layers",
 ];
 
-const SHELTER_KOTO_LAYER_IDS = kotoLayers
-  .filter((layer) => /Designated Evacuation Centers/i.test(layer.label))
-  .map((layer) => `koto-layer-${layer.id}`);
 const AMENITY_CATEGORIES: Record<string, string> = {
   "Water Station": "waterStation250m",
   "Hospital": "hospital250m",
@@ -223,12 +124,6 @@ const AMENITY_CATEGORIES: Record<string, string> = {
   "Bridge": "bridge250m",
 };
 
-const MEASURE_CIRCLE_SOURCE_ID = "measure-circle-source";
-const MEASURE_CIRCLE_FILL_LAYER_ID = "measure-circle-fill";
-const MEASURE_CIRCLE_OUTLINE_LAYER_ID = "measure-circle-outline";
-const MEASURE_SHELTERS_SOURCE_ID = "measure-shelters-source";
-const MEASURE_SHELTERS_LAYER_ID = "measure-shelters-layer";
-const MEASURE_SHELTERS_LABEL_LAYER_ID = "measure-shelters-label-layer";
 const PLAYER_RANGE_SOURCE_ID = "player-range-source";
 const PLAYER_RANGE_FILL_LAYER_ID = "player-range-fill-layer";
 const PLAYER_RANGE_OUTLINE_LAYER_ID = "player-range-outline-layer";
@@ -240,78 +135,9 @@ const LIGHTNING_RANGE_FILL_LAYER_ID = "lightning-range-fill-layer";
 const LIGHTNING_RANGE_OUTLINE_LAYER_ID = "lightning-range-outline-layer";
 const GEOLOCATE_STYLE_ID = "mapbox-geolocate-circle-style";
 const ATTRIBUTION_STYLE_ID = "mapbox-attribution-position-style";
-const TERRAIN_DEM_SOURCE_ID = "mapbox-terrain-dem-source";
-const TERRAIN_DEM_TILESET = "mapbox://mapbox.mapbox-terrain-dem-v1";
-const TERRAIN_RGB_TILESET_ID = "mapbox.terrain-rgb";
-const TERRAIN_RGB_ZOOM = 14;
-const ELEVATION_CACHE_LIMIT = 1024;
 const DEFAULT_START_LOCATION = defaultCityContext.mapConfig.startLocation;
 
-type MeasureStatus = "idle" | "placing" | "active";
-const FIXED_MEASURE_RADIUS_METERS = 250;
 const PLAYER_RADIUS_METERS = Math.max(1, PROXIMITY_RADIUS_KM * 1000);
-
-const clampLatitude = (lat: number) => Math.max(-85.05112878, Math.min(85.05112878, lat));
-
-const toTerrainTilePoint = (coords: { lat: number; lng: number }, zoom: number) => {
-  const lat = clampLatitude(coords.lat);
-  const lng = ((((coords.lng + 180) % 360) + 360) % 360) - 180;
-  const scale = 2 ** zoom;
-  const x = ((lng + 180) / 360) * scale;
-  const latRad = (lat * Math.PI) / 180;
-  const y =
-    ((1 - Math.log(Math.tan(latRad) + 1 / Math.cos(latRad)) / Math.PI) / 2) * scale;
-
-  const tileX = Math.floor(x);
-  const tileY = Math.floor(y);
-  const pixelX = Math.max(0, Math.min(255, Math.floor((x - tileX) * 256)));
-  const pixelY = Math.max(0, Math.min(255, Math.floor((y - tileY) * 256)));
-
-  return { tileX, tileY, pixelX, pixelY };
-};
-
-const decodeTerrainRgbElevation = (r: number, g: number, b: number) =>
-  -10000 + (r * 256 * 256 + g * 256 + b) * 0.1;
-
-const loadImage = (url: string) =>
-  new Promise<HTMLImageElement>((resolve, reject) => {
-    const image = new Image();
-    image.crossOrigin = "anonymous";
-    image.onload = () => resolve(image);
-    image.onerror = () => reject(new Error(`Failed to load terrain tile: ${url}`));
-    image.src = url;
-  });
-
-const queryTerrainRgbElevation = async (
-  coords: { lat: number; lng: number },
-  accessToken: string,
-): Promise<number | null> => {
-  if (typeof document === "undefined" || !accessToken) {
-    return null;
-  }
-
-  const { tileX, tileY, pixelX, pixelY } = toTerrainTilePoint(coords, TERRAIN_RGB_ZOOM);
-  const tileUrl =
-    `https://api.mapbox.com/v4/${TERRAIN_RGB_TILESET_ID}/${TERRAIN_RGB_ZOOM}/${tileX}/${tileY}.pngraw` +
-    `?access_token=${encodeURIComponent(accessToken)}`;
-
-  const image = await loadImage(tileUrl);
-  const canvas = document.createElement("canvas");
-  canvas.width = 256;
-  canvas.height = 256;
-  const context = canvas.getContext("2d", { willReadFrequently: true });
-  if (!context) {
-    return null;
-  }
-
-  context.drawImage(image, 0, 0);
-  const pixel = context.getImageData(pixelX, pixelY, 1, 1).data;
-  if (!pixel || pixel.length < 4 || pixel[3] === 0) {
-    return null;
-  }
-
-  return decodeTerrainRgbElevation(pixel[0], pixel[1], pixel[2]);
-};
 
 interface MapViewProps {
   pois: POI[];
@@ -400,28 +226,14 @@ const pendingPoiRefreshHandlerRef = useRef<(() => void) | null>(null);
 const filteredPoiPopupHandlerRef = useRef<
   ((event: mapboxgl.MapLayerMouseEvent & mapboxgl.EventData) => void) | null
 >(null);
-const measureMarkerRef = useRef<mapboxgl.Marker | null>(null);
-  const measureShelterMarkersRef = useRef<mapboxgl.Marker[]>([]);
-  const measurePopupRef = useRef<mapboxgl.Popup | null>(null);
-  const shelterLayerVisibilityRef = useRef<Record<string, string>>({});
-  const lastMeasureTriggerRef = useRef<number>(0);
-  const measureStatusRef = useRef<MeasureStatus>("idle");
-  const lastMeasureRequestRef = useRef<number>(0);
   const geolocateHandlerRef = useRef<((event: GeolocationPosition) => void) | null>(null);
   const lastLightningParamsRef = useRef<{ center: { lat: number; lng: number }; radiusKm: number } | null>(null);
   const amenityCountsRef = useRef<Record<string, number>>({});
-  const geojsonSourceCacheRef = useRef<Record<string, PointLikeFeature[]>>({});
-  const geojsonSourcePromisesRef = useRef<Record<string, Promise<PointLikeFeature[]>>>({});
-  const layerFeatureCacheRef = useRef<Record<number, PointLikeFeature[]>>({});
-  const layerFeaturePromisesRef = useRef<Record<number, Promise<PointLikeFeature[]>>>({});
   const reapplyPlayerRangeRef = useRef<() => void>(() => {});
   const latestLocationRef = useRef<{ lat: number; lng: number }>(playerLocation);
   const amenitiesCallbackRef = useRef<
     ((info: { counts: Record<string, number>; matchedCategories: string[] }) => void) | undefined
   >(onAmenitiesWithinRadius);
-  const elevationCallbackRef = useRef(onElevationSample);
-  const elevationCacheRef = useRef<Map<string, number | null>>(new Map());
-  const elevationSampleVersionRef = useRef(0);
 
   const createOtherPlayerMarkerElement = useCallback(
     (player: { name: string; isStale: boolean }) => {
@@ -489,13 +301,30 @@ const measureMarkerRef = useRef<mapboxgl.Marker | null>(null);
     });
     return initialState;
   });
+  const kotoLayersVisibleRef = useRef(kotoLayersVisible);
+
+  const applyKotoLayerVisibility = useCallback((label: string, visible: boolean) => {
+    const m = map.current;
+    if (!m) return;
+
+    const layer = kotoLayers.find((item) => item.label === label);
+    if (!layer) return;
+
+    const layerId = `koto-layer-${layer.id}`;
+    if (!m.getLayer(layerId)) return;
+
+    m.setLayoutProperty(layerId, "visibility", visible ? "visible" : "none");
+  }, []);
 
   useEffect(() => {
     if (layerPanelCloseSignal !== undefined) {
       setShowLayerControl(false);
-      onLayerPanelToggle?.(false);
     }
   }, [layerPanelCloseSignal]);
+
+  useEffect(() => {
+    kotoLayersVisibleRef.current = kotoLayersVisible;
+  }, [kotoLayersVisible]);
 
   useEffect(() => {
     translateRef.current = t;
@@ -504,126 +333,6 @@ const measureMarkerRef = useRef<mapboxgl.Marker | null>(null);
   useEffect(() => {
     localeRef.current = locale;
   }, [locale]);
-
-  useEffect(() => {
-    elevationCallbackRef.current = onElevationSample;
-  }, [onElevationSample]);
-
-  const fetchFallbackElevation = useCallback(async (coords?: { lat: number; lng: number } | null) => {
-    if (!coords) return null;
-
-    const key = `${coords.lat.toFixed(5)},${coords.lng.toFixed(5)}`;
-    const cached = elevationCacheRef.current.get(key);
-    if (cached !== undefined) {
-      return cached;
-    }
-
-    try {
-      const fallbackElevation = await queryTerrainRgbElevation(coords, MAPBOX_CONFIG.accessToken);
-      elevationCacheRef.current.set(key, fallbackElevation);
-      if (elevationCacheRef.current.size > ELEVATION_CACHE_LIMIT) {
-        const oldestKey = elevationCacheRef.current.keys().next().value;
-        if (oldestKey) {
-          elevationCacheRef.current.delete(oldestKey);
-        }
-      }
-      return fallbackElevation;
-    } catch (error) {
-      console.warn("[Map] Terrain fallback elevation query failed", { coords, error });
-      elevationCacheRef.current.set(key, null);
-      return null;
-    }
-  }, []);
-
-  const ensureTerrainEnabled = useCallback(() => {
-    const m = map.current;
-    if (!m) return;
-    try {
-      if (!m.getSource(TERRAIN_DEM_SOURCE_ID)) {
-        m.addSource(TERRAIN_DEM_SOURCE_ID, {
-          type: "raster-dem",
-          url: TERRAIN_DEM_TILESET,
-          tileSize: 512,
-          maxzoom: 14,
-        });
-      }
-      const currentTerrain = (m as any).getTerrain?.();
-      if (!currentTerrain || currentTerrain.source !== TERRAIN_DEM_SOURCE_ID) {
-        m.setTerrain({ source: TERRAIN_DEM_SOURCE_ID, exaggeration: 1 });
-      }
-    } catch (error) {
-      console.warn("[Map] Failed to enable terrain source", error);
-    }
-  }, []);
-
-  const sampleTerrainElevation = useCallback(() => {
-    const m = map.current;
-    const callback = elevationCallbackRef.current;
-    if (!m || !callback) return;
-    const sampleVersion = ++elevationSampleVersionRef.current;
-
-    const query = (coords?: { lat: number; lng: number } | null): number | null => {
-      if (!coords) return null;
-      try {
-        const value = (m as any).queryTerrainElevation?.(
-          [coords.lng, coords.lat],
-          { exaggerated: false },
-        );
-        return typeof value === "number" && Number.isFinite(value) ? value : null;
-      } catch {
-        return null;
-      }
-    };
-
-    const currentPlayerCoords = { lat: playerLocation.lat, lng: playerLocation.lng };
-    const currentShelterCoords = secretShelterCoords
-      ? { lat: secretShelterCoords.lat, lng: secretShelterCoords.lng }
-      : null;
-
-    const emit = (playerElevationMeters: number | null, shelterElevationMeters: number | null) => {
-      if (sampleVersion !== elevationSampleVersionRef.current) return;
-      callback({ playerElevationMeters, shelterElevationMeters });
-    };
-
-    const playerElevationMeters = query(currentPlayerCoords);
-    const shelterElevationMeters = query(currentShelterCoords);
-
-    const needsRetry =
-      playerElevationMeters == null ||
-      (currentShelterCoords != null && shelterElevationMeters == null);
-    if (!needsRetry) {
-      emit(playerElevationMeters, shelterElevationMeters);
-      return;
-    }
-
-    const resolveWithFallback = async (afterIdle: boolean) => {
-      let resolvedPlayer = afterIdle ? query(currentPlayerCoords) : playerElevationMeters;
-      let resolvedShelter = afterIdle ? query(currentShelterCoords) : shelterElevationMeters;
-
-      if (resolvedPlayer == null) {
-        resolvedPlayer = await fetchFallbackElevation(currentPlayerCoords);
-      }
-      if (currentShelterCoords && resolvedShelter == null) {
-        resolvedShelter = await fetchFallbackElevation(currentShelterCoords);
-      }
-
-      emit(resolvedPlayer, resolvedShelter);
-    };
-
-    if (m.isStyleLoaded()) {
-      m.once("idle", () => {
-        void resolveWithFallback(true);
-      });
-    } else {
-      void resolveWithFallback(false);
-    }
-  }, [
-    fetchFallbackElevation,
-    playerLocation.lat,
-    playerLocation.lng,
-    secretShelterCoords?.lat,
-    secretShelterCoords?.lng,
-  ]);
 
   const localizeTextFieldExpression = useCallback(
     (expr: any, currentLocale: typeof locale): any => {
@@ -692,104 +401,37 @@ const measureMarkerRef = useRef<mapboxgl.Marker | null>(null);
     ),
   );
 
-  const [measureState, setMeasureState] = useState<{
-    status: MeasureStatus;
-    radius: number;
-    count: number;
-    center: { lng: number; lat: number } | null;
-    featureNames: string[];
-    layerCounts: Record<string, number>;
-  }>({
-    status: "idle",
-    radius: FIXED_MEASURE_RADIUS_METERS,
-    count: 0,
-    center: null,
-    featureNames: [],
-    layerCounts: {},
-  });
-
   const [userCircleCenter, setUserCircleCenter] = useState<{ lat: number; lng: number } | null>(
     null,
   );
   const [hasUserLocationFix, setHasUserLocationFix] = useState(false);
   const [mapLoaded, setMapLoaded] = useState(false);
 
-  const [isMeasurePanelCollapsed, setIsMeasurePanelCollapsed] = useState(false);
   const [visiblePois, setVisiblePois] = useState<POI[]>([]);
-
-  const loadGeojsonPointFeatures = useCallback(
-    async (geojsonUrl?: string): Promise<PointLikeFeature[]> => {
-      if (!geojsonUrl) return [];
-
-      if (geojsonSourceCacheRef.current[geojsonUrl]) {
-        return geojsonSourceCacheRef.current[geojsonUrl];
-      }
-
-      if (!geojsonSourcePromisesRef.current[geojsonUrl]) {
-        geojsonSourcePromisesRef.current[geojsonUrl] = fetch(geojsonUrl)
-          .then((response) => {
-            if (!response.ok) {
-              throw new Error(
-                `Failed to load geojson source ${geojsonUrl}: ${response.status} ${response.statusText}`,
-              );
-            }
-            return response.json() as Promise<FeatureCollection>;
-          })
-          .then((collection) => {
-            if (
-              !collection ||
-              collection.type !== "FeatureCollection" ||
-              !Array.isArray(collection.features)
-            ) {
-              return [];
-            }
-            const pointFeatures = collection.features.filter(
-              (feature): feature is PointLikeFeature => {
-                const type = feature?.geometry?.type;
-                return type === "Point" || type === "MultiPoint";
-              },
-            );
-            geojsonSourceCacheRef.current[geojsonUrl] = pointFeatures;
-            return pointFeatures;
-          })
-          .catch((error) => {
-            console.warn(`[Measure] Unable to load geojson ${geojsonUrl}`, error);
-            delete geojsonSourcePromisesRef.current[geojsonUrl];
-            return [];
-          });
-      }
-
-      return geojsonSourcePromisesRef.current[geojsonUrl];
-    },
-    [],
-  );
-
-  const getLayerMeasurementFeatures = useCallback(
-    async (layer: (typeof kotoLayers)[number]): Promise<PointLikeFeature[]> => {
-      if (layer.sourceType !== "geojson") {
-        return [];
-      }
-
-      if (layerFeatureCacheRef.current[layer.id]) {
-        return layerFeatureCacheRef.current[layer.id];
-      }
-
-      if (!layerFeaturePromisesRef.current[layer.id]) {
-        layerFeaturePromisesRef.current[layer.id] = loadGeojsonPointFeatures(
-          layer.sourceData.geojsonUrl,
-        ).then((features) => {
-          const filtered = features.filter((feature) =>
-            evaluateLayerFilter(layer.style.filter, feature.properties ?? {}),
-          );
-          layerFeatureCacheRef.current[layer.id] = filtered;
-          return filtered;
-        });
-      }
-
-      return layerFeaturePromisesRef.current[layer.id];
-    },
-    [loadGeojsonPointFeatures],
-  );
+  const { ensureTerrainEnabled, sampleTerrainElevation } = useTerrainElevation({
+    accessToken: MAPBOX_CONFIG.accessToken,
+    mapRef: map,
+    onElevationSample,
+    playerLocation,
+    secretShelterCoords,
+  });
+  const {
+    clearMeasurement,
+    handleDeleteMeasurement,
+    handleMapClick,
+    handleMoveMeasurementPoint,
+    isMeasurePanelCollapsed,
+    measureState,
+    measureStatusRef,
+    setIsMeasurePanelCollapsed,
+  } = useMeasurementTool({
+    mapRef: map,
+    kotoLayersVisible,
+    locale,
+    measureTrigger,
+    onMeasurementActiveChange,
+    t,
+  });
 
   const buildDesignatedShelterPopupHtml = useCallback((props: Record<string, any>) => {
     const translate = translateRef.current;
@@ -870,14 +512,6 @@ const measureMarkerRef = useRef<mapboxgl.Marker | null>(null);
       </div>
     `;
   }, []);
-
-
-  useEffect(() => {
-    if (measureState.status !== "active") {
-      setIsMeasurePanelCollapsed(false);
-    }
-  }, [measureState.status]);
-
   useEffect(() => {
     if (isFiltered) {
       setVisiblePois(pois);
@@ -885,97 +519,6 @@ const measureMarkerRef = useRef<mapboxgl.Marker | null>(null);
       setVisiblePois([]);
     }
   }, [isFiltered, pois]);
-
-  const closeMeasurePopup = useCallback(() => {
-    if (measurePopupRef.current) {
-      measurePopupRef.current.remove();
-      measurePopupRef.current = null;
-    }
-  }, []);
-
-  const removeShelterMarkers = useCallback(() => {
-    measureShelterMarkersRef.current.forEach((marker) => marker.remove());
-    measureShelterMarkersRef.current = [];
-    const m = map.current;
-    if (!m) return;
-
-    if (m.getLayer(MEASURE_SHELTERS_LABEL_LAYER_ID)) {
-      m.removeLayer(MEASURE_SHELTERS_LABEL_LAYER_ID);
-    }
-    if (m.getLayer(MEASURE_SHELTERS_LAYER_ID)) {
-      m.removeLayer(MEASURE_SHELTERS_LAYER_ID);
-    }
-    if (m.getSource(MEASURE_SHELTERS_SOURCE_ID)) {
-      m.removeSource(MEASURE_SHELTERS_SOURCE_ID);
-    }
-  }, []);
-
-  const removeMeasurementCircle = useCallback(() => {
-    const m = map.current;
-    if (!m) return;
-
-    if (m.getLayer(MEASURE_CIRCLE_FILL_LAYER_ID)) {
-      m.removeLayer(MEASURE_CIRCLE_FILL_LAYER_ID);
-    }
-    if (m.getLayer(MEASURE_CIRCLE_OUTLINE_LAYER_ID)) {
-      m.removeLayer(MEASURE_CIRCLE_OUTLINE_LAYER_ID);
-    }
-    if (m.getSource(MEASURE_CIRCLE_SOURCE_ID)) {
-      m.removeSource(MEASURE_CIRCLE_SOURCE_ID);
-    }
-  }, []);
-
-  const removeMeasurementArtifacts = useCallback(() => {
-    removeMeasurementCircle();
-    removeShelterMarkers();
-    closeMeasurePopup();
-  }, [closeMeasurePopup, removeMeasurementCircle, removeShelterMarkers]);
-
-  const restoreShelterLayers = useCallback(() => {
-    const m = map.current;
-    if (!m) return;
-
-    Object.entries(shelterLayerVisibilityRef.current).forEach(
-      ([layerId, visibility]) => {
-        if (m.getLayer(layerId)) {
-          m.setLayoutProperty(layerId, "visibility", visibility);
-        }
-      },
-    );
-    shelterLayerVisibilityRef.current = {};
-  }, []);
-
-  const hideShelterLayers = useCallback(() => {
-    const m = map.current;
-    if (!m) return;
-
-    SHELTER_KOTO_LAYER_IDS.forEach((layerId) => {
-      if (!m.getLayer(layerId)) return;
-      const currentVisibility =
-        (m.getLayoutProperty(layerId, "visibility") as string) ?? "visible";
-      if (!(layerId in shelterLayerVisibilityRef.current)) {
-        shelterLayerVisibilityRef.current[layerId] = currentVisibility;
-      }
-      m.setLayoutProperty(layerId, "visibility", "none");
-    });
-  }, []);
-
-  const clearMeasurement = useCallback(() => {
-    removeMeasurementArtifacts();
-    restoreShelterLayers();
-    if (measureMarkerRef.current) {
-      measureMarkerRef.current.remove();
-      measureMarkerRef.current = null;
-    }
-    setMeasureState({
-      status: "idle",
-      radius: FIXED_MEASURE_RADIUS_METERS,
-      count: 0,
-      center: null,
-      featureNames: [],
-      layerCounts: {},
-    });
-  }, [removeMeasurementArtifacts, restoreShelterLayers]);
 
   const refreshFilteredPoiLayers = useCallback(
     (poisToRender: POI[]) => {
@@ -1146,357 +689,6 @@ const measureMarkerRef = useRef<mapboxgl.Marker | null>(null);
     }
   }, []);
 
-  const updateShelterMarkers = useCallback(
-    (shelters: POI[]) => {
-      const m = map.current;
-      if (!m) return;
-
-      measureShelterMarkersRef.current.forEach((marker) => marker.remove());
-      measureShelterMarkersRef.current = [];
-
-      if (m.getLayer(MEASURE_SHELTERS_LABEL_LAYER_ID)) {
-        m.removeLayer(MEASURE_SHELTERS_LABEL_LAYER_ID);
-      }
-      if (m.getLayer(MEASURE_SHELTERS_LAYER_ID)) {
-        m.removeLayer(MEASURE_SHELTERS_LAYER_ID);
-      }
-
-      const validShelters = shelters.filter(
-        (shelter) =>
-          typeof shelter.lng === "number" &&
-          typeof shelter.lat === "number" &&
-          Number.isFinite(shelter.lng) &&
-          Number.isFinite(shelter.lat),
-      );
-
-      if (!validShelters.length) {
-        if (m.getSource(MEASURE_SHELTERS_SOURCE_ID)) {
-          m.removeSource(MEASURE_SHELTERS_SOURCE_ID);
-        }
-        return;
-      }
-
-      const featureCollection = {
-        type: "FeatureCollection",
-        features: validShelters.map((shelter) => ({
-          type: "Feature",
-          geometry: {
-            type: "Point",
-            coordinates: [shelter.lng, shelter.lat],
-          },
-          properties: {
-            name: shelter.name || "Shelter",
-          },
-        })),
-      } as const;
-
-      if (m.getSource(MEASURE_SHELTERS_SOURCE_ID)) {
-        (m.getSource(MEASURE_SHELTERS_SOURCE_ID) as mapboxgl.GeoJSONSource).setData(
-          featureCollection as any,
-        );
-      } else {
-        m.addSource(MEASURE_SHELTERS_SOURCE_ID, {
-          type: "geojson",
-          data: featureCollection as any,
-        });
-      }
-
-      m.addLayer({
-        id: MEASURE_SHELTERS_LAYER_ID,
-        type: "circle",
-        source: MEASURE_SHELTERS_SOURCE_ID,
-        paint: {
-          "circle-radius": 6,
-          "circle-color": "#0f0f0f",
-          "circle-stroke-color": "#c1272d",
-          "circle-stroke-width": 3,
-        },
-      });
-
-      m.addLayer({
-        id: MEASURE_SHELTERS_LABEL_LAYER_ID,
-        type: "symbol",
-        source: MEASURE_SHELTERS_SOURCE_ID,
-        layout: {
-          "text-field": ["get", "name"],
-          "text-font": ["Inter Regular", "Arial Unicode MS Regular"],
-          "text-size": 10,
-          "text-anchor": "top",
-          "text-offset": [0, 1.2],
-          "text-allow-overlap": false,
-        },
-        paint: {
-          "text-color": "#0f0f0f",
-          "text-halo-color": "#ffffff",
-          "text-halo-width": 1.2,
-        },
-      });
-    },
-    [],
-  );
-
-  const updateCircle = useCallback(
-    (center: { lng: number; lat: number }, radius: number) => {
-      const m = map.current;
-      if (!m) return;
-
-      const requestId = Date.now();
-      lastMeasureRequestRef.current = requestId;
-
-      const circleFeature = createCircleFeature(center, radius);
-
-      if (m.getSource(MEASURE_CIRCLE_SOURCE_ID)) {
-        (m.getSource(MEASURE_CIRCLE_SOURCE_ID) as mapboxgl.GeoJSONSource).setData(
-          circleFeature as any,
-        );
-      } else {
-        m.addSource(MEASURE_CIRCLE_SOURCE_ID, {
-          type: "geojson",
-          data: circleFeature as any,
-        });
-        m.addLayer({
-          id: MEASURE_CIRCLE_FILL_LAYER_ID,
-          type: "fill",
-          source: MEASURE_CIRCLE_SOURCE_ID,
-          paint: {
-            "fill-color": "#c1272d",
-            "fill-opacity": 0.18,
-          },
-        });
-        m.addLayer({
-          id: MEASURE_CIRCLE_OUTLINE_LAYER_ID,
-          type: "line",
-          source: MEASURE_CIRCLE_SOURCE_ID,
-          paint: {
-            "line-color": "#c1272d",
-            "line-width": 2,
-            "line-dasharray": [1.5, 1.5],
-          },
-        });
-      }
-
-      (async () => {
-        const radiusKm = Math.max(0, radius) / 1000;
-        const origin = { lat: center.lat, lng: center.lng };
-
-        const activeSymbolLayers = kotoLayers.filter(
-          (layer) => layer.layerType === "symbol" && kotoLayersVisible[layer.label],
-        );
-
-        const layerResults = await Promise.all(
-          activeSymbolLayers.map(async (layer) => ({
-            layer,
-            features: await getLayerMeasurementFeatures(layer),
-          })),
-        );
-
-        const layerCounts: Record<string, number> = {};
-        const markers: POI[] = [];
-
-        layerResults.forEach(({ layer, features }) => {
-          const displayLabel =
-            localeRef.current === "ja" ? layer.labelJp ?? layer.label : layer.label;
-          features.forEach((feature, index) => {
-            const coordinates = getFeatureCoordinates(feature);
-            if (!coordinates.length) return;
-
-            const isWithinRadius = coordinates.some(([lng, lat]) =>
-              haversineDistanceKm(origin, { lat, lng }) <= radiusKm,
-            );
-            if (!isWithinRadius) return;
-
-            const [lng, lat] = coordinates[0];
-            if (!Number.isFinite(lng) || !Number.isFinite(lat)) {
-              return;
-            }
-
-            layerCounts[displayLabel] = (layerCounts[displayLabel] ?? 0) + 1;
-
-            const props = feature.properties ?? {};
-            const localizedName =
-              localeRef.current === "ja"
-                ? (props["Landmark Name (JP)"] as string) ??
-                  (props["Landmark name (JP)"] as string) ??
-                  (props["Landmark Name (EN)"] as string) ??
-                  (props["Landmark name (EN)"] as string)
-                : (props["Landmark Name (EN)"] as string) ??
-                  (props["Landmark name (EN)"] as string) ??
-                  (props["Landmark Name (JP)"] as string) ??
-                  (props["Landmark name (JP)"] as string);
-            const name = localizedName ?? (props.name as string) ?? displayLabel;
-
-            const id =
-              feature.id != null
-                ? String(feature.id)
-                : `${layer.id}-${index}`;
-
-            markers.push({
-              id,
-              name,
-              lat: Number(lat),
-              lng: Number(lng),
-              type: "shelter",
-            });
-          });
-        });
-
-        if (lastMeasureRequestRef.current !== requestId) {
-          return;
-        }
-
-        updateShelterMarkers(markers);
-        hideShelterLayers();
-
-        console.log("[Measure] features within radius", {
-          center,
-          radiusMeters: radius,
-          total: markers.length,
-          layers: layerCounts,
-        });
-
-        setMeasureState((prev) => ({
-          ...prev,
-          status: "active",
-          center,
-          radius,
-          count: markers.length,
-          featureNames: markers
-            .map((feature) => feature.name)
-            .filter((name): name is string => Boolean(name)),
-          layerCounts,
-        }));
-      })().catch((error) => {
-        console.error("[Measure] Failed to load shelters", error);
-      });
-    },
-    [getLayerMeasurementFeatures, hideShelterLayers, updateShelterMarkers, kotoLayersVisible],
-  );
-
-  const beginMoveCenter = useCallback(() => {
-    removeMeasurementArtifacts();
-    restoreShelterLayers();
-    if (measureMarkerRef.current) {
-      measureMarkerRef.current.remove();
-      measureMarkerRef.current = null;
-    }
-    setMeasureState((prev) => ({
-      status: "placing",
-      radius: FIXED_MEASURE_RADIUS_METERS,
-      count: 0,
-      center: null,
-      featureNames: [],
-      layerCounts: {},
-    }));
-    toast.info(
-      t("map.measure.placePrompt", {
-        fallback: "Tap the map to place a new measurement point.",
-      }),
-    );
-  }, [removeMeasurementArtifacts, restoreShelterLayers]);
-
-  const showMarkerMenu = useCallback(() => {
-    const m = map.current;
-    if (!m || !measureState.center) return;
-
-    if (!measurePopupRef.current) {
-      measurePopupRef.current = new mapboxgl.Popup({
-        closeButton: true,
-        closeOnClick: false,
-        offset: 18,
-        className: "measure-popup-wrapper",
-      });
-    }
-
-    measurePopupRef.current
-      .setLngLat([measureState.center.lng, measureState.center.lat])
-      .setHTML(`
-        <div class="measure-popup">
-          <button type="button" data-action="move">${t("map.measure.popup.move", { fallback: "Move center" })}</button>
-          <button type="button" data-action="delete" class="danger">${t("map.measure.popup.delete", { fallback: "Delete" })}</button>
-        </div>
-      `)
-      .addTo(m);
-
-    const popupEl = measurePopupRef.current.getElement();
-    const bindAction = (selector: string, handler: () => void) => {
-      const node = popupEl.querySelector(selector);
-      if (!node) return;
-      node.addEventListener(
-        "click",
-        (event) => {
-          event.stopPropagation();
-          handler();
-        },
-        { once: true },
-      );
-    };
-
-    bindAction('[data-action="move"]', () => {
-      closeMeasurePopup();
-      beginMoveCenter();
-    });
-    bindAction('[data-action="delete"]', () => {
-      closeMeasurePopup();
-      clearMeasurement();
-    });
-  }, [beginMoveCenter, clearMeasurement, closeMeasurePopup, measureState.center]);
-
-  const placeMeasureMarker = useCallback(
-    (lng: number, lat: number) => {
-      const m = map.current;
-      if (!m) return;
-
-      if (!measureMarkerRef.current) {
-        const el = document.createElement("div");
-        el.className = "measure-marker";
-        el.addEventListener("click", (event) => {
-          event.stopPropagation();
-          showMarkerMenu();
-        });
-
-        measureMarkerRef.current = new mapboxgl.Marker({
-          element: el,
-          draggable: true,
-        })
-          .setLngLat([lng, lat])
-          .addTo(m);
-
-        measureMarkerRef.current.on("dragstart", () => {
-          closeMeasurePopup();
-        });
-
-        measureMarkerRef.current.on("dragend", () => {
-          const updated = measureMarkerRef.current?.getLngLat();
-          if (!updated) return;
-          removeMeasurementArtifacts();
-          restoreShelterLayers();
-          setMeasureState((prev) => ({
-            ...prev,
-            status: "active",
-            center: { lng: updated.lng, lat: updated.lat },
-            radius: FIXED_MEASURE_RADIUS_METERS,
-            count: 0,
-            featureNames: [],
-            layerCounts: {},
-          }));
-          updateCircle(
-            { lng: updated.lng, lat: updated.lat },
-            FIXED_MEASURE_RADIUS_METERS,
-          );
-        });
-      }
-
-      measureMarkerRef.current?.setLngLat([lng, lat]);
-    },
-    [
-      closeMeasurePopup,
-      removeMeasurementArtifacts,
-      restoreShelterLayers,
-      showMarkerMenu,
-      updateCircle,
-    ],
-  );
-
   const selectShelterFromLocalData = useCallback(() => {
     if (hasSelectedShelter.current) {
       return;
@@ -1564,21 +756,7 @@ const measureMarkerRef = useRef<mapboxgl.Marker | null>(null);
       }
     })();
   }, [onSecretShelterChange, onShelterOptionsChange]);
-  const [layersVisible, setLayersVisible] = useState({
-    floods: true,
-    shelters: true,
-    schools: true,
-    fireStations: true,
-    hospitals: true,
-    parks: true,
-    libraries: true,
-  });
   const [showLayerControl, setShowLayerControl] = useState(false);
-  useEffect(() => {
-    if (layerPanelCloseSignal !== undefined) {
-      setShowLayerControl(false);
-    }
-  }, [layerPanelCloseSignal]);
 
   // Initialize map
   useEffect(() => {
@@ -1654,6 +832,13 @@ const measureMarkerRef = useRef<mapboxgl.Marker | null>(null);
           const reapply = reapplyPlayerRangeRef.current;
           const mInner = map.current;
           if (!reapply || !mInner) return;
+          const missingVisibleKotoLayer = kotoLayers.some((layer) => {
+            if (!kotoLayersVisibleRef.current[layer.label]) return false;
+            return !mInner.getLayer(`koto-layer-${layer.id}`);
+          });
+          if (missingVisibleKotoLayer) {
+            addKotoLayers();
+          }
           const hasRangeSource = (() => {
             try {
               return Boolean(mInner.getSource(PLAYER_RANGE_SOURCE_ID));
@@ -1985,46 +1170,6 @@ const measureMarkerRef = useRef<mapboxgl.Marker | null>(null);
   }, [gameMode, lightningCenter?.lat, lightningCenter?.lng, lightningRadiusKm, mapLoaded]);
 
   useEffect(() => {
-    measureStatusRef.current = measureState.status;
-  }, [measureState.status]);
-
-  useEffect(() => {
-    onMeasurementActiveChange?.(measureState.status !== "idle");
-  }, [measureState.status, onMeasurementActiveChange]);
-
-  useEffect(() => {
-    if (measureTrigger == null) return;
-    if (measureTrigger === lastMeasureTriggerRef.current) return;
-    lastMeasureTriggerRef.current = measureTrigger;
-
-    if (!map.current) return;
-
-    removeMeasurementArtifacts();
-    restoreShelterLayers();
-    if (measureMarkerRef.current) {
-      measureMarkerRef.current.remove();
-      measureMarkerRef.current = null;
-    }
-    setMeasureState({
-      status: "placing",
-      radius: 250,
-      count: 0,
-      center: null,
-      featureNames: [],
-      layerCounts: {},
-    });
-    toast.info(
-      t("map.measure.dropPrompt", {
-        fallback: "Tap the map to drop a measurement point.",
-      }),
-    );
-  }, [
-    measureTrigger,
-    removeMeasurementArtifacts,
-    restoreShelterLayers,
-  ]);
-
-  useEffect(() => {
     if (!map.current) return;
     console.log("[POI] Updating filtered markers", { total: visiblePois.length });
     refreshFilteredPoiLayers(visiblePois);
@@ -2056,41 +1201,12 @@ const measureMarkerRef = useRef<mapboxgl.Marker | null>(null);
     const m = map.current;
     if (!m) return;
 
-    const handleMapClick = (
-      event: mapboxgl.MapMouseEvent & mapboxgl.EventData,
-    ) => {
-      if (measureStatusRef.current !== "placing") {
-        return;
-      }
-
-      const { lng, lat } = event.lngLat;
-      placeMeasureMarker(lng, lat);
-      setMeasureState((prev) => ({
-        ...prev,
-        status: "active",
-        center: { lng, lat },
-        radius: FIXED_MEASURE_RADIUS_METERS,
-        count: 0,
-        featureNames: [],
-        layerCounts: {},
-      }));
-      updateCircle({ lng, lat }, FIXED_MEASURE_RADIUS_METERS);
-    };
-
     m.on("click", handleMapClick);
 
     return () => {
       m.off("click", handleMapClick);
     };
-  }, [placeMeasureMarker, updateCircle]);
-
-
-  // Handle location picker mode (minimal changes, adds console log)
-  // Temporarily disable POI markers and player markers for debugging
-
-  const toggleLayer = (layer: keyof typeof layersVisible) => {
-    setLayersVisible((prev) => ({ ...prev, [layer]: !prev[layer] }));
-  };
+  }, [handleMapClick]);
 
   const clearAllLayers = () => {
     if (!map.current) return;
@@ -2109,7 +1225,7 @@ const measureMarkerRef = useRef<mapboxgl.Marker | null>(null);
   };
 
   // Add Koto layers to the map
-  const addKotoLayers = () => {
+  const addKotoLayers = useCallback(() => {
     const m = map.current;
     if (!m) return;
 
@@ -2211,6 +1327,7 @@ const measureMarkerRef = useRef<mapboxgl.Marker | null>(null);
       };
 
       sortedKotoLayers.forEach((layer) => {
+        try {
         const sourceId = `koto-source-${layer.sourceData.layerId}`;
         const layerId = `koto-layer-${layer.id}`;
 
@@ -2239,12 +1356,23 @@ const measureMarkerRef = useRef<mapboxgl.Marker | null>(null);
             type: layer.layerType,
             source: sourceId,
             layout: (() => {
-              const layout = {
+            const layout = {
                 ...layer.style.layout,
-                visibility: layer.metadata.loadOnInit ? "visible" : "none",
+                visibility:
+                  (kotoLayersVisibleRef.current[layer.label] ?? layer.metadata.loadOnInit)
+                    ? "visible"
+                    : "none",
               } as Record<string, unknown>;
               if (layout["icon-allow-overlap"] === true) {
                 layout["icon-ignore-placement"] = true;
+              }
+              if (layer.layerType === "symbol") {
+                // Ensure labels can still render even if custom sprite icons are unavailable.
+                layout["icon-optional"] = true;
+                layout["text-optional"] = true;
+                layout["text-allow-overlap"] = true;
+                layout["text-ignore-placement"] = true;
+                layout["text-font"] = ["Open Sans Bold", "Arial Unicode MS Bold"];
               }
               return layout;
             })(),
@@ -2297,6 +1425,13 @@ const measureMarkerRef = useRef<mapboxgl.Marker | null>(null);
           }
 
           boundLayers.add(layerId);
+        }
+        } catch (layerError) {
+          console.warn("[koto] Failed to add individual layer", {
+            layerId: layer.id,
+            layerLabel: layer.label,
+            error: layerError,
+          });
         }
       });
 
@@ -2401,36 +1536,79 @@ const measureMarkerRef = useRef<mapboxgl.Marker | null>(null);
       (m as any).__kotoPopupHandler = handleCombinedClick;
       m.on("click", handleCombinedClick);
 
+      Object.entries(kotoLayersVisibleRef.current).forEach(([label, visible]) => {
+        applyKotoLayerVisibility(label, visible);
+      });
       // console.info("[koto] layers initialized");
     } catch (error) {
       console.warn("[koto] Could not add layers - check tilesets/source-layer names:", error);
     }
-  };
+  }, [applyKotoLayerVisibility, localizeTextFieldExpression]);
 
 
   // Toggle Koto layer visibility
   const toggleKotoLayer = (label: string) => {
-    if (!map.current) return;
+    const layer = kotoLayers.find((item) => item.label === label);
+    const layerId = layer ? `koto-layer-${layer.id}` : null;
+    const newVisibility = !kotoLayersVisibleRef.current[label];
+    setKotoLayersVisible((prev) => ({
+      ...prev,
+      [label]: newVisibility,
+    }));
+    kotoLayersVisibleRef.current = {
+      ...kotoLayersVisibleRef.current,
+      [label]: newVisibility,
+    };
 
-    const layer = kotoLayers.find((l) => l.label === label);
-    if (!layer) return;
+    if (layer && layerId && !map.current?.getLayer(layerId)) {
+      addKotoLayers();
+      const activeMap = map.current;
+      if (activeMap) {
+        const applyAfterStyleLoad = () => {
+          if (!activeMap.getLayer(layerId)) {
+            console.warn("[koto] Requested layer toggle but layer is unavailable", {
+              label,
+              layerId,
+            });
+            if (newVisibility) {
+              setKotoLayersVisible((prev) => ({ ...prev, [label]: false }));
+              kotoLayersVisibleRef.current = {
+                ...kotoLayersVisibleRef.current,
+                [label]: false,
+              };
+            }
+            return;
+          }
+          applyKotoLayerVisibility(label, newVisibility);
+        };
 
-    const layerId = `koto-layer-${layer.id}`;
-    const newVisibility = !kotoLayersVisible[label];
-
-    if (map.current.getLayer(layerId)) {
-      map.current.setLayoutProperty(
-        layerId,
-        "visibility",
-        newVisibility ? "visible" : "none",
-      );
-
-      setKotoLayersVisible((prev) => ({
-        ...prev,
-        [label]: newVisibility,
-      }));
+        if (typeof activeMap.isStyleLoaded === "function" && !activeMap.isStyleLoaded()) {
+          activeMap.once("style.load", applyAfterStyleLoad);
+          return;
+        }
+        applyAfterStyleLoad();
+        return;
+      }
     }
+
+    applyKotoLayerVisibility(label, newVisibility);
   };
+
+  useEffect(() => {
+    if (!mapLoaded) return;
+    const m = map.current;
+    if (!m) return;
+    const missingVisibleKotoLayer = kotoLayers.some((layer) => {
+      if (!kotoLayersVisible[layer.label]) return false;
+      return !m.getLayer(`koto-layer-${layer.id}`);
+    });
+    if (missingVisibleKotoLayer) {
+      addKotoLayers();
+    }
+    Object.entries(kotoLayersVisible).forEach(([label, visible]) => {
+      applyKotoLayerVisibility(label, visible);
+    });
+  }, [addKotoLayers, applyKotoLayerVisibility, kotoLayersVisible, mapLoaded]);
 
   const handleLayerControlToggle = useCallback(
     (desiredState?: boolean) => {
@@ -2458,28 +1636,42 @@ const measureMarkerRef = useRef<mapboxgl.Marker | null>(null);
     }));
   };
 
-  const groupedKotoLayers = KOTO_LAYER_GROUPS.map((group) => ({
-    group,
-    layers: kotoLayers.filter((layer) => layer.group === group),
-  })).filter(({ layers }) => layers.length > 0);
   const translateGroup = (group: KotoLayerGroup) =>
     t(`map.layers.groups.${group}`, { fallback: group });
   const translateLayerLabel = (layerId: number, label: string) =>
     t(`map.layers.items.${layerId}`, { fallback: label });
+  const groupedLayerSections = KOTO_LAYER_GROUPS.map((group) => {
+    const layers = kotoLayers.filter((layer) => layer.group === group);
+    return {
+      group,
+      title: translateGroup(group),
+      isOpen: layerGroupOpenState[group],
+      onToggleGroup: () => toggleLayerGroupOpen(group),
+      layers: layers.map((layer) => ({
+        id: layer.id,
+        label: translateLayerLabel(layer.id, layer.label),
+        icon: getKotoLayerIcon(layer),
+        checked: kotoLayersVisible[layer.label],
+        onChange: () => toggleKotoLayer(layer.label),
+      })),
+    };
+  }).filter((section) => section.layers.length > 0);
+  const legendSections = kotoLayers.map((layer) => ({
+    id: layer.id,
+    items: layer.metadata.legendItems.map((legendItem, itemIndex) => ({
+      key: `${layer.id}-${itemIndex}`,
+      label: legendItem.label,
+      swatchType: legendItem.swatchType,
+      swatchColor:
+        legendItem.swatchStyle.strokeColor ||
+        legendItem.swatchStyle.fillColor ||
+        "#000",
+    })),
+  }));
 
   const anyLayerActive = Object.values(kotoLayersVisible).some(Boolean);
   const isPanelCollapsed =
     measureState.status === "active" && isMeasurePanelCollapsed;
-
-  const handleMoveMeasurementPoint = useCallback(() => {
-    closeMeasurePopup();
-    beginMoveCenter();
-  }, [beginMoveCenter, closeMeasurePopup]);
-
-  const handleDeleteMeasurement = useCallback(() => {
-    closeMeasurePopup();
-    clearMeasurement();
-  }, [clearMeasurement, closeMeasurePopup]);
 
   const moveAttributionToBottomLeft = useCallback(() => {
     const m = map.current;
@@ -2636,176 +1828,21 @@ const measureMarkerRef = useRef<mapboxgl.Marker | null>(null);
         }
       `}</style>
 
-      {/* Layer Control Button */}
-      <motion.button
-        onClick={() => handleLayerControlToggle()}
-        className="absolute top-4 left-4 z-10 rounded-full border border-neutral-900 bg-background p-3 text-neutral-900 shadow-sm transition-colors hover:bg-neutral-100 cursor-pointer"
-        whileHover={{ scale: 1.02 }}
-        whileTap={{ scale: 0.98 }}
-      >
-        <Layers className="w-5 h-5 text-black" />
-      </motion.button>
-
-       {/* Koto Layer Control Panel */}
-      <AnimatePresence>
-        {showLayerControl && (
-          <>
-            <motion.button
-              type="button"
-              aria-label={t("map.layers.title", { fallback: "Map Layers" })}
-              className="absolute inset-0 z-[9] bg-transparent"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => handleLayerControlToggle(false)}
-            />
-            <motion.div
-              className="absolute top-16 left-4 z-10 w-[300px] max-w-[90vw] min-w-[220px] space-y-3 rounded-lg border border-black bg-background p-4 shadow-lg"
-              initial={{ opacity: 0, y: -10, scale: 0.95 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: -10, scale: 0.95 }}
-              style={{
-                width: "300px",
-                minWidth: "220px",
-                maxWidth: "90vw",
-                marginTop: "10px",
-                maxHeight: "min(80vh, 320px)",
-                overflowY: "auto",
-              }}
-            >
-              <div className="mb-2 flex items-center justify-between">
-                <span className="text-sm font-semibold uppercase text-black">
-                  {t("map.layers.title", { fallback: "Map Layers" })}
-                </span>
-                <button
-                  type="button"
-                  onClick={clearAllLayers}
-                  disabled={!anyLayerActive}
-                  className="rounded border border-black bg-background px-3 py-1 text-xs font-semibold uppercase text-black transition-colors hover:bg-neutral-100 disabled:cursor-not-allowed disabled:border-neutral-400 disabled:bg-neutral-200 disabled:text-neutral-500"
-                >
-                  {t("map.layers.clearAll", { fallback: "Clear All" })}
-                </button>
-              </div>
-
-              <div className="space-y-2">
-                {groupedKotoLayers.map(({ group, layers }) => (
-                  <div
-                    key={group}
-                    className="rounded-md bg-white"
-                  >
-                    <button
-                      type="button"
-                      onClick={() => toggleLayerGroupOpen(group)}
-                      className="flex w-full items-center justify-between px-3 py-2 text-left text-sm font-semibold text-black"
-                    >
-                      <span>{translateGroup(group)}</span>
-                      <span className="text-lg leading-none">
-                        {layerGroupOpenState[group] ? "-" : "+"}
-                      </span>
-                    </button>
-                    <AnimatePresence initial={false}>
-                      {layerGroupOpenState[group] && (
-                        <motion.div
-                          key={`${group}-content`}
-                          initial={{ opacity: 0, y: -6 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          exit={{ opacity: 0, y: -6 }}
-                          transition={{ duration: 0.15 }}
-                          className="space-y-1 border-t border-neutral-200 px-2 py-2"
-                        >
-                          {layers.map((layer) => (
-                            <LayerToggle
-                              key={layer.id}
-                              label={translateLayerLabel(layer.id, layer.label)}
-                              icon={getKotoLayerIcon(layer)}
-                              checked={kotoLayersVisible[layer.label]}
-                              onChange={() => toggleKotoLayer(layer.label)}
-                            />
-                          ))}
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
-                  </div>
-                ))}
-              </div>
-            </motion.div>
-          </>
-        )}
-      </AnimatePresence>
-
-{/* Map Legend */}
-      <AnimatePresence>
-        {showLayerControl ? (
-          <motion.div
-            className="absolute bottom-20 left-4 z-10 max-h-[60vh] space-y-2 overflow-y-auto rounded-lg border border-black bg-background p-3 shadow-lg"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 20 }}
-          >
-            <div className="flex items-center justify-between">
-              <span className="text-sm font-semibold uppercase text-black">Layer Legend</span>
-              <button
-                onClick={() => handleLayerControlToggle(false)}
-                className="text-black transition-colors hover:text-red-600"
-                aria-label="Close legend"
-              >
-                ✕
-              </button>
-            </div>
-            <div className="my-2 flex items-center gap-2 text-xs text-black">
-              <div className="h-3 w-3 rounded-full bg-black" />
-              <span>Your Location</span>
-            </div>
-            <div className="my-2 border-t border-black"></div>
-
-            {kotoLayers.map((layer, layerIndex) => (
-              <div key={layer.id}>
-                {layer.metadata.legendItems.map((legendItem, itemIndex) => {
-                  const swatchColor =
-                    legendItem.swatchStyle.strokeColor ||
-                    legendItem.swatchStyle.fillColor ||
-                    "#000";
-                  const swatchClasses =
-                    legendItem.swatchType === "symbol" ||
-                    legendItem.swatchType === "line"
-                      ? "rounded-full"
-                      : "rounded";
-
-                  return (
-                    <div
-                      key={`${layer.id}-${itemIndex}`}
-                      className="mb-2 flex items-center gap-2 text-xs text-black"
-                    >
-                      <div
-                        className={`h-3 w-3 ${swatchClasses}`}
-                        style={{ backgroundColor: swatchColor }}
-                      />
-                      <span>{legendItem.label}</span>
-                    </div>
-                  );
-                })}
-                {layerIndex < kotoLayers.length - 1 && (
-                  <div className="my-2 border-t border-neutral-300"></div>
-                )}
-              </div>
-            ))}
-
-            <div className="mt-3 text-xs text-black/70">
-              Note: Actual layer data requires Mapbox tileset configuration
-            </div>
-          </motion.div>
-        ) : (
-          <motion.button
-            onClick={() => handleLayerControlToggle(true)}
-            className="absolute bottom-20 left-4 z-10 rounded-full border border-black bg-background px-4 py-2 text-sm font-semibold uppercase text-black shadow-sm transition-colors hover:bg-neutral-100"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 20 }}
-          >
-            Legend
-          </motion.button>
-        )}
-      </AnimatePresence>
+      <MapLayerPanel
+        showLayerControl={showLayerControl}
+        onPanelToggle={handleLayerControlToggle}
+        titleLabel={t("map.layers.title", { fallback: "Map Layers" })}
+        clearAllLabel={t("map.layers.clearAll", { fallback: "Clear All" })}
+        clearAllDisabled={!anyLayerActive}
+        onClearAll={clearAllLayers}
+        groupedLayers={groupedLayerSections}
+        legendSections={legendSections}
+        legendTitle="Layer Legend"
+        legendButtonLabel="Legend"
+        legendCloseAriaLabel="Close legend"
+        userLocationLabel="Your Location"
+        legendNote="Note: Actual layer data requires Mapbox tileset configuration"
+      />
 
       <AnimatePresence>
         {measureState.status !== "idle" && (
@@ -2822,30 +1859,5 @@ const measureMarkerRef = useRef<mapboxgl.Marker | null>(null);
       </AnimatePresence>
 
     </div>
-  );
-}
-
-function LayerToggle({
-  label,
-  icon,
-  checked,
-  onChange,
-}: {
-  label: string;
-  icon: React.ReactNode;
-  checked: boolean;
-  onChange: () => void;
-}) {
-  return (
-    <label className="flex items-center gap-3 cursor-pointer rounded px-2 py-1 transition-colors hover:bg-neutral-100">
-      <input
-        type="checkbox"
-        checked={checked}
-        onChange={onChange}
-        className="h-4 w-4 accent-black border border-black"
-      />
-      {icon}
-      <span className="text-sm text-black">{label}</span>
-    </label>
   );
 }

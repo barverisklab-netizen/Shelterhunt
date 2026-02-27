@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { fetchSessionSnapshot } from "./multiplayerSessionService";
+import { fetchSessionSnapshot, finishMultiplayerRace } from "./multiplayerSessionService";
 
 type Deferred<T> = {
   promise: Promise<T>;
@@ -84,6 +84,45 @@ describe("multiplayerSessionService snapshot race controls", () => {
     await expect(stalePromise).rejects.toMatchObject({ name: "AbortError" });
     await expect(freshPromise).resolves.toMatchObject({
       players: [{ id: "player-new", user_id: "new-user" }],
+    });
+  });
+
+  it("sends winner metadata when finishing a multiplayer race", async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: async () => ({
+        session: {
+          id: "session-1",
+          host_id: "host-1",
+          shelter_code: "ABCD",
+          state: "finished",
+          max_players: 4,
+          expires_at: "2026-02-27T00:00:00.000Z",
+          started_at: "2026-02-27T00:00:00.000Z",
+          ended_at: "2026-02-27T00:10:00.000Z",
+          created_at: "2026-02-27T00:00:00.000Z",
+        },
+      }),
+    });
+    globalThis.fetch = fetchMock as unknown as typeof fetch;
+
+    await finishMultiplayerRace("session-1", "token-1", {
+      winnerUserId: "user-99",
+      winnerDisplayName: "Player 99",
+    });
+
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    const [url, requestOptions] = fetchMock.mock.calls[0] as [string, RequestInit];
+    expect(url).toContain("/sessions/session-1/finish");
+    expect(requestOptions.method).toBe("POST");
+    expect(requestOptions.headers).toMatchObject({
+      Authorization: "Bearer token-1",
+      "Content-Type": "application/json",
+    });
+    expect(JSON.parse(requestOptions.body as string)).toEqual({
+      winnerUserId: "user-99",
+      winnerDisplayName: "Player 99",
     });
   });
 });

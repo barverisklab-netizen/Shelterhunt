@@ -4,6 +4,7 @@ import {
   __setProximityIndexRawSourcesForTests,
   countAmenitiesWithinRadius,
   hasShelterWithinRadius,
+  matchShelterWithinRadius,
 } from "./proximityIndex";
 
 // Mapping used in MapView for amenity keys
@@ -126,5 +127,43 @@ describe("amenityIndex", () => {
     const second = await countAmenitiesWithinRadius(center, 0.05, AMENITY_CATEGORIES);
     expect(second.counts.waterStation250m).toBeUndefined();
     expect(second.counts.hospital250m).toBe(1);
+  });
+
+  it("matches a shelter by alternate name within radius and returns nearest context", async () => {
+    installFixtureCollections([
+      {
+        lat: 35.69516,
+        lng: 139.8212,
+        category: "Designated Evacuation Center",
+        nameEn: "Ariake Shelter",
+      },
+      {
+        lat: 35.6953,
+        lng: 139.8212,
+        category: "Evacuation Center",
+        nameEn: "Nearby Backup Shelter",
+      },
+    ]);
+
+    const center = { lat: 35.69516, lng: 139.8212 };
+    const result = await matchShelterWithinRadius(center, 0.25, {
+      altNames: ["ariake shelter"],
+    });
+
+    expect(result.match).toBeTruthy();
+    expect(result.match?.nameEn).toBe("Ariake Shelter");
+    expect(result.nearest?.distanceKm).toBeLessThanOrEqual(0.25);
+  });
+
+  it("treats normalized designated shelter category text as shelter", async () => {
+    installFixtureCollections([
+      { lat: 35.69516, lng: 139.8212, category: "designated ec" },
+    ]);
+
+    const center = { lat: 35.69516, lng: 139.8212 };
+    const { found, nearest } = await hasShelterWithinRadius(center, 0.25);
+
+    expect(found).toBe(true);
+    expect(nearest?.category).toBe("designated ec");
   });
 });
