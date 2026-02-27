@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from 'motion/react';
-import { ChevronDown, ChevronUp, ChevronsUpDown, Clock, Lightbulb, Ruler, X} from 'lucide-react';
+import { ChevronDown, ChevronUp, ChevronsUpDown, Clock, Layers, Lightbulb, Ruler, X} from 'lucide-react';
 import { MapView } from './map/MapView';
 import { QuestionDrawer } from './panels/QuestionDrawer';
 import { GameplayPanel } from './panels/GameplayPanel';
@@ -121,6 +121,7 @@ export function GameScreen({
   const [activePanel, setActivePanel] = useState<"layers" | "questions" | "gameplay" | null>(
     null,
   );
+  const [layerPanelOpenSignal, setLayerPanelOpenSignal] = useState(0);
   const [layerPanelCloseSignal, setLayerPanelCloseSignal] = useState(0);
   const [solvedNearbyAmenityKeys, setSolvedNearbyAmenityKeys] = useState<string[]>([]);
   const [tutorialOpen, setTutorialOpen] = useState(true);
@@ -201,6 +202,10 @@ export function GameScreen({
     setLayerPanelCloseSignal((prev) => prev + 1);
   }, []);
 
+  const requestOpenLayerPanel = useCallback(() => {
+    setLayerPanelOpenSignal((prev) => prev + 1);
+  }, []);
+
   const activatePanel = useCallback(
     (panel: "layers" | "questions" | "gameplay" | null) => {
       if (panel !== "layers") {
@@ -221,6 +226,16 @@ export function GameScreen({
     },
     [closeLayerPanel, pollNearbyShelter, pollProximityAndAmenities],
   );
+
+  const handleLayerPanelButtonClick = useCallback(() => {
+    if (activePanel === "layers") {
+      activatePanel(null);
+      return;
+    }
+
+    activatePanel(null);
+    requestOpenLayerPanel();
+  }, [activePanel, activatePanel, requestOpenLayerPanel]);
 
   useEffect(() => {
     if (isMeasureActive && activePanel === "questions") {
@@ -1092,6 +1107,7 @@ export function GameScreen({
         secretShelterCoords={secretShelterCoords}
         onElevationSample={handleElevationSample}
         elevationSampleTrigger={elevationSampleTrigger}
+          layerPanelOpenSignal={layerPanelOpenSignal}
           onLayerPanelToggle={(open) => {
             if (open) {
               activatePanel("layers");
@@ -1134,6 +1150,18 @@ export function GameScreen({
             )}
           </button>
         </div>
+
+        <motion.button
+          type="button"
+          onClick={handleLayerPanelButtonClick}
+          className="absolute top-4 left-4 z-10 flex items-center justify-center rounded-full border border-neutral-900 bg-background p-4 shadow-md transition-transform hover:scale-105"
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          aria-label={t("map.layers.title", { fallback: "Map Layers" })}
+          title={t("map.layers.title", { fallback: "Map Layers" })}
+        >
+          <Layers className="w-6 h-6 text-black" />
+        </motion.button>
 
         {/* Floating Action Buttons */}
         <div className="absolute top-4 right-4 flex flex-col gap-3 items-end">
@@ -1179,7 +1207,7 @@ export function GameScreen({
       </div>
   
       {/* Question Drawer */}
-      {!isMeasureActive && (
+      {!isMeasureActive && activePanel !== "layers" && (
         <QuestionDrawer
           questions={questions}
           availableCategories={defaultCityContext.questionCategories}

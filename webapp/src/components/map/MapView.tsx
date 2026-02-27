@@ -3,11 +3,7 @@ import { AnimatePresence } from "motion/react";
 import {
   MapPin,
   Home,
-  Flame,
   Hospital,
-  Trees,
-  Library,
-  School,
   Heart,
   Building2,
   Cable,
@@ -17,8 +13,7 @@ import {
 } from "lucide-react";
 import { POI } from "@/types/game";
 import { kotoLayers } from "@/cityContext/koto/layers";
-import { KotoLayerGroup } from "@/types/kotoLayers";
-import { MAPBOX_CONFIG, getTilesetUrl } from "@/config/mapbox";
+import { MAPBOX_CONFIG } from "@/config/mapbox";
 import { MAPBOX_STYLE_URL, PROXIMITY_RADIUS_KM } from "@/config/runtime";
 import { defaultCityContext } from "@/data/cityContext";
 import mapboxgl from "mapbox-gl";
@@ -27,6 +22,12 @@ import { getLocalShelters } from "@/services/mapLayerQueryService";
 import { countAmenitiesWithinRadius } from "@/services/proximityIndex";
 import { useTerrainElevation } from "@/features/elevation/hooks/useTerrainElevation";
 import { useMeasurementTool } from "@/features/measurement/hooks/useMeasurementTool";
+import { CITY_LAYER_GROUPS, type CityLayerGroup, useCityLayers } from "@/features/map/layers/useCityLayers";
+import {
+  buildPopupBodyHtml,
+  buildPopupCardHtml,
+  buildPopupSectionHtml,
+} from "@/features/map/popups/popupHtml";
 import { useI18n } from "@/i18n";
 import { MeasurePanel } from "@/components/map/MeasurePanel";
 import { MapLayerPanel } from "@/components/map/MapLayerPanel";
@@ -105,13 +106,6 @@ const getKotoLayerIcon = (layer: (typeof kotoLayers)[0]): React.ReactNode => {
   return <MapPin className="w-4 h-4" style={{ color }} />;
 };
 
-const KOTO_LAYER_GROUPS: KotoLayerGroup[] = [
-  "Shelters",
-  "Evacuation Support Facilities",
-  "City Landmarks",
-  "Hazard Layers",
-];
-
 const AMENITY_CATEGORIES: Record<string, string> = {
   "Water Station": "waterStation250m",
   "Hospital": "hospital250m",
@@ -153,6 +147,7 @@ interface MapViewProps {
   onMeasurementActiveChange?: (active: boolean) => void;
   isFiltered?: boolean;
   onLayerPanelToggle?: (open: boolean) => void;
+  layerPanelOpenSignal?: number;
   layerPanelCloseSignal?: number;
   gameMode?: "lightning" | "citywide" | null;
   lightningCenter?: { lat: number; lng: number } | null;
@@ -198,6 +193,7 @@ export function MapView({
   onMeasurementActiveChange,
   isFiltered = false,
   onLayerPanelToggle,
+  layerPanelOpenSignal,
   layerPanelCloseSignal,
   gameMode,
   lightningCenter,
@@ -214,18 +210,16 @@ export function MapView({
   const localeRef = useRef(locale);
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
-  const markers = useRef<{ [key: string]: mapboxgl.Marker }>({});
-  const playerMarker = useRef<mapboxgl.Marker | null>(null);
   const geolocateControl = useRef<mapboxgl.GeolocateControl | null>(null);
-const infoPopup = useRef<mapboxgl.Popup | null>(null);
-const otherPlayerMarkersRef = useRef<Record<string, mapboxgl.Marker>>({});
-const hasSelectedShelter = useRef(false);
-const hasEmittedShelterOptions = useRef(false);
-const pendingPoiRefreshRef = useRef<POI[] | null>(null);
-const pendingPoiRefreshHandlerRef = useRef<(() => void) | null>(null);
-const filteredPoiPopupHandlerRef = useRef<
-  ((event: mapboxgl.MapLayerMouseEvent & mapboxgl.EventData) => void) | null
->(null);
+  const infoPopup = useRef<mapboxgl.Popup | null>(null);
+  const otherPlayerMarkersRef = useRef<Record<string, mapboxgl.Marker>>({});
+  const hasSelectedShelter = useRef(false);
+  const hasEmittedShelterOptions = useRef(false);
+  const pendingPoiRefreshRef = useRef<POI[] | null>(null);
+  const pendingPoiRefreshHandlerRef = useRef<(() => void) | null>(null);
+  const filteredPoiPopupHandlerRef = useRef<
+    ((event: mapboxgl.MapLayerMouseEvent & mapboxgl.EventData) => void) | null
+  >(null);
   const geolocateHandlerRef = useRef<((event: GeolocationPosition) => void) | null>(null);
   const lastLightningParamsRef = useRef<{ center: { lat: number; lng: number }; radiusKm: number } | null>(null);
   const amenityCountsRef = useRef<Record<string, number>>({});
@@ -291,41 +285,6 @@ const filteredPoiPopupHandlerRef = useRef<
     [],
   );
 
-  // Koto layer visibility state
-  const [kotoLayersVisible, setKotoLayersVisible] = useState<
-    Record<string, boolean>
-  >(() => {
-    const initialState: Record<string, boolean> = {};
-    kotoLayers.forEach((layer) => {
-      initialState[layer.label] = layer.metadata.loadOnInit;
-    });
-    return initialState;
-  });
-  const kotoLayersVisibleRef = useRef(kotoLayersVisible);
-
-  const applyKotoLayerVisibility = useCallback((label: string, visible: boolean) => {
-    const m = map.current;
-    if (!m) return;
-
-    const layer = kotoLayers.find((item) => item.label === label);
-    if (!layer) return;
-
-    const layerId = `koto-layer-${layer.id}`;
-    if (!m.getLayer(layerId)) return;
-
-    m.setLayoutProperty(layerId, "visibility", visible ? "visible" : "none");
-  }, []);
-
-  useEffect(() => {
-    if (layerPanelCloseSignal !== undefined) {
-      setShowLayerControl(false);
-    }
-  }, [layerPanelCloseSignal]);
-
-  useEffect(() => {
-    kotoLayersVisibleRef.current = kotoLayersVisible;
-  }, [kotoLayersVisible]);
-
   useEffect(() => {
     translateRef.current = t;
   }, [t]);
@@ -333,73 +292,6 @@ const filteredPoiPopupHandlerRef = useRef<
   useEffect(() => {
     localeRef.current = locale;
   }, [locale]);
-
-  const localizeTextFieldExpression = useCallback(
-    (expr: any, currentLocale: typeof locale): any => {
-      if (Array.isArray(expr)) {
-        return expr.map((item) => localizeTextFieldExpression(item, currentLocale));
-      }
-      if (typeof expr === "string") {
-        const normalized = expr.trim().toLowerCase();
-        const wantsName =
-          normalized === "landmark name (jp)" ||
-          normalized === "landmark name (en)" ||
-          normalized === "landmark name";
-        const wantsAddress =
-          normalized === "address (jp)" ||
-          normalized === "address (en)" ||
-          normalized === "address";
-
-        if (wantsName) {
-          return currentLocale === "ja" ? "Landmark Name (JP)" : "Landmark Name (EN)";
-        }
-        if (wantsAddress) {
-          return currentLocale === "ja" ? "Address (JP)" : "Address (EN)";
-        }
-      }
-      return expr;
-    },
-    [],
-  );
-
-  useEffect(() => {
-    const m = map.current;
-    if (!m) return;
-
-    const cloneFn = (globalThis as any).structuredClone as
-      | (<T>(value: T) => T)
-      | undefined;
-
-    kotoLayers.forEach((layer) => {
-      const layerId = `koto-layer-${layer.id}`;
-      const baseTextField = layer.style.layout?.["text-field"];
-      if (!baseTextField) return;
-      if (!m.getLayer(layerId)) return;
-
-      const cloned = cloneFn
-        ? cloneFn(baseTextField)
-        : JSON.parse(JSON.stringify(baseTextField));
-      const localized = localizeTextFieldExpression(cloned, locale);
-
-      try {
-        m.setLayoutProperty(layerId, "text-field", localized);
-      } catch (error) {
-        console.warn("[koto] Failed to update text-field for locale", {
-          layerId,
-          error,
-        });
-      }
-    });
-  }, [locale, localizeTextFieldExpression]);
-
-  const [layerGroupOpenState, setLayerGroupOpenState] = useState<
-    Record<KotoLayerGroup, boolean>
-  >(() =>
-    KOTO_LAYER_GROUPS.reduce(
-      (acc, group) => ({ ...acc, [group]: true }),
-      {} as Record<KotoLayerGroup, boolean>,
-    ),
-  );
 
   const [userCircleCenter, setUserCircleCenter] = useState<{ lat: number; lng: number } | null>(
     null,
@@ -416,17 +308,36 @@ const filteredPoiPopupHandlerRef = useRef<
     secretShelterCoords,
   });
   const {
+    cityLayersVisible,
+    layerGroupOpenState,
+    showLayerControl,
+    anyLayerActive,
+    toggleCityLayer,
+    toggleCityLayerGroup,
+    clearAllCityLayers,
+    handleLayerControlToggle,
+    syncCityLayers,
+  } = useCityLayers({
+    mapRef: map,
+    mapLoaded,
+    locale,
+    t,
+    infoPopupRef: infoPopup,
+    onLayerPanelToggle,
+    layerPanelOpenSignal,
+    layerPanelCloseSignal,
+  });
+  const {
     clearMeasurement,
     handleDeleteMeasurement,
     handleMapClick,
     handleMoveMeasurementPoint,
     isMeasurePanelCollapsed,
     measureState,
-    measureStatusRef,
     setIsMeasurePanelCollapsed,
   } = useMeasurementTool({
     mapRef: map,
-    kotoLayersVisible,
+    kotoLayersVisible: cityLayersVisible,
     locale,
     measureTrigger,
     onMeasurementActiveChange,
@@ -490,27 +401,13 @@ const filteredPoiPopupHandlerRef = useRef<
       )
       .join("<br>");
 
-    const inner = `
-      <div style="padding: 12px;">
-        <div style="font-weight:700; margin-bottom:6px; font-size:14px;">
-          ${escapeHtml(headerLabel)}
-        </div>
-        ${
-          headerDescription
-            ? `<div style="opacity:0.9; font-size:12px; margin-bottom:8px;">${escapeHtml(headerDescription)}</div>`
-            : ""
-        }
-        <div style="font-size:12px; line-height:1.5;">
-          ${rowsHtml}
-        </div>
-      </div>
-    `;
+    const sectionHtml = buildPopupSectionHtml({
+      titleHtml: escapeHtml(headerLabel),
+      descriptionHtml: headerDescription ? escapeHtml(headerDescription) : undefined,
+      contentHtml: buildPopupBodyHtml(rowsHtml, { lineHeight: "1.5" }),
+    });
 
-    return `
-      <div style="background: rgba(0,0,0,0.85); border-radius: 8px; min-width: 220px; color: #fff;">
-        ${inner}
-      </div>
-    `;
+    return buildPopupCardHtml([sectionHtml]);
   }, []);
   useEffect(() => {
     if (isFiltered) {
@@ -633,7 +530,7 @@ const filteredPoiPopupHandlerRef = useRef<
           if (!html) return;
           if (!infoPopup.current) {
             infoPopup.current = new mapboxgl.Popup({
-              closeButton: true,
+              closeButton: false,
               closeOnClick: true,
             });
           }
@@ -756,8 +653,6 @@ const filteredPoiPopupHandlerRef = useRef<
       }
     })();
   }, [onSecretShelterChange, onShelterOptionsChange]);
-  const [showLayerControl, setShowLayerControl] = useState(false);
-
   // Initialize map
   useEffect(() => {
     if (!mapContainer.current || map.current) return;
@@ -778,8 +673,7 @@ const filteredPoiPopupHandlerRef = useRef<
         console.log("Mapbox map loaded successfully!");
         setMapLoaded(true);
         ensureTerrainEnabled();
-        // Add Koto layer sources and layers
-        addKotoLayers();
+        syncCityLayers();
         if (reapplyPlayerRangeRef.current) {
           reapplyPlayerRangeRef.current();
         }
@@ -832,12 +726,11 @@ const filteredPoiPopupHandlerRef = useRef<
           const reapply = reapplyPlayerRangeRef.current;
           const mInner = map.current;
           if (!reapply || !mInner) return;
-          const missingVisibleKotoLayer = kotoLayers.some((layer) => {
-            if (!kotoLayersVisibleRef.current[layer.label]) return false;
-            return !mInner.getLayer(`koto-layer-${layer.id}`);
-          });
-          if (missingVisibleKotoLayer) {
-            addKotoLayers();
+          const missingCityLayer = kotoLayers.some(
+            (layer) => !mInner.getLayer(`koto-layer-${layer.id}`),
+          );
+          if (missingCityLayer) {
+            syncCityLayers();
           }
           const hasRangeSource = (() => {
             try {
@@ -863,6 +756,13 @@ const filteredPoiPopupHandlerRef = useRef<
 
     return () => {
       if (map.current) {
+        if ((map.current as any)?.__cityLayerPopupHandler) {
+          map.current.off(
+            "click",
+            (map.current as any).__cityLayerPopupHandler,
+          );
+          (map.current as any).__cityLayerPopupHandler = null;
+        }
         if ((map.current as any)?.__kotoPopupHandler) {
           map.current.off(
             "click",
@@ -1204,468 +1104,26 @@ const filteredPoiPopupHandlerRef = useRef<
     };
   }, [handleMapClick]);
 
-  const clearAllLayers = () => {
-    if (!map.current) return;
-
-    const updated: Record<string, boolean> = {};
-
-    kotoLayers.forEach((layer) => {
-      const layerId = `koto-layer-${layer.id}`;
-      if (map.current?.getLayer(layerId)) {
-        map.current.setLayoutProperty(layerId, "visibility", "none");
-      }
-      updated[layer.label] = false;
-    });
-
-    setKotoLayersVisible(updated);
-  };
-
-  // Add Koto layers to the map
-  const addKotoLayers = useCallback(() => {
-    const m = map.current;
-    if (!m) return;
-
-    // If style not ready, bind a one-time load and retry once.
-    if (!m.isStyleLoaded && (m as any)._style === undefined) {
-      m.once("load", () => addKotoLayers());
-      return;
-    }
-    if (m.isStyleLoaded && !m.isStyleLoaded()) {
-      m.once("load", () => addKotoLayers());
-      return;
-    }
-
-    try {
-      const sortedKotoLayers = [...kotoLayers].sort((a, b) => {
-        if (a.layerType === b.layerType) return 0;
-        if (a.layerType === "fill" && b.layerType !== "fill") return -1;
-        if (a.layerType !== "fill" && b.layerType === "fill") return 1;
-        return 0;
-      });
-
-      const expectedLayerIds = new Set(
-        sortedKotoLayers.map((layer) => `koto-layer-${layer.id}`),
-      );
-      const expectedSourceIds = new Set(
-        sortedKotoLayers.map((layer) => `koto-source-${layer.sourceData.layerId}`),
-      );
-
-      // Remove stale Koto layers/sources from previous configs
-      const styleLayers = m.getStyle()?.layers ?? [];
-      styleLayers
-        .map((layer) => layer.id)
-        .filter(
-          (id) => id.startsWith("koto-layer-") && !expectedLayerIds.has(id),
-        )
-        .forEach((staleId) => {
-          if (m.getLayer(staleId)) {
-            m.removeLayer(staleId);
-          }
-        });
-
-      Object.keys(m.getStyle()?.sources ?? {})
-        .filter(
-          (id) => id.startsWith("koto-source-") && !expectedSourceIds.has(id),
-        )
-        .forEach((staleSourceId) => {
-          if (m.getSource(staleSourceId)) {
-            m.removeSource(staleSourceId);
-          }
-        });
-
-      // Registry to avoid duplicate event bindings across calls
-      const boundLayers: Set<string> =
-        (m as any).__kotoBoundLayers || ((m as any).__kotoBoundLayers = new Set());
-
-      // Track sources we add in this call to avoid re-adding
-      const addedSources = new Set<string>();
-      const layerMetaRegistry: Record<
-        string,
-        {
-          template?: string;
-          label: string;
-          labelJp?: string;
-          layerNumericId?: number;
-          legendItems?: (typeof kotoLayers)[number]["metadata"]["legendItems"];
-        }
-      > = ((m as any).__kotoLayerMeta = {});
-
-      // Render {{ token }} with props[key]; unknown -> em dash
-      const renderTemplate = (template: string, props: Record<string, any>) => {
-        return template.replace(/{{\s*([^}]+?)\s*}}/g, (_match, rawKey) => {
-          const key = String(rawKey).trim();
-
-          if (key.startsWith("t:")) {
-            const translationKey = key.slice(2);
-            const translate = translateRef.current;
-            const localized =
-              typeof translate === "function"
-                ? translate(translationKey, { fallback: translationKey })
-                : translationKey;
-            return escapeHtml(localized);
-          }
-
-          if (key.startsWith("locale:")) {
-            const choices = key.slice("locale:".length).split("|").map((part) => part.trim()).filter(Boolean);
-            const [enKey, jaKey] = choices;
-            const currentLocale = localeRef.current;
-            const chosenKey = currentLocale === "ja" ? jaKey ?? enKey : enKey ?? jaKey;
-            if (chosenKey) {
-              const val = props?.[chosenKey];
-              return val == null || val === "" ? "—" : escapeHtml(String(val));
-            }
-            return "—";
-          }
-
-          const val = props?.[key];
-          return val == null || val === "" ? "—" : escapeHtml(String(val));
-        });
-      };
-
-      sortedKotoLayers.forEach((layer) => {
-        try {
-        const sourceId = `koto-source-${layer.sourceData.layerId}`;
-        const layerId = `koto-layer-${layer.id}`;
-
-        // Add source if needed (vector or geojson)
-        if (!addedSources.has(sourceId) && !m.getSource(sourceId)) {
-          if (layer.sourceType === "geojson") {
-            const data = layer.sourceData.geojsonUrl;
-            if (!data) {
-              console.warn(`[koto] Missing geojsonUrl for layer ${layer.label}`);
-            } else {
-              m.addSource(sourceId, { type: "geojson", data });
-              addedSources.add(sourceId);
-            }
-          } else {
-            const tilesetUrl = getTilesetUrl(layer.sourceData.layerId);
-            m.addSource(sourceId, { type: "vector", url: tilesetUrl });
-            addedSources.add(sourceId);
-            // console.debug(`[koto] add source: ${sourceId} -> ${tilesetUrl}`);
-          }
-        }
-
-        // Add style layer if missing
-        if (!m.getLayer(layerId)) {
-          const layerConfig: any = {
-            id: layerId,
-            type: layer.layerType,
-            source: sourceId,
-            layout: (() => {
-            const layout = {
-                ...layer.style.layout,
-                visibility:
-                  (kotoLayersVisibleRef.current[layer.label] ?? layer.metadata.loadOnInit)
-                    ? "visible"
-                    : "none",
-              } as Record<string, unknown>;
-              if (layout["icon-allow-overlap"] === true) {
-                layout["icon-ignore-placement"] = true;
-              }
-              if (layer.layerType === "symbol") {
-                // Ensure labels can still render even if custom sprite icons are unavailable.
-                layout["icon-optional"] = true;
-                layout["text-optional"] = true;
-                layout["text-allow-overlap"] = true;
-                layout["text-ignore-placement"] = true;
-                layout["text-font"] = ["Open Sans Bold", "Arial Unicode MS Bold"];
-              }
-              return layout;
-            })(),
-            paint: layer.style.paint,
-          };
-          if (layer.style.layout?.["text-field"]) {
-            const baseTextField = layer.style.layout["text-field"];
-            const cloneFn = (globalThis as any).structuredClone as
-              | (<T>(value: T) => T)
-              | undefined;
-            const cloned = cloneFn
-              ? cloneFn(baseTextField)
-              : JSON.parse(JSON.stringify(baseTextField));
-            layerConfig.layout["text-field"] = localizeTextFieldExpression(
-              cloned,
-              localeRef.current,
-            );
-          }
-          if (layer.sourceType === "vector" && layer.sourceData.layerName) {
-            layerConfig["source-layer"] = layer.sourceData.layerName;
-          }
-          if (layer.style.filter) layerConfig.filter = layer.style.filter;
-
-          m.addLayer(layerConfig);
-          // console.debug(`[koto] add layer: ${layerId}`);
-        }
-
-        const template = layer.metadata?.query?.template;
-        if (template) {
-          layerMetaRegistry[layerId] = {
-            template,
-            label: layer.label,
-            labelJp: layer.labelJp,
-            layerNumericId: layer.id,
-            legendItems: layer.metadata?.legendItems,
-          };
-        } else {
-          delete layerMetaRegistry[layerId];
-        }
-
-        // Bind cursor only once per style layer id
-        if (!boundLayers.has(layerId)) {
-          if (template) {
-            m.on("mouseenter", layerId, () => {
-              m.getCanvas().style.cursor = "pointer";
-            });
-            m.on("mouseleave", layerId, () => {
-              m.getCanvas().style.cursor = "";
-            });
-          }
-
-          boundLayers.add(layerId);
-        }
-        } catch (layerError) {
-          console.warn("[koto] Failed to add individual layer", {
-            layerId: layer.id,
-            layerLabel: layer.label,
-            error: layerError,
-          });
-        }
-      });
-
-      const previousPopupHandler = (m as any).__kotoPopupHandler;
-      if (previousPopupHandler) {
-        m.off("click", previousPopupHandler);
-      }
-
-      const handleCombinedClick = (
-        e: mapboxgl.MapMouseEvent & mapboxgl.EventData,
-      ) => {
-        if (measureStatusRef.current !== "idle") {
-          return;
-        }
-
-        const layerIds = Object.keys(layerMetaRegistry).filter(
-          (id) => layerMetaRegistry[id]?.template && m.getLayer(id),
-        );
-
-        if (!layerIds.length) {
-          return;
-        }
-
-        const features = m.queryRenderedFeatures(e.point, {
-          layers: layerIds,
-        });
-
-        if (!features.length) {
-          if (infoPopup.current) {
-            infoPopup.current.remove();
-            infoPopup.current = null;
-          }
-          return;
-        }
-
-        const sections = features
-          .map((feature) => {
-            const mapLayerId = feature.layer?.id;
-            if (!mapLayerId) return null;
-            const meta = layerMetaRegistry[mapLayerId];
-            if (!meta?.template) return null;
-
-            const legend = meta.legendItems?.[0];
-            const labelKey =
-              legend?.labelKey ??
-              (meta.layerNumericId
-                ? `map.layers.items.${meta.layerNumericId}`
-                : undefined);
-            const fallbackLabel =
-              legend?.label ??
-              (localeRef.current === "ja"
-                ? meta.labelJp ?? meta.label
-                : meta.label);
-            const translate = translateRef.current;
-            const headerLabel = labelKey
-              ? typeof translate === "function"
-                ? translate(labelKey, { fallback: fallbackLabel })
-                : fallbackLabel
-              : fallbackLabel;
-            const headerHtml = `
-              <div style="padding: 12px;">
-                <div style="font-weight:700; margin-bottom:6px; font-size:14px;">
-                  ${escapeHtml(headerLabel)}
-                </div>
-                <div style="font-size:12px;">
-            `;
-            const bodyHtml = renderTemplate(
-              meta.template,
-              feature.properties || {},
-            );
-            const footerHtml = `</div></div>`;
-            return headerHtml + bodyHtml + footerHtml;
-          })
-          .filter((section): section is string => Boolean(section));
-
-        if (!sections.length) {
-          if (infoPopup.current) {
-            infoPopup.current.remove();
-            infoPopup.current = null;
-          }
-          return;
-        }
-
-        const combinedHtml = `
-          <div style="background: rgba(0,0,0,0.85); border-radius: 8px; min-width: 220px; color: #fff;">
-            ${sections.join(
-              `<div style="height:1px; background: rgba(255,255,255,0.2); margin: 0 12px;"></div>`,
-            )}
-          </div>
-        `;
-
-        if (!infoPopup.current) {
-          infoPopup.current = new mapboxgl.Popup({
-            closeButton: true,
-            closeOnClick: true,
-          });
-        }
-
-        infoPopup.current.setLngLat(e.lngLat).setHTML(combinedHtml).addTo(m);
-      };
-
-      (m as any).__kotoPopupHandler = handleCombinedClick;
-      m.on("click", handleCombinedClick);
-
-      Object.entries(kotoLayersVisibleRef.current).forEach(([label, visible]) => {
-        applyKotoLayerVisibility(label, visible);
-      });
-      // console.info("[koto] layers initialized");
-    } catch (error) {
-      console.warn("[koto] Could not add layers - check tilesets/source-layer names:", error);
-    }
-  }, [applyKotoLayerVisibility, localizeTextFieldExpression]);
-
-
-  // Toggle Koto layer visibility
-  const toggleKotoLayer = (label: string) => {
-    const layer = kotoLayers.find((item) => item.label === label);
-    const layerId = layer ? `koto-layer-${layer.id}` : null;
-    const newVisibility = !kotoLayersVisibleRef.current[label];
-    setKotoLayersVisible((prev) => ({
-      ...prev,
-      [label]: newVisibility,
-    }));
-    kotoLayersVisibleRef.current = {
-      ...kotoLayersVisibleRef.current,
-      [label]: newVisibility,
-    };
-
-    if (layer && layerId && !map.current?.getLayer(layerId)) {
-      addKotoLayers();
-      const activeMap = map.current;
-      if (activeMap) {
-        const applyAfterStyleLoad = () => {
-          if (!activeMap.getLayer(layerId)) {
-            console.warn("[koto] Requested layer toggle but layer is unavailable", {
-              label,
-              layerId,
-            });
-            if (newVisibility) {
-              setKotoLayersVisible((prev) => ({ ...prev, [label]: false }));
-              kotoLayersVisibleRef.current = {
-                ...kotoLayersVisibleRef.current,
-                [label]: false,
-              };
-            }
-            return;
-          }
-          applyKotoLayerVisibility(label, newVisibility);
-        };
-
-        if (typeof activeMap.isStyleLoaded === "function" && !activeMap.isStyleLoaded()) {
-          activeMap.once("style.load", applyAfterStyleLoad);
-          return;
-        }
-        applyAfterStyleLoad();
-        return;
-      }
-    }
-
-    applyKotoLayerVisibility(label, newVisibility);
-  };
-
-  useEffect(() => {
-    if (!mapLoaded) return;
-    const m = map.current;
-    if (!m) return;
-    const missingVisibleKotoLayer = kotoLayers.some((layer) => {
-      if (!kotoLayersVisible[layer.label]) return false;
-      return !m.getLayer(`koto-layer-${layer.id}`);
-    });
-    if (missingVisibleKotoLayer) {
-      addKotoLayers();
-    }
-    Object.entries(kotoLayersVisible).forEach(([label, visible]) => {
-      applyKotoLayerVisibility(label, visible);
-    });
-  }, [addKotoLayers, applyKotoLayerVisibility, kotoLayersVisible, mapLoaded]);
-
-  const handleLayerControlToggle = useCallback(
-    (desiredState?: boolean) => {
-      const targetState =
-        typeof desiredState === "boolean" ? desiredState : !showLayerControl;
-
-      if (targetState && measureState.status !== "idle") {
-        const shouldCloseOthers = window.confirm(
-          "Another panel is open. Close it and open Map Layers?",
-        );
-        if (!shouldCloseOthers) return;
-        clearMeasurement();
-      }
-
-      setShowLayerControl(targetState);
-      onLayerPanelToggle?.(targetState);
-    },
-    [clearMeasurement, measureState.status, onLayerPanelToggle, showLayerControl],
-  );
-
-  const toggleLayerGroupOpen = (group: KotoLayerGroup) => {
-    setLayerGroupOpenState((prev) => ({
-      ...prev,
-      [group]: !prev[group],
-    }));
-  };
-
-  const translateGroup = (group: KotoLayerGroup) =>
+  const translateGroup = (group: CityLayerGroup) =>
     t(`map.layers.groups.${group}`, { fallback: group });
   const translateLayerLabel = (layerId: number, label: string) =>
     t(`map.layers.items.${layerId}`, { fallback: label });
-  const groupedLayerSections = KOTO_LAYER_GROUPS.map((group) => {
+  const groupedLayerSections = CITY_LAYER_GROUPS.map((group) => {
     const layers = kotoLayers.filter((layer) => layer.group === group);
     return {
       group,
       title: translateGroup(group),
       isOpen: layerGroupOpenState[group],
-      onToggleGroup: () => toggleLayerGroupOpen(group),
+      onToggleGroup: () => toggleCityLayerGroup(group),
       layers: layers.map((layer) => ({
         id: layer.id,
         label: translateLayerLabel(layer.id, layer.label),
         icon: getKotoLayerIcon(layer),
-        checked: kotoLayersVisible[layer.label],
-        onChange: () => toggleKotoLayer(layer.label),
+        checked: cityLayersVisible[layer.label],
+        onChange: () => toggleCityLayer(layer.label),
       })),
     };
   }).filter((section) => section.layers.length > 0);
-  const legendSections = kotoLayers.map((layer) => ({
-    id: layer.id,
-    items: layer.metadata.legendItems.map((legendItem, itemIndex) => ({
-      key: `${layer.id}-${itemIndex}`,
-      label: legendItem.label,
-      swatchType: legendItem.swatchType,
-      swatchColor:
-        legendItem.swatchStyle.strokeColor ||
-        legendItem.swatchStyle.fillColor ||
-        "#000",
-    })),
-  }));
-
-  const anyLayerActive = Object.values(kotoLayersVisible).some(Boolean);
   const isPanelCollapsed =
     measureState.status === "active" && isMeasurePanelCollapsed;
 
@@ -1763,7 +1221,7 @@ const filteredPoiPopupHandlerRef = useRef<
       />
 
       {/* Add CSS animations */}
-      <style>{`
+      { <style>{`
         .mapboxgl-popup-content {
           background: transparent !important;
           padding: 0 !important;
@@ -1822,7 +1280,7 @@ const filteredPoiPopupHandlerRef = useRef<
         .measure-popup button.danger:hover {
           background: #1a1a1a;
         }
-      `}</style>
+      `}</style> }
 
       <MapLayerPanel
         showLayerControl={showLayerControl}
@@ -1830,14 +1288,8 @@ const filteredPoiPopupHandlerRef = useRef<
         titleLabel={t("map.layers.title", { fallback: "Map Layers" })}
         clearAllLabel={t("map.layers.clearAll", { fallback: "Clear All" })}
         clearAllDisabled={!anyLayerActive}
-        onClearAll={clearAllLayers}
+        onClearAll={clearAllCityLayers}
         groupedLayers={groupedLayerSections}
-        legendSections={legendSections}
-        legendTitle="Layer Legend"
-        legendButtonLabel="Legend"
-        legendCloseAriaLabel="Close legend"
-        userLocationLabel="Your Location"
-        legendNote="Note: Actual layer data requires Mapbox tileset configuration"
       />
 
       <AnimatePresence>
