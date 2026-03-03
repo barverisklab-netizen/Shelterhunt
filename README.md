@@ -1,184 +1,478 @@
-# Map n' Seek (マップれんぼ) · Location-Based Deduction Game
+# Shelterhunt (Map n' Seek / マップれんぼ)
 
-This repository contains the Map n' Seek (マップれんぼ) prototype, a browser-based deduction game that helps players locate an emergency shelter before time runs out. The experience mirrors the visual system documented in Figma and is implemented with React, Vite, Tailwind v4, Mapbox GL, and a shadcn-inspired component kit.
+Shelterhunt is a map-based deduction game where players locate a target emergency shelter before time runs out.  
+This repository contains the full stack:
+- `webapp/`: React + Vite client with Mapbox gameplay UI.
+- `api/`: Fastify backend for shelters, session lifecycle, and multiplayer streams.
+- `data/`: GeoJSON dataset and import/export/rebuild scripts (not deployed).
 
-## Repository layout
+## Contents
+1. Repository Overview
+2. Architecture at a Glance
+3. Quick Start
+4. Environment Setup
+5. Scripts
+6. API Contract
+7. Database Model
+8. Data Workflows (`data/` and seed scripts)
+9. Runtime Flows
+10. Troubleshooting
 
-| Path    | Description                                |
-| ------- | ------------------------------------------ |
-| `webapp/` | Vite/React client, Tailwind UI, local assets |
-| `api/`    | Fastify-based multiplayer/session service    |
+## Repository Overview
 
-Unless noted otherwise, all paths in the sections below are relative to their directory (`webapp/` or `api/`).
+| Path | Purpose |
+| --- | --- |
+| `webapp/` | Browser game runtime, map UI, gameplay/session hooks, API client services |
+| `api/` | Multiplayer/session backend, shelters/question-attributes API, WebSocket stream |
+| `data/` | Source GeoJSON + scripts for export/import and 250m amenity recomputation |
+| `.github/workflows/` | Release workflow |
 
-## Environment files and secrets
+## Architecture at a Glance
 
-Create local env files from templates:
+### Runtime dependencies
+- `webapp` calls `api` for:
+  - `GET /shelters`
+  - `GET /question-attributes`
+  - `/sessions/*` multiplayer endpoints
+  - `GET /sessions/:id/stream` WebSocket
+- `api` reads/writes PostgreSQL (Supabase-compatible):
+  - `public.shelters`
+  - `public.sessions`
+  - `public.players`
+  - `public.question_attributes`
+- `data` scripts maintain source GeoJSON and can seed/export DB data.
 
+### Frontend module boundaries (`webapp/src`)
+- `components/`: screen-level and UI view components (`map/`, `controls/`, `layout/`, `ui/`, etc.).
+- `features/`: extracted domain behavior by concern:
+  - `session/`, `gameplay/`, `map/`, `measurement/`, `elevation/`.
+- `services/`: API and map/query data access.
+- `config/`: runtime/env configuration.
+
+Current complexity hotspots:
+- `components/GameScreen.tsx`
+- `components/map/MapView.tsx`
+
+### Main Screens & Interactions
+- `webapp/src/components/IntroScreen.tsx`: initial landing experience before mode selection and onboarding.
+- `webapp/src/components/OnboardingScreen.tsx`: setup flow for player identity and mode selection (solo, host, join), with help and localization-aware copy.
+- `webapp/src/components/WaitingRoom.tsx`: multiplayer lobby with roster, ready-state controls, share flow, and host-managed race start.
+- `webapp/src/components/GameScreen.tsx`: central gameplay orchestrator. It coordinates map interactions, clue/question state, solve attempts, panel routing, and end-of-round outcomes.
+- `webapp/src/components/SoloModeScreen.tsx`: solo-specific launch path into gameplay with local state ownership.
+- `webapp/src/components/TerminalScreen.tsx`: post-round terminal state surface used when gameplay transitions out of active mode.
+- `webapp/src/components/overlays/*`: dedicated overlays for help, profile naming, tutorial carousel, host share, guess confirmation, victory, and penalty messaging.
+- Background resume behavior: `webapp/src/App.tsx` persists session/gameplay snapshots into `localStorage`; on tab return/visibility restore it reconciles state, refreshes session data, and re-establishes multiplayer heartbeat/socket behavior when applicable.
+
+### Core Interaction Modules
+- `webapp/src/components/map/MapView.tsx`: Mapbox lifecycle wrapper and interaction hub. It integrates city layers, player/other-player location rendering, measurement hooks, and elevation sampling hooks while preserving gameplay state ownership in `GameScreen`.
+- `webapp/src/components/map/MapLayerPanel.tsx`: layer toggle UI for city layers; visibility changes are driven through extracted map feature hooks and applied to the active map instance.
+- `webapp/src/components/map/MeasurePanel.tsx`: measurement interaction readout that reports radius results and visible-layer counts for the selected point.
+- `webapp/src/components/panels/QuestionDrawer.tsx`: question prompt workflow, answer input controls, eligibility gating, and cooldown presentation. It supports proximity-aware categories and per-question lock timing.
+- `webapp/src/components/panels/GameplayPanel.tsx`: mission-control style panel for clue history, wrong-clue context, and player strategy support during active rounds.
+- Dynamic clue/question system: question templates are API-driven from `question_attributes`; clue text and prompts are localized via `webapp/src/assets/locales/*.json` and resolved at runtime.
+- Proximity and nearby checks: gameplay uses configured radius gates and nearby feature checks before unlocking selected question categories; this behavior is controlled by runtime flags in `webapp/src/config/runtime.ts`.
+- Multiplayer live map behavior: player positions sync through the session stream (`/sessions/:id/stream`) and are rendered as map updates; server-side 50m coordinate rounding affects perceived movement granularity.
+
+### Layer Styling and Data Sources (Important)
+- Layer styling and behavior metadata are defined in `webapp/src/cityContext/koto/layers.ts` (filters, paint/layout, popup templates, grouping, default visibility).
+- Layer source paths for local datasets are defined in `webapp/src/data/kotoGeojsonSources.ts` and point to bundled GeoJSON files in `data/geojson/*`.
+- Layer runtime loading is handled by `webapp/src/features/map/layers/useCityLayers.ts`:
+  - `sourceType: "geojson"` layers are loaded from local GeoJSON URLs (`map.addSource(... type: "geojson")`).
+  - `sourceType: "vector"` layers are loaded from Mapbox tilesets using `mapbox://{username}.{layerId}` from `webapp/src/config/mapbox.ts`.
+- Current split in `koto/layers.ts` is mixed:
+  - shelter/support/landmark point layers are local GeoJSON-backed.
+  - Hazard layers (flood depth, inland water depth, flood duration, storm surge) are Mapbox vector tileset-backed.
+- Basemap is Mapbox style-driven (`webapp/src/data/cityContext.ts`, `basemapUrl`).
+
+Related data-source behavior:
+- Proximity index (`webapp/src/services/proximityIndex.ts`) uses local raw GeoJSON imports (`data/geojson/ihi_*`).
+- Measurement feature counting (`webapp/src/features/measurement/services/measurementLayers.ts`) currently evaluates only GeoJSON-backed layers; vector hazard layers are not part of measurement feature extraction.
+- Lightning/multiplayer shelter selection in current app flow uses local/API shelter data (`getLocalShelters`/`getShelters`), not the Mapbox tilequery utilities. Tilequery helpers exist in `webapp/src/utils/lightningSelection.ts` and `webapp/src/services/designatedShelterService.ts` but are not the active path in `App.tsx`.
+
+## Quick Start
+
+### Prerequisites
+- Node.js 20+ recommended
+- npm 10+ recommended
+- Postgres/Supabase database for `api`
+- Mapbox token for `webapp`
+
+### Install
+```bash
+npm install
+npm --prefix webapp install
+npm --prefix api install
+npm --prefix data install
+```
+
+### Run webapp only
+```bash
+npm run dev:webapp
+```
+
+### Run API only
+```bash
+npm run dev:api
+```
+
+### Run full stack (webapp + api)
+```bash
+npm run dev
+```
+
+### Build
+```bash
+npm run build:webapp
+npm run build:api
+```
+
+### Local Sensor Testing (Geolocation)
+Lightning and multiplayer flows are location-sensitive during local testing:
+- Lightning mode uses the player location to fetch/select shelters around the player.
+- Multiplayer uses location checks and live location updates during race state.
+
+Recommended setup:
+- On desktop, test from `http://localhost` (geolocation is allowed on localhost).
+- For LAN/mobile testing on another device, use `https` (browsers typically block geolocation on non-secure origins).
+- In Chrome DevTools, use `More tools -> Sensors` to simulate GPS coordinates.
+- On physical devices, enable OS location services and browser location permission.
+
+Related flag:
+- `VITE_ENABLE_PROXIMITY=false` bypasses proximity gating for questions, but does not replace geolocation behavior needed for lightning/multiplayer location testing.
+
+## Environment Setup
+
+Create local env files:
 ```bash
 cp webapp/.env.example webapp/.env.local
 cp api/.env.example api/.env
 cp data/.env.example data/.env
 ```
 
-Never commit real credentials or tokens. Commit only `*.env.example` files with placeholder values.
+Never commit real secrets.
 
-## Webapp (Vite client)
+### Webapp env (`webapp/.env.local`)
 
-- **Structure**: `src/App.tsx` orchestrates the end-to-end flow (Onboarding → Waiting Room → Gameplay) and injects the default game content from `src/data`.
-- **Data**: Shelters load from the API (`/shelters`). Question templates/clue text are generated dynamically from `question_attributes` (seeded from GeoJSON) and localized strings in `src/assets/locales/*.json`. City-specific defaults (map start, categories) live in `src/data/cityContext.ts`.
-- **Design System**: Bauhaus-inspired utilities, typography, and color tokens are centralized in `src/styles/globals.css`. The Tailwind entry point is `src/index.css`.
-- **Maps**: Mapbox GL powers the interactive map via `src/components/MapView.tsx`. Tokens and tileset IDs are configured through environment variables (`.env.local` and `src/config/mapbox.ts`).
-- **Docs**: Release steps and product notes continue to live under `docs/` (now inside `webapp/`).
+Required for local map runtime:
+- `VITE_MAPBOX_TOKEN`
 
-### Running the client locally
+Common:
+- `VITE_API_BASE_URL` (default `http://localhost:4000`)
+- `VITE_WS_BASE_URL` (optional; defaults from API URL with `ws` scheme)
+- `VITE_MAPBOX_STYLE_URL` (optional)
+- `VITE_DEFAULT_LOCALE` (`en` / `ja`)
 
-```bash
-cd webapp
-npm install
-npm run dev          # Vite dev server
-```
-
-Copy `webapp/.env.example` to `webapp/.env.local`, then set at least `VITE_MAPBOX_TOKEN` and point `VITE_API_BASE_URL` at your API deployment. For detailed Mapbox setup guidance, see `src/MAPBOX_SETUP.md`.
-
-Optional webapp env toggles:
-
-- `VITE_LIGHTNING_MINUTES` (default `60`) — duration of the lightning round
+Gameplay toggles:
+- `VITE_ENABLE_PROXIMITY` (default `true`)
+- `VITE_PROXIMITY_RADIUS_KM` (default `0.25`)
+- `VITE_ENABLE_WRONG_GUESS_PENALTY` (default `false`)
+- `VITE_ONE_QUESTION_PER_LOCATION` (default `false`)
+- `VITE_MULTIPLAYER_RADIUS_KM` (default `2`)
+- `VITE_LIGHTNING_MINUTES` (default `60`)
 - `VITE_LIGHTNING_RADIUS_KM` (default `2`)
-- `VITE_MULTIPLAYER_RADIUS_KM` (default `2`) — max km radius used when selecting or auto-falling back to a nearby shelter in multiplayer
-- `VITE_ENABLE_PROXIMITY` (default `true`) — set to `false` to bypass proximity gating (and question cooldowns) for local testing
-- `VITE_PROXIMITY_RADIUS_KM` (default `0.25`) — radius (in km) for proximity checks and nearby amenity counts
-- `VITE_ENABLE_WRONG_GUESS_PENALTY` (default `false`) — when `true`, wrong guesses apply timer penalties (legacy mode); when `false`, you still have 3 attempts but the timer is unchanged
-- `VITE_ONE_QUESTION_PER_LOCATION` (default `false`) — when `true`, players can ask only one question at their current location and must move before asking again
-- `VITE_MAPBOX_STYLE_URL` (optional) — override the default Mapbox style
-- `VITE_WS_BASE_URL` (defaults to `VITE_API_BASE_URL` with `ws` scheme) — explicit WebSocket host if it differs from the REST API
 
-If you want the production build:
+Note: `webapp/.env.example` currently includes `VITE_LIGHTNING_DURATION_MINUTES`; runtime code reads `VITE_LIGHTNING_MINUTES`.
 
-```bash
-cd webapp
-npm run build        # production bundle
-npm run preview      # serves dist/ locally
-```
+### API env (`api/.env`)
 
-### Main Screens & Interactions
+Required:
+- `DATABASE_URL`
+- `JWT_SECRET`
+- `TASKS_CRON_SECRET`
 
-- **Onboarding Screen** (`src/components/OnboardingScreen.tsx`): Presents Bauhaus-styled cards that let players host, join, or start a solo round. Help + toasts surface onboarding tips.
-- **Waiting Room** (`src/components/WaitingRoom.tsx`): Displays the lobby roster, host controls, and readiness toggles. Transition logic is handled in `App.tsx`.
-- **Game Screen** (`src/components/GameScreen.tsx`): Anchors the live session with a Mapbox canvas, floating action buttons, and animated overlays for clues (no trivia flow) and end-game states. Mission Control surfaces dynamic clues logged from correct answers.
-- **Background resume**: When the browser tab is hidden or the phone is locked, the client snapshots session + gameplay state to `localStorage`. On return (within a 10-minute grace window), the timer is reconciled and the session is restored; multiplayer sessions attempt to reconnect and refresh the lobby snapshot.
-
-### Core UI Modules
-
-- **MapView** (`src/components/MapView.tsx`): Wraps Mapbox GL, handles POI markers, draws a 250m user range ring (driven by app-provided player location), exposes a location picker mode, and wires in Koto-specific layers (`src/cityContext/koto/layers.ts`). Geolocation uses one-shot fixes (no continuous tracking) to reduce battery drain. Measurement toasts are localized.
-- **Map layer localization**: Layer popups are locale-aware. Templates in `src/cityContext/koto/layers.ts` use `{{t:key}}` for labels and `{{locale:enKey|jaKey}}` to choose the right property name per locale. Legend titles/descriptions resolve from `map.layers.items.*` and `map.layers.descriptions.*` in `src/assets/locales/*.json`, so keep those ids in sync with layer `id`s when adding/editing layers.
-- **Question Drawer** (`src/components/QuestionDrawer.tsx`): Bottom sheet that gates question prompts based on proximity and logs every answer (both correct and incorrect) so players can refer back later. Nearby Amenity is a single dynamic question powered by a local spatial index over the GeoJSON data (`data/geojson/ihi_*`). It counts mapped categories (water stations, hospitals, AED, emergency storage, community centers, train stations, shrines/temples, flood gates, bridges) within a configurable radius (default 250m) of the current player location.
-  - **Question cooldowns**: After any question is answered, that question enters a 120-second cooldown (per player/session). The drawer disables the prompt and shows a live countdown (`questions.cooldown` string) until it becomes available again. Set `VITE_ENABLE_PROXIMITY=false` to bypass proximity gating and cooldown delays during local testing.
-- **Gameplay Panel** (`src/components/GameplayPanel.tsx`): Side panel for Mission Control, showing logged clues and strategy tips.
-- **Clue Engine**: Questions and clues are driven by `question_attributes` plus locale strings (`questions.dynamic.*`). Every answer is captured: correct clues accumulate in the “Correct” list, wrong guesses land under “Wrong clues,” and the Mission Control panel can filter the map using either set (e.g., remove shelters matching all known wrong answers). Location category is always selectable; other categories require proximity (unless `VITE_ENABLE_PROXIMITY=false` for testing).
-- **UI Primitives** (`src/components/ui/*`): Custom shadcn-derived kit (buttons, drawers, dialogs, etc.) that underpins the interaction model.
-- **Proximity & spatial index**: `src/services/proximityIndex.ts` builds a Turf-based spatial index over all local GeoJSON (landmarks, support, shelters). Map amenities use `countAmenitiesWithinRadius` to unlock the Nearby Amenity question; the answer is validated against the secret shelter’s stored attributes (exact counts). Facility/Capacity and other proximity-gated categories unlock when any shelter is within the configured radius (default 250m), detected via the same index (`hasShelterWithinRadius`). Set `VITE_ENABLE_PROXIMITY=false` to bypass gating in local testing.
-- **Answer validation & measurement**: Facility Type, Capacity/Resources, and all nearby-amenity questions are validated against the secret shelter’s stored attributes (`attributeValueLookup`), not the player’s surroundings. For spatial context, the Measure tool (MapView + `MeasurePanel`) lets players drop a center point and see every mapped point-of-interest within 250 m, along with per-layer counts and labels sourced from the same local GeoJSON bundles. Proximity affects availability; correctness always compares to the secret shelter data.
-
-## Multiplayer API (Render/Supabase)
-
-The `api/` directory houses a Fastify-based web service that manages multiplayer sessions end-to-end:
-
-- Connects to Supabase Postgres using the `DATABASE_URL` env var.
-- Provides REST endpoints for creating/joining sessions, toggling readiness, starting/finishing races, and fetching lobby snapshots.
-- Issues JWTs scoped to a session/player combination; the frontend consumes these endpoints via `webapp/src/services/multiplayerSessionService.ts`.
-- Ships with a WebSocket stream per session plus a cron endpoint for Render jobs to close expired sessions.
-
-### Running the API locally
-
-```bash
-cd api
-npm install
-npm run dev          # Fastify + TSX watch
-```
-
-Copy `api/.env.example` to `api/.env` before booting the service. Key vars:
-
-- `DATABASE_URL`, `JWT_SECRET`, `TASKS_CRON_SECRET`
+Common:
+- `PORT` (default `4000`)
 - `SESSION_TTL_MINUTES` (default `20`)
 - `SESSION_MAX_PLAYERS` (default `8`)
-- `SESSION_MAX_DISTANCE_KM` (default `2`) — max km radius for auto-selected fallback shelters when the requested shelter is already active
+- `SESSION_MAX_DISTANCE_KM` (default `2`)
+- `CORS_ORIGIN` (comma-separated allowed origins)
 
-### API troubleshooting
+DB safety/timeouts:
+- `DB_SSL_ALLOW_SELF_SIGNED` (default `false`)
+- `DB_CONNECT_TIMEOUT_MS` (default `5000`)
+- `DB_QUERY_TIMEOUT_MS` (default `10000`)
+- `DB_STATEMENT_TIMEOUT_MS` (default `10000`)
 
-- If your Supabase Postgres instance is paused due to inactivity, the API may still report `/health` as OK while data endpoints like `/shelters` and `/question-attributes` return `500`.
-- In that case, resume the Supabase project (or wait for wake-up), then retry the API requests.
+### Alternate Database Options (Beyond Supabase)
+Current deployment uses Supabase, but the backend is written against standard PostgreSQL (`pg` driver).  
+Any PostgreSQL-compatible provider can be used with minimal/no code changes.
 
-To build/start the compiled server (mirrors production):
+Short answer:
+- PostgreSQL-compatible switch: no API code changes required, but environment variables must be updated.
+- Update at minimum:
+  - `api/.env`: `DATABASE_URL` (and `CORS_ORIGIN` if frontend host changes)
+  - `data/.env`: `DATABASE_URL` when running `data` import/export scripts
 
+Works with no code changes:
+- Local PostgreSQL
+- Neon Postgres
+- Render Postgres
+- Railway Postgres
+- AWS RDS Postgres
+
+What you must do when switching provider:
+1. Set `DATABASE_URL` for the target provider in `api/.env`.
+2. Run SQL setup:
+   - `api/sql/001_init_sessions.sql`
+   - `api/sql/002_question_attributes.sql`
+3. Seed data (recommended):
+   - `cd api && SHELTER_DATA_PATH=../data/geojson/ihi_shelters.geojson npm run seed:shelters`
+4. Update `CORS_ORIGIN` for your frontend domain(s).
+5. Ensure a scheduler/cron can call `POST /tasks/expire-sessions` with `x-cron-key`.
+
+Postgres-specific requirements:
+- `pgcrypto` extension is used (`gen_random_uuid()` in schema).
+- Enum type `session_state` is required.
+- Partial unique index on active sessions is required.
+- JSONB column support is used (`question_attributes.options`).
+
+TLS / connection notes:
+- Hosted DBs should use verified TLS (`sslmode=require`).
+- `sslmode=disable` is only valid for localhost/loopback DBs.
+- `sslmode=no-verify` is intentionally rejected.
+
+If you want a non-PostgreSQL engine (MySQL, SQLite, MongoDB), code changes are required:
+- Replace `pg` pool and SQL query layer in `api/src/db/pool.ts` and `api/src/services/*`.
+- Recreate migrations/types/constraints in the new datastore.
+- Rework Postgres-specific SQL features (enum, partial index, JSONB, `gen_random_uuid()`).
+
+### Data env (`data/.env`)
+- `DATABASE_URL` (for `seed:db`)
+- `SHELTER_DATA_PATH` (GeoJSON path override)
+- `DATA_API_BASE_URL` (for `export:api`)
+- `OUTPUT_PATH` (export destination path)
+
+## Scripts
+
+### Root scripts
+| Command | Purpose |
+| --- | --- |
+| `npm run dev:webapp` | Start Vite client |
+| `npm run dev:api` | Start Fastify API |
+| `npm run dev` | Run both in parallel |
+| `npm run build:webapp` | Build webapp |
+| `npm run build:api` | Build API |
+| `npm run start:api` | Run built API |
+
+### API scripts (`api/package.json`)
+| Command | Purpose |
+| --- | --- |
+| `npm run dev` | Run API in watch mode (`tsx`) |
+| `npm run build` | Compile TypeScript to `dist/` |
+| `npm run start` | Run compiled server |
+| `npm run lint` | Lint API TypeScript |
+| `npm run check` | Type check API |
+| `npm run seed:shelters` | Seed shelters + question attributes from GeoJSON |
+
+### Data scripts (`data/package.json`)
+| Command | Purpose |
+| --- | --- |
+| `npm run export:api` | Pull shelters from API and write GeoJSON |
+| `npm run seed:db` | Upsert shelters from GeoJSON directly into DB |
+| `node scripts/buildIhiAnswers.mjs` | Recompute `250m_*` fields from raw map layers |
+
+## API Contract
+
+### Read endpoints
+| Method | Path | Description |
+| --- | --- | --- |
+| `GET` | `/shelters` | Returns shelter dataset used by map/gameplay |
+| `GET` | `/shelters/:code` | Returns one shelter by share code |
+| `GET` | `/question-attributes` | Returns dynamic question metadata |
+
+### Session endpoints
+| Method | Path | Description |
+| --- | --- | --- |
+| `POST` | `/sessions` | Host creates session |
+| `POST` | `/sessions/join` | Player joins session by shelter code |
+| `POST` | `/sessions/:id/ready` | Toggle ready (JWT required) |
+| `POST` | `/sessions/:id/heartbeat` | Presence update (JWT required, returns 204) |
+| `POST` | `/sessions/:id/start` | Host starts race |
+| `POST` | `/sessions/:id/finish` | Finish race and winner |
+| `POST` | `/sessions/:id/leave` | Leave session, host may be promoted |
+| `GET` | `/sessions/:id` | Session + players snapshot |
+| `GET` | `/sessions/:id/stream` | WebSocket stream (token required) |
+| `POST` | `/tasks/expire-sessions` | Cron cleanup (`x-cron-key`) |
+
+### WebSocket event notes
+- Lobby events: `player_joined`, `ready_updated`, `race_started`, `race_finished`, etc.
+- Location updates are accepted only while `session.state === racing`.
+- Location coordinates are rounded to 50m grid before broadcast.
+- Live location cache is in memory (`SessionHub`), not persisted in DB.
+
+## Database Model
+
+Migrations:
+- `api/sql/001_init_sessions.sql`
+- `api/sql/002_question_attributes.sql`
+
+### `public.shelters`
+Purpose:
+- Master shelter catalog for gameplay and session targeting.
+
+Key columns:
+- identity: `id`, `code` (unique), `share_code` (unique)
+- location: `latitude`, `longitude`
+- hazard + clue attributes: flood/storm/inland fields, `facility_type`, `shelter_capacity`, `*_250m`
+
+Used by:
+- API: `GET /shelters`, `GET /shelters/:code`
+- Session service: shelter lookup and active-session targeting
+- Webapp: base shelter dataset for map + gameplay
+
+### `public.sessions`
+Purpose:
+- Session lifecycle per multiplayer race.
+
+Key columns:
+- `id`, `shelter_id`, `shelter_code`, `host_id`
+- `state` (`lobby|racing|finished|closed`)
+- `max_players`, `expires_at`, `started_at`, `ended_at`
+
+Critical constraint:
+- Partial unique index ensures one active (`lobby`/`racing`) session per shelter.
+
+State semantics:
+- `lobby`: players join/ready before host starts.
+- `racing`: active multiplayer round; live location updates are accepted.
+- `finished`: race completed.
+- `closed`: expired/ended session cleanup state.
+
+### `public.players`
+Purpose:
+- Player membership + presence in session.
+
+Key columns:
+- `session_id`, `user_id`, `display_name`, `ready`, `last_seen`
+
+Critical constraint:
+- unique `(session_id, user_id)`.
+
+Presence behavior:
+- `last_seen` is updated by heartbeat and ready toggles.
+- Expiry task uses `last_seen` to close abandoned sessions.
+
+### `public.question_attributes`
+Purpose:
+- Dynamic question metadata for frontend prompts.
+
+Key columns:
+- `id`, `label`, `kind` (`number`/`select`), `options` (jsonb)
+
+Model detail:
+- `id`: stable key consumed by frontend dynamic question templates (e.g. `floodDepth`, `facilityType`, `shelterCapacity`).
+- `label`: human-readable question label.
+- `kind`:
+  - `number`: numeric comparison/input style question.
+  - `select`: categorical question with predefined options.
+- `options`:
+  - Required for `select` style attributes.
+  - Usually empty array for `number` attributes.
+  - Stored as JSONB array in DB.
+
+How this table is populated:
+- Created by `api/sql/002_question_attributes.sql`.
+- Seeded/updated by `api/scripts/importShelters.ts` (`npm run seed:shelters`).
+- Seeder builds this table from `ATTRIBUTE_CONFIG` and categorical values found in shelter GeoJSON properties.
+- Upsert behavior keeps `id` stable while refreshing labels/kinds/options.
+
+Runtime usage:
+- API returns rows via `GET /question-attributes`.
+- Webapp fetches/caches via `webapp/src/services/questionAttributeService.ts`.
+- `GameScreen`/question drawer uses these records to construct dynamic question set and input controls.
+
+Operational note:
+- If `public.question_attributes` is empty/missing, dynamic question generation in the UI becomes incomplete.
+- `data/scripts/importToSupabase.mjs` does not maintain this table; use `npm --prefix api run seed:shelters` for full game-ready seeding.
+
+## Data Workflows (`data/` and Seed Scripts)
+
+### Preferred production-like seed path
+1. Apply SQL migrations (`api/sql/*.sql`) to DB.
+2. Run:
+   ```bash
+   cd api
+   SHELTER_DATA_PATH=../data/geojson/ihi_shelters.geojson npm run seed:shelters
+   ```
+3. Seeder upserts:
+   - `public.shelters`
+   - `public.question_attributes`
+
+### Direct DB seed path (lighter)
 ```bash
-cd api
-npm run build        # emits dist/server.js
-npm run start        # runs compiled server
+cd data
+npm run seed:db
+```
+Warning: `seed:db` is **not** a full gameplay seed.
+- It upserts `public.shelters` only.
+- It does **not** populate/update `public.question_attributes`.
+- Result: question metadata can be missing and dynamic question UX can be incomplete/broken.
+
+If you used `seed:db`, do this immediately after:
+1. Ensure migrations are applied:
+   - `api/sql/001_init_sessions.sql`
+   - `api/sql/002_question_attributes.sql`
+2. Backfill full gameplay metadata with API seeder:
+   ```bash
+   cd api
+   SHELTER_DATA_PATH=../data/geojson/ihi_shelters.geojson npm run seed:shelters
+   ```
+3. Verify:
+   - `GET /question-attributes` returns non-empty `attributes`.
+
+### Export current DB/API shelters back to GeoJSON
+```bash
+cd data
+npm run export:api
 ```
 
-## Running both services together
-
-From the repo root you can install a lightweight dev dependency and launch both processes with one command:
-
+### Recompute `250m_*` amenity fields
 ```bash
-npm install           # installs the root helper scripts (once)
-npm run dev           # runs webapp dev + api dev concurrently
+cd data
+node scripts/buildIhiAnswers.mjs
 ```
 
-The helper scripts use `npm --prefix` under the hood, so you can still run `npm run dev:webapp` or `npm run dev:api` individually from the root.
+## Runtime Flows
 
-### Multiplayer data seeding
+### Gameplay boot flow
+1. Webapp loads and fetches `/shelters`.
+2. Webapp fetches `/question-attributes`.
+3. UI initializes clues, filters, and map layers from these payloads.
 
-The GeoJSON dataset now lives in a separate data repo (not shipped or deployed with the app). Point the importer at that copy via `SHELTER_DATA_PATH` or by cloning the data repo alongside this one (e.g., `../shelterhunt-data/geojson/ihi_shelters.geojson`). After setting up your Supabase project:
+### Multiplayer flow
+1. Host creates session (`POST /sessions`) or player joins (`POST /sessions/join`).
+2. Client receives JWT and connects to `/sessions/:id/stream`.
+3. Ready/start/finish/leave events propagate through REST + WS broadcasts.
+4. Heartbeats update `players.last_seen`; cron can close stale sessions.
 
-```bash
-cd api
-psql "$DATABASE_URL" -f sql/001_init_sessions.sql   # create/alter tables
-psql "$DATABASE_URL" -f sql/002_question_attributes.sql   # create question attribute metadata table
-SHELTER_DATA_PATH=../shelterhunt-data/geojson/ihi_shelters.geojson npm run seed:shelters
-```
+## Troubleshooting
 
-The importer assigns a random six-character `share_code` to every shelter and upserts the records into Supabase. The frontend and API read these codes from the database; the raw GeoJSON should remain versioned only in the data repo (see `data/` for helper scripts to export/import).
+### DB-backed endpoints fail while `/health` is up
+Cause:
+- Supabase/Postgres paused or unavailable.
 
-### Key endpoints
+Action:
+- Resume/wake database and retry.
 
-| Method | Path                      | Description                               |
-| ------ | ------------------------ | ----------------------------------------- |
-| POST   | `/sessions`              | Host creates a new shelter session        |
-| POST   | `/sessions/join`         | Join an existing session by shelter code  |
-| POST   | `/sessions/:id/ready`    | Toggle ready state (auth required)        |
-| POST   | `/sessions/:id/heartbeat`| Presence heartbeat (`204` no response body) |
-| POST   | `/sessions/:id/start`    | Host starts the race                      |
-| GET    | `/sessions/:id`          | Fetch lobby snapshot (auth required)      |
-| POST   | `/sessions/:id/finish`   | Mark race finished                        |
-| POST   | `/tasks/expire-sessions` | Cron endpoint to close expired sessions   |
-| GET    | `/shelters`              | List shelters (with hazard/attribute data) |
-| GET    | `/question-attributes`   | List question attribute metadata (kind/options) |
+### Session auth errors (`401`/`403`)
+Cause:
+- Missing/expired token or token/session mismatch.
 
-Subscribe to `ws://…/sessions/:id/stream?token=…` using the returned JWT token to receive lobby events (`player_joined`, `ready_updated`, etc.).
+Action:
+- Rejoin/create session and refresh token; ensure client session ID matches token session ID.
 
-### Multiplayer live locations (V1)
+### Live location markers not updating
+Checklist:
+- Session state must be `racing`.
+- Client must send `location_update`.
+- Movement under 50m may look unchanged due to server rounding.
+- API restart clears in-memory location cache until fresh updates arrive.
 
-- Live player markers are shown only after the race starts (`state = racing`).
-- Each client requests a fresh geolocation fix and sends `location_update` every 5 seconds over the existing session WebSocket.
-- Server rounds incoming coordinates to a 50m grid before broadcasting to all players in the same session.
-- Clients render remote players (not self) as labeled map markers and mark them stale after 1 minute without update.
-- If a player has no valid location update, no marker is shown for that player.
-- Small movement under the 50m grid can appear unchanged on the map until the player crosses into the next rounded cell.
+### Layer/proximity/gameplay anomalies after refactor
+Action:
+- Run targeted checks around `GameScreen.tsx`, `MapView.tsx`, and feature hooks in `webapp/src/features/*`.
 
-WebSocket events used in V1:
+## CI Note
 
-- Client to server: `location_update` with `{ lat, lng }`
-- Server to clients:
-  - `player_location_updated`
-  - `player_locations_snapshot` (sent on stream connect)
-  - `player_location_removed` (on leave/disconnect)
-
-Current limitation:
-
-- Location state is in-memory in the API process (no DB persistence). On API restart, live markers rebuild from new client updates.
-
-## Deployment
-
-Deploy **webapp** as a Render Static Site (build: `npm install && npm run build` from `webapp/`, publish directory `dist/`). Deploy **api** as a Render Web Service (build: `npm install && npm run build` from `api/`, start: `npm run start`). Set `VITE_API_BASE_URL` in the webapp environment to the URL Render assigns to the API, and configure `SESSION_MAX_DISTANCE_KM` on the API if you need a different multiplayer fallback radius.
+`release.yml` currently runs `npm run build` at repo root, but root `package.json` exposes `build:webapp` and `build:api` (not `build`).  
+Align workflow and scripts before relying on release automation.
