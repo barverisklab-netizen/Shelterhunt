@@ -1,6 +1,6 @@
 import { motion } from "motion/react";
 import { MapPin } from "lucide-react";
-import { cn } from "./ui/utils";
+import { cn } from "@/components/ui/utils";
 
 interface MenuHeaderProps {
   title: string;

@@ -1,9 +1,9 @@
 import { motion, AnimatePresence } from "motion/react";
 import { X, MapPin, Brain, Lightbulb, Trophy, Play } from "lucide-react";
-import { Button } from "./ui/button";
+import { Button } from "../ui/button";
 import { useI18n } from "@/i18n";
 import { defaultCityContext } from "@/data/cityContext";
-import mascotPlaying from "../assets/graphics/character-mascot-playing.svg";
+import mascotPlaying from "@/assets/graphics/character-mascot-playing.svg";
 
 interface HelpModalProps {
   isOpen: boolean;

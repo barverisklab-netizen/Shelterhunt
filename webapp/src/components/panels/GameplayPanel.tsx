@@ -1,13 +1,13 @@
 import { AnimatePresence, motion } from "motion/react";
 import { X, Lightbulb, CheckCircle, XCircle, Sparkles, Info } from "lucide-react";
-import { Button } from "./ui/button";
-import { LanguageToggle } from "./LanguageToggle";
+import { Button } from "../ui/button";
+import { LanguageToggle } from "../controls/LanguageToggle";
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
-} from "./ui/accordion";
+} from "../ui/accordion";
 import { Clue } from "@/types/game";
 import { useI18n } from "@/i18n";
 import { useState } from "react";

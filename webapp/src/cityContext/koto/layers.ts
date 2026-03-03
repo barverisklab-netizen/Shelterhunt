@@ -116,22 +116,32 @@ export const kotoLayers: KotoLayer[] = [
         "text-halo-color": "#ffffff",
         "text-halo-width": 1.2,
       },
-      filter: ["==", ["get", "Category"], "Voluntary EC"],
+      filter: [
+        "in",
+        ["get", "Category"],
+        ["literal", ["Voluntary EC", "EC/Voluntary EC"]],
+      ],
       layout: {
         "icon-size": 0.8,
         "text-font": ["Roboto Bold"],
         "text-size": 10,
         "icon-image": [
-          "match",
-          ["get", "Category"],
-          "Voluntary EC",
+          "case",
+          [
+            "in",
+            ["get", "Category"],
+            ["literal", ["Voluntary EC", "EC/Voluntary EC"]],
+          ],
           "ihi_vec",
           "",
         ],
         "text-field": [
-          "match",
-          ["get", "Category"],
-          "Voluntary EC",
+          "case",
+          [
+            "in",
+            ["get", "Category"],
+            ["literal", ["Voluntary EC", "EC/Voluntary EC"]],
+          ],
           ["get", "Landmark Name (JP)"],
           "",
         ],
@@ -190,16 +200,22 @@ export const kotoLayers: KotoLayer[] = [
         "text-font": ["Roboto Bold"],
         "text-size": 10,
         "icon-image": [
-          "match",
-          ["get", "Category"],
-          ["Temp EC (Corporate)", "Temp EC (UR)"],
+          "case",
+          [
+            "in",
+            ["get", "Category"],
+            ["literal", ["Temp EC (Corporate)", "Temp EC (UR)"]],
+          ],
           "ihi_tec",
           "",
         ],
         "text-field": [
-          "match",
-          ["get", "Category"],
-          ["Temp EC (Corporate)", "Temp EC (UR)"],
+          "case",
+          [
+            "in",
+            ["get", "Category"],
+            ["literal", ["Temp EC (Corporate)", "Temp EC (UR)"]],
+          ],
           ["get", "Landmark Name (JP)"],
           "",
         ],
@@ -248,10 +264,7 @@ export const kotoLayers: KotoLayer[] = [
         "text-halo-color": "#ffffff",
         "text-halo-width": 1.2,
       },
-      filter: [
-        "in",
-        ["get", "Category"], "Special Needs Shelter"
-      ],
+      filter: ["==", ["get", "Category"], "Special Needs Shelter"],
       layout: {
         "icon-size": 0.8,
         "text-font": ["Roboto Bold"],

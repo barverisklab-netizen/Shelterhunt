@@ -1,7 +1,7 @@
 import { motion } from "motion/react";
-import { Button } from "./ui/button";
+import { Button } from "../ui/button";
 import { useI18n } from "@/i18n";
-import mascotCrying from "../assets/graphics/character-mascot-crying.svg";
+import mascotCrying from "@/assets/graphics/character-mascot-crying.svg";
 
 type PenaltyStage = "first" | "second" | "third";
 

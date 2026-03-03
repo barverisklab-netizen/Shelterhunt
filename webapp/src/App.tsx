@@ -1,14 +1,14 @@
-import { useState, useEffect, useCallback, useRef, useMemo } from "react";
-import { IntroScreen } from "./components/IntroScreen";
-import { OnboardingScreen } from "./components/OnboardingScreen";
-import { SoloModeScreen } from "./components/SoloModeScreen";
-import { WaitingRoom } from "./components/WaitingRoom";
-import { GameScreen, type WrongGuessStage } from "./components/GameScreen";
-import { HelpModal } from "./components/HelpModal";
-import { TerminalScreen } from "./components/TerminalScreen";
-import { Toaster } from "./components/ui/sonner";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { toast } from "sonner@2.0.3";
-import type { Player, POI, QuestionAttribute } from "@/types/game";
+import type {
+  LatLng,
+  Player,
+  POI,
+  QuestionAttribute,
+  RemoteOutcome,
+  SecretShelterInfo,
+  ShelterOption,
+} from "@/types/game";
 import {
   defaultPlayers,
 } from "@/data/gameContent";
@@ -23,7 +23,6 @@ import {
 } from "./utils/lightningSelection";
 import { getLocalShelters } from "@/services/mapLayerQueryService";
 import {
-  buildSessionSocketUrl,
   createMultiplayerSession,
   fetchSessionSnapshot,
   finishMultiplayerRace,
@@ -35,8 +34,6 @@ import {
   type Player as SessionPlayer,
   type SessionResponse,
 } from "./services/multiplayerSessionService";
-import { ProfileNameModal } from "./components/ProfileNameModal";
-import { HostShareModal } from "./components/HostShareModal";
 import {
   getShelterByShareCode,
   getShelters,
@@ -44,9 +41,15 @@ import {
 } from "./services/shelterDataService";
 import { getQuestionAttributes } from "./services/questionAttributeService";
 import { useI18n } from "./i18n";
-import { LanguageToggle } from "./components/LanguageToggle";
-import { Clock } from "lucide-react";
-import loadingMascot from "./assets/graphics/character-mascot-loading.gif";
+import { AppShell } from "./app/AppShell";
+import {
+  useMultiplayerSocket,
+  type MultiplayerSessionContext,
+  type SessionRole,
+} from "./features/session/hooks/useMultiplayerSocket";
+import { useSessionState } from "./features/session/hooks/useSessionState";
+import { useSessionTimer } from "./features/session/hooks/useSessionTimer";
+import { deriveRemoteOutcomeFromRaceFinished } from "./features/session/services/raceOutcome";
 
 type GameState =
   | "intro"
@@ -58,7 +61,6 @@ type GameState =
 
 type GameMode = "lightning" | "citywide";
 
-const INITIAL_SHELTER_RADIUS_KM = LIGHTNING_RADIUS_KM;
 const DESIGNATED_CATEGORY = "designated ec";
 const MULTIPLAYER_DURATION_MINUTES = 60;
 const EXCLUDED_QUESTION_ATTRIBUTE_IDS = new Set([
@@ -72,26 +74,7 @@ const GAMEPLAY_SNAPSHOT_KEY = "shelterhunt.gameplaySnapshot.v1";
 const GAME_SNAPSHOT_VERSION = 1;
 const RESUME_GRACE_MS = 10 * 60 * 1000;
 const MULTIPLAYER_LOCATION_UPDATE_MS = 5_000;
-const MULTIPLAYER_LOCATION_STALE_MS = 60_000;
 const MULTIPLAYER_LOCATION_ROUNDING_METERS = 50;
-
-type SessionRole = "host" | "player";
-
-interface MultiplayerSessionContext {
-  sessionId: string;
-  token: string;
-  playerId: string;
-  userId: string;
-  role: SessionRole;
-  shelterCode: string;
-}
-
-interface MultiplayerPlayerLocation {
-  userId: string;
-  lat: number;
-  lng: number;
-  updatedAt: number;
-}
 
 interface GameSnapshot {
   version: number;
@@ -106,14 +89,14 @@ interface GameSnapshot {
   timerEnabled: boolean;
   timerEndsAt: number | null;
   isTimerCritical: boolean;
-  playerLocation: { lat: number; lng: number };
-  secretShelter: { id: string; name: string } | null;
-  shelterOptions: { id: string; name: string }[];
+  playerLocation: LatLng;
+  secretShelter: SecretShelterInfo | null;
+  shelterOptions: ShelterOption[];
   gameMode: GameMode | null;
-  lightningCenter: { lat: number; lng: number } | null;
+  lightningCenter: LatLng | null;
   lightningRadiusKm: number | null;
   designatedShelters: POI[];
-  remoteOutcome: { result: "win" | "lose"; winnerName?: string } | null;
+  remoteOutcome: RemoteOutcome | null;
   sessionContext: MultiplayerSessionContext | null;
   sessionHostId: string | null;
   currentShelter: Shelter | null;
@@ -134,14 +117,14 @@ const mapSessionPlayersToUI = (
   }));
 };
 
-const isDefaultStartLocation = (location: { lat: number; lng: number }) => {
+const isDefaultStartLocation = (location: LatLng) => {
   return (
     Math.abs(location.lat - defaultCityContext.mapConfig.startLocation.lat) < 1e-6 &&
     Math.abs(location.lng - defaultCityContext.mapConfig.startLocation.lng) < 1e-6
   );
 };
 
-const roundLocationToGrid = (location: { lat: number; lng: number }, meters = MULTIPLAYER_LOCATION_ROUNDING_METERS) => {
+const roundLocationToGrid = (location: LatLng, meters = MULTIPLAYER_LOCATION_ROUNDING_METERS) => {
   const metersPerLatDegree = 111_320;
   const safeLatCos = Math.max(0.000001, Math.cos((location.lat * Math.PI) / 180));
   const metersPerLngDegree = metersPerLatDegree * safeLatCos;
@@ -156,7 +139,7 @@ const roundLocationToGrid = (location: { lat: number; lng: number }, meters = MU
 };
 
 const buildLocalDesignatedShelters = async (
-  center: { lat: number; lng: number },
+  center: LatLng,
   radiusKm?: number,
 ): Promise<POI[]> => {
   const normalizedRadius =
@@ -222,47 +205,25 @@ export default function App() {
   const [hostSetupModalOpen, setHostSetupModalOpen] = useState(false);
   const [hostShareModalOpen, setHostShareModalOpen] = useState(false);
   const [hostShareCode, setHostShareCode] = useState<string | null>(null);
-  const [timeRemaining, setTimeRemaining] = useState(1800); // 30 minutes
   const [showHelp, setShowHelp] = useState(false);
-  const [playerLocation, setPlayerLocation] = useState({
+  const [playerLocation, setPlayerLocation] = useState<LatLng>({
     lat: defaultCityContext.mapConfig.startLocation.lat,
     lng: defaultCityContext.mapConfig.startLocation.lng,
   });
-  const [secretShelter, setSecretShelter] = useState<{
-    id: string;
-    name: string;
-  } | null>(null);
-  const [shelterOptions, setShelterOptions] = useState<
-    { id: string; name: string }[]
-  >([]);
-  const [isTimerCritical, setIsTimerCritical] = useState(false);
-  const [wrongGuessCount, setWrongGuessCount] = useState(0);
-  const [timerEnabled, setTimerEnabled] = useState(true);
-  const [timerEndsAt, setTimerEndsAt] = useState<number | null>(null);
+  const [secretShelter, setSecretShelter] = useState<SecretShelterInfo | null>(null);
+  const [shelterOptions, setShelterOptions] = useState<ShelterOption[]>([]);
   const [gameMode, setGameMode] = useState<GameMode | null>(null);
-  const [lightningCenter, setLightningCenter] = useState<{ lat: number; lng: number } | null>(
-    null,
-  );
+  const [lightningCenter, setLightningCenter] = useState<LatLng | null>(null);
   const [lightningRadiusKm, setLightningRadiusKm] = useState<number | null>(null);
   const [modeProcessing, setModeProcessing] = useState(false);
-  const [sessionBootstrapLoading, setSessionBootstrapLoading] = useState(false);
+  const [sessionBootstrapLoading] = useState(false);
   const [lockSecretShelter, setLockSecretShelter] = useState(false);
   const [lockShelterOptions, setLockShelterOptions] = useState(false);
   const [designatedShelters, setDesignatedShelters] = useState<POI[]>([]);
-  const [remoteOutcome, setRemoteOutcome] = useState<
-    { result: "win" | "lose"; winnerName?: string } | null
-  >(null);
+  const [remoteOutcome, setRemoteOutcome] = useState<RemoteOutcome | null>(null);
   const [shelters, setShelters] = useState<Shelter[]>([]);
   const [questionAttributes, setQuestionAttributes] = useState<QuestionAttribute[]>([]);
   const [sessionContext, setSessionContext] = useState<MultiplayerSessionContext | null>(null);
-  const sessionSocketRef = useRef<WebSocket | null>(null);
-  const [socketReconnectKey, setSocketReconnectKey] = useState(0);
-  const latestPlayerLocationRef = useRef(playerLocation);
-  const locationBroadcastInFlightRef = useRef(false);
-  const [multiplayerPlayerLocations, setMultiplayerPlayerLocations] = useState<
-    Record<string, MultiplayerPlayerLocation>
-  >({});
-  const [locationClockTick, setLocationClockTick] = useState(0);
   const [sessionHostId, setSessionHostId] = useState<string | null>(null);
   const [currentShelter, setCurrentShelter] = useState<Shelter | null>(null);
   const [joinCodeScreenOpen, setJoinCodeScreenOpen] = useState(false);
@@ -279,62 +240,68 @@ export default function App() {
   const restoredFromSnapshotRef = useRef(false);
   const sessionSnapshotRequestSequenceRef = useRef(0);
   const activeSessionSnapshotRequestRef = useRef<AbortController | null>(null);
-
-  useEffect(() => {
-    latestPlayerLocationRef.current = playerLocation;
-  }, [playerLocation.lat, playerLocation.lng]);
-
-  useEffect(() => {
-    if (!sessionContext || gameState !== "playing") {
-      return;
-    }
-    const interval = setInterval(() => {
-      setLocationClockTick((tick) => tick + 1);
-    }, 15_000);
-    return () => clearInterval(interval);
-  }, [gameState, sessionContext]);
-
-  const otherPlayerLocations = useMemo(() => {
-    if (!sessionContext || gameState !== "playing") {
-      return [];
-    }
-    const now = Date.now();
-    void locationClockTick;
-    return Object.values(multiplayerPlayerLocations)
-      .filter((location) => location.userId !== currentSessionUserId)
-      .map((location) => {
-        const playerName =
-          players.find((player) => player.id === location.userId)?.name ??
-          t("waiting.player", { fallback: "Player" });
-        return {
-          userId: location.userId,
-          name: playerName,
-          lat: location.lat,
-          lng: location.lng,
-          isStale: now - location.updatedAt >= MULTIPLAYER_LOCATION_STALE_MS,
-        };
-      });
-  }, [currentSessionUserId, gameState, multiplayerPlayerLocations, players, sessionContext, t, locationClockTick]);
+  const socketPlayersChangedHandlerRef = useRef<() => void>(() => {});
+  const socketPlayerLeftHandlerRef = useRef<
+    (options: { departedUserId?: string }) => void
+  >(() => {});
+  const socketSessionClosedHandlerRef = useRef<() => void>(() => {});
+  const socketRaceStartedHandlerRef = useRef<() => void>(() => {});
+  const socketRaceFinishedHandlerRef = useRef<(payload: any) => void>(() => {});
+  const handleSocketPlayersChanged = useCallback(
+    () => socketPlayersChangedHandlerRef.current(),
+    [],
+  );
+  const handleSocketPlayerLeft = useCallback(
+    (options: { departedUserId?: string }) => socketPlayerLeftHandlerRef.current(options),
+    [],
+  );
+  const handleSocketSessionClosed = useCallback(
+    () => socketSessionClosedHandlerRef.current(),
+    [],
+  );
+  const handleSocketRaceStarted = useCallback(
+    () => socketRaceStartedHandlerRef.current(),
+    [],
+  );
+  const handleSocketRaceFinished = useCallback(
+    (payload: any) => socketRaceFinishedHandlerRef.current(payload),
+    [],
+  );
 
   const handleTimeUp = useCallback(() => {
     setGameState("ended");
     setSecretShelter(null);
     setShelterOptions([]);
-    setIsTimerCritical(false);
-    setTimerEnabled(false);
-    setTimerEndsAt(null);
     toast.error(t("app.toasts.timeUp", { fallback: "Time's up! Game over." }));
   }, [t]);
 
-  const setTimerState = useCallback((seconds: number, enabled: boolean) => {
-    setTimeRemaining(seconds);
-    setTimerEnabled(enabled);
-    setTimerEndsAt(enabled ? Date.now() + seconds * 1000 : null);
-  }, []);
+  const {
+    timeRemaining,
+    timerEnabled,
+    timerEndsAt,
+    isTimerCritical,
+    setTimeRemaining,
+    setTimerEnabled,
+    setTimerEndsAt,
+    setIsTimerCritical,
+    setTimerState,
+  } = useSessionTimer({
+    gameState,
+    onTimeUp: handleTimeUp,
+  });
+
+  const {
+    wrongGuessCount,
+    setWrongGuessCount,
+    applyWrongGuessPenalty,
+  } = useSessionState({
+    setTimerState,
+    setIsTimerCritical: (isCritical) => setIsTimerCritical(isCritical),
+  });
 
   const requestBroadcastLocation = useCallback(
     () =>
-      new Promise<{ lat: number; lng: number } | null>((resolve) => {
+      new Promise<LatLng | null>((resolve) => {
         if (typeof navigator === "undefined" || !navigator.geolocation) {
           resolve(null);
           return;
@@ -356,6 +323,30 @@ export default function App() {
       }),
     [],
   );
+
+  const {
+    otherPlayerLocations,
+    ensureSocketConnected,
+    closeSocket,
+    clearPlayerLocations,
+  } = useMultiplayerSocket({
+    sessionContext,
+    gameState,
+    playerLocation,
+    setPlayerLocation,
+    requestBroadcastLocation,
+    isDefaultStartLocation,
+    roundLocationToGrid,
+    currentSessionUserId,
+    players,
+    playerNameFallback: t("waiting.player", { fallback: "Player" }),
+    onPlayersChanged: handleSocketPlayersChanged,
+    onPlayerLeft: handleSocketPlayerLeft,
+    onSessionClosed: handleSocketSessionClosed,
+    onRaceStarted: handleSocketRaceStarted,
+    onRaceFinished: handleSocketRaceFinished,
+    locationUpdateMs: MULTIPLAYER_LOCATION_UPDATE_MS,
+  });
 
   const buildGameSnapshot = useCallback(
     (): GameSnapshot => ({
@@ -505,27 +496,6 @@ export default function App() {
     [clearGameSnapshots, currentUserId, handleTimeUp],
   );
 
-  // Timer countdown
-  useEffect(() => {
-    if (!timerEnabled || gameState !== "playing" || !timerEndsAt) {
-      return;
-    }
-
-    const tick = () => {
-      const nextRemaining = Math.max(0, Math.ceil((timerEndsAt - Date.now()) / 1000));
-      if (nextRemaining <= 0) {
-        setTimeRemaining(0);
-        handleTimeUp();
-        return;
-      }
-      setTimeRemaining(nextRemaining);
-    };
-
-    tick();
-    const timer = setInterval(tick, 1000);
-    return () => clearInterval(timer);
-  }, [gameState, handleTimeUp, timerEnabled, timerEndsAt]);
-
   useEffect(() => {
     getShelters()
       .then(setShelters)
@@ -550,7 +520,7 @@ export default function App() {
 
 
   const updateSecretShelter = useCallback(
-    (info: { id: string; name: string }) => {
+    (info: SecretShelterInfo) => {
       if (lockSecretShelter) return;
       setSecretShelter(info);
     },
@@ -558,7 +528,7 @@ export default function App() {
   );
 
   const updateShelterOptions = useCallback(
-    (options: { id: string; name: string }[]) => {
+    (options: ShelterOption[]) => {
       if (lockShelterOptions) return;
       setShelterOptions(options);
     },
@@ -566,7 +536,7 @@ export default function App() {
   );
 
   const loadDesignatedShelters = useCallback(
-    async (center: { lat: number; lng: number }, radiusKm: number) => {
+    async (center: LatLng, radiusKm: number) => {
       try {
         const shelters = await buildLocalDesignatedShelters(center, radiusKm);
         setDesignatedShelters(shelters);
@@ -597,11 +567,9 @@ export default function App() {
   useEffect(() => {
     return () => {
       invalidateSessionSnapshotRequests("app-unmount");
-      if (sessionSocketRef.current) {
-        sessionSocketRef.current.close();
-      }
+      closeSocket();
     };
-  }, [invalidateSessionSnapshotRequests]);
+  }, [closeSocket, invalidateSessionSnapshotRequests]);
 
   const resetGameContext = () => {
     clearGameSnapshots();
@@ -615,7 +583,7 @@ export default function App() {
     setLockSecretShelter(false);
     setLockShelterOptions(false);
     setRemoteOutcome(null);
-    setMultiplayerPlayerLocations({});
+    clearPlayerLocations();
   };
 
   const disconnectSession = useCallback(
@@ -636,16 +604,13 @@ export default function App() {
           }
         }
       }
-      if (sessionSocketRef.current) {
-        sessionSocketRef.current.close();
-        sessionSocketRef.current = null;
-      }
+      closeSocket();
       setSessionContext(null);
       setCurrentShelter(null);
       setSessionHostId(null);
-      setMultiplayerPlayerLocations({});
+      clearPlayerLocations();
     },
-    [invalidateSessionSnapshotRequests, sessionContext],
+    [clearPlayerLocations, closeSocket, invalidateSessionSnapshotRequests, sessionContext],
   );
 
   const performSessionReset = useCallback(
@@ -672,7 +637,7 @@ export default function App() {
       setHostShareCode(null);
       setHostSetupModalOpen(false);
       setJoinNameModalOpen(false);
-      setMultiplayerPlayerLocations({});
+      clearPlayerLocations();
 
       if (!options?.skipToast) {
         toast.info(
@@ -681,7 +646,7 @@ export default function App() {
         );
       }
     },
-    [clearGameSnapshots, disconnectSession, setTimerState, t],
+    [clearGameSnapshots, clearPlayerLocations, disconnectSession, setTimerState, t],
   );
 
   const refreshSessionPlayers = useCallback(
@@ -824,10 +789,7 @@ export default function App() {
       }
 
       if (sessionContext) {
-        const socket = sessionSocketRef.current;
-        if (!socket || socket.readyState !== WebSocket.OPEN) {
-          setSocketReconnectKey((prev) => prev + 1);
-        }
+        ensureSocketConnected();
         refreshSessionPlayers(sessionContext.sessionId, sessionContext.token);
         heartbeatSession(sessionContext.sessionId, sessionContext.token).catch((error) => {
           console.warn("[Multiplayer] Heartbeat failed after resume:", error);
@@ -847,6 +809,7 @@ export default function App() {
     };
   }, [
     applyGameSnapshot,
+    ensureSocketConnected,
     loadGameSnapshot,
     refreshSessionPlayers,
     resumeId,
@@ -861,7 +824,7 @@ export default function App() {
 
   const requestUserLocation = useCallback(
     () =>
-      new Promise<{ lat: number; lng: number }>((resolve, reject) => {
+      new Promise<LatLng>((resolve, reject) => {
         if (!("geolocation" in navigator)) {
           reject(new Error("Geolocation is unavailable on this device."));
           return;
@@ -891,7 +854,7 @@ export default function App() {
     if (!currentShelter) {
       return;
     }
-    setMultiplayerPlayerLocations({});
+    clearPlayerLocations();
     setResumeId(crypto.randomUUID());
 
     const label =
@@ -899,7 +862,7 @@ export default function App() {
       currentShelter.nameJp ??
       currentShelter.code;
 
-    const finishSetup = (options: { id: string; name: string }[], coords?: { lat: number; lng: number }) => {
+    const finishSetup = (options: ShelterOption[], coords?: LatLng) => {
       setSecretShelter({ id: currentShelter.code, name: label });
       setShelterOptions(options);
       setLockSecretShelter(true);
@@ -944,7 +907,14 @@ export default function App() {
     } else {
       useFallback();
     }
-  }, [buildLocalDesignatedShelters, currentShelter, designatedShelters, sessionContext, setTimerState]);
+  }, [
+    buildLocalDesignatedShelters,
+    clearPlayerLocations,
+    currentShelter,
+    designatedShelters,
+    sessionContext,
+    setTimerState,
+  ]);
 
   const bootstrapSession = useCallback(
     async (
@@ -992,235 +962,6 @@ export default function App() {
     },
     [getShelterByShareCode, profileName, refreshSessionPlayers, setTimerState],
   );
-
-  const handleSessionEvent = useCallback(
-    (message: any) => {
-      if (!sessionContext) return;
-      const payload = (message as any)?.payload ?? {};
-      switch (message.type) {
-        case "player_joined":
-        case "ready_updated":
-          refreshSessionPlayers(sessionContext.sessionId, sessionContext.token);
-          break;
-        case "player_left":
-        case "player_disconnected":
-          if (payload?.user_id) {
-            setMultiplayerPlayerLocations((previous) => {
-              const next = { ...previous };
-              delete next[String(payload.user_id)];
-              return next;
-            });
-          }
-          refreshSessionPlayers(sessionContext.sessionId, sessionContext.token, {
-            announceDeparture: true,
-            departedUserId: payload.player_id ?? payload.user_id,
-          });
-          break;
-        case "player_location_removed":
-          if (payload?.user_id) {
-            setMultiplayerPlayerLocations((previous) => {
-              const next = { ...previous };
-              delete next[String(payload.user_id)];
-              return next;
-            });
-          }
-          break;
-        case "player_locations_snapshot": {
-          const locations = Array.isArray(payload?.locations) ? payload.locations : [];
-          setMultiplayerPlayerLocations(() => {
-            const next: Record<string, MultiplayerPlayerLocation> = {};
-            locations.forEach((entry) => {
-              const userId = typeof entry?.user_id === "string" ? entry.user_id : null;
-              const lat = typeof entry?.lat === "number" ? entry.lat : NaN;
-              const lng = typeof entry?.lng === "number" ? entry.lng : NaN;
-              const updatedAt =
-                typeof entry?.updated_at === "number" ? entry.updated_at : Date.now();
-              if (!userId || !Number.isFinite(lat) || !Number.isFinite(lng)) return;
-              next[userId] = { userId, lat, lng, updatedAt };
-            });
-            return next;
-          });
-          break;
-        }
-        case "player_location_updated": {
-          const userId = typeof payload?.user_id === "string" ? payload.user_id : null;
-          const lat = typeof payload?.lat === "number" ? payload.lat : NaN;
-          const lng = typeof payload?.lng === "number" ? payload.lng : NaN;
-          const updatedAt =
-            typeof payload?.updated_at === "number" ? payload.updated_at : Date.now();
-          if (!userId || !Number.isFinite(lat) || !Number.isFinite(lng)) {
-            break;
-          }
-          setMultiplayerPlayerLocations((previous) => ({
-            ...previous,
-            [userId]: { userId, lat, lng, updatedAt },
-          }));
-          break;
-        }
-        case "session_closed":
-          toast.error(
-            t("app.toasts.hostLeft", {
-              fallback: "Host left the game. Returning to lobby.",
-            }),
-          );
-          performSessionReset({
-            skipToast: true,
-            targetState: gameState === "playing" ? "ended" : "onboarding",
-          });
-          break;
-        case "race_started":
-          beginMultiplayerRace();
-          break;
-        case "race_finished": {
-          const winner = payload.winner ?? {};
-          console.log("[Multiplayer] race_finished event", payload);
-          const winnerName =
-            winner.display_name ??
-            t("defeat.subtitle", { fallback: "Another team reached the shelter." });
-          if (sessionContext) {
-            const isSelf = winner.user_id === sessionContext.userId;
-            setRemoteOutcome({
-              result: isSelf ? "win" : "lose",
-              winnerName,
-            });
-            if (!isSelf) {
-              toast.error(
-                t("app.toasts.raceFinished", {
-                  fallback: "Another team found the shelter first.",
-                }),
-              );
-            }
-          }
-          break;
-        }
-        default:
-          break;
-      }
-    },
-    [beginMultiplayerRace, gameState, performSessionReset, refreshSessionPlayers, sessionContext, t],
-  );
-
-  useEffect(() => {
-    if (!sessionContext) {
-      return undefined;
-    }
-
-    const socket = new WebSocket(
-      buildSessionSocketUrl(sessionContext.sessionId, sessionContext.token),
-    );
-    sessionSocketRef.current = socket;
-
-    socket.onmessage = (event) => {
-      try {
-        const payload = JSON.parse(event.data);
-        handleSessionEvent(payload);
-      } catch (error) {
-        console.warn("[Multiplayer] Failed to parse session event:", error);
-      }
-    };
-
-    socket.onclose = () => {
-      if (sessionSocketRef.current === socket) {
-        sessionSocketRef.current = null;
-      }
-    };
-
-    socket.onerror = (event) => {
-      console.warn("[Multiplayer] WebSocket error:", event);
-    };
-
-    return () => {
-      socket.close();
-    };
-  }, [handleSessionEvent, sessionContext, socketReconnectKey]);
-
-  useEffect(() => {
-    if (!sessionContext || gameState !== "playing") {
-      return undefined;
-    }
-
-    const sendLocationUpdate = async () => {
-      if (locationBroadcastInFlightRef.current) {
-        return;
-      }
-      const socket = sessionSocketRef.current;
-      if (!socket || socket.readyState !== WebSocket.OPEN) {
-        return;
-      }
-
-      locationBroadcastInFlightRef.current = true;
-      try {
-        let location = latestPlayerLocationRef.current;
-        if (!Number.isFinite(location.lat) || !Number.isFinite(location.lng)) {
-          return;
-        }
-
-        const freshLocation = await requestBroadcastLocation();
-        if (
-          freshLocation &&
-          Number.isFinite(freshLocation.lat) &&
-          Number.isFinite(freshLocation.lng)
-        ) {
-          const previousLocation = latestPlayerLocationRef.current;
-          location = freshLocation;
-          latestPlayerLocationRef.current = freshLocation;
-          if (
-            Math.abs(previousLocation.lat - freshLocation.lat) > 1e-6 ||
-            Math.abs(previousLocation.lng - freshLocation.lng) > 1e-6
-          ) {
-            setPlayerLocation(freshLocation);
-          }
-        }
-
-        if (isDefaultStartLocation(location)) {
-          return;
-        }
-
-        const rounded = roundLocationToGrid(location);
-        socket.send(
-          JSON.stringify({
-            type: "location_update",
-            payload: {
-              lat: rounded.lat,
-              lng: rounded.lng,
-            },
-          }),
-        );
-      } finally {
-        locationBroadcastInFlightRef.current = false;
-      }
-    };
-
-    void sendLocationUpdate();
-    const interval = setInterval(() => {
-      void sendLocationUpdate();
-    }, MULTIPLAYER_LOCATION_UPDATE_MS);
-    return () => clearInterval(interval);
-  }, [gameState, requestBroadcastLocation, sessionContext]);
-
-  useEffect(() => {
-    if (!sessionContext) {
-      return undefined;
-    }
-
-    let cancelled = false;
-
-    const sendHeartbeat = () => {
-      if (cancelled) return;
-      heartbeatSession(sessionContext.sessionId, sessionContext.token).catch(
-        (error) => {
-          console.warn("[Multiplayer] Heartbeat failed:", error);
-        },
-      );
-    };
-
-    sendHeartbeat();
-    const interval = setInterval(sendHeartbeat, 20000);
-    return () => {
-      cancelled = true;
-      clearInterval(interval);
-    };
-  }, [sessionContext]);
 
   const handleSkipIntro = () => {
     setGameState("onboarding");
@@ -1427,13 +1168,13 @@ export default function App() {
   }: {
     mode: GameMode;
     timerSeconds: number | null;
-    secret: { id: string; name: string } | null;
-    options: { id: string; name: string }[];
-    playerCoords?: { lat: number; lng: number };
+    secret: SecretShelterInfo | null;
+    options: ShelterOption[];
+    playerCoords?: LatLng;
     lockSecret: boolean;
     lockOptions: boolean;
     lightningRadiusKm?: number | null;
-    lightningCenter?: { lat: number; lng: number } | null;
+    lightningCenter?: LatLng | null;
   }) => {
     void disconnectSession();
     setResumeId(crypto.randomUUID());
@@ -1550,24 +1291,7 @@ export default function App() {
     performSessionReset();
   };
 
-  const handleWrongGuessPenalty = (): WrongGuessStage => {
-    const next = Math.min(wrongGuessCount + 1, 3);
-    setWrongGuessCount(next);
-
-    if (next === 1) {
-      setTimerState(600, true);
-      setIsTimerCritical(true);
-      return "first";
-    }
-
-    if (next === 2) {
-      setTimerState(300, true);
-      setIsTimerCritical(true);
-      return "second";
-    }
-
-    return "third";
-  };
+  const handleWrongGuessPenalty = () => applyWrongGuessPenalty();
 
   const handleEndGame = () => {
     if (sessionContext) {
@@ -1600,6 +1324,53 @@ export default function App() {
     },
     [sessionContext],
   );
+
+  socketPlayersChangedHandlerRef.current = () => {
+    if (!sessionContext) return;
+    refreshSessionPlayers(sessionContext.sessionId, sessionContext.token);
+  };
+
+  socketPlayerLeftHandlerRef.current = ({ departedUserId }) => {
+    if (!sessionContext) return;
+    refreshSessionPlayers(sessionContext.sessionId, sessionContext.token, {
+      announceDeparture: true,
+      departedUserId,
+    });
+  };
+
+  socketSessionClosedHandlerRef.current = () => {
+    toast.error(
+      t("app.toasts.hostLeft", {
+        fallback: "Host left the game. Returning to lobby.",
+      }),
+    );
+    performSessionReset({
+      skipToast: true,
+      targetState: gameState === "playing" ? "ended" : "onboarding",
+    });
+  };
+
+  socketRaceStartedHandlerRef.current = () => {
+    beginMultiplayerRace();
+  };
+
+  socketRaceFinishedHandlerRef.current = (payload: any) => {
+    console.log("[Multiplayer] race_finished event", payload);
+    if (!sessionContext) return;
+    const outcome = deriveRemoteOutcomeFromRaceFinished(
+      payload,
+      sessionContext.userId,
+      t("defeat.subtitle", { fallback: "Another team reached the shelter." }),
+    );
+    setRemoteOutcome(outcome);
+    if (outcome.result === "lose") {
+      toast.error(
+        t("app.toasts.raceFinished", {
+          fallback: "Another team found the shelter first.",
+        }),
+      );
+    }
+  };
 
   const handleModeBack = () => {
     resetGameContext();
@@ -1716,7 +1487,7 @@ export default function App() {
     setSecretShelter(null);
     setLockSecretShelter(false);
     setLockShelterOptions(false);
-    let playerCoords: { lat: number; lng: number } | undefined;
+    let playerCoords: LatLng | undefined;
     try {
       playerCoords = await requestUserLocation();
     } catch (error) {
@@ -1734,200 +1505,79 @@ export default function App() {
     setModeProcessing(false);
   };
 
-  const currentPlayer = players.find((p) => p.id === currentUserId);
-
   const profilePromptActive =
     gameState === "onboarding" &&
     (joinNameModalOpen || hostSetupModalOpen || joinCodeScreenOpen);
 
   const showLoadingOverlay = modeProcessing || sessionBootstrapLoading;
-  const loadingTitle = sessionBootstrapLoading
-    ? t("app.processing.connecting", {
-        fallback: "Connecting to your lobby…",
-      })
-    : t("app.processing.title", {
-        fallback: "Preparing multiplayer session…",
-      });
-  const loadingSubtitle = sessionBootstrapLoading
-    ? t("app.processing.connectingSubtitle", {
-        fallback: "Setting up your waiting room and pulling players in",
-      })
-    : t("app.processing.subtitle", {
-        fallback: "Checking your location & locking a nearby shelter",
-      });
-
   return (
-    <div className="min-h-screen bg-background relative overflow-hidden">
-      {gameState !== "playing" && <LanguageToggle />}
-      {/* Main Content */}
-      <div className="relative z-10">
-        {gameState === "intro" && <IntroScreen onContinue={handleSkipIntro} />}
-
-        {gameState === "onboarding" && !profilePromptActive && !showLoadingOverlay && (
-          <OnboardingScreen
-            onJoinGame={handleJoinGameRequest}
-            onHostGame={handleHostGame}
-            onPlaySolo={handlePlaySolo}
-            onShowHelp={() => setShowHelp(true)}
-          />
-        )}
-
-        {gameState === "mode-select" && (
-          <SoloModeScreen
-            isProcessing={modeProcessing}
-            onBack={handleModeBack}
-            onSelectLightning={handleSelectLightning}
-            onSelectCitywide={handleSelectCitywide}
-          />
-        )}
-
-        {gameState === "waiting" && (
-          <WaitingRoom
-            gameCode={gameCode}
-            players={players}
-            isHost={isHost}
-            currentUserId={currentUserId}
-             hostId={sessionHostId}
-            onToggleReady={handleToggleReady}
-            onStartGame={handleStartGame}
-            onLeaveGame={handleLeaveGame}
-          />
-        )}
-
-        {gameState === "playing" && (
-          <GameScreen
-            pois={designatedShelters}
-            questionAttributes={questionAttributes}
-            shelters={shelters}
-            playerLocation={playerLocation}
-            timeRemaining={timeRemaining}
-            secretShelter={secretShelter}
-            shelterOptions={shelterOptions}
-            isTimerCritical={isTimerCritical}
-            isTimerEnabled={timerEnabled}
-            onApplyPenalty={handleWrongGuessPenalty}
-            onEndGame={handleEndGame}
-            onLocationChange={setPlayerLocation}
-            onSecretShelterChange={updateSecretShelter}
-            onShelterOptionsChange={updateShelterOptions}
-            currentPlayerName={currentPlayerDisplayName}
-            currentPlayerId={currentSessionUserId}
-            onMultiplayerWin={sessionContext ? handleMultiplayerWin : undefined}
-            remoteOutcome={remoteOutcome}
-            gameMode={gameMode}
-            lightningCenter={lightningCenter}
-            lightningRadiusKm={lightningRadiusKm ?? undefined}
-            otherPlayerLocations={otherPlayerLocations}
-            resumeId={resumeId}
-            onShowHelp={() => setShowHelp(true)}
-          />
-        )}
-
-        {gameState === "ended" && (
-          <TerminalScreen onRestart={handleLeaveGame} />
-        )}
-      </div>
-
-      {/* Help Modal */}
-      <HelpModal isOpen={showHelp} onClose={() => setShowHelp(false)} />
-
-      {/* Toast Notifications */}
-      <Toaster
-        position="top-center"
-        toastOptions={{
-          className: "rounded border-4 border-black bg-red-500 text-white shadow-lg",
-          style: { background: "#ef4444", border: "4px solid #000", color: "#fff" },
-        }}
-      />
-
-      {gameState === "onboarding" && (
-        <>
-          <ProfileNameModal
-            open={joinNameModalOpen}
-            initialValue={profileName}
-            title={t("profile.setCallsignTitle")}
-            subtitle={t("profile.setCallsignSubtitle")}
-            placeholder={t("profile.callsignPlaceholder")}
-            submitLabel={t("profile.submitContinue")}
-            variant="screen"
-            onSubmit={handleJoinNameSubmit}
-            onClose={() => setJoinNameModalOpen(false)}
-          />
-
-          <ProfileNameModal
-            open={hostSetupModalOpen}
-            initialValue={profileName}
-            title={t("profile.createSessionTitle")}
-            subtitle={t("profile.createSessionSubtitle")}
-            placeholder={t("profile.callsignPlaceholder")}
-            submitLabel={t("profile.submitStart")}
-            variant="screen"
-            onSubmit={handleHostSetupSubmit}
-            onClose={() => setHostSetupModalOpen(false)}
-          />
-
-          <ProfileNameModal
-            open={joinCodeScreenOpen}
-            initialValue=""
-            title={t("profile.joinGameTitle")}
-            subtitle={t("profile.joinGameSubtitle")}
-            placeholder={t("profile.codePlaceholder")}
-            submitLabel={
-              joinSubmitting
-                ? t("profile.joining")
-                : t("profile.submitJoin")
-            }
-            label={t("profile.codeLabel")}
-            variant="screen"
-            submitting={joinSubmitting}
-            error={joinError}
-            onSubmit={handleJoinSessionSubmit}
-            onClose={() => {
-              if (joinSubmitting) return;
-              setJoinCodeScreenOpen(false);
-              setJoinError(null);
-            }}
-          />
-        </>
-      )}
-
-      <HostShareModal
-        open={hostShareModalOpen && Boolean(hostShareCode)}
-        code={hostShareCode}
-        onClose={() => setHostShareModalOpen(false)}
-      />
-
-      {showLoadingOverlay && (
-        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/80 text-black">
-          <div className="w-full max-w-[320px] text-center px-6 py-8 rounded-2xl border-4 border-black bg-white shadow-[8px_8px_0_#000]">
-            <div className="mb-4 flex justify-center">
-              <img
-                src={loadingMascot}
-                alt={t("app.processing.loadingMascotAlt", {
-                  fallback: "Mascot animation showing the game is loading",
-                })}
-                className="h-28 w-28 object-contain"
-              />
-            </div>
-            <div className="mb-4 flex items-center justify-center gap-3 text-lg font-black uppercase tracking-[0.3em]">
-              <Clock className="h-5 w-5" />
-              {loadingTitle}
-            </div>
-            <div className="flex justify-center gap-2">
-              {[0, 1, 2].map((index) => (
-                <div
-                  key={index}
-                  className="h-4 w-4 animate-bounce rounded-full bg-white"
-                  style={{ animationDelay: `${index * 0.15}s` }}
-                />
-              ))}
-            </div>
-            <p className="mt-4 text-xs font-semibold uppercase tracking-widest text-neutral-300">
-              {loadingSubtitle}
-            </p>
-          </div>
-        </div>
-      )}
-    </div>
+    <AppShell
+      gameState={gameState}
+      profilePromptActive={profilePromptActive}
+      showLoadingOverlay={showLoadingOverlay}
+      modeProcessing={modeProcessing}
+      sessionBootstrapLoading={sessionBootstrapLoading}
+      gameCode={gameCode}
+      players={players}
+      isHost={isHost}
+      currentUserId={currentUserId}
+      sessionHostId={sessionHostId}
+      designatedShelters={designatedShelters}
+      questionAttributes={questionAttributes}
+      shelters={shelters}
+      playerLocation={playerLocation}
+      timeRemaining={timeRemaining}
+      secretShelter={secretShelter}
+      shelterOptions={shelterOptions}
+      isTimerCritical={isTimerCritical}
+      timerEnabled={timerEnabled}
+      currentPlayerDisplayName={currentPlayerDisplayName}
+      currentSessionUserId={currentSessionUserId}
+      remoteOutcome={remoteOutcome}
+      gameMode={gameMode}
+      lightningCenter={lightningCenter}
+      lightningRadiusKm={lightningRadiusKm}
+      otherPlayerLocations={otherPlayerLocations}
+      resumeId={resumeId}
+      showHelp={showHelp}
+      joinNameModalOpen={joinNameModalOpen}
+      hostSetupModalOpen={hostSetupModalOpen}
+      joinCodeScreenOpen={joinCodeScreenOpen}
+      profileName={profileName}
+      joinSubmitting={joinSubmitting}
+      joinError={joinError}
+      hostShareModalOpen={hostShareModalOpen}
+      hostShareCode={hostShareCode}
+      multiplayerActive={Boolean(sessionContext)}
+      onSkipIntro={handleSkipIntro}
+      onJoinGameRequest={handleJoinGameRequest}
+      onHostGame={handleHostGame}
+      onPlaySolo={handlePlaySolo}
+      onShowHelp={() => setShowHelp(true)}
+      onModeBack={handleModeBack}
+      onSelectLightning={handleSelectLightning}
+      onSelectCitywide={handleSelectCitywide}
+      onToggleReady={handleToggleReady}
+      onStartGame={handleStartGame}
+      onLeaveGame={handleLeaveGame}
+      onApplyPenalty={handleWrongGuessPenalty}
+      onEndGame={handleEndGame}
+      onPlayerLocationChange={setPlayerLocation}
+      onSecretShelterChange={updateSecretShelter}
+      onShelterOptionsChange={updateShelterOptions}
+      onMultiplayerWin={handleMultiplayerWin}
+      onCloseHelp={() => setShowHelp(false)}
+      onJoinNameSubmit={handleJoinNameSubmit}
+      onCloseJoinNameModal={() => setJoinNameModalOpen(false)}
+      onHostSetupSubmit={handleHostSetupSubmit}
+      onCloseHostSetupModal={() => setHostSetupModalOpen(false)}
+      onJoinSessionSubmit={handleJoinSessionSubmit}
+      onCloseJoinCodeModal={() => {
+        if (joinSubmitting) return;
+        setJoinCodeScreenOpen(false);
+        setJoinError(null);
+      }}
+      onCloseHostShareModal={() => setHostShareModalOpen(false)}
+    />
   );
 }

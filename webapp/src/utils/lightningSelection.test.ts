@@ -1,6 +1,7 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import type { POI } from "@/types/game";
 import {
+  fetchDesignatedShelterPOIs,
   haversineDistanceKm,
   listSheltersWithinRadius,
   selectLightningShelter,
@@ -17,6 +18,10 @@ const createSeededRandom =
   };
 
 describe("lightning shelter selection", () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
   it("includes the secret shelter in the eligible shelter list within 2km", () => {
     const rng = createSeededRandom(42);
     const userLocation = {
@@ -59,6 +64,70 @@ describe("lightning shelter selection", () => {
     expect(() =>
       selectLightningShelter(sampleShelters, farAwayLocation, 0.1),
     ).toThrowError("No shelters within the provided radius.");
+  });
+
+  it("filters designated shelters from tilequery payload and deduplicates by name", async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      statusText: "OK",
+      json: async () => ({
+        features: [
+          {
+            id: "a-1",
+            geometry: { type: "Point", coordinates: [139.8212, 35.69516] },
+            properties: {
+              Category: "Designated EC",
+              "Landmark name (EN)": "Ariake Shelter",
+              OBJECTID: 101,
+            },
+          },
+          {
+            id: "a-2",
+            geometry: { type: "Point", coordinates: [139.82125, 35.6952] },
+            properties: {
+              Category: "Designated EC",
+              "Landmark name (EN)": "ariake shelter",
+              OBJECTID: 102,
+            },
+          },
+          {
+            id: "b-1",
+            geometry: { type: "Point", coordinates: [139.822, 35.696] },
+            properties: {
+              Category: "Hospital",
+              "Landmark name (EN)": "Not a Shelter",
+              OBJECTID: 103,
+            },
+          },
+        ],
+      }),
+    });
+
+    const shelters = await fetchDesignatedShelterPOIs(
+      { lat: 35.69516, lng: 139.8212 },
+      0.25,
+      {
+        fetcher: fetchMock as unknown as typeof fetch,
+        token: "token-1",
+        username: "user-1",
+        tilesetId: "tileset-1",
+        layerName: "layer-1",
+      },
+    );
+
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    const [calledUrl] = fetchMock.mock.calls[0] as [string];
+    expect(calledUrl).toContain("/v4/user-1.tileset-1/tilequery/139.8212,35.69516.json");
+    expect(calledUrl).toContain("layers=layer-1");
+    expect(calledUrl).toContain("radius=250");
+
+    expect(shelters).toHaveLength(1);
+    expect(shelters[0]).toMatchObject({
+      id: "101",
+      name: "Ariake Shelter",
+      type: "shelter",
+    });
   });
 });
 const sampleShelters: POI[] = [

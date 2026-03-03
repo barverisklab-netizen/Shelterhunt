@@ -50,3 +50,59 @@ export interface QuestionAttribute {
 }
 
 export type ShelterAnswerValue = string | number | null;
+
+export interface LatLng {
+  lat: number;
+  lng: number;
+}
+
+export interface ShelterOption {
+  id: string;
+  name: string;
+}
+
+export interface SecretShelterInfo extends ShelterOption {}
+
+export interface MultiplayerWinInfo {
+  winnerName: string;
+  winnerUserId?: string;
+}
+
+export interface RemoteOutcome {
+  result: "win" | "lose";
+  winnerName?: string;
+}
+
+export interface OtherPlayerLocation {
+  userId: string;
+  name: string;
+  lat: number;
+  lng: number;
+  isStale: boolean;
+}
+
+export type WrongGuessStage = "first" | "second" | "third";
+
+export type GameOutcome = "none" | "win" | "lose" | "penalty";
+
+export interface SessionOwnedGameContract {
+  playerLocation: LatLng;
+  timeRemaining: number;
+  timerEnabled: boolean;
+  isTimerCritical: boolean;
+  wrongGuessCount: number;
+  remoteOutcome: RemoteOutcome | null;
+  resumeId: string;
+}
+
+export interface GameplayOwnedStateContract {
+  clues: Clue[];
+  visitedPOIs: string[];
+  filteredPois: POI[] | null;
+  filterSource: "correct" | "wrong" | null;
+  selectedShelterId: string | null;
+  solvedQuestions: string[];
+  solvedNearbyAmenityKeys: string[];
+  questionCooldowns: Record<string, number>;
+  outcome: GameOutcome;
+}

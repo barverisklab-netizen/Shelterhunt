@@ -490,6 +490,11 @@
     "exitConfirmLeave": "終わる",
     "secretShelter": "秘密の避難所",
     "secretShelterName": "手がかりを解くと、避難所が表示されます",
+    "elevationLoading": "標高を確認中...",
+    "elevationUnavailable": "標高データを取得できません。",
+    "elevationAbove": "標高差: 避難所より{meters}m高い場所",
+    "elevationBelow": "標高差: 避難所より{meters}m低い場所",
+    "elevationSame": "標高差: 避難所とほぼ同じ",
     "toasts": {
       "selectShelterFirst": "回答を送る前に避難所を選んでください。",
       "shelterPreparing": "避難所を決めています。少し待ってから、もういちど試してください。",

@@ -5,7 +5,7 @@ import {
   LIGHTNING_DURATION_MINUTES,
   LIGHTNING_RADIUS_KM,
 } from "../config/runtime";
-import { MenuHeader } from "./MenuHeader";
+import { MenuHeader } from "./layout/MenuHeader";
 import { useI18n } from "@/i18n";
 
 interface SoloModeScreenProps {
