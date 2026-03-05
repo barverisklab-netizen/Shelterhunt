@@ -2,6 +2,8 @@ import assert from "node:assert/strict";
 import { afterEach, beforeEach, describe, it } from "node:test";
 
 process.env.DATABASE_URL ??= "postgres://postgres:postgres@localhost:5432/shelterhunt_test";
+process.env.DB_SCHEMA ??= "public";
+process.env.DEPLOYED_CITY_ID ??= "test-city";
 process.env.TASKS_CRON_SECRET ??= "test-cron-secret-12345";
 process.env.JWT_SECRET ??= "test-jwt-secret-12345";
 

@@ -13,7 +13,7 @@ import {
   toggleReady,
   findPlayerByUserId,
 } from "../services/sessionService.js";
-import type { SessionHub } from "../realtime/sessionHub.js";
+import type { SessionHub, SessionPlayerLocation } from "../realtime/sessionHub.js";
 import type { SessionRole, SessionTokenPayload } from "../types/fastify.js";
 
 import { ApiError } from "../services/errors.js";
@@ -59,6 +59,14 @@ const locationUpdateSchema = z.object({
   }),
 });
 
+const noCityQuerySchema = z
+  .object({
+    city: z.never().optional(),
+    cityId: z.never().optional(),
+    city_id: z.never().optional(),
+  })
+  .passthrough();
+
 const paramsSchema = z.object({
   id: z.string().uuid(),
 });
@@ -71,6 +79,37 @@ function ensureSessionAccess(tokenSessionId: string, requestedId: string) {
 
 const TOKEN_TTL = "3h";
 const LOCATION_ROUNDING_METERS = 50;
+
+interface SessionEventSequencer {
+  next: (sessionId: string) => number;
+  reset: (sessionId: string) => void;
+}
+
+export const createSessionEventSequencer = (): SessionEventSequencer => {
+  const counters = new Map<string, number>();
+  return {
+    next: (sessionId: string) => {
+      const value = (counters.get(sessionId) ?? 0) + 1;
+      counters.set(sessionId, value);
+      return value;
+    },
+    reset: (sessionId: string) => {
+      counters.delete(sessionId);
+    },
+  };
+};
+
+export const shouldSuppressDuplicateLocation = (
+  previous: Pick<SessionPlayerLocation, "lat" | "lng"> | undefined,
+  next: Pick<SessionPlayerLocation, "lat" | "lng">,
+): boolean => Boolean(previous && previous.lat === next.lat && previous.lng === next.lng);
+
+const assertNoCityQueryOverride = (query: unknown) => {
+  const parsed = noCityQuerySchema.safeParse(query ?? {});
+  if (!parsed.success) {
+    throw new ApiError(400, "City is fixed by deployment and cannot be passed as a query parameter");
+  }
+};
 
 const roundToNearestGrid = (lat: number, lng: number, meters = LOCATION_ROUNDING_METERS) => {
   const metersPerLatDegree = 111_320;
@@ -87,10 +126,32 @@ const roundToNearestGrid = (lat: number, lng: number, meters = LOCATION_ROUNDING
 };
 
 const sessionRoutes: FastifyPluginAsync<{ sessionHub: SessionHub }> = async (fastify, { sessionHub }) => {
+  const eventSequencer = createSessionEventSequencer();
+  const nextSequence = (sessionId: string) => eventSequencer.next(sessionId);
+  const resetRealtimeState = (sessionId: string) => {
+    eventSequencer.reset(sessionId);
+  };
+
+  const broadcastOrdered = (sessionId: string, type: string, payload: Record<string, unknown>) => {
+    const event = {
+      type,
+      sequence: nextSequence(sessionId),
+      payload,
+    };
+    sessionHub.broadcast(sessionId, event);
+  };
+
+  fastify.addHook("preHandler", async (request) => {
+    assertNoCityQueryOverride(request.query);
+  });
+
   fastify.post("/sessions", async (request, reply) => {
     const body = createSessionSchema.parse(request.body);
     const { session, player, releasedSessions } = await createSession(body);
-    releasedSessions.forEach((sessionId) => sessionHub.close(sessionId));
+    releasedSessions.forEach((sessionId) => {
+      resetRealtimeState(sessionId);
+      sessionHub.close(sessionId);
+    });
 
     const token = fastify.jwt.sign(
       {
@@ -102,10 +163,7 @@ const sessionRoutes: FastifyPluginAsync<{ sessionHub: SessionHub }> = async (fas
       { expiresIn: TOKEN_TTL },
     );
 
-    sessionHub.broadcast(session.id, {
-      type: "session_created",
-      payload: { session },
-    });
+    broadcastOrdered(session.id, "session_created", { session });
 
     reply.code(201).send({ session, player, token });
   });
@@ -124,10 +182,7 @@ const sessionRoutes: FastifyPluginAsync<{ sessionHub: SessionHub }> = async (fas
       { expiresIn: TOKEN_TTL },
     );
 
-    sessionHub.broadcast(session.id, {
-      type: "player_joined",
-      payload: { player },
-    });
+    broadcastOrdered(session.id, "player_joined", { player });
 
     reply.send({ session, player, token });
   });
@@ -141,10 +196,7 @@ const sessionRoutes: FastifyPluginAsync<{ sessionHub: SessionHub }> = async (fas
       const body = readySchema.parse(request.body);
       const player = await toggleReady(params.id, request.user.userId, body.ready);
 
-      sessionHub.broadcast(params.id, {
-        type: "ready_updated",
-        payload: { playerId: player.user_id, ready: player.ready },
-      });
+      broadcastOrdered(params.id, "ready_updated", { playerId: player.user_id, ready: player.ready });
 
       reply.send({ player });
     },
@@ -171,10 +223,7 @@ const sessionRoutes: FastifyPluginAsync<{ sessionHub: SessionHub }> = async (fas
       const session = await startSession(params.id, request.user.userId);
       sessionHub.clearPlayerLocations(params.id);
 
-      sessionHub.broadcast(params.id, {
-        type: "race_started",
-        payload: { startedAt: session.started_at },
-      });
+      broadcastOrdered(params.id, "race_started", { startedAt: session.started_at });
 
       reply.send({ session });
     },
@@ -197,14 +246,11 @@ const sessionRoutes: FastifyPluginAsync<{ sessionHub: SessionHub }> = async (fas
       const session = await finishSession(params.id, request.user.userId);
       const winnerDisplayName = body?.winnerDisplayName ?? winnerPlayer.display_name ?? null;
 
-      sessionHub.broadcast(params.id, {
-        type: "race_finished",
-        payload: {
-          endedAt: session.ended_at,
-          winner: {
-            user_id: winnerUserId,
-            display_name: winnerDisplayName,
-          },
+      broadcastOrdered(params.id, "race_finished", {
+        endedAt: session.ended_at,
+        winner: {
+          user_id: winnerUserId,
+          display_name: winnerDisplayName,
         },
       });
 
@@ -230,31 +276,20 @@ const sessionRoutes: FastifyPluginAsync<{ sessionHub: SessionHub }> = async (fas
         throw error;
       }
 
-      sessionHub.broadcast(params.id, {
-        type: "player_left",
-        payload: {
-          user_id: request.user.userId,
-          player_id: result.departedPlayer.id,
-        },
+      broadcastOrdered(params.id, "player_left", {
+        user_id: request.user.userId,
+        player_id: result.departedPlayer.id,
       });
       sessionHub.removePlayerLocation(params.id, request.user.userId);
-      sessionHub.broadcast(params.id, {
-        type: "player_location_removed",
-        payload: { user_id: request.user.userId },
-      });
+      broadcastOrdered(params.id, "player_location_removed", { user_id: request.user.userId });
 
       if (result.promotedHostId) {
-        sessionHub.broadcast(params.id, {
-          type: "host_promoted",
-          payload: { user_id: result.promotedHostId },
-        });
+        broadcastOrdered(params.id, "host_promoted", { user_id: result.promotedHostId });
       }
 
       if (result.session.state === "closed") {
-        sessionHub.broadcast(params.id, {
-          type: "session_closed",
-          payload: {},
-        });
+        broadcastOrdered(params.id, "session_closed", {});
+        resetRealtimeState(params.id);
         sessionHub.close(params.id);
       }
 
@@ -297,6 +332,8 @@ const sessionRoutes: FastifyPluginAsync<{ sessionHub: SessionHub }> = async (fas
             type: "connected",
             sessionId: params.id,
             playerId: payload.playerId,
+            sequence: nextSequence(params.id),
+            timestamp: new Date().toISOString(),
           }),
         );
 
@@ -306,6 +343,7 @@ const sessionRoutes: FastifyPluginAsync<{ sessionHub: SessionHub }> = async (fas
             JSON.stringify({
               type: "player_locations_snapshot",
               sessionId: params.id,
+              sequence: nextSequence(params.id),
               timestamp: new Date().toISOString(),
               payload: { locations: knownLocations },
             }),
@@ -351,6 +389,13 @@ const sessionRoutes: FastifyPluginAsync<{ sessionHub: SessionHub }> = async (fas
             }
 
             const rounded = roundToNearestGrid(lat, lng);
+            const previousLocation = sessionHub
+              .getPlayerLocations(params.id)
+              .find((location) => location.user_id === payload.userId);
+            if (shouldSuppressDuplicateLocation(previousLocation, rounded)) {
+              return;
+            }
+
             const locationPayload = {
               user_id: payload.userId,
               lat: rounded.lat,
@@ -358,10 +403,7 @@ const sessionRoutes: FastifyPluginAsync<{ sessionHub: SessionHub }> = async (fas
               updated_at: Date.now(),
             };
             sessionHub.upsertPlayerLocation(params.id, locationPayload);
-            sessionHub.broadcast(params.id, {
-              type: "player_location_updated",
-              payload: locationPayload,
-            });
+            broadcastOrdered(params.id, "player_location_updated", locationPayload);
           } catch (error) {
             request.log.warn({ err: error }, "Failed to process location update");
           }
@@ -379,7 +421,10 @@ const sessionRoutes: FastifyPluginAsync<{ sessionHub: SessionHub }> = async (fas
       throw new ApiError(401, "Unauthorized cron request");
     }
     const closedSessions = await expireStaleSessions();
-    closedSessions.forEach((sessionId) => sessionHub.close(sessionId));
+    closedSessions.forEach((sessionId) => {
+      resetRealtimeState(sessionId);
+      sessionHub.close(sessionId);
+    });
     reply.send({ closed: closedSessions.length });
   });
 };

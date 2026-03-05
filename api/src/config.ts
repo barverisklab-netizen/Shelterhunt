@@ -8,6 +8,12 @@ loadEnv({ path: resolve(configDir, "../.env") });
 
 const envSchema = z.object({
   DATABASE_URL: z.string().url(),
+  DB_SCHEMA: z
+    .string()
+    .trim()
+    .min(1)
+    .regex(/^[A-Za-z_][A-Za-z0-9_]*$/, "DB_SCHEMA must be a valid PostgreSQL identifier"),
+  DEPLOYED_CITY_ID: z.string().trim().min(1),
   TASKS_CRON_SECRET: z.string().min(10),
   JWT_SECRET: z.string().min(10),
   PORT: z.coerce.number().default(4000),
@@ -21,20 +27,25 @@ const envSchema = z.object({
   CORS_ORIGIN: z.string().optional(),
 });
 
-export const env = envSchema.parse({
-  DATABASE_URL: process.env.DATABASE_URL,
-  TASKS_CRON_SECRET: process.env.TASKS_CRON_SECRET,
-  JWT_SECRET: process.env.JWT_SECRET,
-  PORT: process.env.PORT,
-  DB_SSL_ALLOW_SELF_SIGNED: process.env.DB_SSL_ALLOW_SELF_SIGNED,
-  DB_CONNECT_TIMEOUT_MS: process.env.DB_CONNECT_TIMEOUT_MS,
-  DB_QUERY_TIMEOUT_MS: process.env.DB_QUERY_TIMEOUT_MS,
-  DB_STATEMENT_TIMEOUT_MS: process.env.DB_STATEMENT_TIMEOUT_MS,
-  SESSION_TTL_MINUTES: process.env.SESSION_TTL_MINUTES,
-  SESSION_MAX_PLAYERS: process.env.SESSION_MAX_PLAYERS,
-  SESSION_MAX_DISTANCE_KM: process.env.SESSION_MAX_DISTANCE_KM,
-  CORS_ORIGIN: process.env.CORS_ORIGIN,
-});
+export const parseEnv = (source: NodeJS.ProcessEnv) =>
+  envSchema.parse({
+    DATABASE_URL: source.DATABASE_URL,
+    DB_SCHEMA: source.DB_SCHEMA,
+    DEPLOYED_CITY_ID: source.DEPLOYED_CITY_ID,
+    TASKS_CRON_SECRET: source.TASKS_CRON_SECRET,
+    JWT_SECRET: source.JWT_SECRET,
+    PORT: source.PORT,
+    DB_SSL_ALLOW_SELF_SIGNED: source.DB_SSL_ALLOW_SELF_SIGNED,
+    DB_CONNECT_TIMEOUT_MS: source.DB_CONNECT_TIMEOUT_MS,
+    DB_QUERY_TIMEOUT_MS: source.DB_QUERY_TIMEOUT_MS,
+    DB_STATEMENT_TIMEOUT_MS: source.DB_STATEMENT_TIMEOUT_MS,
+    SESSION_TTL_MINUTES: source.SESSION_TTL_MINUTES,
+    SESSION_MAX_PLAYERS: source.SESSION_MAX_PLAYERS,
+    SESSION_MAX_DISTANCE_KM: source.SESSION_MAX_DISTANCE_KM,
+    CORS_ORIGIN: source.CORS_ORIGIN,
+  });
+
+export const env = parseEnv(process.env);
 
 const parseOrigins = (raw?: string | null): string[] => {
   const values = raw
@@ -53,8 +64,11 @@ export const sessionDefaults = {
 };
 
 export const dbDefaults = {
+  schema: env.DB_SCHEMA,
   sslAllowSelfSigned: env.DB_SSL_ALLOW_SELF_SIGNED,
   connectTimeoutMs: env.DB_CONNECT_TIMEOUT_MS,
   queryTimeoutMs: env.DB_QUERY_TIMEOUT_MS,
   statementTimeoutMs: env.DB_STATEMENT_TIMEOUT_MS,
 };
+
+export const deployedCityId = env.DEPLOYED_CITY_ID;

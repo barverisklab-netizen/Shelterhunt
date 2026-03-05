@@ -149,7 +149,7 @@ export function buildServer() {
 export async function start() {
   const server = buildServer();
   await server.listen({ port: env.PORT, host: "0.0.0.0" });
-  logger.info({ port: env.PORT }, "API listening");
+  logger.info({ port: env.PORT, cityId: env.DEPLOYED_CITY_ID, dbSchema: env.DB_SCHEMA }, "API listening");
   return server;
 }
 

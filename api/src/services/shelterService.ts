@@ -39,7 +39,7 @@ export async function listShelters(): Promise<ShelterRecord[]> {
             latitude,
             longitude,
             created_at
-     from public.shelters
+     from shelters
      order by coalesce(name_en, name_jp, share_code) asc`,
   );
   return result.rows;
@@ -82,7 +82,7 @@ export async function findShelterByShareCode(code: string): Promise<ShelterRecor
             latitude,
             longitude,
             created_at
-     from public.shelters
+     from shelters
      where share_code = $1
      limit 1`,
     [normalized],

@@ -11,7 +11,7 @@ This service powers the multiplayer MVP described in the work plan. It exposes R
 
 ## Getting started
 
-1. Copy `.env.example` to `.env` and fill in `DATABASE_URL`, `JWT_SECRET`, and `TASKS_CRON_SECRET`.
+1. Copy `.env.example` to `.env` and fill in `DATABASE_URL`, `DB_SCHEMA`, `DEPLOYED_CITY_ID`, `JWT_SECRET`, and `TASKS_CRON_SECRET`.
 2. Install dependencies:
 
    ```bash
@@ -29,6 +29,8 @@ This service powers the multiplayer MVP described in the work plan. It exposes R
 Environment variables of note:
 
 - `TASKS_CRON_SECRET` — shared secret expected in `x-cron-key` for `POST /tasks/expire-sessions`
+- `DB_SCHEMA` — required PostgreSQL schema for all API reads/writes (configured via `search_path`; must be a valid schema identifier)
+- `DEPLOYED_CITY_ID` — required deployment-level city binding (clients cannot override city via query params)
 - `DB_SSL_ALLOW_SELF_SIGNED` (default `false`) — set to `true` only for local development environments that intercept TLS with a custom/self-signed certificate chain
 - `SESSION_TTL_MINUTES` (default `20`)
 - `SESSION_MAX_PLAYERS` (default `8`)
@@ -77,6 +79,7 @@ The GeoJSON is intentionally kept in a separate data repo (not deployed with the
 | POST   | `/tasks/expire-sessions`| Cron endpoint to close expired sessions   |
 
 Subscribe to `ws://.../sessions/:id/stream?token=...` using the returned JWT token to receive lobby events (`player_joined`, `ready_updated`, etc.).
+Realtime session events now include a monotonic `sequence` value per session so clients can order frames deterministically.
 
 ### Live location stream (V1)
 
