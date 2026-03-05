@@ -22,7 +22,7 @@ Support new cities by deploying one city per stack (frontend + API), with city i
 
 ## Phase 1: Deployment Contract and City Binding
 
-### RF-DC-01: Deploy-time city contract
+### [x] RF-DC-01: Deploy-time city contract
 - Define required env variables:
   - `DEPLOYED_CITY_ID` (required)
   - `DB_SCHEMA` (required, e.g. `public`, `osaka`, `nagoya`)
@@ -32,7 +32,7 @@ Support new cities by deploying one city per stack (frontend + API), with city i
 - Fail fast at startup if `DEPLOYED_CITY_ID` is missing/unknown.
 - Ensure frontend and API both bind to the same city id and schema.
 
-### RF-DC-02: City module contract
+### [x] RF-DC-02: City module contract
 - Standardize city module shape under `webapp/src/cityContext/<city>/`.
 - Keep one file for map setup per city:
   - `layers.ts` exports both:
@@ -44,21 +44,21 @@ Support new cities by deploying one city per stack (frontend + API), with city i
 
 ## Phase 2: Frontend Refactor (Single-City Runtime)
 
-### RF-DC-03: Frontend bootstrap by `DEPLOYED_CITY_ID`
+### [x] RF-DC-03: Frontend bootstrap by `DEPLOYED_CITY_ID`
 - Replace `defaultCityContext` assumptions with resolved city config from env.
 - Wire `MapView`, `GameScreen`, Help modal, and map hooks to the deployed city module.
 
-### RF-DC-04: Remove runtime city-switch logic
+### [x] RF-DC-04: Remove runtime city-switch logic
 - Remove/avoid URL/query/lobby city switching paths.
 - Remove multi-city state branching in app shell and gameplay flow.
 
-### RF-DC-05: Keep map style + layer lifecycle deterministic
+### [x] RF-DC-05: Keep map style + layer lifecycle deterministic
 - Load map style from city `layers.ts -> mapStyle`.
 - Ensure style reload and layer re-attach remain idempotent.
 - Keep source/layer registry checks to avoid duplicate add/remove errors.
 - Add map liveness guards before source/layer operations (`map exists`, `style loaded`, `source not already attached`).
 
-### RF-DC-06: Question runtime modularization (city-owned)
+### [x] RF-DC-06: Question runtime modularization (city-owned)
 - Extract question assembly out of `GameScreen` into `features/gameplay/questions/`.
 - Use city `questionAdapter.ts` for:
   - attribute-to-category mapping
@@ -74,17 +74,17 @@ Support new cities by deploying one city per stack (frontend + API), with city i
 
 ## Phase 3: API and Data (Per-City Stack)
 
-### RF-DC-07: API city binding (not query filtering)
+### [x] RF-DC-07: API city binding (not query filtering)
 - API reads one configured city at startup (`DEPLOYED_CITY_ID`).
 - API rejects requests if deployment city is misconfigured.
 - Do not add/require `city_id` query parameters for normal gameplay routes.
 
-### RF-DC-08: Data pipeline per city
+### [x] RF-DC-08: Data pipeline per city
 - Keep city-specific datasets in `data/geojson/<city>/`.
 - Parameterize scripts with `--city` to produce city-owned seed artifacts.
 - Ensure `question_attributes` are generated for that city dataset.
 
-### RF-DC-09: DB strategy per city
+### [x] RF-DC-09: DB strategy per city
 - One PostgreSQL instance with one schema per city; no `city_id` filtering in gameplay queries.
 - Keep current city in `public` for now (no forced rename); new cities use dedicated schemas.
 - API must use schema-qualified queries or enforced per-connection `search_path` to `DB_SCHEMA`.
@@ -98,23 +98,23 @@ Support new cities by deploying one city per stack (frontend + API), with city i
 
 ## Phase 4: Hardening and Failure-Mode Controls
 
-### RF-DC-14: Frontend async race and stale-state guards
+### [ ] RF-DC-14: Frontend async race and stale-state guards
 - Add `AbortController` to cancellable fetches (shelters, attributes, snapshot refresh, designated shelter queries).
 - Ignore stale responses using request ids/version checks before state commits.
 - Prevent setState-after-unmount and stale closure updates in long-running map/gameplay effects.
 
-### RF-DC-15: Websocket/session event ordering hardening
+### [ ] RF-DC-15: Websocket/session event ordering hardening
 - Define event ordering/idempotency rules for multiplayer stream events.
 - Ignore duplicate or out-of-order terminal events (`race_finished`, player leave/join bursts).
 - Add heartbeat/backoff policy and deterministic reconnect behavior.
 - Add monotonic server sequence numbers (or timestamps) in stream payloads for client-side ordering guards.
 
-### RF-DC-16: Config/schema validation gates
+### [x] RF-DC-16: Config/schema validation gates
 - Validate city `layers.ts`, `questionAdapter.ts`, and env contract at startup/build.
 - Block deploy when required config is missing (style URL, source ids, mandatory question ids).
 - Add contract tests per city module.
 
-### RF-DC-17: Migration and seed safety
+### [ ] RF-DC-17: Migration and seed safety
 - Enforce pre-deploy checks:
   - DB reachable
   - target schema exists (`DB_SCHEMA`)
@@ -123,7 +123,7 @@ Support new cities by deploying one city per stack (frontend + API), with city i
 - Run migrations in CI/CD per target schema with rollback playbook per release.
 - Add post-seed verification queries (row counts + required attributes present).
 
-### RF-DC-18: Deployment safety and rollback
+### [ ] RF-DC-18: Deployment safety and rollback
 - Use staged rollout (canary/blue-green) per city deployment.
 - Add smoke gates before traffic cutover:
   - map loads
@@ -137,13 +137,13 @@ Support new cities by deploying one city per stack (frontend + API), with city i
 
 ## Phase 5: Delivery and Operations
 
-### RF-DC-10: Environment and secrets templates
+### [x] RF-DC-10: Environment and secrets templates
 - Create per-city env templates for frontend/API.
 - Include `DEPLOYED_CITY_ID` + `DB_SCHEMA` in API env templates.
 - Keep Mapbox and DB credentials environment-only.
 - No tokens/usernames hardcoded in source.
 
-### RF-DC-11: Deployment templates per city
+### [ ] RF-DC-11: Deployment templates per city
 - Add deployment matrix (one job per city) or one pipeline with city parameter.
 - Standardize naming:
   - frontend app name
@@ -151,11 +151,11 @@ Support new cities by deploying one city per stack (frontend + API), with city i
   - database schema name
   - domain/subdomain
 
-### RF-DC-12: CORS/domain/session hardening
+### [ ] RF-DC-12: CORS/domain/session hardening
 - Configure API CORS per city domain.
 - Ensure websocket/session endpoints use the city deployment domain only.
 
-### RF-DC-13: Monitoring and runbooks per city
+### [ ] RF-DC-13: Monitoring and runbooks per city
 - Track logs/metrics per city deployment.
 - Add city-specific rollback steps and smoke-check checklist.
 - Add alert thresholds for:
