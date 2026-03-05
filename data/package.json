@@ -5,7 +5,7 @@
   "scripts": {
     "export:api": "node ./scripts/exportFromApi.mjs",
     "seed:db": "node ./scripts/importToSupabase.mjs",
-    "build:answers": "node ./scripts/buildIhiAnswers.mjs",
+    "build:answers": "node ./scripts/buildCityAnswers.mjs",
     "verify:seed": "node ./scripts/verifySeed.mjs"
   },
   "dependencies": {

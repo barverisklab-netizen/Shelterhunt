@@ -100,6 +100,7 @@ const GEOJSON_CANDIDATE_PATHS = [
   process.env.SHELTER_DATA_PATH,
   path.resolve(process.cwd(), `../data/geojson/${cityId}/shelters.geojson`),
   path.resolve(process.cwd(), `assets/${cityId}/shelters.geojson`),
+  // Legacy fallbacks (pre city-folder split)
   path.resolve(process.cwd(), "../data/geojson/ihi_shelters.geojson"),
   path.resolve(process.cwd(), "assets/ihi_shelters.geojson"),
 ].filter((value): value is string => Boolean(value));

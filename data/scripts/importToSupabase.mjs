@@ -43,6 +43,7 @@ const geojsonPath = path.resolve(
     process.env.SHELTER_DATA_PATH ??
     path.join(process.cwd(), "geojson", cityId, "shelters.geojson"),
 );
+// Legacy fallback (pre city-folder split)
 const legacyGeojsonPath = path.resolve(path.join(process.cwd(), "geojson/ihi_shelters.geojson"));
 
 if (!databaseUrl) {
