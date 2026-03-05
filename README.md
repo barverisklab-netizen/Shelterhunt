@@ -263,6 +263,42 @@ If you want a non-PostgreSQL engine (MySQL, SQLite, MongoDB), code changes are r
 | `npm run build:api` | Build API |
 | `npm run start:api` | Run built API |
 
+## Minimum Requirements to Add a City
+
+1. Scaffold city boilerplate.
+   ```bash
+   npm run scaffold:city -- --city=<id> --name="City Name" --lat=<centerLat> --lng=<centerLng>
+   ```
+2. Add city datasets in `data/geojson/<id>/`:
+   - `shelters.geojson`
+   - `support.geojson`
+   - `landmark.geojson`
+3. Fill city modules:
+   - `webapp/src/cityContext/<id>/context.ts`
+   - `webapp/src/cityContext/<id>/layers.ts`
+   - `webapp/src/cityContext/<id>/questionAdapter.ts`
+4. Create/upgrade target schema.
+   ```bash
+   npm run migrate:api-schema -- --schema=<schema>
+   ```
+5. Seed shelters + question attributes for that city/schema.
+   ```bash
+   npm run seed:api-shelters -- --city=<id> --schema=<schema>
+   ```
+6. Verify seed integrity.
+   ```bash
+   npm --prefix data run verify:seed -- --schema=<schema>
+   ```
+7. Set deployment env:
+   - Webapp: `VITE_DEPLOYED_CITY_ID=<id>`, `VITE_MAPBOX_TOKEN`, `VITE_MAPBOX_USERNAME` (if vector layers)
+   - API: `DEPLOYED_CITY_ID=<id>`, `DB_SCHEMA=<schema>`, `DATABASE_URL`, `JWT_SECRET`, `TASKS_CRON_SECRET`
+8. Run smoke checks:
+   - `GET /health` is `200`
+   - `/shelters` is non-empty
+   - `/question-attributes` is non-empty
+   - map loads and layer toggle works
+   - session stream connects (`/sessions/:id/stream`)
+
 ### API scripts (`api/package.json`)
 | Command | Purpose |
 | --- | --- |
