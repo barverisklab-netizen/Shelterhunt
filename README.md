@@ -253,6 +253,9 @@ If you want a non-PostgreSQL engine (MySQL, SQLite, MongoDB), code changes are r
 ### Root scripts
 | Command | Purpose |
 | --- | --- |
+| `npm run scaffold:city -- --city=<id> --name="City Name"` | Generate city boilerplate (`cityContext` files + data placeholders + registry wiring) |
+| `npm run migrate:api-schema -- --schema=<schema>` | Apply API SQL migrations to a target city schema |
+| `npm run seed:api-shelters -- --city=<id> --schema=<schema>` | Seed shelters + question attributes for a target city/schema |
 | `npm run dev:webapp` | Start Vite client |
 | `npm run dev:api` | Start Fastify API |
 | `npm run dev` | Run both in parallel |
@@ -268,7 +271,8 @@ If you want a non-PostgreSQL engine (MySQL, SQLite, MongoDB), code changes are r
 | `npm run start` | Run compiled server |
 | `npm run lint` | Lint API TypeScript |
 | `npm run check` | Type check API |
-| `npm run seed:shelters` | Seed shelters + question attributes from GeoJSON |
+| `npm run migrate:schema -- --schema=<schema>` | Apply `api/sql/*.sql` to target schema |
+| `npm run seed:shelters -- --city=<id> --schema=<schema>` | Seed shelters + question attributes from city GeoJSON |
 
 ### Data scripts (`data/package.json`)
 | Command | Purpose |
@@ -422,11 +426,13 @@ Operational note:
 ## Data Workflows (`data/` and Seed Scripts)
 
 ### Preferred production-like seed path
-1. Apply SQL migrations (`api/sql/*.sql`) to DB.
+1. Apply SQL migrations to the target city schema.
+   ```bash
+   npm run migrate:api-schema -- --schema=koto
+   ```
 2. Run:
    ```bash
-   cd api
-   SHELTER_DATA_PATH=../data/geojson/koto/shelters.geojson npm run seed:shelters
+   npm run seed:api-shelters -- --city=koto --schema=koto
    ```
 3. Seeder upserts:
    - `${DB_SCHEMA}.shelters`
@@ -444,12 +450,12 @@ Warning: `seed:db` is **not** a full gameplay seed.
 
 If you used `seed:db`, do this immediately after:
 1. Ensure migrations are applied:
-   - `api/sql/001_init_sessions.sql`
-   - `api/sql/002_question_attributes.sql`
+   ```bash
+   npm run migrate:api-schema -- --schema=koto
+   ```
 2. Backfill full gameplay metadata with API seeder:
    ```bash
-   cd api
-   SHELTER_DATA_PATH=../data/geojson/koto/shelters.geojson npm run seed:shelters
+   npm run seed:api-shelters -- --city=koto --schema=koto
    ```
 3. Verify:
    - `GET /question-attributes` returns non-empty `attributes`.
@@ -463,7 +469,7 @@ npm run export:api
 ### Recompute `250m_*` amenity fields
 ```bash
 cd data
-node scripts/buildIhiAnswers.mjs
+npm run build:answers -- --city=koto
 ```
 
 ## Runtime Flows

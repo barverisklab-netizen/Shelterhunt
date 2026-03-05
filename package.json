@@ -3,6 +3,9 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
+    "scaffold:city": "node ./scripts/scaffoldCity.mjs",
+    "migrate:api-schema": "npm --prefix api run migrate:schema",
+    "seed:api-shelters": "npm --prefix api run seed:shelters",
     "dev:webapp": "npm --prefix webapp run dev",
     "dev:api": "npm --prefix api run dev",
     "dev": "concurrently \"npm run dev:webapp\" \"npm run dev:api\"",

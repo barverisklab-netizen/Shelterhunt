@@ -10,6 +10,7 @@
     "start": "node dist/server.js",
     "lint": "eslint . --ext .ts",
     "check": "tsc --noEmit",
+    "migrate:schema": "tsx scripts/migrateSchema.ts",
     "seed:shelters": "tsx scripts/importShelters.ts"
   },
   "dependencies": {

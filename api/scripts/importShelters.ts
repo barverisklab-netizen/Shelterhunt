@@ -1,7 +1,7 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 import crypto from "node:crypto";
-import { pool } from "../src/db/pool.js";
+import { Client } from "pg";
 import type { ShelterRecord } from "../src/types/shelter.js";
 
 type AttributeKind = "number" | "select";
@@ -27,8 +27,79 @@ interface GeoJSONCollection {
   features?: GeoJSONFeature[];
 }
 
+const parseArgs = (argv: string[]) => {
+  const map = new Map<string, string>();
+  for (let index = 0; index < argv.length; index += 1) {
+    const token = argv[index];
+    if (!token.startsWith("--")) continue;
+    if (token.includes("=")) {
+      const [key, value] = token.split("=");
+      if (value) {
+        map.set(key, value);
+      }
+      continue;
+    }
+    const next = argv[index + 1];
+    if (next && !next.startsWith("--")) {
+      map.set(token, next);
+      index += 1;
+    }
+  }
+  return map;
+};
+
+const argMap = parseArgs(process.argv.slice(2));
+const cityId = (argMap.get("--city") ?? process.env.DEPLOYED_CITY_ID ?? process.env.CITY_ID ?? "koto").trim();
+const schemaName = (argMap.get("--schema") ?? process.env.DB_SCHEMA ?? "public").trim();
+const databaseUrl = process.env.DATABASE_URL;
+const LOCAL_DB_HOSTS = new Set(["", "localhost", "127.0.0.1", "::1"]);
+const quoteIdent = (value: string) => {
+  if (!/^[A-Za-z_][A-Za-z0-9_]*$/.test(value)) {
+    throw new Error(`Invalid schema identifier: ${value}`);
+  }
+  return `"${value}"`;
+};
+const resolvePgConnection = (connectionString: string) => {
+  const parsed = new URL(connectionString);
+  const hostname = parsed.hostname.toLowerCase();
+  const isLocalHost = LOCAL_DB_HOSTS.has(hostname);
+  const sslMode = parsed.searchParams.get("sslmode")?.toLowerCase();
+  const sslFlag = parsed.searchParams.get("ssl")?.toLowerCase();
+
+  if (sslMode === "no-verify") {
+    throw new Error(
+      "DATABASE_URL must not use sslmode=no-verify. Use sslmode=require (hosted DB) or sslmode=disable (localhost only).",
+    );
+  }
+
+  if (sslMode === "disable" && !isLocalHost) {
+    throw new Error(
+      "DATABASE_URL sslmode=disable is only allowed for localhost/loopback databases.",
+    );
+  }
+
+  const wantsSslFromMode = Boolean(sslMode && sslMode !== "disable");
+  const wantsSslFromFlag = sslFlag === "1" || sslFlag === "true";
+  const shouldUseSsl =
+    sslMode === "disable" ? false : !isLocalHost || wantsSslFromMode || wantsSslFromFlag;
+
+  if (shouldUseSsl) {
+    parsed.searchParams.delete("sslmode");
+    parsed.searchParams.delete("ssl");
+    return {
+      connectionString: parsed.toString(),
+      ssl: { rejectUnauthorized: true },
+    };
+  }
+
+  return { connectionString: parsed.toString(), ssl: undefined };
+};
+
 const GEOJSON_CANDIDATE_PATHS = [
+  argMap.get("--input"),
   process.env.SHELTER_DATA_PATH,
+  path.resolve(process.cwd(), `../data/geojson/${cityId}/shelters.geojson`),
+  path.resolve(process.cwd(), `assets/${cityId}/shelters.geojson`),
   path.resolve(process.cwd(), "../data/geojson/ihi_shelters.geojson"),
   path.resolve(process.cwd(), "assets/ihi_shelters.geojson"),
 ].filter((value): value is string => Boolean(value));
@@ -46,7 +117,7 @@ const resolveGeojsonPath = async (): Promise<string> => {
   throw new Error(
     [
       "GeoJSON file not found.",
-      "Set SHELTER_DATA_PATH to the dataset in your data repo (e.g. ../shelterhunt-data/geojson/ihi_shelters.geojson),",
+      `Set SHELTER_DATA_PATH or --input to a city dataset (e.g. ../data/geojson/${cityId}/shelters.geojson),`,
       "or place the file under api/assets/.",
     ].join(" "),
   );
@@ -312,7 +383,7 @@ const parseFeatures = async () => {
 const insertShelters = async (client: any, rows: Omit<ShelterRecord, "id" | "created_at">[]) => {
   for (const row of rows) {
     await client.query(
-      `insert into public.shelters
+      `insert into shelters
            (code, share_code, external_id, sequence_no, name_en, name_jp, address, address_en, address_jp, category, category_jp,
             flood_depth_rank, flood_depth, storm_surge_depth_rank, storm_surge_depth,
             flood_duration_rank, flood_duration, inland_waters_depth_rank, inland_waters_depth,
@@ -402,7 +473,7 @@ const upsertQuestionAttributes = async (
 ) => {
   for (const attribute of attributes) {
     await client.query(
-      `insert into public.question_attributes (id, label, kind, options)
+      `insert into question_attributes (id, label, kind, options)
        values ($1, $2, $3, $4)
        on conflict (id) do update set
          label = excluded.label,
@@ -416,25 +487,31 @@ const upsertQuestionAttributes = async (
 
 async function main() {
   try {
+    if (!databaseUrl) {
+      throw new Error("DATABASE_URL is required.");
+    }
     const { rows, questionAttributeRows } = await parseFeatures();
     if (!rows.length) {
       console.log("[Shelters] No rows to insert");
       return;
     }
 
-    const client = await pool.connect();
+    const client = new Client(resolvePgConnection(databaseUrl));
+    await client.connect();
     try {
+      await client.query(`set search_path to ${quoteIdent(schemaName)}, public`);
       await client.query("BEGIN");
       await insertShelters(client, rows);
       await upsertQuestionAttributes(client, questionAttributeRows);
       await client.query("COMMIT");
-      console.log(`[Shelters] Inserted/updated ${rows.length} shelters`);
+      console.log(
+        `[Shelters] Inserted/updated ${rows.length} shelters in schema '${schemaName}' for city '${cityId}'`,
+      );
     } catch (error) {
       await client.query("ROLLBACK");
       throw error;
     } finally {
-      client.release();
-      await pool.end();
+      await client.end();
     }
   } catch (error) {
     console.error("[Shelters] Import failed:", error);

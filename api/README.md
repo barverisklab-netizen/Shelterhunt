@@ -47,23 +47,27 @@ Environment variables of note:
 
 ## Database schema
 
-The SQL in `api/sql/001_init_sessions.sql` creates the required `sessions`/`players` tables and `session_state` enum (including a partial unique index so only one active race exists per shelter). Run it once against your Supabase project using their SQL editor or CLI:
+Apply migrations to the target city schema (for example `koto`, `osaka`) using:
 
 ```bash
-psql "$DATABASE_URL" -f sql/001_init_sessions.sql
-# or paste the file contents into Supabase SQL editor and run.
+npm run migrate:schema -- --schema=koto
 ```
 
-Make sure the `pgcrypto` extension is enabled so `gen_random_uuid()` is available (Supabase enables it by default).
+This runs `api/sql/*.sql` against the selected schema and rewrites `public.*` table references to that schema.
+Make sure `DATABASE_URL` and `DB_SCHEMA` (or `--schema`) are set.
 
 After the tables exist, import the GeoJSON dataset:
 
 ```bash
-cd api
-SHELTER_DATA_PATH=../shelterhunt-data/geojson/ihi_shelters.geojson npm run seed:shelters
+npm run seed:shelters -- --city=koto --schema=koto
 ```
 
-The GeoJSON is intentionally kept in a separate data repo (not deployed with the API). Point `SHELTER_DATA_PATH` to that file (or the local `../data/geojson/ihi_shelters.geojson`). The script generates deterministic shelter codes and upserts the records into Supabase. You can also seed from the data repo itself via `cd data && npm run seed:db` with the same `DATABASE_URL`.
+Seeder behavior:
+- default path is `../data/geojson/<city>/shelters.geojson`
+- override with `--input=/abs/path/to/shelters.geojson` or `SHELTER_DATA_PATH`
+- upserts both `shelters` and `question_attributes` in the selected schema
+
+You can still seed shelters only via `cd data && npm run seed:db -- --city=<id> --schema=<schema>`, but that does not populate `question_attributes`.
 
 ## Key endpoints
 
