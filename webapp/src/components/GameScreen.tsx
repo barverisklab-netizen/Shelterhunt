@@ -20,7 +20,7 @@ import {
   type ShelterOption,
   type WrongGuessStage as SharedWrongGuessStage,
 } from "@/types/game";
-import { defaultCityContext } from '../data/cityContext';
+import { deployedCityContext, deployedCityQuestionAdapter } from "@/cityContext/deployedCity";
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { toast } from "sonner@2.0.3";
 import { useI18n } from "@/i18n";
@@ -36,6 +36,12 @@ import { useGameplaySnapshot } from "@/features/gameplay/hooks/useGameplaySnapsh
 import { useQuestionCooldowns } from "@/features/gameplay/hooks/useQuestionCooldowns";
 import { useProximityAndAmenities } from "@/features/gameplay/hooks/useProximityAndAmenities";
 import { useElevation } from "@/features/gameplay/hooks/useElevation";
+import {
+  buildBaseQuestions,
+  buildNearbyAmenityQuestion,
+  type RuntimeQuestion,
+} from "@/features/gameplay/questions/questionAssembler";
+import { buildClueText, isMinCountQuestion } from "@/features/gameplay/questions/clueComposer";
 import type {
   SnapshotFilterSource,
   SnapshotOutcome,
@@ -250,49 +256,6 @@ export function GameScreen({
     setExternalWinnerName(remoteOutcome.winnerName);
   }, [remoteOutcome]);
 
-  const attributeCategoryMap: Record<string, Question["category"]> = {
-    floodDepth: "location",
-    stormSurgeDepth: "location",
-    floodDuration: "location",
-    inlandWatersDepth: "location",
-    facilityType: "facility",
-    shelterCapacity: "facility",
-    waterStation250m: "nearby",
-    hospital250m: "nearby",
-    aed250m: "nearby",
-    emergencySupplyStorage250m: "nearby",
-    communityCenter250m: "nearby",
-    trainStation250m: "nearby",
-    shrineTemple250m: "nearby",
-    floodgate250m: "nearby",
-    bridge250m: "nearby",
-  };
-
-  const buildQuestionTexts = (attribute: QuestionAttribute) => {
-    const baseLabel = attribute.label;
-    const defaultQuestion = (() => {
-      if (attribute.kind === "number") {
-        if (attribute.id.endsWith("250m")) {
-          return `Are there {param} ${baseLabel}?`;
-        }
-        return `Is the ${baseLabel} {param}?`;
-      }
-      return `Is the ${baseLabel} {param}?`;
-    })();
-    const defaultClue = attribute.id.endsWith("250m")
-      ? `There are {param} ${baseLabel}`
-      : `The ${baseLabel} is {param}`;
-
-    const questionText = t(`questions.dynamic.${attribute.id}.question`, {
-      fallback: defaultQuestion,
-    });
-    const clueTemplate = t(`questions.dynamic.${attribute.id}.clue`, {
-      fallback: defaultClue,
-    });
-
-    return { questionText, clueTemplate };
-  };
-
   const normalizeName = useCallback(
     (value?: string | null) => (value ?? "").trim().toLowerCase(),
     [],
@@ -504,46 +467,15 @@ export function GameScreen({
     return extractor(secretShelterRecord);
   };
 
-  const NEARBY_AMENITY_IDS = new Set([
-    "waterStation250m",
-    "hospital250m",
-    "aed250m",
-    "emergencySupplyStorage250m",
-    "communityCenter250m",
-    "trainStation250m",
-    "shrineTemple250m",
-    "floodgate250m",
-    "bridge250m",
-  ]);
+  const baseQuestions: RuntimeQuestion[] = buildBaseQuestions({
+    attributes: questionAttributes,
+    solvedQuestions,
+    adapter: deployedCityQuestionAdapter,
+    t,
+    getSecretAnswer,
+  });
 
-  const baseQuestions: (Question & { clueTemplate?: string })[] = questionAttributes
-    .filter((attribute) => !solvedQuestions.includes(attribute.id))
-    .filter((attribute) => {
-      const value = getSecretAnswer(attribute.id);
-      return value !== null && value !== undefined;
-    })
-    .filter((attribute) => !NEARBY_AMENITY_IDS.has(attribute.id))
-    .map((attribute) => {
-      const { questionText, clueTemplate } = buildQuestionTexts(attribute);
-      return {
-        id: attribute.id,
-        text: questionText,
-        clueTemplate,
-        category: attributeCategoryMap[attribute.id] ?? "location",
-        paramType: attribute.kind === "number" ? "number" : "select",
-        options: attribute.kind === "select" ? attribute.options : undefined,
-      };
-    });
-
-  const nearbyAmenityQuestion: Question = {
-    id: "nearbyAmenity",
-    text: t("questions.dynamic.nearbyAmenity.question", {
-      fallback: "Are there nearby amenities within 250m?",
-    }),
-    category: "nearby",
-    paramType: "select",
-    options: [],
-  };
+  const nearbyAmenityQuestion: Question = buildNearbyAmenityQuestion(t, deployedCityQuestionAdapter);
 
   const hasNearbyAmenities =
     PROXIMITY_DISABLED_FOR_TESTING ||
@@ -556,7 +488,7 @@ export function GameScreen({
     lastQuestionLocationKey !== null &&
     lastQuestionLocationKey === currentQuestionLocationKey;
 
-  const questions: (Question & { clueTemplate?: string })[] = hasNearbyAmenities
+  const questions: RuntimeQuestion[] = hasNearbyAmenities
     ? [...baseQuestions, nearbyAmenityQuestion]
     : [...baseQuestions];
 
@@ -599,19 +531,7 @@ export function GameScreen({
     };
 
     let isCorrect = false;
-    const minCountIds = new Set([
-      "waterStation250m",
-      "hospital250m",
-      "aed250m",
-      "emergencySupplyStorage250m",
-      "communityCenter250m",
-      "trainStation250m",
-      "shrineTemple250m",
-      "floodgate250m",
-      "bridge250m",
-      "shelterCapacity",
-    ]);
-    const isMinCountQuestion = minCountIds.has(questionId);
+    const minCountQuestion = isMinCountQuestion(questionId);
 
     if (question.paramType === "number") {
       const numericGuess = Number(param);
@@ -619,20 +539,14 @@ export function GameScreen({
       isCorrect =
         Number.isFinite(numericGuess) &&
         Number.isFinite(numericExpected) &&
-        (isMinCountQuestion ? numericGuess <= numericExpected : numericGuess === numericExpected);
+        (minCountQuestion ? numericGuess <= numericExpected : numericGuess === numericExpected);
     } else {
       isCorrect = normalizeVal(param) === normalizeVal(expected);
     }
 
-    const clueTemplate =
-      (question as Question & { clueTemplate?: string }).clueTemplate || question.text;
-    const clueValue =
-      isMinCountQuestion && typeof expected !== "undefined" && expected !== null
-        ? expected
-        : param ?? expected;
-    const clueText = clueTemplate.replace("{param}", `${clueValue ?? ""}`);
+    const { text: clueText, value: clueValue } = buildClueText(question, param, expected);
     const categoryLabel =
-      defaultCityContext.questionCategories.find((cat) => cat.id === question.category)
+      deployedCityContext.questionCategories.find((cat) => cat.id === question.category)
         ?.name ?? question.category;
 
     const newClue: Clue = {
@@ -1210,7 +1124,7 @@ export function GameScreen({
       {!isMeasureActive && activePanel !== "layers" && (
         <QuestionDrawer
           questions={questions}
-          availableCategories={defaultCityContext.questionCategories}
+          availableCategories={deployedCityContext.questionCategories}
           isOpen={drawerOpen}
           onToggle={() => {
             const next = !drawerOpen;

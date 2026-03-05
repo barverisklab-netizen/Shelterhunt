@@ -5,11 +5,45 @@ import process from "node:process";
 import crypto from "node:crypto";
 import { Client } from "pg";
 
+const parseArgs = (argv) => {
+  const map = new Map();
+  for (let index = 0; index < argv.length; index += 1) {
+    const token = argv[index];
+    if (!token.startsWith("--")) continue;
+    if (token.includes("=")) {
+      const [key, value] = token.split("=");
+      if (typeof value === "string") {
+        map.set(key, value);
+      }
+      continue;
+    }
+    const next = argv[index + 1];
+    if (next && !next.startsWith("--")) {
+      map.set(token, next);
+      index += 1;
+    }
+  }
+  return map;
+};
+
+const argMap = parseArgs(process.argv.slice(2));
 const databaseUrl = process.env.DATABASE_URL;
+const cityId = argMap.get("--city") ?? process.env.DEPLOYED_CITY_ID ?? process.env.CITY_ID ?? "koto";
+const schemaName = argMap.get("--schema") ?? process.env.DB_SCHEMA ?? "public";
 const LOCAL_DB_HOSTS = new Set(["", "localhost", "127.0.0.1", "::1"]);
+const quoteIdent = (value) => {
+  if (!/^[A-Za-z_][A-Za-z0-9_]*$/.test(value)) {
+    throw new Error(`Invalid identifier: ${value}`);
+  }
+  return `"${value}"`;
+};
+const schemaSql = quoteIdent(schemaName);
 const geojsonPath = path.resolve(
-  process.env.SHELTER_DATA_PATH ?? path.join(process.cwd(), "geojson/ihi_shelters.geojson"),
+  argMap.get("--input") ??
+    process.env.SHELTER_DATA_PATH ??
+    path.join(process.cwd(), "geojson", cityId, "shelters.geojson"),
 );
+const legacyGeojsonPath = path.resolve(path.join(process.cwd(), "geojson/ihi_shelters.geojson"));
 
 if (!databaseUrl) {
   console.error("[Data] DATABASE_URL is required to import shelters.");
@@ -98,7 +132,15 @@ const generateShareCode = (used) => {
 };
 
 const parseFeatures = async () => {
-  const raw = await fs.readFile(geojsonPath, "utf-8");
+  let raw;
+  let resolvedPath = geojsonPath;
+  try {
+    raw = await fs.readFile(geojsonPath, "utf-8");
+  } catch {
+    raw = await fs.readFile(legacyGeojsonPath, "utf-8");
+    resolvedPath = legacyGeojsonPath;
+  }
+  console.log("[Data] Using GeoJSON:", resolvedPath, { cityId, schemaName });
   const data = JSON.parse(raw);
   const features = Array.isArray(data?.features) ? data.features : [];
   const usedCodes = new Set();
@@ -220,10 +262,11 @@ const insertShelters = async (rows) => {
   const client = new Client(connection);
   await client.connect();
   try {
+    await client.query(`set search_path to ${schemaSql}`);
     await client.query("BEGIN");
     for (const row of rows) {
       await client.query(
-        `insert into public.shelters
+        `insert into shelters
            (code, share_code, external_id, sequence_no, name_en, name_jp, address, address_en, address_jp, category, category_jp,
             flood_depth_rank, flood_depth, storm_surge_depth_rank, storm_surge_depth,
             flood_duration_rank, flood_duration, inland_waters_depth_rank, inland_waters_depth, latitude, longitude)

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { kotoLayers } from "./layers";
+import { kotoLayers, kotoMapStyle } from "./layers";
 
 describe("koto layer contracts", () => {
   it("has unique ids and labels", () => {
@@ -45,5 +45,9 @@ describe("koto layer contracts", () => {
     expect(designated).toBeDefined();
     expect(designated?.metadata.loadOnInit).toBe(true);
     expect(designated?.layerType).toBe("symbol");
+  });
+
+  it("defines map style contract", () => {
+    expect(kotoMapStyle.styleUrl).toBeTruthy();
   });
 });

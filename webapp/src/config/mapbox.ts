@@ -1,17 +1,20 @@
-// Mapbox Configuration
-// Update this with your actual Mapbox username to enable Koto layers
+// Mapbox configuration is environment-driven.
+// Do not hardcode tokens or usernames in source.
+
+const readEnv = (key: "VITE_MAPBOX_USERNAME" | "VITE_MAPBOX_TOKEN" | "VITE_MAPBOX_STYLE_URL") => {
+  const value = import.meta.env?.[key];
+  return typeof value === "string" ? value.trim() : "";
+};
 
 export const MAPBOX_CONFIG = {
-  // Mapbox username for Koto layer tilesets
-  username:
-    (import.meta.env?.VITE_MAPBOX_USERNAME as string | undefined) ??
-    "mitfluxmap",
+  // Mapbox username for tileset lookups (required when vector sources are used)
+  username: readEnv("VITE_MAPBOX_USERNAME"),
 
-  // Access token is loaded from environment variable (already configured)
-  accessToken: import.meta.env.VITE_MAPBOX_TOKEN as string,
+  // Access token must come from environment
+  accessToken: readEnv("VITE_MAPBOX_TOKEN"),
 
   // Optional: style URL override
-  styleUrl: (import.meta.env?.VITE_MAPBOX_STYLE_URL as string | undefined) ?? "",
+  styleUrl: readEnv("VITE_MAPBOX_STYLE_URL"),
 
   // Tileset IDs from your Koto layers
   tilesets: {
@@ -23,5 +26,8 @@ export const MAPBOX_CONFIG = {
 
 // Helper function to get tileset URL
 export function getTilesetUrl(tilesetId: string): string {
+  if (!MAPBOX_CONFIG.username) {
+    throw new Error("Missing VITE_MAPBOX_USERNAME for Mapbox tileset URL resolution.");
+  }
   return `mapbox://${MAPBOX_CONFIG.username}.${tilesetId}`;
 }

@@ -2,7 +2,7 @@ import { motion, AnimatePresence } from "motion/react";
 import { X, MapPin, Brain, Lightbulb, Trophy, Play } from "lucide-react";
 import { Button } from "../ui/button";
 import { useI18n } from "@/i18n";
-import { defaultCityContext } from "@/data/cityContext";
+import { deployedCityContext } from "@/cityContext/deployedCity";
 import mascotPlaying from "@/assets/graphics/character-mascot-playing.svg";
 
 interface HelpModalProps {
@@ -42,7 +42,7 @@ const getVimeoVideoLink = (rawUrl?: string) => {
 
 export function HelpModal({ isOpen, onClose }: HelpModalProps) {
   const { t } = useI18n();
-  const helpVideoUrl = defaultCityContext.helpVideoUrl;
+  const helpVideoUrl = deployedCityContext.helpVideoUrl;
   const helpVideoLink = getVimeoVideoLink(helpVideoUrl);
   const steps = [
     {

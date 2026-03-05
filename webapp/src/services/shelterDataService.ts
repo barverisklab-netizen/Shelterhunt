@@ -73,6 +73,7 @@ interface ApiShelter {
 }
 
 let sheltersPromise: Promise<Shelter[]> | null = null;
+let sheltersRequestVersion = 0;
 
 const mapShelter = (item: ApiShelter): Shelter => ({
   id: item.id,
@@ -110,18 +111,41 @@ const mapShelter = (item: ApiShelter): Shelter => ({
   longitude: item.longitude,
 });
 
-async function requestShelters(): Promise<Shelter[]> {
-  const response = await fetch(`${API_BASE_URL}/shelters`);
+async function requestShelters(
+  requestVersion: number,
+  signal?: AbortSignal,
+): Promise<Shelter[]> {
+  const response = await fetch(`${API_BASE_URL}/shelters`, { signal });
   if (!response.ok) {
     throw new Error(`Failed to load shelters: ${response.status} ${response.statusText}`);
   }
   const payload = (await response.json()) as { shelters: ApiShelter[] };
+  if (requestVersion !== sheltersRequestVersion) {
+    throw new Error("Stale shelters response ignored.");
+  }
   return payload.shelters.map(mapShelter);
 }
 
-export function getShelters(force = false): Promise<Shelter[]> {
+interface ShelterRequestOptions {
+  force?: boolean;
+  signal?: AbortSignal;
+}
+
+export function getShelters(force?: boolean): Promise<Shelter[]>;
+export function getShelters(options?: ShelterRequestOptions): Promise<Shelter[]>;
+export function getShelters(forceOrOptions: boolean | ShelterRequestOptions = false): Promise<Shelter[]> {
+  const options =
+    typeof forceOrOptions === "boolean" ? { force: forceOrOptions } : forceOrOptions;
+  const force = options.force ?? false;
   if (!sheltersPromise || force) {
-    sheltersPromise = requestShelters();
+    sheltersRequestVersion += 1;
+    const requestVersion = sheltersRequestVersion;
+    sheltersPromise = requestShelters(requestVersion, options.signal).catch((error) => {
+      if (requestVersion === sheltersRequestVersion) {
+        sheltersPromise = null;
+      }
+      throw error;
+    });
   }
   return sheltersPromise;
 }

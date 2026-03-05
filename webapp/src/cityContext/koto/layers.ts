@@ -1,8 +1,21 @@
-import { KotoLayer } from "@/types/kotoLayers";
+import type { CityLayer } from "@/types/cityLayers";
 import { KOTO_GEOJSON_SOURCES } from "@/data/kotoGeojsonSources";
+import type { CityMapStyle } from "@/cityContext/types";
+
+export const kotoMapStyle: CityMapStyle = {
+  styleUrl: "mapbox://styles/mitfluxmap/cmebgcxpe001001qm0ek1491l",
+  fallbackStyleUrl: "mapbox://styles/mapbox/streets-v12",
+};
+
+export const kotoLayerGroups = [
+  "Shelters",
+  "Evacuation Support Facilities",
+  "City Landmarks",
+  "Hazard Layers",
+] as const;
 
 // Koto, Tokyo Mapbox layer definitions and styling details
-export const kotoLayers: KotoLayer[] = [
+export const kotoLayers: CityLayer[] = [
   // Designated Evacuation Centers
   {
     id: 1,

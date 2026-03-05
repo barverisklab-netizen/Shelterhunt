@@ -12,7 +12,7 @@ import type {
 import {
   defaultPlayers,
 } from "@/data/gameContent";
-import { defaultCityContext } from "./data/cityContext";
+import { deployedCityContext } from "@/cityContext/deployedCity";
 import {
   LIGHTNING_DURATION_MINUTES,
   LIGHTNING_RADIUS_KM,
@@ -119,8 +119,8 @@ const mapSessionPlayersToUI = (
 
 const isDefaultStartLocation = (location: LatLng) => {
   return (
-    Math.abs(location.lat - defaultCityContext.mapConfig.startLocation.lat) < 1e-6 &&
-    Math.abs(location.lng - defaultCityContext.mapConfig.startLocation.lng) < 1e-6
+    Math.abs(location.lat - deployedCityContext.mapConfig.startLocation.lat) < 1e-6 &&
+    Math.abs(location.lng - deployedCityContext.mapConfig.startLocation.lng) < 1e-6
   );
 };
 
@@ -207,8 +207,8 @@ export default function App() {
   const [hostShareCode, setHostShareCode] = useState<string | null>(null);
   const [showHelp, setShowHelp] = useState(false);
   const [playerLocation, setPlayerLocation] = useState<LatLng>({
-    lat: defaultCityContext.mapConfig.startLocation.lat,
-    lng: defaultCityContext.mapConfig.startLocation.lng,
+    lat: deployedCityContext.mapConfig.startLocation.lat,
+    lng: deployedCityContext.mapConfig.startLocation.lng,
   });
   const [secretShelter, setSecretShelter] = useState<SecretShelterInfo | null>(null);
   const [shelterOptions, setShelterOptions] = useState<ShelterOption[]>([]);
@@ -467,7 +467,7 @@ export default function App() {
       setTimerEnabled(snapshot.timerEnabled ?? true);
       setTimerEndsAt(snapshot.timerEnabled ? resolvedTimerEndsAt : null);
       setIsTimerCritical(snapshot.isTimerCritical ?? false);
-      setPlayerLocation(snapshot.playerLocation ?? defaultCityContext.mapConfig.startLocation);
+      setPlayerLocation(snapshot.playerLocation ?? deployedCityContext.mapConfig.startLocation);
       setSecretShelter(snapshot.secretShelter ?? null);
       setShelterOptions(snapshot.shelterOptions ?? []);
       setGameMode(snapshot.gameMode ?? null);
@@ -883,7 +883,7 @@ export default function App() {
 
     const seedCitywide = async () => {
       try {
-        const cityCenter = defaultCityContext.mapConfig.startLocation;
+        const cityCenter = deployedCityContext.mapConfig.startLocation;
         const nearby = designatedShelters.length
           ? designatedShelters
           : await buildLocalDesignatedShelters(cityCenter);
@@ -988,7 +988,7 @@ export default function App() {
       setHostShareCode(null);
       await disconnectSession();
       try {
-        const cityCenter = defaultCityContext.mapConfig.startLocation;
+        const cityCenter = deployedCityContext.mapConfig.startLocation;
         const nearby = await buildLocalDesignatedShelters(cityCenter);
         console.log("[Multiplayer] Citywide shelters available", {
           count: nearby.length,

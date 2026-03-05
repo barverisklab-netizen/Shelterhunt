@@ -1,6 +1,6 @@
 import type { POI } from "@/types/game";
 import { MAPBOX_CONFIG } from "@/config/mapbox";
-import { kotoLayers } from "@/cityContext/koto/layers";
+import { deployedCityLayers } from "@/cityContext/deployedCity";
 
 interface GeoPoint {
   lat: number;
@@ -126,6 +126,9 @@ export class DesignatedShelterService {
     if (!token) {
       throw new Error("Mapbox access token is not configured.");
     }
+    if (!username) {
+      throw new Error("Mapbox username is not configured.");
+    }
 
     const designatedLayer =
       options.tilesetId && options.layerName
@@ -135,7 +138,7 @@ export class DesignatedShelterService {
               layerName: options.layerName,
             },
           }
-        : kotoLayers.find((layer) =>
+        : deployedCityLayers.find((layer) =>
             /Designated Evacuation Centers/i.test(layer.label),
           );
 

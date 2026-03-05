@@ -4,9 +4,40 @@ import path from "node:path";
 import process from "node:process";
 
 const LOCAL_API_HOSTS = new Set(["localhost", "127.0.0.1", "::1"]);
+const parseArgs = (argv) => {
+  const map = new Map();
+  for (let index = 0; index < argv.length; index += 1) {
+    const token = argv[index];
+    if (!token.startsWith("--")) continue;
+
+    if (token.includes("=")) {
+      const [key, value] = token.split("=");
+      if (typeof value === "string") {
+        map.set(key, value);
+      }
+      continue;
+    }
+
+    const next = argv[index + 1];
+    if (next && !next.startsWith("--")) {
+      map.set(token, next);
+      index += 1;
+    }
+  }
+  return map;
+};
+
+const argMap = parseArgs(process.argv.slice(2));
+const cityId =
+  argMap.get("--city") ??
+  process.env.DEPLOYED_CITY_ID ??
+  process.env.CITY_ID ??
+  "koto";
 const apiBase = process.env.DATA_API_BASE_URL?.replace(/\/+$/, "") || "http://localhost:4000";
 const outputPath = path.resolve(
-  process.env.OUTPUT_PATH ?? path.join(process.cwd(), "geojson/ihi_shelters.geojson"),
+  process.env.OUTPUT_PATH ??
+    argMap.get("--output") ??
+    path.join(process.cwd(), "geojson", cityId, "shelters.geojson"),
 );
 const apiUrl = new URL(apiBase);
 
@@ -85,7 +116,7 @@ const writeGeojson = async (collection) => {
 };
 
 const main = async () => {
-  console.log("[Data] Fetching shelters from API:", apiBase);
+  console.log("[Data] Fetching shelters from API:", apiBase, { cityId });
   const shelters = await fetchShelters();
   const collection = buildFeatureCollection(shelters);
   await writeGeojson(collection);

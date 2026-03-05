@@ -36,10 +36,10 @@ This repository contains the full stack:
   - `/sessions/*` multiplayer endpoints
   - `GET /sessions/:id/stream` WebSocket
 - `api` reads/writes PostgreSQL (Supabase-compatible):
-  - `public.shelters`
-  - `public.sessions`
-  - `public.players`
-  - `public.question_attributes`
+  - `${DB_SCHEMA}.shelters`
+  - `${DB_SCHEMA}.sessions`
+  - `${DB_SCHEMA}.players`
+  - `${DB_SCHEMA}.question_attributes`
 - `data` scripts maintain source GeoJSON and can seed/export DB data.
 
 ### Frontend module boundaries (`webapp/src`)
@@ -74,7 +74,7 @@ Current complexity hotspots:
 - Multiplayer live map behavior: player positions sync through the session stream (`/sessions/:id/stream`) and are rendered as map updates; server-side 50m coordinate rounding affects perceived movement granularity.
 
 ### Layer Styling and Data Sources (Important)
-- Layer styling and behavior metadata are defined in `webapp/src/cityContext/koto/layers.ts` (filters, paint/layout, popup templates, grouping, default visibility).
+- Layer styling and behavior metadata are city-owned in `webapp/src/cityContext/<city>/layers.ts` (filters, paint/layout, popup templates, grouping, default visibility).
 - Layer source paths for local datasets are defined in `webapp/src/data/kotoGeojsonSources.ts` and point to bundled GeoJSON files in `data/geojson/*`.
 - Layer runtime loading is handled by `webapp/src/features/map/layers/useCityLayers.ts`:
   - `sourceType: "geojson"` layers are loaded from local GeoJSON URLs (`map.addSource(... type: "geojson")`).
@@ -154,7 +154,9 @@ Never commit real secrets.
 ### Webapp env (`webapp/.env.local`)
 
 Required for local map runtime:
+- `VITE_DEPLOYED_CITY_ID` (deployment-bound city, e.g. `koto`)
 - `VITE_MAPBOX_TOKEN`
+- `VITE_MAPBOX_USERNAME` (required when vector layers are used)
 
 Common:
 - `VITE_API_BASE_URL` (default `http://localhost:4000`)
@@ -177,6 +179,8 @@ Note: `webapp/.env.example` currently includes `VITE_LIGHTNING_DURATION_MINUTES`
 
 Required:
 - `DATABASE_URL`
+- `DB_SCHEMA` (deployment-bound schema, e.g. `public`, `osaka`)
+- `DEPLOYED_CITY_ID` (deployment-bound city id)
 - `JWT_SECRET`
 - `TASKS_CRON_SECRET`
 
@@ -216,7 +220,7 @@ What you must do when switching provider:
    - `api/sql/001_init_sessions.sql`
    - `api/sql/002_question_attributes.sql`
 3. Seed data (recommended):
-   - `cd api && SHELTER_DATA_PATH=../data/geojson/ihi_shelters.geojson npm run seed:shelters`
+   - `cd api && SHELTER_DATA_PATH=../data/geojson/koto/shelters.geojson npm run seed:shelters`
 4. Update `CORS_ORIGIN` for your frontend domain(s).
 5. Ensure a scheduler/cron can call `POST /tasks/expire-sessions` with `x-cron-key`.
 
@@ -238,6 +242,8 @@ If you want a non-PostgreSQL engine (MySQL, SQLite, MongoDB), code changes are r
 
 ### Data env (`data/.env`)
 - `DATABASE_URL` (for `seed:db`)
+- `DB_SCHEMA` (schema used by `seed:db`/`verify:seed`)
+- `DEPLOYED_CITY_ID` (city used for `data/geojson/<city>/...` defaults)
 - `SHELTER_DATA_PATH` (GeoJSON path override)
 - `DATA_API_BASE_URL` (for `export:api`)
 - `OUTPUT_PATH` (export destination path)
@@ -268,8 +274,27 @@ If you want a non-PostgreSQL engine (MySQL, SQLite, MongoDB), code changes are r
 | Command | Purpose |
 | --- | --- |
 | `npm run export:api` | Pull shelters from API and write GeoJSON |
-| `npm run seed:db` | Upsert shelters from GeoJSON directly into DB |
-| `node scripts/buildIhiAnswers.mjs` | Recompute `250m_*` fields from raw map layers |
+| `npm run seed:db` | Upsert shelters from GeoJSON directly into configured schema |
+| `npm run build:answers` | Recompute `250m_*` fields from raw map layers |
+| `npm run verify:seed` | Verify shelters + `question_attributes` completeness post-seed |
+
+## Release Gates (Per-City Deployment)
+
+Required env contract for a deployment:
+- Frontend: `VITE_DEPLOYED_CITY_ID`, `VITE_MAPBOX_TOKEN`, `VITE_MAPBOX_USERNAME`
+- API: `DEPLOYED_CITY_ID`, `DB_SCHEMA`, `DATABASE_URL`, `JWT_SECRET`, `TASKS_CRON_SECRET`
+
+Minimum smoke checks before traffic cutover:
+1. `GET /health` returns `200`.
+2. `GET /shelters` returns non-empty `shelters`.
+3. `GET /question-attributes` returns non-empty `attributes`.
+4. Webapp loads map style and can toggle at least one city layer.
+5. Session stream connects on `/sessions/:id/stream`.
+
+Rollback baseline:
+1. Re-deploy previous frontend/API artifact pair (same manifest version).
+2. Keep DB schema unchanged; if seed/migration changed data, restore DB snapshot for the target schema.
+3. Re-run smoke checks above.
 
 ## API Contract
 
@@ -294,6 +319,10 @@ If you want a non-PostgreSQL engine (MySQL, SQLite, MongoDB), code changes are r
 | `GET` | `/sessions/:id/stream` | WebSocket stream (token required) |
 | `POST` | `/tasks/expire-sessions` | Cron cleanup (`x-cron-key`) |
 
+City binding rule:
+- API is deployment-bound to one city/schema (`DEPLOYED_CITY_ID`, `DB_SCHEMA`).
+- Gameplay routes reject `city`, `cityId`, and `city_id` query overrides.
+
 ### WebSocket event notes
 - Lobby events: `player_joined`, `ready_updated`, `race_started`, `race_finished`, etc.
 - Location updates are accepted only while `session.state === racing`.
@@ -306,7 +335,12 @@ Migrations:
 - `api/sql/001_init_sessions.sql`
 - `api/sql/002_question_attributes.sql`
 
-### `public.shelters`
+Schema strategy:
+- One deployment serves one city.
+- API is schema-bound at startup via `DB_SCHEMA`.
+- Existing city can remain in `public`; new cities should use dedicated schemas.
+
+### `${DB_SCHEMA}.shelters`
 Purpose:
 - Master shelter catalog for gameplay and session targeting.
 
@@ -320,7 +354,7 @@ Used by:
 - Session service: shelter lookup and active-session targeting
 - Webapp: base shelter dataset for map + gameplay
 
-### `public.sessions`
+### `${DB_SCHEMA}.sessions`
 Purpose:
 - Session lifecycle per multiplayer race.
 
@@ -338,7 +372,7 @@ State semantics:
 - `finished`: race completed.
 - `closed`: expired/ended session cleanup state.
 
-### `public.players`
+### `${DB_SCHEMA}.players`
 Purpose:
 - Player membership + presence in session.
 
@@ -352,7 +386,7 @@ Presence behavior:
 - `last_seen` is updated by heartbeat and ready toggles.
 - Expiry task uses `last_seen` to close abandoned sessions.
 
-### `public.question_attributes`
+### `${DB_SCHEMA}.question_attributes`
 Purpose:
 - Dynamic question metadata for frontend prompts.
 
@@ -382,7 +416,7 @@ Runtime usage:
 - `GameScreen`/question drawer uses these records to construct dynamic question set and input controls.
 
 Operational note:
-- If `public.question_attributes` is empty/missing, dynamic question generation in the UI becomes incomplete.
+- If `${DB_SCHEMA}.question_attributes` is empty/missing, dynamic question generation in the UI becomes incomplete.
 - `data/scripts/importToSupabase.mjs` does not maintain this table; use `npm --prefix api run seed:shelters` for full game-ready seeding.
 
 ## Data Workflows (`data/` and Seed Scripts)
@@ -392,11 +426,11 @@ Operational note:
 2. Run:
    ```bash
    cd api
-   SHELTER_DATA_PATH=../data/geojson/ihi_shelters.geojson npm run seed:shelters
+   SHELTER_DATA_PATH=../data/geojson/koto/shelters.geojson npm run seed:shelters
    ```
 3. Seeder upserts:
-   - `public.shelters`
-   - `public.question_attributes`
+   - `${DB_SCHEMA}.shelters`
+   - `${DB_SCHEMA}.question_attributes`
 
 ### Direct DB seed path (lighter)
 ```bash
@@ -404,8 +438,8 @@ cd data
 npm run seed:db
 ```
 Warning: `seed:db` is **not** a full gameplay seed.
-- It upserts `public.shelters` only.
-- It does **not** populate/update `public.question_attributes`.
+- It upserts `${DB_SCHEMA}.shelters` only.
+- It does **not** populate/update `${DB_SCHEMA}.question_attributes`.
 - Result: question metadata can be missing and dynamic question UX can be incomplete/broken.
 
 If you used `seed:db`, do this immediately after:
@@ -415,7 +449,7 @@ If you used `seed:db`, do this immediately after:
 2. Backfill full gameplay metadata with API seeder:
    ```bash
    cd api
-   SHELTER_DATA_PATH=../data/geojson/ihi_shelters.geojson npm run seed:shelters
+   SHELTER_DATA_PATH=../data/geojson/koto/shelters.geojson npm run seed:shelters
    ```
 3. Verify:
    - `GET /question-attributes` returns non-empty `attributes`.

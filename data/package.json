@@ -4,7 +4,9 @@
   "type": "module",
   "scripts": {
     "export:api": "node ./scripts/exportFromApi.mjs",
-    "seed:db": "node ./scripts/importToSupabase.mjs"
+    "seed:db": "node ./scripts/importToSupabase.mjs",
+    "build:answers": "node ./scripts/buildIhiAnswers.mjs",
+    "verify:seed": "node ./scripts/verifySeed.mjs"
   },
   "dependencies": {
     "dotenv": "^16.4.5",

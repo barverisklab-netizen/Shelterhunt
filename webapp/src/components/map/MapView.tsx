@@ -12,17 +12,16 @@ import {
   Archive,
 } from "lucide-react";
 import { POI } from "@/types/game";
-import { kotoLayers } from "@/cityContext/koto/layers";
+import { deployedCity, deployedCityContext, deployedCityLayers } from "@/cityContext/deployedCity";
 import { MAPBOX_CONFIG } from "@/config/mapbox";
 import { MAPBOX_STYLE_URL, PROXIMITY_RADIUS_KM } from "@/config/runtime";
-import { defaultCityContext } from "@/data/cityContext";
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
 import { getLocalShelters } from "@/services/mapLayerQueryService";
 import { countAmenitiesWithinRadius } from "@/services/proximityIndex";
 import { useTerrainElevation } from "@/features/elevation/hooks/useTerrainElevation";
 import { useMeasurementTool } from "@/features/measurement/hooks/useMeasurementTool";
-import { CITY_LAYER_GROUPS, type CityLayerGroup, useCityLayers } from "@/features/map/layers/useCityLayers";
+import { cityLayerGroups, type CityLayerGroup, useCityLayers } from "@/features/map/layers/useCityLayers";
 import {
   buildPopupBodyHtml,
   buildPopupCardHtml,
@@ -99,7 +98,7 @@ const LAYER_ICON_BY_LABEL: Record<string, React.ReactNode> = {
 };
 
 // Resolve a map-layer icon from known labels, with a colorized fallback pin.
-const getKotoLayerIcon = (layer: (typeof kotoLayers)[0]): React.ReactNode => {
+const getCityLayerIcon = (layer: (typeof deployedCityLayers)[0]): React.ReactNode => {
   const icon = LAYER_ICON_BY_LABEL[layer.label];
   if (icon) return icon;
 
@@ -135,7 +134,8 @@ const LIGHTNING_RANGE_FILL_LAYER_ID = "lightning-range-fill-layer";
 const LIGHTNING_RANGE_OUTLINE_LAYER_ID = "lightning-range-outline-layer";
 const GEOLOCATE_STYLE_ID = "mapbox-geolocate-circle-style";
 const ATTRIBUTION_STYLE_ID = "mapbox-attribution-position-style";
-const DEFAULT_START_LOCATION = defaultCityContext.mapConfig.startLocation;
+const CITY_LAYER_PREFIX = `city-layer-${deployedCity.id}-`;
+const DEFAULT_START_LOCATION = deployedCityContext.mapConfig.startLocation;
 
 const PLAYER_RADIUS_METERS = Math.max(1, PROXIMITY_RADIUS_KM * 1000);
 
@@ -191,7 +191,7 @@ export function MapView({
   visitedPOIs,
   gameEnded,
   onPOIClick,
-  basemapUrl = defaultCityContext.mapConfig.basemapUrl,
+  basemapUrl = deployedCity.mapStyle.styleUrl || deployedCityContext.mapConfig.basemapUrl,
   onSecretShelterChange,
   onShelterOptionsChange,
   measureTrigger,
@@ -350,7 +350,7 @@ export function MapView({
     setIsMeasurePanelCollapsed,
   } = useMeasurementTool({
     mapRef: map,
-    kotoLayersVisible: cityLayersVisible,
+    cityLayersVisible: cityLayersVisible,
     locale,
     measureTrigger,
     onMeasurementActiveChange,
@@ -685,7 +685,7 @@ export function MapView({
         style: MAPBOX_STYLE_URL || basemapUrl,
         center: [playerLocation.lng, playerLocation.lat],
         zoom: 14,
-        minZoom: defaultCityContext.mapConfig.minZoom ?? 10,
+        minZoom: deployedCityContext.mapConfig.minZoom ?? 10,
       });
 
       map.current.on("load", () => {
@@ -745,8 +745,8 @@ export function MapView({
           const reapply = reapplyPlayerRangeRef.current;
           const mInner = map.current;
           if (!reapply || !mInner) return;
-          const missingCityLayer = kotoLayers.some(
-            (layer) => !mInner.getLayer(`koto-layer-${layer.id}`),
+          const missingCityLayer = deployedCityLayers.some(
+            (layer) => !mInner.getLayer(`${CITY_LAYER_PREFIX}${layer.id}`),
           );
           if (missingCityLayer) {
             syncCityLayers();
@@ -782,12 +782,12 @@ export function MapView({
           );
           (map.current as any).__cityLayerPopupHandler = null;
         }
-        if ((map.current as any)?.__kotoPopupHandler) {
+        if ((map.current as any)?.__legacyPopupHandler) {
           map.current.off(
             "click",
-            (map.current as any).__kotoPopupHandler,
+            (map.current as any).__legacyPopupHandler,
           );
-          (map.current as any).__kotoPopupHandler = null;
+          (map.current as any).__legacyPopupHandler = null;
         }
         if (infoPopup.current) {
           infoPopup.current.remove();
@@ -1131,8 +1131,8 @@ export function MapView({
     t(`map.layers.groups.${group}`, { fallback: group });
   const translateLayerLabel = (layerId: number, label: string) =>
     t(`map.layers.items.${layerId}`, { fallback: label });
-  const groupedLayerSections = CITY_LAYER_GROUPS.map((group) => {
-    const layers = kotoLayers.filter((layer) => layer.group === group);
+  const groupedLayerSections = cityLayerGroups.map((group) => {
+    const layers = deployedCityLayers.filter((layer) => layer.group === group);
     return {
       group,
       title: translateGroup(group),
@@ -1141,7 +1141,7 @@ export function MapView({
       layers: layers.map((layer) => ({
         id: layer.id,
         label: translateLayerLabel(layer.id, layer.label),
-        icon: getKotoLayerIcon(layer),
+        icon: getCityLayerIcon(layer),
         checked: cityLayersVisible[layer.label],
         onChange: () => toggleCityLayer(layer.label),
       })),

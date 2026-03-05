@@ -7,11 +7,54 @@ const __dirname = path.dirname(__filename);
 
 const ROOT_DIR = path.resolve(__dirname, "..", "..");
 const GEOJSON_DIR = path.join(ROOT_DIR, "data", "geojson");
+const parseArgs = (argv) => {
+  const map = new Map();
+  for (let index = 0; index < argv.length; index += 1) {
+    const token = argv[index];
+    if (!token.startsWith("--")) continue;
+    if (token.includes("=")) {
+      const [key, value] = token.split("=");
+      if (typeof value === "string") {
+        map.set(key, value);
+      }
+      continue;
+    }
+    const next = argv[index + 1];
+    if (next && !next.startsWith("--")) {
+      map.set(token, next);
+      index += 1;
+    }
+  }
+  return map;
+};
 
-const SHELTERS_PATH = path.join(GEOJSON_DIR, "ihi_shelters.geojson");
-const SUPPORT_PATH = path.join(GEOJSON_DIR, "ihi_support.geojson");
-const LANDMARK_PATH = path.join(GEOJSON_DIR, "ihi_landmark.geojson");
-const OUTPUT_PATH = path.join(GEOJSON_DIR, "IHI_answers.geojson");
+const argMap = parseArgs(process.argv.slice(2));
+const CITY_ID = argMap.get("--city") ?? process.env.CITY_ID ?? process.env.DEPLOYED_CITY_ID ?? "koto";
+const CITY_GEOJSON_DIR = path.join(GEOJSON_DIR, CITY_ID);
+
+const resolvePath = (...candidates) => candidates.find((candidate) => fs.existsSync(candidate)) ?? candidates[0];
+
+const SHELTERS_PATH = resolvePath(
+  process.env.SHELTERS_PATH ?? "",
+  path.join(CITY_GEOJSON_DIR, "shelters.geojson"),
+  path.join(GEOJSON_DIR, "ihi_shelters.geojson"),
+);
+const SUPPORT_PATH = resolvePath(
+  process.env.SUPPORT_PATH ?? "",
+  path.join(CITY_GEOJSON_DIR, "support.geojson"),
+  path.join(GEOJSON_DIR, "ihi_support.geojson"),
+);
+const LANDMARK_PATH = resolvePath(
+  process.env.LANDMARK_PATH ?? "",
+  path.join(CITY_GEOJSON_DIR, "landmark.geojson"),
+  path.join(GEOJSON_DIR, "ihi_landmark.geojson"),
+);
+const OUTPUT_PATH =
+  argMap.get("--output") ??
+  process.env.OUTPUT_PATH ??
+  (fs.existsSync(CITY_GEOJSON_DIR)
+    ? path.join(CITY_GEOJSON_DIR, "answers.geojson")
+    : path.join(GEOJSON_DIR, "IHI_answers.geojson"));
 
 const RADIUS_KM = 0.25;
 const BUCKET_SIZE_DEG = 0.005; // ~550m at this latitude
@@ -128,6 +171,7 @@ const applyCounts = (properties, counts) => {
 };
 
 const run = () => {
+  console.log("[buildAnswers] city:", CITY_ID);
   const shelters = readGeoJson(SHELTERS_PATH);
   const support = readGeoJson(SUPPORT_PATH);
   const landmarks = readGeoJson(LANDMARK_PATH);

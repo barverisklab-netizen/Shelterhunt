@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import type { MutableRefObject } from "react";
 import mapboxgl from "mapbox-gl";
 import { toast } from "sonner@2.0.3";
-import { kotoLayers } from "@/cityContext/koto/layers";
+import { deployedCity, deployedCityLayers } from "@/cityContext/deployedCity";
 import { haversineDistanceKm } from "@/utils/lightningSelection";
 import {
   FIXED_MEASURE_RADIUS_METERS,
@@ -35,16 +35,16 @@ type TranslateFn = (
 
 interface UseMeasurementToolParams {
   mapRef: MutableRefObject<mapboxgl.Map | null>;
-  kotoLayersVisible: Record<string, boolean>;
+  cityLayersVisible: Record<string, boolean>;
   locale: string;
   measureTrigger?: number;
   onMeasurementActiveChange?: (active: boolean) => void;
   t: TranslateFn;
 }
 
-const SHELTER_KOTO_LAYER_IDS = kotoLayers
+const SHELTER_CITY_LAYER_IDS = deployedCityLayers
   .filter((layer) => /Designated Evacuation Centers/i.test(layer.label))
-  .map((layer) => `koto-layer-${layer.id}`);
+  .map((layer) => `city-layer-${deployedCity.id}-${layer.id}`);
 
 const createDefaultMeasureState = (): MeasureState => ({
   status: "idle",
@@ -57,7 +57,7 @@ const createDefaultMeasureState = (): MeasureState => ({
 
 export function useMeasurementTool({
   mapRef,
-  kotoLayersVisible,
+  cityLayersVisible,
   locale,
   measureTrigger,
   onMeasurementActiveChange,
@@ -113,7 +113,7 @@ export function useMeasurementTool({
     const map = mapRef.current;
     if (!map) return;
 
-    hideMapLayers(map, SHELTER_KOTO_LAYER_IDS, shelterLayerVisibilityRef.current);
+    hideMapLayers(map, SHELTER_CITY_LAYER_IDS, shelterLayerVisibilityRef.current);
   }, [mapRef]);
 
   const clearMeasurement = useCallback(() => {
@@ -140,8 +140,8 @@ export function useMeasurementTool({
         const radiusKm = Math.max(0, radius) / 1000;
         const origin = { lat: center.lat, lng: center.lng };
 
-        const activeSymbolLayers = kotoLayers.filter(
-          (layer) => layer.layerType === "symbol" && kotoLayersVisible[layer.label],
+        const activeSymbolLayers = deployedCityLayers.filter(
+          (layer) => layer.layerType === "symbol" && cityLayersVisible[layer.label],
         );
 
         const layerResults = await Promise.all(
@@ -227,7 +227,7 @@ export function useMeasurementTool({
         console.error("[Measure] Failed to load shelters", error);
       });
     },
-    [hideShelterLayers, kotoLayersVisible, mapRef],
+    [hideShelterLayers, cityLayersVisible, mapRef],
   );
 
   const beginMoveCenter = useCallback(() => {

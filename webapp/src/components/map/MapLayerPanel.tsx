@@ -1,6 +1,5 @@
 import { AnimatePresence, motion } from "motion/react";
 import type { ReactNode } from "react";
-import type { KotoLayerGroup } from "@/types/kotoLayers";
 
 export interface MapLayerToggleItem {
   id: number;
@@ -11,7 +10,7 @@ export interface MapLayerToggleItem {
 }
 
 export interface MapLayerGroupSection {
-  group: KotoLayerGroup;
+  group: string;
   title: string;
   isOpen: boolean;
   layers: MapLayerToggleItem[];

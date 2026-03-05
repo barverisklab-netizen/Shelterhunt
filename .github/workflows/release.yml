@@ -21,11 +21,29 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Build project
-        run: npm run build
+      - name: Install API dependencies
+        run: npm --prefix api ci
 
-      - name: Upload production bundle
+      - name: Install webapp dependencies
+        run: npm --prefix webapp ci
+
+      - name: Validate API types
+        run: npm --prefix api run check
+
+      - name: Build API
+        run: npm run build:api
+
+      - name: Build webapp
+        run: npm run build:webapp
+
+      - name: Upload API artifact
         uses: actions/upload-artifact@v4
         with:
-          name: sheltersearch-build
-          path: build
+          name: shelterhunt-api-dist
+          path: api/dist
+
+      - name: Upload webapp artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: shelterhunt-webapp-build
+          path: webapp/build

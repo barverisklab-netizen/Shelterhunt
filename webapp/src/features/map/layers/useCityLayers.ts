@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { MutableRefObject } from "react";
 import mapboxgl from "mapbox-gl";
-import { kotoLayers as cityLayers } from "@/cityContext/koto/layers";
-import type { KotoLayerGroup } from "@/types/kotoLayers";
+import { deployedCity, deployedCityLayerGroups, deployedCityLayers } from "@/cityContext/deployedCity";
+import type { CityLayerGroup } from "@/types/cityLayers";
 import { getTilesetUrl } from "@/config/mapbox";
 import {
   buildPopupBodyHtml,
@@ -10,14 +10,10 @@ import {
   buildPopupSectionHtml,
 } from "@/features/map/popups/popupHtml";
 
-export type CityLayerGroup = KotoLayerGroup;
-
-export const CITY_LAYER_GROUPS: CityLayerGroup[] = [
-  "Shelters",
-  "Evacuation Support Facilities",
-  "City Landmarks",
-  "Hazard Layers",
-];
+export const cityLayerGroups: CityLayerGroup[] = [...deployedCityLayerGroups];
+export type { CityLayerGroup } from "@/types/cityLayers";
+const CITY_LAYER_PREFIX = `city-layer-${deployedCity.id}-`;
+const CITY_SOURCE_PREFIX = `city-source-${deployedCity.id}-`;
 
 type TranslateFn = (
   key: string,
@@ -61,7 +57,7 @@ export function useCityLayers({
 }: UseCityLayersParams) {
   const [cityLayersVisible, setCityLayersVisible] = useState<Record<string, boolean>>(() => {
     const initialState: Record<string, boolean> = {};
-    cityLayers.forEach((layer) => {
+    deployedCityLayers.forEach((layer) => {
       initialState[layer.label] = layer.metadata.loadOnInit;
     });
     return initialState;
@@ -70,7 +66,7 @@ export function useCityLayers({
   const [layerGroupOpenState, setLayerGroupOpenState] = useState<
     Record<CityLayerGroup, boolean>
   >(() =>
-    CITY_LAYER_GROUPS.reduce(
+    cityLayerGroups.reduce(
       (acc, group) => ({ ...acc, [group]: true }),
       {} as Record<CityLayerGroup, boolean>,
     ),
@@ -84,10 +80,10 @@ export function useCityLayers({
     const m = mapRef.current;
     if (!m) return;
 
-    const layer = cityLayers.find((item) => item.label === label);
+    const layer = deployedCityLayers.find((item) => item.label === label);
     if (!layer) return;
 
-    const layerId = `koto-layer-${layer.id}`;
+    const layerId = `${CITY_LAYER_PREFIX}${layer.id}`;
     if (!m.getLayer(layerId)) return;
 
     m.setLayoutProperty(layerId, "visibility", visible ? "visible" : "none");
@@ -135,7 +131,7 @@ export function useCityLayers({
     }
 
     try {
-      const sortedCityLayers = [...cityLayers].sort((a, b) => {
+      const sortedCityLayers = [...deployedCityLayers].sort((a, b) => {
         if (a.layerType === b.layerType) return 0;
         if (a.layerType === "fill" && b.layerType !== "fill") return -1;
         if (a.layerType !== "fill" && b.layerType === "fill") return 1;
@@ -143,16 +139,16 @@ export function useCityLayers({
       });
 
       const expectedLayerIds = new Set(
-        sortedCityLayers.map((layer) => `koto-layer-${layer.id}`),
+        sortedCityLayers.map((layer) => `${CITY_LAYER_PREFIX}${layer.id}`),
       );
       const expectedSourceIds = new Set(
-        sortedCityLayers.map((layer) => `koto-source-${layer.sourceData.layerId}`),
+        sortedCityLayers.map((layer) => `${CITY_SOURCE_PREFIX}${layer.sourceData.layerId}`),
       );
 
       const styleLayers = m.getStyle()?.layers ?? [];
       styleLayers
         .map((layer) => layer.id)
-        .filter((id) => id.startsWith("koto-layer-") && !expectedLayerIds.has(id))
+        .filter((id) => id.startsWith(CITY_LAYER_PREFIX) && !expectedLayerIds.has(id))
         .forEach((staleId) => {
           if (m.getLayer(staleId)) {
             m.removeLayer(staleId);
@@ -160,7 +156,7 @@ export function useCityLayers({
         });
 
       Object.keys(m.getStyle()?.sources ?? {})
-        .filter((id) => id.startsWith("koto-source-") && !expectedSourceIds.has(id))
+        .filter((id) => id.startsWith(CITY_SOURCE_PREFIX) && !expectedSourceIds.has(id))
         .forEach((staleSourceId) => {
           if (m.getSource(staleSourceId)) {
             m.removeSource(staleSourceId);
@@ -177,7 +173,7 @@ export function useCityLayers({
           label: string;
           labelJp?: string;
           layerNumericId?: number;
-          legendItems?: (typeof cityLayers)[number]["metadata"]["legendItems"];
+          legendItems?: (typeof deployedCityLayers)[number]["metadata"]["legendItems"];
         }
       > = ((m as any).__cityLayerMeta = {});
 
@@ -217,8 +213,8 @@ export function useCityLayers({
 
       sortedCityLayers.forEach((layer) => {
         try {
-          const sourceId = `koto-source-${layer.sourceData.layerId}`;
-          const layerId = `koto-layer-${layer.id}`;
+          const sourceId = `${CITY_SOURCE_PREFIX}${layer.sourceData.layerId}`;
+          const layerId = `${CITY_LAYER_PREFIX}${layer.id}`;
 
           if (!addedSources.has(sourceId) && !m.getSource(sourceId)) {
             if (layer.sourceType === "geojson") {
@@ -409,8 +405,8 @@ export function useCityLayers({
   ]);
 
   const toggleCityLayer = useCallback((label: string) => {
-    const layer = cityLayers.find((item) => item.label === label);
-    const layerId = layer ? `koto-layer-${layer.id}` : null;
+    const layer = deployedCityLayers.find((item) => item.label === label);
+    const layerId = layer ? `${CITY_LAYER_PREFIX}${layer.id}` : null;
     const newVisibility = !cityLayersVisibleRef.current[label];
 
     setCityLayersVisible((prev) => ({ ...prev, [label]: newVisibility }));
@@ -458,14 +454,15 @@ export function useCityLayers({
     if (!m) return;
 
     const updated: Record<string, boolean> = {};
-    cityLayers.forEach((layer) => {
-      const layerId = `koto-layer-${layer.id}`;
+    deployedCityLayers.forEach((layer) => {
+      const layerId = `${CITY_LAYER_PREFIX}${layer.id}`;
       if (m.getLayer(layerId)) {
         m.setLayoutProperty(layerId, "visibility", "none");
       }
       updated[layer.label] = false;
     });
     setCityLayersVisible(updated);
+    cityLayersVisibleRef.current = updated;
   }, [mapRef]);
 
   const handleLayerControlToggle = useCallback(
@@ -518,8 +515,8 @@ export function useCityLayers({
       | (<T>(value: T) => T)
       | undefined;
 
-    cityLayers.forEach((layer) => {
-      const layerId = `koto-layer-${layer.id}`;
+    deployedCityLayers.forEach((layer) => {
+      const layerId = `${CITY_LAYER_PREFIX}${layer.id}`;
       const baseTextField = layer.style.layout?.["text-field"];
       if (!baseTextField) return;
       if (!m.getLayer(layerId)) return;
@@ -545,9 +542,9 @@ export function useCityLayers({
     const m = mapRef.current;
     if (!m) return;
 
-    const missingVisibleCityLayer = cityLayers.some((layer) => {
+    const missingVisibleCityLayer = deployedCityLayers.some((layer) => {
       if (!cityLayersVisible[layer.label]) return false;
-      return !m.getLayer(`koto-layer-${layer.id}`);
+      return !m.getLayer(`${CITY_LAYER_PREFIX}${layer.id}`);
     });
     if (missingVisibleCityLayer) {
       syncCityLayers();
