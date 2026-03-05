@@ -1,84 +1,48 @@
-# Shelterhunt Data (external)
+# Shelterhunt Data
 
-This folder is the scaffold for your separate, version-controlled data repo. It is **not** deployed with the webapp or API; it only holds fixtures and helper scripts.
+This folder is for city datasets and data tooling. It is not deployed with the frontend/API runtime.
 
 ## Layout
-- `geojson/` — place `ihi_shelters.geojson` here (kept out of git; a `.gitkeep` preserves the folder).
-- `scripts/` — utility scripts to export/import the dataset.
-- `package.json` — local script runner; install deps with `npm install` inside `data/`.
+- `geojson/<city>/`
+  - `shelters.geojson`
+  - `support.geojson`
+  - `landmark.geojson`
+- `scripts/` data import/export/build/verify utilities
+
+Current city dataset in repo:
+- `geojson/koto/*`
 
 ## Scripts
-- `npm run export:api`  
-  Pulls shelters from the API (`DATA_API_BASE_URL`, default `http://localhost:4000`) and writes `geojson/ihi_shelters.geojson`. Non-local API URLs must use `https://`. Override output with `OUTPUT_PATH=...`.
-
-- `npm run seed:db`  
-  Imports `geojson/ihi_shelters.geojson` into Postgres via `DATABASE_URL` (Supabase works). Optionally override the source with `SHELTER_DATA_PATH=...`.
-
-- `node scripts/buildIhiAnswers.mjs`  
-  Recalculates the `250m_*` amenity fields using the same 250m distance logic as the webapp (haversine, 0.25 km). Outputs `geojson/IHI_answers.geojson` with all other properties preserved from `ihi_shelters.geojson`.
+- `npm run export:api`
+  - pulls `/shelters` from API and writes `geojson/<city>/shelters.geojson`
+  - supports `--city` and `--output`
+- `npm run build:answers`
+  - computes `250m_*` fields for a city dataset
+  - supports `--city` and `--output`
+- `npm run seed:db`
+  - upserts shelters into selected DB schema
+  - supports `--city`, `--schema`, and `--input`
+- `npm run verify:seed`
+  - verifies shelters + question_attributes in selected schema
+  - supports `--schema`
 
 ## Environment
-- Export (`scripts/exportFromApi.mjs`):  
-  - `DATA_API_BASE_URL` — API base to pull shelters from (default `http://localhost:4000`; non-local hosts must use `https://`).  
-  - `OUTPUT_PATH` — optional; where to write the GeoJSON (default `geojson/ihi_shelters.geojson`).  
-  - Node 18+ recommended (uses built-in `fetch`).
-- Import (`scripts/importToSupabase.mjs`):  
-  - `DATABASE_URL` — Postgres/Supabase connection string (required). Use `sslmode=require` for hosted databases. `sslmode=disable` is allowed only for localhost/loopback DBs. `sslmode=no-verify` is not allowed.  
-  - `SHELTER_DATA_PATH` — optional; GeoJSON path (default `geojson/ihi_shelters.geojson`).  
+- `DATABASE_URL` required for `seed:db` / `verify:seed`
+- `DB_SCHEMA` target schema (or pass `--schema`)
+- `DEPLOYED_CITY_ID` default city (or pass `--city`)
+- `DATA_API_BASE_URL` for `export:api`
+- `SHELTER_DATA_PATH` optional source override for `seed:db`
+- `OUTPUT_PATH` optional output override for `export:api` / `build:answers`
 
-Both scripts load environment variables via `dotenv`, so you can create a local `.env` in `data/` instead of exporting values every time, e.g.:
+## Example (Koto)
+```bash
+cd data
+npm run export:api -- --city=koto
+npm run build:answers -- --city=koto
+npm run seed:db -- --city=koto --schema=public
+npm run verify:seed -- --schema=public
 ```
-DATABASE_URL=postgresql://user:password@db.example.com:5432/dbname?sslmode=require
-SHELTER_DATA_PATH=geojson/ihi_shelters.geojson
-DATA_API_BASE_URL=https://your-api.example.com
-OUTPUT_PATH=geojson/ihi_shelters.geojson
-```
-Local-only DB example (no TLS): `DATABASE_URL=postgresql://postgres:postgres@localhost:5432/shelterhunt?sslmode=disable`.
-See `.env.example` for a template; keep your real `.env` out of git.
 
-### Two ways to seed the DB with this GeoJSON
-- From the API folder (uses `api/scripts/importShelters.ts`):  
-  ```
-  cd api
-  DATABASE_URL=postgresql://user:password@db.example.com:5432/dbname?sslmode=require \
-  SHELTER_DATA_PATH=../data/geojson/ihi_shelters.geojson \
-  npm run seed:shelters
-  ```
-- From this data folder (uses `scripts/importToSupabase.mjs`):  
-  ```
-  cd data
-  DATABASE_URL=postgresql://user:password@db.example.com:5432/dbname?sslmode=require \
-  SHELTER_DATA_PATH=geojson/ihi_shelters.geojson \
-  npm run seed:db
-  ```
-
-Both paths read the same GeoJSON file; pick whichever location is more convenient.
-
-### How the API seeder finds the GeoJSON
-The main app’s seeding script (`api/scripts/importShelters.ts`, run via `npm run seed:shelters` in `api/`) looks for the dataset in this order:
-1. `SHELTER_DATA_PATH` (explicit path you set)
-2. `../data/geojson/ihi_shelters.geojson` (this data repo cloned next to the app)
-3. `api/assets/ihi_shelters.geojson` (legacy fallback)
-
-It logs the path it uses and throws with setup guidance if none exist. Recommended: set `SHELTER_DATA_PATH=../data/geojson/ihi_shelters.geojson`.
-
-## Typical workflow
-1) Clone/create your data repo alongside the app (e.g., `../shelterhunt-data`), or keep this `data/` directory as your data repo.
-2) Export from API:  
-   ```bash
-   cd data
-   npm install
-   DATA_API_BASE_URL=https://your-api.example.com npm run export:api
-   ```
-3) Commit the refreshed `geojson/ihi_shelters.geojson` to the data repo (not to the app repo).
-4) Seed a DB when needed:  
-   ```bash
-   cd api
-   DATABASE_URL=... SHELTER_DATA_PATH=../data/geojson/ihi_shelters.geojson npm run seed:shelters
-   ```
-   or run `npm run seed:db` from `data/` with `DATABASE_URL` set.
-
-This keeps runtime data in the DB/API while keeping fixtures reproducible and versioned in a dedicated repo.
-
-### Refreshing 250m amenity fields
-If `250m_*` values were generated with degree-based buffering (e.g., in QGIS), use the script above to regenerate them with the app’s exact distance algorithm. This keeps the in-game proximity checks and the stored `250m_*` values consistent.
+## Notes
+- Legacy root files (`geojson/ihi_*.geojson`) are no longer the primary structure.
+- Scripts still keep legacy fallback behavior for compatibility, but new city work should use `geojson/<city>/`.

@@ -75,7 +75,7 @@ Current complexity hotspots:
 
 ### Layer Styling and Data Sources (Important)
 - Layer styling and behavior metadata are city-owned in `webapp/src/cityContext/<city>/layers.ts` (filters, paint/layout, popup templates, grouping, default visibility).
-- Layer source paths for local datasets are defined in `webapp/src/data/kotoGeojsonSources.ts` and point to bundled GeoJSON files in `data/geojson/*`.
+- Layer source paths for local datasets are defined in `webapp/src/data/kotoGeojsonSources.ts` and point to bundled GeoJSON files in `data/geojson/<city>/*`.
 - Layer runtime loading is handled by `webapp/src/features/map/layers/useCityLayers.ts`:
   - `sourceType: "geojson"` layers are loaded from local GeoJSON URLs (`map.addSource(... type: "geojson")`).
   - `sourceType: "vector"` layers are loaded from Mapbox tilesets using `mapbox://{username}.{layerId}` from `webapp/src/config/mapbox.ts`.
@@ -85,7 +85,7 @@ Current complexity hotspots:
 - Basemap is Mapbox style-driven (`webapp/src/data/cityContext.ts`, `basemapUrl`).
 
 Related data-source behavior:
-- Proximity index (`webapp/src/services/proximityIndex.ts`) uses local raw GeoJSON imports (`data/geojson/ihi_*`).
+- Proximity index (`webapp/src/services/proximityIndex.ts`) uses local raw GeoJSON imports (`data/geojson/<city>/*`).
 - Measurement feature counting (`webapp/src/features/measurement/services/measurementLayers.ts`) currently evaluates only GeoJSON-backed layers; vector hazard layers are not part of measurement feature extraction.
 - Lightning/multiplayer shelter selection in current app flow uses local/API shelter data (`getLocalShelters`/`getShelters`), not the Mapbox tilequery utilities. Tilequery helpers exist in `webapp/src/utils/lightningSelection.ts` and `webapp/src/services/designatedShelterService.ts` but are not the active path in `App.tsx`.
 

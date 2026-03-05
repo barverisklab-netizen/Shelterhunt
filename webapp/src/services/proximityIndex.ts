@@ -3,9 +3,9 @@ import { point } from "@turf/helpers";
 import { featureEach } from "@turf/meta";
 import type { FeatureCollection, Point as TurfPoint } from "geojson";
 
-import landmarkGeoJsonRaw from "../../../data/geojson/ihi_landmark.geojson?raw";
-import supportGeoJsonRaw from "../../../data/geojson/ihi_support.geojson?raw";
-import sheltersGeoJsonRaw from "../../../data/geojson/ihi_shelters.geojson?raw";
+import landmarkGeoJsonRaw from "../../../data/geojson/koto/landmark.geojson?raw";
+import supportGeoJsonRaw from "../../../data/geojson/koto/support.geojson?raw";
+import sheltersGeoJsonRaw from "../../../data/geojson/koto/shelters.geojson?raw";
 
 type AmenityFeature = {
   lat: number;
