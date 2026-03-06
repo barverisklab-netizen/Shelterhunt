@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { Languages } from "lucide-react";
 import { localeOptions, useI18n } from "@/i18n";
+import type { Locale } from "@/i18n";
 import { motion, AnimatePresence } from "motion/react";
 
 type LanguageToggleProps = {
@@ -16,7 +17,7 @@ export function LanguageToggle({ inline = false, className }: LanguageToggleProp
 
   const options = useMemo(
     () =>
-      localeOptions.map((opt: { value: string }) => ({
+      localeOptions.map((opt: { value: Locale; label: string }) => ({
         ...opt,
         label: t(`common.language.${opt.value}`),
       })),
@@ -86,7 +87,7 @@ export function LanguageToggle({ inline = false, className }: LanguageToggleProp
               transition={{ type: "tween", duration: 0.16, ease: "easeOut" }}
               className="p-2 flex flex-col gap-1 min-w-[140px]"
             >
-              {options.map((option: { value: string; label: string }) => (
+              {options.map((option: { value: Locale; label: string }) => (
                 <button
                   key={option.value}
                   onClick={() => {

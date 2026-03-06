@@ -162,6 +162,7 @@ Common:
 - `VITE_API_BASE_URL` (default `http://localhost:4000`)
 - `VITE_WS_BASE_URL` (optional; defaults from API URL with `ws` scheme)
 - `VITE_MAPBOX_STYLE_URL` (optional)
+- `VITE_SUPPORTED_LOCALES` (optional comma-separated subset of city-supported locales, e.g. `en,ja`)
 - `VITE_DEFAULT_LOCALE` (`en` / `ja`)
 
 Gameplay toggles:
@@ -277,6 +278,7 @@ If you want a non-PostgreSQL engine (MySQL, SQLite, MongoDB), code changes are r
    - `webapp/src/cityContext/<id>/context.ts`
    - `webapp/src/cityContext/<id>/layers.ts`
    - `webapp/src/cityContext/<id>/questionAdapter.ts`
+   - include applicable locales in `layers.ts` via `<city>SupportedLocales`
 4. Create/upgrade target schema.
    ```bash
    npm run migrate:api-schema -- --schema=<schema>

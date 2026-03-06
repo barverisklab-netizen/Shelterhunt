@@ -1,9 +1,14 @@
 import { kotoCityContext } from "@/cityContext/koto/context";
-import { kotoLayers, kotoLayerGroups, kotoMapStyle } from "@/cityContext/koto/layers";
+import {
+  kotoLayers,
+  kotoLayerGroups,
+  kotoMapStyle,
+  kotoSupportedLocales,
+} from "@/cityContext/koto/layers";
 import { kotoQuestionAdapter } from "@/cityContext/koto/questionAdapter";
 import type { CityLayer, CityLayerGroup } from "@/types/cityLayers";
 import type { CityContext } from "@/data/cityContext";
-import type { CityMapStyle, CityQuestionAdapter } from "@/cityContext/types";
+import type { CityLocale, CityMapStyle, CityQuestionAdapter } from "@/cityContext/types";
 
 export interface DeployedCityDefinition {
   id: string;
@@ -11,6 +16,7 @@ export interface DeployedCityDefinition {
   mapStyle: CityMapStyle;
   layerGroups: ReadonlyArray<CityLayerGroup>;
   layers: CityLayer[];
+  supportedLocales: CityLocale[];
   questionAdapter: CityQuestionAdapter;
 }
 
@@ -21,6 +27,7 @@ const CITY_REGISTRY: Record<string, DeployedCityDefinition> = {
     mapStyle: kotoMapStyle,
     layerGroups: kotoLayerGroups,
     layers: kotoLayers,
+    supportedLocales: kotoSupportedLocales,
     questionAdapter: kotoQuestionAdapter,
   },
 };
@@ -55,8 +62,33 @@ if (usesVectorSources && !mapboxUsername) {
   throw new Error("Missing required VITE_MAPBOX_USERNAME for vector city layers.");
 }
 
+const envLocales = (import.meta.env.VITE_SUPPORTED_LOCALES as string | undefined)
+  ?.split(",")
+  .map((value) => value.trim())
+  .filter(Boolean);
+const envLocalesDeduped = envLocales ? Array.from(new Set(envLocales)) : undefined;
+
+const resolvedLocales = envLocalesDeduped?.length ? envLocalesDeduped : resolved.supportedLocales;
+
+if (!resolvedLocales.length) {
+  throw new Error("City must define at least one supported locale.");
+}
+
+const invalidEnvLocales = resolvedLocales.filter(
+  (locale) => !resolved.supportedLocales.includes(locale as CityLocale),
+);
+if (invalidEnvLocales.length > 0) {
+  throw new Error(
+    `Unsupported locale override(s): ${invalidEnvLocales.join(
+      ", ",
+    )}. Allowed for city '${resolved.id}': ${resolved.supportedLocales.join(", ")}`,
+  );
+}
+const citySupportedLocales = resolvedLocales as CityLocale[];
+
 export const deployedCity = resolved;
 export const deployedCityContext = resolved.context;
 export const deployedCityLayers = resolved.layers;
 export const deployedCityLayerGroups = resolved.layerGroups;
+export const deployedCitySupportedLocales = citySupportedLocales;
 export const deployedCityQuestionAdapter = resolved.questionAdapter;

@@ -1,6 +1,6 @@
 import type { CityLayer } from "@/types/cityLayers";
 import { KOTO_GEOJSON_SOURCES } from "@/data/kotoGeojsonSources";
-import type { CityMapStyle } from "@/cityContext/types";
+import type { CityLocale, CityMapStyle } from "@/cityContext/types";
 
 export const kotoMapStyle: CityMapStyle = {
   styleUrl: "mapbox://styles/mitfluxmap/cmebgcxpe001001qm0ek1491l",
@@ -13,6 +13,8 @@ export const kotoLayerGroups = [
   "City Landmarks",
   "Hazard Layers",
 ] as const;
+
+export const kotoSupportedLocales: CityLocale[] = ["en", "ja"];
 
 // Koto, Tokyo Mapbox layer definitions and styling details
 export const kotoLayers: CityLayer[] = [

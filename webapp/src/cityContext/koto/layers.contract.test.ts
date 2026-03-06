@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { kotoLayers, kotoMapStyle } from "./layers";
+import { kotoLayers, kotoMapStyle, kotoSupportedLocales } from "./layers";
 
 describe("koto layer contracts", () => {
   it("has unique ids and labels", () => {
@@ -49,5 +49,10 @@ describe("koto layer contracts", () => {
 
   it("defines map style contract", () => {
     expect(kotoMapStyle.styleUrl).toBeTruthy();
+  });
+
+  it("defines supported locales for this city", () => {
+    expect(kotoSupportedLocales.length).toBeGreaterThan(0);
+    expect(new Set(kotoSupportedLocales).size).toBe(kotoSupportedLocales.length);
   });
 });

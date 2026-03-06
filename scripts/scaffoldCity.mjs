@@ -83,7 +83,7 @@ const upsertDeployedCityRegistry = async ({
 
   const importBlock = [
     `import { ${cityVar}CityContext } from "@/cityContext/${cityId}/context";`,
-    `import { ${cityVar}Layers, ${cityVar}LayerGroups, ${cityVar}MapStyle } from "@/cityContext/${cityId}/layers";`,
+    `import { ${cityVar}Layers, ${cityVar}LayerGroups, ${cityVar}MapStyle, ${cityVar}SupportedLocales } from "@/cityContext/${cityId}/layers";`,
     `import { ${cityVar}QuestionAdapter } from "@/cityContext/${cityId}/questionAdapter";`,
   ].join("\n");
 
@@ -103,6 +103,7 @@ const upsertDeployedCityRegistry = async ({
       `    mapStyle: ${cityVar}MapStyle,`,
       `    layerGroups: ${cityVar}LayerGroups,`,
       `    layers: ${cityVar}Layers,`,
+      `    supportedLocales: ${cityVar}SupportedLocales,`,
       `    questionAdapter: ${cityVar}QuestionAdapter,`,
       "  },",
     ].join("\n");
@@ -165,7 +166,7 @@ export const ${cityVar}CityContext: CityContext = {
 `;
 
   const layersTs = `import type { CityLayer } from "@/types/cityLayers";
-import type { CityMapStyle } from "@/cityContext/types";
+import type { CityLocale, CityMapStyle } from "@/cityContext/types";
 
 export const ${cityVar}MapStyle: CityMapStyle = {
   styleUrl: "mapbox://styles/mapbox/streets-v12",
@@ -178,6 +179,8 @@ export const ${cityVar}LayerGroups = [
   "City Landmarks",
   "Hazard Layers",
 ] as const;
+
+export const ${cityVar}SupportedLocales: CityLocale[] = ["en", "ja"];
 
 export const ${cityVar}Layers: CityLayer[] = [];
 `;
@@ -220,7 +223,7 @@ export const ${cityVar}QuestionAdapter: CityQuestionAdapter = {
 `;
 
   const contractTestTs = `import { describe, expect, it } from "vitest";
-import { ${cityVar}Layers, ${cityVar}MapStyle } from "./layers";
+import { ${cityVar}Layers, ${cityVar}MapStyle, ${cityVar}SupportedLocales } from "./layers";
 
 describe("${cityId} layer contracts", () => {
   it("has unique ids and labels", () => {
@@ -233,6 +236,11 @@ describe("${cityId} layer contracts", () => {
 
   it("defines map style contract", () => {
     expect(${cityVar}MapStyle.styleUrl).toBeTruthy();
+  });
+
+  it("defines supported locales for this city", () => {
+    expect(${cityVar}SupportedLocales.length).toBeGreaterThan(0);
+    expect(new Set(${cityVar}SupportedLocales).size).toBe(${cityVar}SupportedLocales.length);
   });
 });
 `;

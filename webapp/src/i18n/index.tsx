@@ -2,8 +2,10 @@ import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import en from "@/assets/locales/en.json";
 import ja from "@/assets/locales/ja.json";
 import { DEFAULT_LOCALE } from "@/config/i18n";
+import { deployedCitySupportedLocales } from "@/cityContext/deployedCity";
+import type { CityLocale } from "@/cityContext/types";
 
-export type Locale = "en" | "ja";
+export type Locale = CityLocale;
 
 type Messages = Record<string, string | Messages>;
 
@@ -49,10 +51,14 @@ const format = (value: string, replacements?: Record<string, string | number>) =
 };
 
 export function I18nProvider({ children }: { children: React.ReactNode }) {
-  // Env-provided default locale is authoritative for initial load.
-  const [defaultLocale, setDefaultLocaleState] = useState<Locale>(DEFAULT_LOCALE);
+  const initialLocale = (deployedCitySupportedLocales.includes(DEFAULT_LOCALE)
+    ? DEFAULT_LOCALE
+    : deployedCitySupportedLocales[0]) as Locale;
 
-  const [locale, setLocaleState] = useState<Locale>(DEFAULT_LOCALE);
+  // Env-provided default locale is authoritative for initial load.
+  const [defaultLocale, setDefaultLocaleState] = useState<Locale>(initialLocale);
+
+  const [locale, setLocaleState] = useState<Locale>(initialLocale);
 
   useEffect(() => {
     if (typeof document !== "undefined") {
@@ -66,12 +72,12 @@ export function I18nProvider({ children }: { children: React.ReactNode }) {
   // Respect env-configured default on mount by syncing state + storage.
   useEffect(() => {
     if (typeof window !== "undefined") {
-      setLocaleState(DEFAULT_LOCALE);
-      setDefaultLocaleState(DEFAULT_LOCALE);
-      window.localStorage.setItem(STORAGE_KEY, DEFAULT_LOCALE);
-      window.localStorage.setItem(STORAGE_DEFAULT_KEY, DEFAULT_LOCALE);
+      setLocaleState(initialLocale);
+      setDefaultLocaleState(initialLocale);
+      window.localStorage.setItem(STORAGE_KEY, initialLocale);
+      window.localStorage.setItem(STORAGE_DEFAULT_KEY, initialLocale);
     }
-  }, []);
+  }, [initialLocale]);
 
   const value = useMemo<I18nContextValue>(() => {
     const t = (key: string, options?: TranslateOptions) => {
@@ -100,6 +106,9 @@ export function I18nProvider({ children }: { children: React.ReactNode }) {
     };
 
     const setLocale = (next: Locale) => {
+      if (!deployedCitySupportedLocales.includes(next)) {
+        return;
+      }
       console.log("[i18n] setLocale called", { next });
       setLocaleState(next);
       if (typeof window !== "undefined") {
@@ -132,4 +141,4 @@ export function useI18n() {
 export const localeOptions: { value: Locale; label: string }[] = [
   { value: "en", label: "English" },
   { value: "ja", label: "日本語" },
-];
+].filter((option) => deployedCitySupportedLocales.includes(option.value));
