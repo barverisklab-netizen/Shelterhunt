@@ -13,6 +13,14 @@ import {
 } from "lucide-react";
 import { POI } from "@/types/game";
 import { deployedCity, deployedCityContext, deployedCityLayers } from "@/cityContext/deployedCity";
+import {
+  cityNearbyQuestionConfig,
+  cityAmenityCategoryMap,
+  cityPoiTypeByQuestionId,
+  getCityPoiTypeLabel,
+  isDesignatedShelterCategory,
+  resolveCityAmenityQuestionId,
+} from "@/cityContext/gameplayConfig";
 import { MAPBOX_CONFIG } from "@/config/mapbox";
 import { MAPBOX_STYLE_URL, PROXIMITY_RADIUS_KM } from "@/config/runtime";
 import mapboxgl from "mapbox-gl";
@@ -109,18 +117,6 @@ const getCityLayerIcon = (layer: (typeof deployedCityLayers)[0]): React.ReactNod
 
   const color = sanitizeToBauhausColor(rawColor);
   return <MapPin className="w-4 h-4" style={{ color }} />;
-};
-
-const AMENITY_CATEGORIES: Record<string, string> = {
-  "Water Station": "waterStation250m",
-  "Hospital": "hospital250m",
-  "AED": "aed250m",
-  "Emergency Supply Storage": "emergencySupplyStorage250m",
-  "Community Center": "communityCenter250m",
-  "Train Station": "trainStation250m",
-  "Shrine/Temple": "shrineTemple250m",
-  "Flood Gate": "floodgate250m",
-  "Bridge": "bridge250m",
 };
 
 const PLAYER_RANGE_SOURCE_ID = "player-range-source";
@@ -422,7 +418,7 @@ export function MapView({
     });
 
     return buildPopupCardHtml([sectionHtml]);
-  }, []);
+  }, [t]);
 
   // Keep filtered view POIs in a dedicated local list.
   useEffect(() => {
@@ -574,12 +570,24 @@ export function MapView({
     amenitiesCallbackRef.current?.({ counts: {}, matchedCategories: [] });
     try {
       console.info("Amenity query center", latestLocationRef.current);
-      const radiusKm = PROXIMITY_RADIUS_KM;
+      const radiusKm = Number(cityNearbyQuestionConfig.radiusKm || PROXIMITY_RADIUS_KM);
       const { counts, matchedCategories, unmatched } = await countAmenitiesWithinRadius(
         { lat: latestLocationRef.current.lat, lng: latestLocationRef.current.lng },
         radiusKm,
-        AMENITY_CATEGORIES,
+        cityAmenityCategoryMap,
       );
+      const matchedQuestionIds = Array.from(
+        new Set(
+          Array.from(matchedCategories)
+            .map((rawCategory) => resolveCityAmenityQuestionId(rawCategory))
+            .filter((value): value is string => Boolean(value)),
+        ),
+      );
+      const matchedLabels = matchedQuestionIds.map((questionId) => {
+        const poiType = cityPoiTypeByQuestionId[questionId];
+        if (!poiType) return questionId;
+        return getCityPoiTypeLabel(poiType, t);
+      });
 
       amenityCountsRef.current = counts;
       console.info("[Amenities] Counts within radius", {
@@ -595,7 +603,7 @@ export function MapView({
       }
       amenitiesCallbackRef.current?.({
         counts,
-        matchedCategories: Array.from(matchedCategories),
+        matchedCategories: matchedLabels,
       });
     } catch (error) {
       amenitiesCallbackRef.current?.({ counts: {}, matchedCategories: [] });
@@ -613,7 +621,7 @@ export function MapView({
       try {
         const allShelters = await getLocalShelters();
         const designated = allShelters.filter(
-          (poi) => poi.category?.toLowerCase() === "designated ec",
+          (poi) => isDesignatedShelterCategory(poi.category),
         );
 
         const options: { id: string; name: string; lat?: number; lng?: number }[] = [];

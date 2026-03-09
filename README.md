@@ -229,7 +229,7 @@ Postgres-specific requirements:
 - `pgcrypto` extension is used (`gen_random_uuid()` in schema).
 - Enum type `session_state` is required.
 - Partial unique index on active sessions is required.
-- JSONB column support is used (`question_attributes.options`).
+- JSONB column support is used (`question_attributes.options`, `shelters.question_answers`).
 
 TLS / connection notes:
 - Hosted DBs should use verified TLS (`sslmode=require`).
@@ -278,6 +278,7 @@ If you want a non-PostgreSQL engine (MySQL, SQLite, MongoDB), code changes are r
    - `webapp/src/cityContext/<id>/context.ts`
    - `webapp/src/cityContext/<id>/layers.ts`
    - `webapp/src/cityContext/<id>/questionAdapter.ts`
+   - `data/city-config/<id>.json` (questionCatalog + poiTypes + nearby mode/matchers)
    - include applicable locales in `layers.ts` via `<city>SupportedLocales`
 4. Create/upgrade target schema.
    ```bash
@@ -289,7 +290,7 @@ If you want a non-PostgreSQL engine (MySQL, SQLite, MongoDB), code changes are r
    ```
 6. Verify seed integrity.
    ```bash
-   npm --prefix data run verify:seed -- --schema=<schema>
+   npm --prefix data run verify:seed -- --city=<id> --schema=<schema>
    ```
 7. Set deployment env:
    - Webapp: `VITE_DEPLOYED_CITY_ID=<id>`, `VITE_MAPBOX_TOKEN`, `VITE_MAPBOX_USERNAME` (if vector layers)
@@ -316,7 +317,7 @@ If you want a non-PostgreSQL engine (MySQL, SQLite, MongoDB), code changes are r
 | Command | Purpose |
 | --- | --- |
 | `npm run export:api` | Pull shelters from API and write GeoJSON |
-| `npm run seed:db` | Upsert shelters from GeoJSON directly into configured schema |
+| `npm run seed:db` | Upsert shelters + `question_attributes` + `question_answers` into configured schema |
 | `npm run build:answers` | Recompute `250m_*` fields from raw map layers |
 | `npm run verify:seed` | Verify shelters + `question_attributes` completeness post-seed |
 
@@ -390,6 +391,7 @@ Key columns:
 - identity: `id`, `code` (unique), `share_code` (unique)
 - location: `latitude`, `longitude`
 - hazard + clue attributes: flood/storm/inland fields, `facility_type`, `shelter_capacity`, `*_250m`
+- canonical dynamic answers: `question_answers` (JSONB keyed by question id)
 
 Used by:
 - API: `GET /shelters`, `GET /shelters/:code`
@@ -449,7 +451,8 @@ Model detail:
 How this table is populated:
 - Created by `api/sql/002_question_attributes.sql`.
 - Seeded/updated by `api/scripts/importShelters.ts` (`npm run seed:shelters`).
-- Seeder builds this table from `ATTRIBUTE_CONFIG` and categorical values found in shelter GeoJSON properties.
+- Seeder builds this table from `data/city-config/<city>.json -> questionCatalog`.
+- For `select` questions, options are derived from observed dataset values.
 - Upsert behavior keeps `id` stable while refreshing labels/kinds/options.
 
 Runtime usage:
@@ -459,7 +462,6 @@ Runtime usage:
 
 Operational note:
 - If `${DB_SCHEMA}.question_attributes` is empty/missing, dynamic question generation in the UI becomes incomplete.
-- `data/scripts/importToSupabase.mjs` does not maintain this table; use `npm --prefix api run seed:shelters` for full game-ready seeding.
 
 ## Data Workflows (`data/` and Seed Scripts)
 
@@ -476,27 +478,14 @@ Operational note:
    - `${DB_SCHEMA}.shelters`
    - `${DB_SCHEMA}.question_attributes`
 
-### Direct DB seed path (lighter)
+### Direct DB seed path
 ```bash
 cd data
 npm run seed:db
 ```
-Warning: `seed:db` is **not** a full gameplay seed.
-- It upserts `${DB_SCHEMA}.shelters` only.
-- It does **not** populate/update `${DB_SCHEMA}.question_attributes`.
-- Result: question metadata can be missing and dynamic question UX can be incomplete/broken.
-
-If you used `seed:db`, do this immediately after:
-1. Ensure migrations are applied:
-   ```bash
-   npm run migrate:api-schema -- --schema=koto
-   ```
-2. Backfill full gameplay metadata with API seeder:
-   ```bash
-   npm run seed:api-shelters -- --city=koto --schema=koto
-   ```
-3. Verify:
-   - `GET /question-attributes` returns non-empty `attributes`.
+`seed:db` now uses the same city-config contract to upsert:
+- `${DB_SCHEMA}.shelters` (including JSONB `question_answers`)
+- `${DB_SCHEMA}.question_attributes`
 
 ### Export current DB/API shelters back to GeoJSON
 ```bash

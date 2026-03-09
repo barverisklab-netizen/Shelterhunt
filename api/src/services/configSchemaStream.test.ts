@@ -3,7 +3,7 @@ import { describe, it } from "node:test";
 
 process.env.DATABASE_URL ??= "postgres://postgres:postgres@localhost:5432/shelterhunt_test";
 process.env.DB_SCHEMA ??= "public";
-process.env.DEPLOYED_CITY_ID ??= "test-city";
+process.env.DEPLOYED_CITY_ID ??= "koto";
 process.env.TASKS_CRON_SECRET ??= "test-cron-secret-12345";
 process.env.JWT_SECRET ??= "test-jwt-secret-12345";
 
@@ -57,11 +57,32 @@ describe("config/schema binding", () => {
     const { pool } = await import("../db/pool.js");
     const { listShelters } = await import("./shelterService.js");
     const { listQuestionAttributes } = await import("./questionAttributeService.js");
+    const { cityQuestionIds } = await import("../config/cityConfig.js");
 
     const capture: QueryCapture = { sqlTexts: [] };
     const originalQuery = pool.query;
     (pool as { query: unknown }).query = (async (queryTextOrConfig: unknown) => {
       captureSql(queryTextOrConfig, capture);
+      const text =
+        typeof queryTextOrConfig === "string"
+          ? queryTextOrConfig
+          : typeof queryTextOrConfig === "object" &&
+              queryTextOrConfig !== null &&
+              "text" in (queryTextOrConfig as Record<string, unknown>) &&
+              typeof (queryTextOrConfig as { text?: unknown }).text === "string"
+            ? (queryTextOrConfig as { text: string }).text
+            : "";
+      if (/from question_attributes/i.test(text)) {
+        return {
+          rows: cityQuestionIds.map((id) => ({
+            id,
+            label: id,
+            kind: "number",
+            options: [],
+          })),
+          rowCount: cityQuestionIds.length,
+        };
+      }
       return { rows: [], rowCount: 0 };
     }) as typeof pool.query;
 

@@ -1,5 +1,5 @@
 export interface QuestionCategory {
-  id: "location" | "facility" | "nearby";
+  id: string;
   name: string;
   description: string;
   icon: string;

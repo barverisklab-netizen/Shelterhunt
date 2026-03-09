@@ -31,8 +31,10 @@ const argMap = parseArgs(process.argv.slice(2));
 const cityId =
   argMap.get("--city") ??
   process.env.DEPLOYED_CITY_ID ??
-  process.env.CITY_ID ??
-  "koto";
+  process.env.CITY_ID;
+if (!cityId) {
+  throw new Error("Missing city id. Provide --city or set DEPLOYED_CITY_ID/CITY_ID.");
+}
 const apiBase = process.env.DATA_API_BASE_URL?.replace(/\/+$/, "") || "http://localhost:4000";
 const outputPath = path.resolve(
   process.env.OUTPUT_PATH ??
@@ -85,6 +87,7 @@ const buildFeatureCollection = (shelters) => {
           flood_duration: item.flood_duration,
           inland_waters_depth_rank: item.inland_waters_depth_rank,
           inland_waters_depth: item.inland_waters_depth,
+          question_answers: item.question_answers ?? {},
         },
       };
     })

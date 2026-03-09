@@ -2,10 +2,8 @@ import distance from "@turf/distance";
 import { point } from "@turf/helpers";
 import { featureEach } from "@turf/meta";
 import type { FeatureCollection, Point as TurfPoint } from "geojson";
-
-import landmarkGeoJsonRaw from "../../../data/geojson/koto/landmark.geojson?raw";
-import supportGeoJsonRaw from "../../../data/geojson/koto/support.geojson?raw";
-import sheltersGeoJsonRaw from "../../../data/geojson/koto/shelters.geojson?raw";
+import { deployedCityQuestionAdapter } from "@/cityContext/deployedCity";
+import { isDesignatedShelterCategory } from "@/cityContext/gameplayConfig";
 
 type AmenityFeature = {
   lat: number;
@@ -19,7 +17,7 @@ type AmenityFeature = {
 
 type NearbyShelterFeature = AmenityFeature & { distanceKm: number };
 
-const DEFAULT_GEOJSON_SOURCES = [landmarkGeoJsonRaw, supportGeoJsonRaw, sheltersGeoJsonRaw];
+const DEFAULT_GEOJSON_URLS = deployedCityQuestionAdapter.proximity.geojsonUrls;
 
 const isFiniteNumber = (value: unknown): value is number =>
   typeof value === "number" && Number.isFinite(value);
@@ -28,6 +26,8 @@ const normalizeText = (value: string | number | null | undefined) =>
   typeof value === "string" || typeof value === "number"
     ? String(value).trim().toLowerCase()
     : "";
+
+const normalizeCategoryKey = (value: string) => value.trim().toLowerCase();
 
 const parseGeoJson = (raw: string): FeatureCollection<TurfPoint> | null => {
   try {
@@ -50,7 +50,8 @@ class ProximityIndex {
   private bucketSizeDeg = 0.005; // ~550m at this latitude
   private buckets = new Map<string, AmenityFeature[]>();
   private loadPromise: Promise<void> | null = null;
-  private rawSources: string[] = DEFAULT_GEOJSON_SOURCES;
+  private rawSourcesForTests: string[] | null = null;
+  private sourceUrls: string[] = DEFAULT_GEOJSON_URLS;
 
   private bucketKey(lat: number, lng: number) {
     const latBucket = Math.floor(lat / this.bucketSizeDeg);
@@ -115,12 +116,32 @@ class ProximityIndex {
     this.loadPromise = null;
   }
 
+  private async loadFromUrls() {
+    const fetchResults = await Promise.all(
+      this.sourceUrls.map(async (url) => {
+        const response = await fetch(url);
+        if (!response.ok) {
+          throw new Error(`Failed to fetch GeoJSON source '${url}' (${response.status})`);
+        }
+        return response.text();
+      }),
+    );
+
+    fetchResults.forEach((raw) => {
+      this.ingestCollection(parseGeoJson(raw));
+    });
+  }
+
   private async ensureLoaded() {
     if (this.loadPromise) return this.loadPromise;
-    this.loadPromise = Promise.resolve().then(() => {
-      this.rawSources.forEach((raw) => {
-        this.ingestCollection(parseGeoJson(raw));
-      });
+    this.loadPromise = Promise.resolve().then(async () => {
+      if (this.rawSourcesForTests) {
+        this.rawSourcesForTests.forEach((raw) => {
+          this.ingestCollection(parseGeoJson(raw));
+        });
+        return;
+      }
+      await this.loadFromUrls();
     });
     return this.loadPromise;
   }
@@ -130,12 +151,13 @@ class ProximityIndex {
   }
 
   setRawSourcesForTests(rawSources: string[]) {
-    this.rawSources = [...rawSources];
+    this.rawSourcesForTests = [...rawSources];
     this.resetBuckets();
   }
 
   restoreDefaultSourcesForTests() {
-    this.rawSources = DEFAULT_GEOJSON_SOURCES;
+    this.rawSourcesForTests = null;
+    this.sourceUrls = [...DEFAULT_GEOJSON_URLS];
     this.resetBuckets();
   }
 
@@ -187,29 +209,8 @@ export const __setProximityIndexRawSourcesForTests = (rawSources: string[]) => {
 export const __resetProximityIndexForTests = () => {
   proximityIndex.restoreDefaultSourcesForTests();
 };
-export const SHELTER_CATEGORY_MAP: Record<string, string> = {
-  "Designated Evacuation Center": "shelter",
-  "Voluntary Evacuation Center": "shelter",
-  "Temporary Evacuation Center": "shelter",
-  "Special Needs Shelter": "shelter",
-  "Evacuation Center": "shelter",
-  "EC": "shelter",
-  "Designated EC": "shelter",
-  "EC/Voluntary EC": "shelter",
-};
 
-const isShelterCategory = (category: string) => {
-  if (!category) return false;
-  if (SHELTER_CATEGORY_MAP[category]) return true;
-  const normalized = category.trim().toLowerCase();
-  return (
-    normalized.includes("evacuation center") ||
-    normalized === "ec" ||
-    normalized.includes("designated ec") ||
-    normalized.includes("voluntary ec") ||
-    normalized.includes("ec/")
-  );
-};
+const isShelterCategory = (category: string) => isDesignatedShelterCategory(category);
 
 export async function countAmenitiesWithinRadius(
   center: { lat: number; lng: number },
@@ -223,7 +224,9 @@ export async function countAmenitiesWithinRadius(
   const matchedCategories = new Set<string>();
 
   features.forEach((feature) => {
-    const key = categoryKeyMap[feature.category];
+    const key =
+      categoryKeyMap[feature.category] ??
+      categoryKeyMap[normalizeCategoryKey(feature.category)];
     if (!key) {
       unmatched[feature.category] = (unmatched[feature.category] ?? 0) + 1;
       return;

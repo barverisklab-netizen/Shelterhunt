@@ -5,19 +5,26 @@ import { kotoQuestionAdapter } from "@/cityContext/koto/questionAdapter";
 
 describe("question assembler", () => {
   const t = (key: string, options?: { fallback?: string }) => options?.fallback ?? key;
+  const allAttributes = kotoQuestionAdapter.questionCatalog.map((item) => ({
+    id: item.id,
+    label: item.label,
+    kind: item.kind,
+    options: item.kind === "select" ? ["School"] : undefined,
+  }));
 
   it("builds facility question using adapter fallback", () => {
     const questions = buildBaseQuestions({
-      attributes: [{ id: "facilityType", label: "Facility Type", kind: "select", options: ["School"] }],
+      attributes: allAttributes,
       solvedQuestions: [],
       adapter: kotoQuestionAdapter,
       t,
-      getSecretAnswer: () => "School",
+      getSecretAnswer: (id) => (id === "facilityType" ? "School" : 1),
     });
 
-    expect(questions).toHaveLength(1);
-    expect(questions[0].category).toBe("facility");
-    expect(questions[0].text).toContain("Facility Type");
+    const facility = questions.find((question) => question.id === "facilityType");
+    expect(facility).toBeTruthy();
+    expect(facility?.category).toBe("facility");
+    expect(facility?.text).toContain("Facility Type");
   });
 
   it("builds nearby amenity question and clue text", () => {
@@ -25,7 +32,7 @@ describe("question assembler", () => {
     expect(nearby.id).toBe("nearbyAmenity");
 
     const clue = buildClueText(
-      { ...nearby, clueTemplate: "There are {param} nearby amenities" },
+      { ...nearby, clueTemplate: "There are {param} nearby amenities", evaluationMode: "atMost" },
       2,
       4,
     );

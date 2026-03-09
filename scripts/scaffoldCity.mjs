@@ -128,6 +128,7 @@ const createCityScaffold = async ({
   const cityVar = toCamel(cityId);
   const cityDir = path.join(ROOT, "webapp/src/cityContext", cityId);
   const dataDir = path.join(ROOT, "data/geojson", cityId);
+  const cityConfigDir = path.join(ROOT, "data/city-config");
 
   const contextTs = `import type { CityContext } from "@/data/cityContext";
 
@@ -186,25 +187,27 @@ export const ${cityVar}Layers: CityLayer[] = [];
 `;
 
   const questionAdapterTs = `import type { CityQuestionAdapter } from "@/cityContext/types";
+import cityConfigRaw from "../../../../data/city-config/${cityId}.json";
+
+const cityConfig = cityConfigRaw as {
+  questionCatalog: CityQuestionAdapter["questionCatalog"];
+  poiTypes: CityQuestionAdapter["poiTypes"];
+  nearbyQuestion: CityQuestionAdapter["nearbyQuestion"];
+  designatedShelter: CityQuestionAdapter["designatedShelter"];
+};
 
 export const ${cityVar}QuestionAdapter: CityQuestionAdapter = {
   translationNamespace: "${cityId}",
-  attributeCategoryMap: {
-    floodDepth: "location",
-    stormSurgeDepth: "location",
-    floodDuration: "location",
-    inlandWatersDepth: "location",
-    facilityType: "facility",
-    shelterCapacity: "facility",
-    waterStation250m: "nearby",
-    hospital250m: "nearby",
-    aed250m: "nearby",
-    emergencySupplyStorage250m: "nearby",
-    communityCenter250m: "nearby",
-    trainStation250m: "nearby",
-    shrineTemple250m: "nearby",
-    floodgate250m: "nearby",
-    bridge250m: "nearby",
+  questionCatalog: cityConfig.questionCatalog,
+  poiTypes: cityConfig.poiTypes,
+  nearbyQuestion: cityConfig.nearbyQuestion,
+  designatedShelter: cityConfig.designatedShelter,
+  proximity: {
+    geojsonUrls: [
+      new URL("../../../../data/geojson/${cityId}/shelters.geojson", import.meta.url).href,
+      new URL("../../../../data/geojson/${cityId}/support.geojson", import.meta.url).href,
+      new URL("../../../../data/geojson/${cityId}/landmark.geojson", import.meta.url).href,
+    ],
   },
   buildQuestionFallback: (attribute) => {
     if (attribute.kind === "number" && attribute.id.endsWith("250m")) {
@@ -220,6 +223,26 @@ export const ${cityVar}QuestionAdapter: CityQuestionAdapter = {
   },
   nearbyAmenityQuestionFallback: "Are there nearby amenities within 250m?",
 };
+`;
+
+  const cityConfigJson = `{
+  "cityId": "${cityId}",
+  "nearbyQuestion": {
+    "mode": "picker",
+    "questionId": "nearbyAmenity",
+    "categoryId": "nearby",
+    "radiusKm": 0.25,
+    "countMin": 0,
+    "countMax": 10,
+    "cooldownScope": "shared"
+  },
+  "designatedShelter": {
+    "categoryMatchers": ["designated evacuation center"],
+    "layerLabelMatchers": ["Designated Evacuation Centers"]
+  },
+  "poiTypes": [],
+  "questionCatalog": []
+}
 `;
 
   const contractTestTs = `import { describe, expect, it } from "vitest";
@@ -257,6 +280,7 @@ describe("${cityId} layer contracts", () => {
     writeIfMissing(path.join(cityDir, "layers.ts"), layersTs, force),
     writeIfMissing(path.join(cityDir, "questionAdapter.ts"), questionAdapterTs, force),
     writeIfMissing(path.join(cityDir, "layers.contract.test.ts"), contractTestTs, force),
+    writeIfMissing(path.join(cityConfigDir, `${cityId}.json`), cityConfigJson, force),
     writeIfMissing(path.join(dataDir, "shelters.geojson"), emptyGeojson, force),
     writeIfMissing(path.join(dataDir, "support.geojson"), emptyGeojson, force),
     writeIfMissing(path.join(dataDir, "landmark.geojson"), emptyGeojson, force),
@@ -290,9 +314,10 @@ const main = async () => {
   console.log("Next steps:");
   console.log(`1) Fill data/geojson/${cityId}/*.geojson with city data.`);
   console.log(`2) Update webapp/src/cityContext/${cityId}/layers.ts with real layer definitions.`);
-  console.log(`3) Update webapp/src/cityContext/${cityId}/questionAdapter.ts as needed.`);
-  console.log(`4) Run data scripts with --city=${cityId} and your target --schema.`);
-  console.log(`5) Set VITE_DEPLOYED_CITY_ID=${cityId}, DEPLOYED_CITY_ID=${cityId}, DB_SCHEMA=<schema>.`);
+  console.log(`3) Populate data/city-config/${cityId}.json with questionCatalog + poiTypes.`);
+  console.log(`4) Update webapp/src/cityContext/${cityId}/questionAdapter.ts as needed.`);
+  console.log(`5) Run data scripts with --city=${cityId} and your target --schema.`);
+  console.log(`6) Set VITE_DEPLOYED_CITY_ID=${cityId}, DEPLOYED_CITY_ID=${cityId}, DB_SCHEMA=<schema>.`);
 };
 
 main().catch((error) => {

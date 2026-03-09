@@ -18,6 +18,11 @@ const isUniqueViolation = (error: unknown): error is { code: string } => {
 };
 
 const normalizeCode = (code: string) => code.trim().toUpperCase();
+const isMissingQuestionAnswersColumnError = (error: unknown) =>
+  typeof error === "object" &&
+  error !== null &&
+  "code" in error &&
+  (error as { code?: unknown }).code === "42703";
 
 async function closeInactiveSessionsForShelter(client: PoolClient, shelterId: string): Promise<string[]> {
   const result = await client.query<{ id: string }>(
@@ -39,8 +44,7 @@ async function closeInactiveSessionsForShelter(client: PoolClient, shelterId: st
 
 async function fetchShelterByShareCode(client: PoolClient, code: string): Promise<ShelterRecord> {
   const normalized = normalizeCode(code);
-  const result = await client.query<ShelterRecord>(
-    `select id,
+  const baseSelect = `select id,
             code,
             share_code,
             external_id,
@@ -71,14 +75,27 @@ async function fetchShelterByShareCode(client: PoolClient, code: string): Promis
             shrine_temple_250m,
             floodgate_250m,
             bridge_250m,
+            question_answers,
             latitude,
             longitude,
             created_at
      from public.shelters
      where share_code = $1
-     limit 1`,
-    [normalized],
+     limit 1`;
+  const fallbackSelect = baseSelect.replace(
+    "question_answers,",
+    "'{}'::jsonb as question_answers,",
   );
+
+  let result;
+  try {
+    result = await client.query<ShelterRecord>(baseSelect, [normalized]);
+  } catch (error) {
+    if (!isMissingQuestionAnswersColumnError(error)) {
+      throw error;
+    }
+    result = await client.query<ShelterRecord>(fallbackSelect, [normalized]);
+  }
 
   const shelter = result.rows[0];
   if (!shelter) {

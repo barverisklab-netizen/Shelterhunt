@@ -1,0 +1,235 @@
+{
+  "cityId": "koto",
+  "nearbyQuestion": {
+    "mode": "picker",
+    "questionId": "nearbyAmenity",
+    "categoryId": "nearby",
+    "radiusKm": 0.25,
+    "countMin": 0,
+    "countMax": 10,
+    "cooldownScope": "shared"
+  },
+  "designatedShelter": {
+    "categoryMatchers": [
+      "designated ec",
+      "designated evacuation center",
+      "evacuation center",
+      "ec"
+    ],
+    "layerLabelMatchers": [
+      "Designated Evacuation Centers"
+    ]
+  },
+  "poiTypes": [
+    {
+      "id": "waterStation",
+      "questionId": "waterStation250m",
+      "rawCategoryMatchers": [
+        "Water Station"
+      ]
+    },
+    {
+      "id": "hospital",
+      "questionId": "hospital250m",
+      "rawCategoryMatchers": [
+        "Hospital"
+      ]
+    },
+    {
+      "id": "aed",
+      "questionId": "aed250m",
+      "rawCategoryMatchers": [
+        "AED"
+      ]
+    },
+    {
+      "id": "emergencySupplyStorage",
+      "questionId": "emergencySupplyStorage250m",
+      "rawCategoryMatchers": [
+        "Emergency Supply Storage"
+      ]
+    },
+    {
+      "id": "communityCenter",
+      "questionId": "communityCenter250m",
+      "rawCategoryMatchers": [
+        "Community Center"
+      ]
+    },
+    {
+      "id": "trainStation",
+      "questionId": "trainStation250m",
+      "rawCategoryMatchers": [
+        "Train Station"
+      ]
+    },
+    {
+      "id": "shrineTemple",
+      "questionId": "shrineTemple250m",
+      "rawCategoryMatchers": [
+        "Shrine/Temple"
+      ]
+    },
+    {
+      "id": "floodgate",
+      "questionId": "floodgate250m",
+      "rawCategoryMatchers": [
+        "Flood Gate"
+      ]
+    },
+    {
+      "id": "bridge",
+      "questionId": "bridge250m",
+      "rawCategoryMatchers": [
+        "Bridge"
+      ]
+    }
+  ],
+  "questionCatalog": [
+    {
+      "id": "floodDepth",
+      "label": "Flood Depth",
+      "kind": "select",
+      "category": "location",
+      "source": "shelter",
+      "evaluation": "equals",
+      "sourceProperty": "Flood_Depth"
+    },
+    {
+      "id": "stormSurgeDepth",
+      "label": "Storm Surge Depth",
+      "kind": "select",
+      "category": "location",
+      "source": "shelter",
+      "evaluation": "equals",
+      "sourceProperty": "StormSurge_Depth"
+    },
+    {
+      "id": "floodDuration",
+      "label": "Flood Duration",
+      "kind": "select",
+      "category": "location",
+      "source": "shelter",
+      "evaluation": "equals",
+      "sourceProperty": "Flood_Duration"
+    },
+    {
+      "id": "inlandWatersDepth",
+      "label": "Inland Waters Depth",
+      "kind": "select",
+      "category": "location",
+      "source": "shelter",
+      "evaluation": "equals",
+      "sourceProperty": "InlandWaters_Depth"
+    },
+    {
+      "id": "facilityType",
+      "label": "Facility Type",
+      "kind": "select",
+      "category": "facility",
+      "source": "shelter",
+      "evaluation": "equals",
+      "sourceProperty": "Facility_Type"
+    },
+    {
+      "id": "shelterCapacity",
+      "label": "Shelter Capacity",
+      "kind": "number",
+      "category": "facility",
+      "source": "shelter",
+      "evaluation": "atMost",
+      "sourceProperty": "Shelter_Capacity",
+      "defaultNumber": 0
+    },
+    {
+      "id": "waterStation250m",
+      "label": "Water Stations within 250m",
+      "kind": "number",
+      "category": "nearby",
+      "source": "nearby",
+      "evaluation": "equals",
+      "sourceProperty": "250m_Water_Station",
+      "defaultNumber": 0
+    },
+    {
+      "id": "hospital250m",
+      "label": "Hospitals within 250m",
+      "kind": "number",
+      "category": "nearby",
+      "source": "nearby",
+      "evaluation": "equals",
+      "sourceProperty": "250m_Hospital",
+      "defaultNumber": 0
+    },
+    {
+      "id": "aed250m",
+      "label": "AEDs within 250m",
+      "kind": "number",
+      "category": "nearby",
+      "source": "nearby",
+      "evaluation": "equals",
+      "sourceProperty": "250m_AED",
+      "defaultNumber": 0
+    },
+    {
+      "id": "emergencySupplyStorage250m",
+      "label": "Emergency Supply Storage within 250m",
+      "kind": "number",
+      "category": "nearby",
+      "source": "nearby",
+      "evaluation": "equals",
+      "sourceProperty": "250m_Emergency_Supply_Storage",
+      "defaultNumber": 0
+    },
+    {
+      "id": "communityCenter250m",
+      "label": "Community Centers within 250m",
+      "kind": "number",
+      "category": "nearby",
+      "source": "nearby",
+      "evaluation": "equals",
+      "sourceProperty": "250m_Community_Center",
+      "defaultNumber": 0
+    },
+    {
+      "id": "trainStation250m",
+      "label": "Train Stations within 250m",
+      "kind": "number",
+      "category": "nearby",
+      "source": "nearby",
+      "evaluation": "equals",
+      "sourceProperty": "250m_Train_Station",
+      "defaultNumber": 0
+    },
+    {
+      "id": "shrineTemple250m",
+      "label": "Shrines/Temples within 250m",
+      "kind": "number",
+      "category": "nearby",
+      "source": "nearby",
+      "evaluation": "equals",
+      "sourceProperty": "250m_Shrine_Temple",
+      "defaultNumber": 0
+    },
+    {
+      "id": "floodgate250m",
+      "label": "Floodgates within 250m",
+      "kind": "number",
+      "category": "nearby",
+      "source": "nearby",
+      "evaluation": "equals",
+      "sourceProperty": "250m_Floodgate",
+      "defaultNumber": 0
+    },
+    {
+      "id": "bridge250m",
+      "label": "Bridges within 250m",
+      "kind": "number",
+      "category": "nearby",
+      "source": "nearby",
+      "evaluation": "equals",
+      "sourceProperty": "250m_Bridge",
+      "defaultNumber": 0
+    }
+  ]
+}

@@ -3,6 +3,7 @@ import type { MutableRefObject } from "react";
 import mapboxgl from "mapbox-gl";
 import { toast } from "sonner@2.0.3";
 import { deployedCity, deployedCityLayers } from "@/cityContext/deployedCity";
+import { isDesignatedShelterLayerLabel } from "@/cityContext/gameplayConfig";
 import { haversineDistanceKm } from "@/utils/lightningSelection";
 import {
   FIXED_MEASURE_RADIUS_METERS,
@@ -43,7 +44,7 @@ interface UseMeasurementToolParams {
 }
 
 const SHELTER_CITY_LAYER_IDS = deployedCityLayers
-  .filter((layer) => /Designated Evacuation Centers/i.test(layer.label))
+  .filter((layer) => isDesignatedShelterLayerLabel(layer.label))
   .map((layer) => `city-layer-${deployedCity.id}-${layer.id}`);
 
 const createDefaultMeasureState = (): MeasureState => ({

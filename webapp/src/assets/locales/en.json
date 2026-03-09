@@ -256,6 +256,85 @@
       "availableCategories": "Available nearby: {categories}",
       "noneWithinRadius": "No amenities within 100m yet."
     },
+    "city": {
+      "koto": {
+        "floodDepth": {
+          "question": "Is the flood depth {param}?",
+          "clue": "Flood depth is {param}"
+        },
+        "stormSurgeDepth": {
+          "question": "Is the storm surge depth {param}?",
+          "clue": "Storm surge depth is {param}"
+        },
+        "floodDuration": {
+          "question": "Is the flood duration {param}?",
+          "clue": "Flood duration is {param}"
+        },
+        "inlandWatersDepth": {
+          "question": "Is the inland waters depth {param}?",
+          "clue": "Inland waters depth is {param}"
+        },
+        "facilityType": {
+          "question": "Is the facility type {param}?",
+          "clue": "Facility type is {param}"
+        },
+        "shelterCapacity": {
+          "question": "Capacity of the shelter is {param}?",
+          "clue": "Shelter capacity is {param}"
+        },
+        "waterStation250m": {
+          "question": "Are there exactly {param} water stations within 250m?",
+          "clue": "There are exactly {param} water stations within 250m"
+        },
+        "hospital250m": {
+          "question": "Are there exactly {param} hospitals within 250m?",
+          "clue": "There are exactly {param} hospitals within 250m"
+        },
+        "aed250m": {
+          "question": "Are there exactly {param} AEDs within 250m?",
+          "clue": "There are exactly {param} AEDs within 250m"
+        },
+        "emergencySupplyStorage250m": {
+          "question": "Are there exactly {param} emergency supply storages within 250m?",
+          "clue": "There are exactly {param} emergency supply storages within 250m"
+        },
+        "communityCenter250m": {
+          "question": "Are there exactly {param} community centers within 250m?",
+          "clue": "There are exactly {param} community centers within 250m"
+        },
+        "trainStation250m": {
+          "question": "Are there exactly {param} train stations within 250m?",
+          "clue": "There are exactly {param} train stations within 250m"
+        },
+        "shrineTemple250m": {
+          "question": "Are there exactly {param} shrines or temples within 250m?",
+          "clue": "There are exactly {param} shrines or temples within 250m"
+        },
+        "floodgate250m": {
+          "question": "Are there exactly {param} floodgates within 250m?",
+          "clue": "There are exactly {param} floodgates within 250m"
+        },
+        "bridge250m": {
+          "question": "Are there exactly {param} bridges within 250m?",
+          "clue": "There are exactly {param} bridges within 250m"
+        },
+        "nearbyAmenity": {
+          "question": "Are there nearby amenities within 250m?",
+          "clue": "There are exactly {param} {amenity} within 250m"
+        },
+        "poiTypes": {
+          "waterStation": { "label": "Water stations" },
+          "hospital": { "label": "Hospitals" },
+          "aed": { "label": "AEDs" },
+          "emergencySupplyStorage": { "label": "Emergency supply storage" },
+          "communityCenter": { "label": "Community centers" },
+          "trainStation": { "label": "Train stations" },
+          "shrineTemple": { "label": "Shrines/Temples" },
+          "floodgate": { "label": "Flood gates" },
+          "bridge": { "label": "Bridges" }
+        }
+      }
+    },
     "dynamic": {
       "floodDepth": {
         "question": "Is the flood depth {param}?",

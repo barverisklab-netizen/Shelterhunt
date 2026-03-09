@@ -6,6 +6,19 @@ import type { ShelterRecord } from "../src/types/shelter.js";
 
 type AttributeKind = "number" | "select";
 
+type CityQuestionDefinition = {
+  id: string;
+  label: string;
+  kind: AttributeKind;
+  sourceProperty?: string;
+  defaultNumber?: number;
+};
+
+type CityConfig = {
+  cityId: string;
+  questionCatalog: CityQuestionDefinition[];
+};
+
 interface QuestionAttributeSeed {
   id: string;
   label: string;
@@ -49,16 +62,21 @@ const parseArgs = (argv: string[]) => {
 };
 
 const argMap = parseArgs(process.argv.slice(2));
-const cityId = (argMap.get("--city") ?? process.env.DEPLOYED_CITY_ID ?? process.env.CITY_ID ?? "koto").trim();
+const cityId = (argMap.get("--city") ?? process.env.DEPLOYED_CITY_ID ?? process.env.CITY_ID ?? "").trim();
+if (!cityId) {
+  throw new Error("Missing city id. Provide --city or set DEPLOYED_CITY_ID/CITY_ID.");
+}
 const schemaName = (argMap.get("--schema") ?? process.env.DB_SCHEMA ?? "public").trim();
 const databaseUrl = process.env.DATABASE_URL;
 const LOCAL_DB_HOSTS = new Set(["", "localhost", "127.0.0.1", "::1"]);
+
 const quoteIdent = (value: string) => {
   if (!/^[A-Za-z_][A-Za-z0-9_]*$/.test(value)) {
     throw new Error(`Invalid schema identifier: ${value}`);
   }
   return `"${value}"`;
 };
+
 const resolvePgConnection = (connectionString: string) => {
   const parsed = new URL(connectionString);
   const hostname = parsed.hostname.toLowerCase();
@@ -98,15 +116,18 @@ const resolvePgConnection = (connectionString: string) => {
 const GEOJSON_CANDIDATE_PATHS = [
   argMap.get("--input"),
   process.env.SHELTER_DATA_PATH,
+  path.resolve(process.cwd(), `data/geojson/${cityId}/shelters.geojson`),
   path.resolve(process.cwd(), `../data/geojson/${cityId}/shelters.geojson`),
   path.resolve(process.cwd(), `assets/${cityId}/shelters.geojson`),
-  // Legacy fallbacks (pre city-folder split)
-  path.resolve(process.cwd(), "../data/geojson/ihi_shelters.geojson"),
-  path.resolve(process.cwd(), "assets/ihi_shelters.geojson"),
 ].filter((value): value is string => Boolean(value));
 
-const resolveGeojsonPath = async (): Promise<string> => {
-  for (const candidate of GEOJSON_CANDIDATE_PATHS) {
+const CITY_CONFIG_CANDIDATE_PATHS = [
+  path.resolve(process.cwd(), `data/city-config/${cityId}.json`),
+  path.resolve(process.cwd(), `../data/city-config/${cityId}.json`),
+];
+
+const resolvePath = async (candidates: string[], description: string): Promise<string> => {
+  for (const candidate of candidates) {
     try {
       await fs.access(candidate);
       return candidate;
@@ -114,14 +135,7 @@ const resolveGeojsonPath = async (): Promise<string> => {
       // continue
     }
   }
-
-  throw new Error(
-    [
-      "GeoJSON file not found.",
-      `Set SHELTER_DATA_PATH or --input to a city dataset (e.g. ../data/geojson/${cityId}/shelters.geojson),`,
-      "or place the file under api/assets/.",
-    ].join(" "),
-  );
+  throw new Error(`${description} not found. Checked: ${candidates.join(", ")}`);
 };
 
 const normalizeText = (value: unknown) => {
@@ -133,70 +147,9 @@ const normalizeText = (value: unknown) => {
 };
 
 const toNumber = (value: unknown) => {
+  if (value === null || value === undefined || value === "") return null;
   const num = typeof value === "number" ? value : Number(value);
   return Number.isFinite(num) ? num : null;
-};
-
-const toNumberOrZero = (value: unknown) => {
-  const num = toNumber(value);
-  return typeof num === "number" ? num : 0;
-};
-
-const ATTRIBUTE_CONFIG: Record<string, { label: string; kind: AttributeKind }> = {
-  floodDepthRank: { label: "Flood Depth Rank", kind: "number" },
-  floodDepth: { label: "Flood Depth", kind: "select" },
-  stormSurgeDepthRank: { label: "Storm Surge Depth Rank", kind: "number" },
-  stormSurgeDepth: { label: "Storm Surge Depth", kind: "select" },
-  floodDurationRank: { label: "Flood Duration Rank", kind: "number" },
-  floodDuration: { label: "Flood Duration", kind: "select" },
-  inlandWatersDepthRank: { label: "Inland Waters Depth Rank", kind: "number" },
-  inlandWatersDepth: { label: "Inland Waters Depth", kind: "select" },
-  facilityType: { label: "Facility Type", kind: "select" },
-  shelterCapacity: { label: "Shelter Capacity", kind: "number" },
-  waterStation250m: { label: "Water Stations within 250m", kind: "number" },
-  hospital250m: { label: "Hospitals within 250m", kind: "number" },
-  aed250m: { label: "AEDs within 250m", kind: "number" },
-  emergencySupplyStorage250m: { label: "Emergency Supply Storage within 250m", kind: "number" },
-  communityCenter250m: { label: "Community Centers within 250m", kind: "number" },
-  trainStation250m: { label: "Train Stations within 250m", kind: "number" },
-  shrineTemple250m: { label: "Shrines/Temples within 250m", kind: "number" },
-  floodgate250m: { label: "Floodgates within 250m", kind: "number" },
-  bridge250m: { label: "Bridges within 250m", kind: "number" },
-};
-
-const initQuestionAttributes = (): Record<string, QuestionAttributeSeed> =>
-  Object.entries(ATTRIBUTE_CONFIG).reduce<Record<string, QuestionAttributeSeed>>(
-    (acc, [id, config]) => {
-      acc[id] = { id, label: config.label, kind: config.kind, options: new Set<string>() };
-      return acc;
-    },
-    {},
-  );
-
-const addSelectOption = (seed: Record<string, QuestionAttributeSeed>, id: string, value: unknown) => {
-  if (!value || typeof value !== "string") return;
-  const normalized = value.trim();
-  if (!normalized) return;
-  seed[id]?.options.add(normalized);
-};
-
-const toBoolean = (value: unknown) => {
-  if (typeof value === "boolean") {
-    return value;
-  }
-  if (typeof value === "number") {
-    return value !== 0;
-  }
-  if (typeof value === "string") {
-    const normalized = value.trim().toLowerCase();
-    if (["true", "t", "yes", "y", "1"].includes(normalized)) {
-      return true;
-    }
-    if (["false", "f", "no", "n", "0"].includes(normalized)) {
-      return false;
-    }
-  }
-  return null;
 };
 
 const generateCode = (source: string, used: Set<string>): string => {
@@ -233,8 +186,60 @@ const generateShareCode = (used: Set<string>) => {
   throw new Error("Failed to generate unique share code");
 };
 
-const parseFeatures = async () => {
-  const geojsonPath = await resolveGeojsonPath();
+const loadCityConfig = async (): Promise<CityConfig> => {
+  const configPath = await resolvePath(CITY_CONFIG_CANDIDATE_PATHS, "City config");
+  const raw = await fs.readFile(configPath, "utf-8");
+  const parsed = JSON.parse(raw) as CityConfig;
+  if (!Array.isArray(parsed.questionCatalog) || !parsed.questionCatalog.length) {
+    throw new Error(`City config '${configPath}' has no questionCatalog entries.`);
+  }
+  return parsed;
+};
+
+const initQuestionAttributes = (
+  questionCatalog: CityQuestionDefinition[],
+): Record<string, QuestionAttributeSeed> =>
+  questionCatalog.reduce<Record<string, QuestionAttributeSeed>>((acc, item) => {
+    acc[item.id] = { id: item.id, label: item.label, kind: item.kind, options: new Set<string>() };
+    return acc;
+  }, {});
+
+const readQuestionValue = (props: Record<string, any>, question: CityQuestionDefinition) => {
+  if (!question.sourceProperty) {
+    return question.kind === "number" ? question.defaultNumber ?? null : null;
+  }
+
+  const rawValue = props[question.sourceProperty];
+  if (question.kind === "select") {
+    return normalizeText(rawValue);
+  }
+
+  const numeric = toNumber(rawValue);
+  if (numeric !== null) return numeric;
+  if (typeof question.defaultNumber === "number") return question.defaultNumber;
+  return null;
+};
+
+const LEGACY_COLUMN_BY_QUESTION_ID: Partial<Record<string, keyof Omit<ShelterRecord, "id" | "created_at">>> = {
+  floodDepth: "flood_depth",
+  stormSurgeDepth: "storm_surge_depth",
+  floodDuration: "flood_duration",
+  inlandWatersDepth: "inland_waters_depth",
+  facilityType: "facility_type",
+  shelterCapacity: "shelter_capacity",
+  waterStation250m: "water_station_250m",
+  hospital250m: "hospital_250m",
+  aed250m: "aed_250m",
+  emergencySupplyStorage250m: "emergency_supply_storage_250m",
+  communityCenter250m: "community_center_250m",
+  trainStation250m: "train_station_250m",
+  shrineTemple250m: "shrine_temple_250m",
+  floodgate250m: "floodgate_250m",
+  bridge250m: "bridge_250m",
+};
+
+const parseFeatures = async (cityConfig: CityConfig) => {
+  const geojsonPath = await resolvePath(GEOJSON_CANDIDATE_PATHS, "GeoJSON file");
   console.log("[Shelters] Using GeoJSON:", geojsonPath);
 
   const raw = await fs.readFile(geojsonPath, "utf-8");
@@ -242,7 +247,7 @@ const parseFeatures = async () => {
   const features = data.features ?? [];
   const usedCodes = new Set<string>();
   const usedShareCodes = new Set<string>();
-  const questionAttributes = initQuestionAttributes();
+  const questionAttributes = initQuestionAttributes(cityConfig.questionCatalog);
 
   const rows = features
     .map((feature, index) => {
@@ -251,7 +256,6 @@ const parseFeatures = async () => {
       let lng = toNumber(coords?.[0]);
       let lat = toNumber(coords?.[1]);
 
-      // Swap if lat/lng reversed
       if (
         typeof coords?.[0] === "number" &&
         typeof coords?.[1] === "number" &&
@@ -303,37 +307,28 @@ const parseFeatures = async () => {
         normalizeText(props["カテゴリ"]) ??
         normalizeText(props["category_jp"]);
       const floodDepthRank = toNumber(props["Flood_Depth_Rank"]);
-      const floodDepth = normalizeText(props["Flood_Depth"]);
       const stormSurgeDepthRank = toNumber(props["StormSurge_Depth_Rank"]);
-      const stormSurgeDepth = normalizeText(props["StormSurge_Depth"]);
       const floodDurationRank = toNumber(props["Flood_Duration_Rank"]);
-      const floodDuration = normalizeText(props["Flood_Duration"]);
       const inlandWatersDepthRank = toNumber(props["InlandWaters_Depth_Rank"]);
-      const inlandWatersDepth = normalizeText(props["InlandWaters_Depth"]);
-      const facilityType = normalizeText(props["Facility_Type"]);
-      const shelterCapacity = toNumber(props["Shelter_Capacity"]);
-      const waterStation250m = toNumberOrZero(props["250m_Water_Station"]);
-      const hospital250m = toNumberOrZero(props["250m_Hospital"]);
-      const aed250m = toNumber(props["250m_AED"]);
-      const emergencySupplyStorage250m = toNumber(props["250m_Emergency_Supply_Storage"]);
-      const communityCenter250m = toNumber(props["250m_Community_Center"]);
-      const trainStation250m = toNumberOrZero(props["250m_Train_Station"]);
-      const shrineTemple250m = toNumber(props["250m_Shrine_Temple"]);
-      const floodgate250m = toNumberOrZero(props["250m_Floodgate"]);
-      const bridge250m = toNumber(props["250m_Bridge"]);
       const codeSource =
         externalId ??
         (typeof sequenceNo === "number" ? `SEQ-${sequenceNo}` : `${lat}-${lng}`);
       const code = generateCode(codeSource, usedCodes);
       const shareCode = generateShareCode(usedShareCodes);
 
-      addSelectOption(questionAttributes, "floodDepth", floodDepth);
-      addSelectOption(questionAttributes, "stormSurgeDepth", stormSurgeDepth);
-      addSelectOption(questionAttributes, "floodDuration", floodDuration);
-      addSelectOption(questionAttributes, "inlandWatersDepth", inlandWatersDepth);
-      addSelectOption(questionAttributes, "facilityType", facilityType);
+      const questionAnswers: Record<string, string | number | boolean | null> = {};
+      cityConfig.questionCatalog.forEach((question) => {
+        const value = readQuestionValue(props, question);
+        if (value === null || value === undefined) {
+          return;
+        }
+        questionAnswers[question.id] = value;
+        if (question.kind === "select" && typeof value === "string") {
+          questionAttributes[question.id]?.options.add(value);
+        }
+      });
 
-      return {
+      const row: Omit<ShelterRecord, "id" | "created_at"> = {
         code,
         share_code: shareCode,
         external_id: externalId,
@@ -346,28 +341,38 @@ const parseFeatures = async () => {
         category,
         category_jp: categoryJp,
         flood_depth_rank: typeof floodDepthRank === "number" ? floodDepthRank : null,
-        flood_depth: floodDepth,
+        flood_depth: null,
         storm_surge_depth_rank: typeof stormSurgeDepthRank === "number" ? stormSurgeDepthRank : null,
-        storm_surge_depth: stormSurgeDepth,
+        storm_surge_depth: null,
         flood_duration_rank: typeof floodDurationRank === "number" ? floodDurationRank : null,
-        flood_duration: floodDuration,
+        flood_duration: null,
         inland_waters_depth_rank: typeof inlandWatersDepthRank === "number" ? inlandWatersDepthRank : null,
-        inland_waters_depth: inlandWatersDepth,
-        facility_type: facilityType,
-        shelter_capacity: typeof shelterCapacity === "number" ? shelterCapacity : 0,
-        water_station_250m: typeof waterStation250m === "number" ? waterStation250m : 0,
-        hospital_250m: typeof hospital250m === "number" ? hospital250m : 0,
-        aed_250m: typeof aed250m === "number" ? aed250m : 0,
-        emergency_supply_storage_250m:
-          typeof emergencySupplyStorage250m === "number" ? emergencySupplyStorage250m : 0,
-        community_center_250m: typeof communityCenter250m === "number" ? communityCenter250m : 0,
-        train_station_250m: typeof trainStation250m === "number" ? trainStation250m : 0,
-        shrine_temple_250m: typeof shrineTemple250m === "number" ? shrineTemple250m : 0,
-        floodgate_250m: typeof floodgate250m === "number" ? floodgate250m : 0,
-        bridge_250m: typeof bridge250m === "number" ? bridge250m : 0,
+        inland_waters_depth: null,
+        facility_type: null,
+        shelter_capacity: 0,
+        water_station_250m: 0,
+        hospital_250m: 0,
+        aed_250m: 0,
+        emergency_supply_storage_250m: 0,
+        community_center_250m: 0,
+        train_station_250m: 0,
+        shrine_temple_250m: 0,
+        floodgate_250m: 0,
+        bridge_250m: 0,
+        question_answers: questionAnswers,
         latitude: Number(lat),
         longitude: Number(lng),
-      } satisfies Omit<ShelterRecord, "id" | "created_at">;
+      };
+
+      cityConfig.questionCatalog.forEach((question) => {
+        const column = LEGACY_COLUMN_BY_QUESTION_ID[question.id];
+        if (!column) return;
+        const value = questionAnswers[question.id];
+        if (value === undefined || value === null) return;
+        (row as any)[column] = value;
+      });
+
+      return row;
     })
     .filter((item): item is Omit<ShelterRecord, "id" | "created_at"> => Boolean(item));
 
@@ -381,7 +386,7 @@ const parseFeatures = async () => {
   return { rows, questionAttributeRows };
 };
 
-const insertShelters = async (client: any, rows: Omit<ShelterRecord, "id" | "created_at">[]) => {
+const insertShelters = async (client: Client, rows: Omit<ShelterRecord, "id" | "created_at">[]) => {
   for (const row of rows) {
     await client.query(
       `insert into shelters
@@ -390,14 +395,14 @@ const insertShelters = async (client: any, rows: Omit<ShelterRecord, "id" | "cre
             flood_duration_rank, flood_duration, inland_waters_depth_rank, inland_waters_depth,
             facility_type, shelter_capacity, water_station_250m, hospital_250m, aed_250m, emergency_supply_storage_250m,
             community_center_250m, train_station_250m, shrine_temple_250m, floodgate_250m, bridge_250m,
-            latitude, longitude)
+            question_answers, latitude, longitude)
          values
            ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11,
             $12, $13, $14, $15,
             $16, $17, $18, $19,
             $20, $21, $22, $23, $24, $25,
             $26, $27, $28, $29, $30,
-            $31, $32)
+            $31, $32, $33)
          on conflict (code) do update set
            share_code = excluded.share_code,
            external_id = excluded.external_id,
@@ -428,48 +433,50 @@ const insertShelters = async (client: any, rows: Omit<ShelterRecord, "id" | "cre
            shrine_temple_250m = excluded.shrine_temple_250m,
            floodgate_250m = excluded.floodgate_250m,
            bridge_250m = excluded.bridge_250m,
+           question_answers = excluded.question_answers,
            latitude = excluded.latitude,
            longitude = excluded.longitude`,
-        [
-          row.code,
-          row.share_code,
-          row.external_id,
-          row.sequence_no,
-          row.name_en,
-          row.name_jp,
-          row.address,
-          row.address_en,
-          row.address_jp,
-          row.category,
-          row.category_jp,
-          row.flood_depth_rank,
-          row.flood_depth,
-          row.storm_surge_depth_rank,
-          row.storm_surge_depth,
-          row.flood_duration_rank,
-          row.flood_duration,
-          row.inland_waters_depth_rank,
-          row.inland_waters_depth,
-          row.facility_type,
-          row.shelter_capacity,
-          row.water_station_250m,
-          row.hospital_250m,
-          row.aed_250m,
-          row.emergency_supply_storage_250m,
-          row.community_center_250m,
-          row.train_station_250m,
-          row.shrine_temple_250m,
-          row.floodgate_250m,
-          row.bridge_250m,
-          row.latitude,
-          row.longitude,
-        ],
-      );
-    }
+      [
+        row.code,
+        row.share_code,
+        row.external_id,
+        row.sequence_no,
+        row.name_en,
+        row.name_jp,
+        row.address,
+        row.address_en,
+        row.address_jp,
+        row.category,
+        row.category_jp,
+        row.flood_depth_rank,
+        row.flood_depth,
+        row.storm_surge_depth_rank,
+        row.storm_surge_depth,
+        row.flood_duration_rank,
+        row.flood_duration,
+        row.inland_waters_depth_rank,
+        row.inland_waters_depth,
+        row.facility_type,
+        row.shelter_capacity,
+        row.water_station_250m,
+        row.hospital_250m,
+        row.aed_250m,
+        row.emergency_supply_storage_250m,
+        row.community_center_250m,
+        row.train_station_250m,
+        row.shrine_temple_250m,
+        row.floodgate_250m,
+        row.bridge_250m,
+        JSON.stringify(row.question_answers ?? {}),
+        row.latitude,
+        row.longitude,
+      ],
+    );
+  }
 };
 
 const upsertQuestionAttributes = async (
-  client: any,
+  client: Client,
   attributes: { id: string; label: string; kind: AttributeKind; options: (string | number)[] }[],
 ) => {
   for (const attribute of attributes) {
@@ -483,6 +490,14 @@ const upsertQuestionAttributes = async (
       [attribute.id, attribute.label, attribute.kind, JSON.stringify(attribute.options ?? [])],
     );
   }
+
+  const keepIds = attributes.map((attribute) => attribute.id);
+  await client.query(
+    `delete from question_attributes
+     where id <> all($1::text[])`,
+    [keepIds],
+  );
+
   console.log(`[Shelters] Upserted ${attributes.length} question attribute definitions`);
 };
 
@@ -491,7 +506,9 @@ async function main() {
     if (!databaseUrl) {
       throw new Error("DATABASE_URL is required.");
     }
-    const { rows, questionAttributeRows } = await parseFeatures();
+
+    const cityConfig = await loadCityConfig();
+    const { rows, questionAttributeRows } = await parseFeatures(cityConfig);
     if (!rows.length) {
       console.log("[Shelters] No rows to insert");
       return;

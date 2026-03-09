@@ -260,6 +260,85 @@
       "availableCategories": "近くにある施設: {categories}",
       "noneWithinRadius": "近くに施設はありません。"
     },
+    "city": {
+      "koto": {
+        "floodDepth": {
+          "question": "洪水浸水深は{param}ですか？",
+          "clue": "洪水浸水深は{param}です"
+        },
+        "stormSurgeDepth": {
+          "question": "高潮深は{param}ですか？",
+          "clue": "高潮深は{param}です"
+        },
+        "floodDuration": {
+          "question": "浸水継続時間は{param}ですか？",
+          "clue": "浸水継続時間は{param}です"
+        },
+        "inlandWatersDepth": {
+          "question": "内水氾濫深は{param}ですか？",
+          "clue": "内水氾濫深は{param}です"
+        },
+        "facilityType": {
+          "question": "施設の種類は{param}ですか？",
+          "clue": "施設の種類は{param}です"
+        },
+        "shelterCapacity": {
+          "question": "収容人数が＿人ですか？",
+          "clue": "収容人数が少なくとも{param}です"
+        },
+        "waterStation250m": {
+          "question": "250m以内に給水所がちょうど{param}か所ありますか？",
+          "clue": "250m以内に給水所がちょうど{param}か所あります"
+        },
+        "hospital250m": {
+          "question": "250m以内に病院がちょうど{param}か所ありますか？",
+          "clue": "250m以内に病院がちょうど{param}か所あります"
+        },
+        "aed250m": {
+          "question": "250m以内にAEDがちょうど{param}台ありますか？",
+          "clue": "250m以内にAEDがちょうど{param}台あります"
+        },
+        "emergencySupplyStorage250m": {
+          "question": "250m以内に防災備蓄倉庫がちょうど{param}か所ありますか？",
+          "clue": "250m以内に防災備蓄倉庫がちょうど{param}か所あります"
+        },
+        "communityCenter250m": {
+          "question": "250m以内にコミュニティセンターがちょうど{param}か所ありますか？",
+          "clue": "250m以内にコミュニティセンターがちょうど{param}か所あります"
+        },
+        "trainStation250m": {
+          "question": "250m以内に駅がちょうど{param}か所ありますか？",
+          "clue": "250m以内に駅がちょうど{param}か所あります"
+        },
+        "shrineTemple250m": {
+          "question": "250m以内に神社・寺院がちょうど{param}か所ありますか？",
+          "clue": "250m以内に神社・寺院がちょうど{param}か所あります"
+        },
+        "floodgate250m": {
+          "question": "250m以内に水門がちょうど{param}か所ありますか？",
+          "clue": "250m以内に水門がちょうど{param}か所あります"
+        },
+        "bridge250m": {
+          "question": "250m以内に橋がちょうど{param}か所ありますか？",
+          "clue": "250m以内に橋がちょうど{param}か所あります"
+        },
+        "nearbyAmenity": {
+          "question": "250m以内の周辺施設について尋ねますか？",
+          "clue": "{amenity}がちょうど{param}か所、250m以内にあります"
+        },
+        "poiTypes": {
+          "waterStation": { "label": "給水所" },
+          "hospital": { "label": "病院" },
+          "aed": { "label": "AED" },
+          "emergencySupplyStorage": { "label": "防災備蓄倉庫" },
+          "communityCenter": { "label": "コミュニティセンター" },
+          "trainStation": { "label": "駅" },
+          "shrineTemple": { "label": "神社・寺院" },
+          "floodgate": { "label": "水門" },
+          "bridge": { "label": "橋" }
+        }
+      }
+    },
     "dynamic": {
       "floodDepth": {
         "question": "洪水浸水深は{param}ですか？",

@@ -32,6 +32,7 @@ export interface Shelter {
   shrineTemple250m: number | null;
   floodgate250m: number | null;
   bridge250m: number | null;
+  questionAnswers: Record<string, string | number | boolean | null>;
   latitude: number;
   longitude: number;
 }
@@ -68,6 +69,7 @@ interface ApiShelter {
   shrine_temple_250m: number | null;
   floodgate_250m: number | null;
   bridge_250m: number | null;
+  question_answers?: Record<string, string | number | boolean | null> | null;
   latitude: number;
   longitude: number;
 }
@@ -107,6 +109,7 @@ const mapShelter = (item: ApiShelter): Shelter => ({
   shrineTemple250m: item.shrine_temple_250m,
   floodgate250m: item.floodgate_250m,
   bridge250m: item.bridge_250m,
+  questionAnswers: item.question_answers ?? {},
   latitude: item.latitude,
   longitude: item.longitude,
 });

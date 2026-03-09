@@ -12,10 +12,11 @@ export interface POI {
 export interface Question {
   id: string;
   text: string;
-  category: "location" | "facility" | "nearby";
+  category: string;
   paramType: "number" | "select";
   options?: (string | number)[];
   requiredPOIType?: string[];
+  evaluationMode?: "equals" | "atMost";
 }
 
 export interface TriviaQuestion {

@@ -29,6 +29,10 @@ interface QuestionDrawerProps {
   nearbyAmenityCategories?: string[];
   solvedNearbyAmenityKeys?: string[];
   nearbyShelterName?: string | null;
+  nearbyAmenityOptions?: { key: string; label: string }[];
+  nearbyCountOptions?: number[];
+  nearbyMode?: "picker" | "per-poi";
+  nearbyPickerQuestionId?: string;
 }
 
 const CATEGORY_ICONS = {
@@ -52,6 +56,10 @@ export function QuestionDrawer({
   nearbyAmenityCategories = [],
   solvedNearbyAmenityKeys = [],
   nearbyShelterName = null,
+  nearbyAmenityOptions = [],
+  nearbyCountOptions = [],
+  nearbyMode = "picker",
+  nearbyPickerQuestionId = "nearbyAmenity",
 }: QuestionDrawerProps) {
   const { t } = useI18n();
   const [selectedParams, setSelectedParams] = useState<
@@ -63,18 +71,10 @@ export function QuestionDrawer({
     count: number | null;
   }>({ amenityKey: null, count: null });
 
-  const AMENITY_OPTIONS: { key: string; label: string }[] = [
-    { key: "waterStation250m", label: t("questions.dynamic.nearbyAmenity.types.waterStation250m", { fallback: "Water stations" }) },
-    { key: "hospital250m", label: t("questions.dynamic.nearbyAmenity.types.hospital250m", { fallback: "Hospitals" }) },
-    { key: "aed250m", label: t("questions.dynamic.nearbyAmenity.types.aed250m", { fallback: "AEDs" }) },
-    { key: "emergencySupplyStorage250m", label: t("questions.dynamic.nearbyAmenity.types.emergencySupplyStorage250m", { fallback: "Emergency supply storage" }) },
-    { key: "communityCenter250m", label: t("questions.dynamic.nearbyAmenity.types.communityCenter250m", { fallback: "Community centers" }) },
-    { key: "trainStation250m", label: t("questions.dynamic.nearbyAmenity.types.trainStation250m", { fallback: "Train stations" }) },
-    { key: "shrineTemple250m", label: t("questions.dynamic.nearbyAmenity.types.shrineTemple250m", { fallback: "Shrines/Temples" }) },
-    { key: "floodgate250m", label: t("questions.dynamic.nearbyAmenity.types.floodgate250m", { fallback: "Flood gates" }) },
-    { key: "bridge250m", label: t("questions.dynamic.nearbyAmenity.types.bridge250m", { fallback: "Bridges" }) },
-  ];
-  const AMENITY_COUNT_OPTIONS = Array.from({ length: 11 }, (_, index) => index);
+  const AMENITY_OPTIONS: { key: string; label: string }[] = nearbyAmenityOptions;
+  const AMENITY_COUNT_OPTIONS = nearbyCountOptions.length
+    ? nearbyCountOptions
+    : Array.from({ length: 11 }, (_, index) => index);
   const currentTime = Date.now();
 
   const translateCategory = (category: QuestionCategory) => {
@@ -122,7 +122,7 @@ export function QuestionDrawer({
     if (!proximityEnabled) {
       return true;
     }
-    if (question.id === "nearbyAmenity") {
+    if (nearbyMode === "picker" && question.id === nearbyPickerQuestionId) {
       return hasAnyAmenityNearby;
     }
     if (question.category === "nearby") {
@@ -247,7 +247,7 @@ export function QuestionDrawer({
                     {t("questions.chooseCategory")}
                   </h3>
                   {availableCategories.map((category, index) => {
-                    const IconComponent = CATEGORY_ICONS[category.id];
+                    const IconComponent = CATEGORY_ICONS[category.id] ?? MapPin;
                     const questionsInCategory = questions.filter(
                       (q) => q.category === category.id,
                     );
@@ -392,7 +392,7 @@ export function QuestionDrawer({
                         </div>
 
                         {/* Parameter Selection */}
-                        {question.id === "nearbyAmenity" ? (
+                        {nearbyMode === "picker" && question.id === nearbyPickerQuestionId ? (
                           <div className="space-y-2">
                             <label className="text-xs font-semibold uppercase text-black/70">
                               {t("questions.nearbyAmenity.selectAmenity", {

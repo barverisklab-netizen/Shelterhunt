@@ -13,6 +13,7 @@ import {
   defaultPlayers,
 } from "@/data/gameContent";
 import { deployedCityContext } from "@/cityContext/deployedCity";
+import { cityQuestionById, isDesignatedShelterCategory } from "@/cityContext/gameplayConfig";
 import {
   LIGHTNING_DURATION_MINUTES,
   LIGHTNING_RADIUS_KM,
@@ -61,14 +62,7 @@ type GameState =
 
 type GameMode = "lightning" | "citywide";
 
-const DESIGNATED_CATEGORY = "designated ec";
 const MULTIPLAYER_DURATION_MINUTES = 60;
-const EXCLUDED_QUESTION_ATTRIBUTE_IDS = new Set([
-  "floodDepthRank",
-  "stormSurgeDepthRank",
-  "floodDurationRank",
-  "inlandWatersDepthRank",
-]);
 const GAME_SNAPSHOT_KEY = "shelterhunt.gameSnapshot.v1";
 const GAMEPLAY_SNAPSHOT_KEY = "shelterhunt.gameplaySnapshot.v1";
 const GAME_SNAPSHOT_VERSION = 1;
@@ -162,7 +156,7 @@ const buildLocalDesignatedShelters = async (
   return shelters
     .filter(
       (poi) =>
-        poi.category?.toLowerCase() === DESIGNATED_CATEGORY &&
+        isDesignatedShelterCategory(poi.category) &&
         Number.isFinite(poi.lat) &&
         Number.isFinite(poi.lng),
     )
@@ -502,9 +496,7 @@ export default function App() {
       .catch((error) => console.warn("[Shelters] Failed to load shelter dataset:", error));
     getQuestionAttributes()
       .then((attributes) =>
-        setQuestionAttributes(
-          attributes.filter((attribute) => !EXCLUDED_QUESTION_ATTRIBUTE_IDS.has(attribute.id)),
-        ),
+        setQuestionAttributes(attributes.filter((attribute) => Boolean(cityQuestionById[attribute.id]))),
       )
       .catch((error) => console.warn("[Questions] Failed to load question attributes:", error));
   }, []);

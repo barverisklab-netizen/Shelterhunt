@@ -7,6 +7,7 @@ const __dirname = path.dirname(__filename);
 
 const ROOT_DIR = path.resolve(__dirname, "..", "..");
 const GEOJSON_DIR = path.join(ROOT_DIR, "data", "geojson");
+const CITY_CONFIG_DIR = path.join(ROOT_DIR, "data", "city-config");
 const parseArgs = (argv) => {
   const map = new Map();
   for (let index = 0; index < argv.length; index += 1) {
@@ -29,28 +30,39 @@ const parseArgs = (argv) => {
 };
 
 const argMap = parseArgs(process.argv.slice(2));
-const CITY_ID = argMap.get("--city") ?? process.env.CITY_ID ?? process.env.DEPLOYED_CITY_ID ?? "koto";
+const CITY_ID = argMap.get("--city") ?? process.env.CITY_ID ?? process.env.DEPLOYED_CITY_ID;
+if (!CITY_ID) {
+  throw new Error("Missing city id. Provide --city or set DEPLOYED_CITY_ID/CITY_ID.");
+}
 const CITY_GEOJSON_DIR = path.join(GEOJSON_DIR, CITY_ID);
+const CITY_CONFIG_PATH = path.join(CITY_CONFIG_DIR, `${CITY_ID}.json`);
 
-const resolvePath = (...candidates) => candidates.find((candidate) => fs.existsSync(candidate)) ?? candidates[0];
+const resolvePath = (description, ...candidates) => {
+  const existing = candidates
+    .filter((candidate) => typeof candidate === "string" && candidate.trim().length > 0)
+    .find((candidate) => fs.existsSync(candidate));
+  if (existing) return existing;
+  throw new Error(
+    `${description} not found. Checked: ${candidates
+      .filter((candidate) => typeof candidate === "string" && candidate.trim().length > 0)
+      .join(", ")}`,
+  );
+};
 
 const SHELTERS_PATH = resolvePath(
+  "Shelters GeoJSON",
   process.env.SHELTERS_PATH ?? "",
   path.join(CITY_GEOJSON_DIR, "shelters.geojson"),
-  // Legacy fallback (pre city-folder split)
-  path.join(GEOJSON_DIR, "ihi_shelters.geojson"),
 );
 const SUPPORT_PATH = resolvePath(
+  "Support GeoJSON",
   process.env.SUPPORT_PATH ?? "",
   path.join(CITY_GEOJSON_DIR, "support.geojson"),
-  // Legacy fallback (pre city-folder split)
-  path.join(GEOJSON_DIR, "ihi_support.geojson"),
 );
 const LANDMARK_PATH = resolvePath(
+  "Landmark GeoJSON",
   process.env.LANDMARK_PATH ?? "",
   path.join(CITY_GEOJSON_DIR, "landmark.geojson"),
-  // Legacy fallback (pre city-folder split)
-  path.join(GEOJSON_DIR, "ihi_landmark.geojson"),
 );
 const OUTPUT_PATH =
   argMap.get("--output") ??
@@ -59,27 +71,7 @@ const OUTPUT_PATH =
     ? path.join(CITY_GEOJSON_DIR, "answers.geojson")
     : path.join(GEOJSON_DIR, `${CITY_ID}_answers.geojson`));
 
-const RADIUS_KM = 0.25;
 const BUCKET_SIZE_DEG = 0.005; // ~550m at this latitude
-
-const CATEGORY_TO_PROPERTY = {
-  "Water Station": "250m_Water_Station",
-  Hospital: "250m_Hospital",
-  AED: "250m_AED",
-  "Emergency Supply Storage": "250m_Emergency_Supply_Storage",
-  "Community Center": "250m_Community_Center",
-  "Train Station": "250m_Train_Station",
-  "Shrine/Temple": "250m_Shrine_Temple",
-  "Flood Gate": "250m_Floodgate",
-  Bridge: "250m_Bridge",
-};
-
-const BOOLEAN_KEYS = new Set([
-  "250m_Water_Station",
-  "250m_Hospital",
-  "250m_Train_Station",
-  "250m_Floodgate",
-]);
 
 const toRadians = (degrees) => (degrees * Math.PI) / 180;
 const haversineKm = (a, b) => {
@@ -105,6 +97,21 @@ const readGeoJson = (filePath) => {
   }
   return parsed;
 };
+
+const loadCityConfig = () => {
+  const configPath = CITY_CONFIG_PATH;
+  if (!fs.existsSync(configPath)) {
+    throw new Error(`Missing city config: ${configPath}`);
+  }
+  const raw = fs.readFileSync(configPath, "utf8");
+  const parsed = JSON.parse(raw);
+  if (!Array.isArray(parsed.questionCatalog) || !Array.isArray(parsed.poiTypes)) {
+    throw new Error(`Invalid city config: ${configPath}`);
+  }
+  return parsed;
+};
+
+const normalizeCategory = (value) => String(value ?? "").trim().toLowerCase();
 
 const bucketKey = (lat, lng) => {
   const latBucket = Math.floor(lat / BUCKET_SIZE_DEG);
@@ -140,9 +147,9 @@ const buildBuckets = (features) => {
   return buckets;
 };
 
-const queryCounts = (center, buckets) => {
+const queryCounts = (center, buckets, radiusKm, categoryToProperty) => {
   const counts = {};
-  const radiusDeg = RADIUS_KM / 111;
+  const radiusDeg = radiusKm / 111;
   const bucketRadius = Math.max(1, Math.ceil(radiusDeg / BUCKET_SIZE_DEG));
   const centerLatBucket = Math.floor(center.lat / BUCKET_SIZE_DEG);
   const centerLngBucket = Math.floor(center.lng / BUCKET_SIZE_DEG);
@@ -153,10 +160,12 @@ const queryCounts = (center, buckets) => {
       const bucket = buckets.get(key);
       if (!bucket) continue;
       for (const feature of bucket) {
-        const propertyKey = CATEGORY_TO_PROPERTY[feature.category];
+        const propertyKey =
+          categoryToProperty[feature.category] ??
+          categoryToProperty[normalizeCategory(feature.category)];
         if (!propertyKey) continue;
         const distKm = haversineKm(center, feature);
-        if (distKm <= RADIUS_KM) {
+        if (distKm <= radiusKm) {
           counts[propertyKey] = (counts[propertyKey] || 0) + 1;
         }
       }
@@ -166,15 +175,30 @@ const queryCounts = (center, buckets) => {
   return counts;
 };
 
-const applyCounts = (properties, counts) => {
-  Object.values(CATEGORY_TO_PROPERTY).forEach((propertyKey) => {
-    const count = counts[propertyKey] || 0;
-    properties[propertyKey] = BOOLEAN_KEYS.has(propertyKey) ? count > 0 : count;
+const applyCounts = (properties, counts, nearbyPropertyKeys) => {
+  nearbyPropertyKeys.forEach((propertyKey) => {
+    properties[propertyKey] = counts[propertyKey] || 0;
   });
 };
 
 const run = () => {
   console.log("[buildAnswers] city:", CITY_ID);
+  const cityConfig = loadCityConfig();
+  const questionById = Object.fromEntries(cityConfig.questionCatalog.map((item) => [item.id, item]));
+  const categoryToProperty = {};
+
+  cityConfig.poiTypes.forEach((poiType) => {
+    const question = questionById[poiType.questionId];
+    if (!question?.sourceProperty) return;
+    poiType.rawCategoryMatchers.forEach((rawCategory) => {
+      categoryToProperty[rawCategory] = question.sourceProperty;
+      categoryToProperty[normalizeCategory(rawCategory)] = question.sourceProperty;
+    });
+  });
+
+  const nearbyPropertyKeys = Array.from(new Set(Object.values(categoryToProperty)));
+  const radiusKm = Number(cityConfig.nearbyQuestion?.radiusKm) || 0.25;
+
   const shelters = readGeoJson(SHELTERS_PATH);
   const support = readGeoJson(SUPPORT_PATH);
   const landmarks = readGeoJson(LANDMARK_PATH);
@@ -192,8 +216,8 @@ const run = () => {
     const [lng, lat] = feature.geometry.coordinates || [];
     if (!isFiniteNumber(lat) || !isFiniteNumber(lng)) continue;
     feature.properties = feature.properties || {};
-    const counts = queryCounts({ lat, lng }, buckets);
-    applyCounts(feature.properties, counts);
+    const counts = queryCounts({ lat, lng }, buckets, radiusKm, categoryToProperty);
+    applyCounts(feature.properties, counts, nearbyPropertyKeys);
   }
 
   fs.writeFileSync(OUTPUT_PATH, JSON.stringify(shelters, null, 2));

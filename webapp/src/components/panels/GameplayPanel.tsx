@@ -252,13 +252,7 @@ export function GameplayPanel({
                                           : clue.category}
                                       </div>
                                       <div>
-                                        {clue.questionId === "nearbyAmenity"
-                                          ? clue.text
-                                          : clue.questionId
-                                            ? t(`questions.dynamic.${clue.questionId}.clue`, {
-                                                fallback: clue.text,
-                                              }).replace("{param}", `${clue.paramValue ?? ""}`)
-                                            : clue.text}
+                                        {clue.text}
                                       </div>
                                   {onFilterByClue && (
                                     <div className="mt-2 flex gap-2">

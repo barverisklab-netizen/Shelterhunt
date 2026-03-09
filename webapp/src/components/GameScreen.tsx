@@ -20,7 +20,14 @@ import {
   type ShelterOption,
   type WrongGuessStage as SharedWrongGuessStage,
 } from "@/types/game";
-import { deployedCityContext, deployedCityQuestionAdapter } from "@/cityContext/deployedCity";
+import { deployedCity, deployedCityContext, deployedCityQuestionAdapter } from "@/cityContext/deployedCity";
+import {
+  cityNearbyQuestionConfig,
+  cityPoiTypes,
+  cityQuestionById,
+  getCityPoiTypeLabel,
+  isDesignatedShelterCategory,
+} from "@/cityContext/gameplayConfig";
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { toast } from "sonner@2.0.3";
 import { useI18n } from "@/i18n";
@@ -41,7 +48,7 @@ import {
   buildNearbyAmenityQuestion,
   type RuntimeQuestion,
 } from "@/features/gameplay/questions/questionAssembler";
-import { buildClueText, isMinCountQuestion } from "@/features/gameplay/questions/clueComposer";
+import { buildClueText, isAtMostQuestion } from "@/features/gameplay/questions/clueComposer";
 import type {
   SnapshotFilterSource,
   SnapshotOutcome,
@@ -135,7 +142,6 @@ export function GameScreen({
   const secretShelterLogRef = useRef<string | null>(null);
   const secretShelterId = secretShelter?.id ?? null;
   const secretShelterRawName = secretShelter?.name ?? null;
-  const DESIGNATED_CATEGORY = "designated ec";
   const normalizeValue = (value: unknown) =>
     typeof value === "number" ? String(value) : String(value ?? "").trim().toLowerCase();
   const hasAnnouncedTestingModeRef = useRef(false);
@@ -340,23 +346,17 @@ export function GameScreen({
     secretShelterCoords,
     t,
   });
-  const attributeValueLookup: Record<string, (shelter: Shelter) => string | number | null> = {
-    floodDepth: (shelter) => shelter.floodDepth,
-    stormSurgeDepth: (shelter) => shelter.stormSurgeDepth,
-    floodDuration: (shelter) => shelter.floodDuration,
-    inlandWatersDepth: (shelter) => shelter.inlandWatersDepth,
-    facilityType: (shelter) => shelter.facilityType,
-    shelterCapacity: (shelter) => shelter.shelterCapacity,
-    waterStation250m: (shelter) => shelter.waterStation250m,
-    hospital250m: (shelter) => shelter.hospital250m,
-    aed250m: (shelter) => shelter.aed250m,
-    emergencySupplyStorage250m: (shelter) => shelter.emergencySupplyStorage250m,
-    communityCenter250m: (shelter) => shelter.communityCenter250m,
-    trainStation250m: (shelter) => shelter.trainStation250m,
-    shrineTemple250m: (shelter) => shelter.shrineTemple250m,
-    floodgate250m: (shelter) => shelter.floodgate250m,
-    bridge250m: (shelter) => shelter.bridge250m,
-  };
+  const getShelterAnswer = useCallback(
+    (shelter: Shelter, questionId: string): string | number | null => {
+      const value = shelter.questionAnswers?.[questionId];
+      if (value === undefined) return null;
+      if (value === null) return null;
+      if (typeof value === "string" || typeof value === "number") return value;
+      if (typeof value === "boolean") return value ? 1 : 0;
+      return null;
+    },
+    [],
+  );
 
   const buildPoiFromShelter = useCallback(
     (shelter: Shelter): POI | null => {
@@ -416,10 +416,8 @@ export function GameScreen({
       return;
     }
 
-    const designatedShelters = shelters.filter(
-      (shelter) =>
-        typeof shelter.category === "string" &&
-        shelter.category.toLowerCase() === DESIGNATED_CATEGORY,
+    const designatedShelters = shelters.filter((shelter) =>
+      isDesignatedShelterCategory(shelter.category),
     );
 
     const baseShelters = designatedShelters.filter((shelter) => {
@@ -429,9 +427,8 @@ export function GameScreen({
 
     const refinedShelters = baseShelters.filter((shelter) => {
       for (const clue of wrongClues) {
-        const extractor = attributeValueLookup[clue.questionId as string];
-        if (!extractor) continue;
-        const value = extractor(shelter as any);
+        const questionId = clue.questionId as string;
+        const value = getShelterAnswer(shelter, questionId);
         if (normalizeValue(value) === normalizeValue(clue.paramValue)) {
           return false;
         }
@@ -462,9 +459,7 @@ export function GameScreen({
 
   const getSecretAnswer = (attributeId: string): string | number | null => {
     if (!secretShelterRecord) return null;
-    const extractor = attributeValueLookup[attributeId];
-    if (!extractor) return null;
-    return extractor(secretShelterRecord);
+    return getShelterAnswer(secretShelterRecord, attributeId);
   };
 
   const baseQuestions: RuntimeQuestion[] = buildBaseQuestions({
@@ -476,6 +471,24 @@ export function GameScreen({
   });
 
   const nearbyAmenityQuestion: Question = buildNearbyAmenityQuestion(t, deployedCityQuestionAdapter);
+  const nearbyPickerQuestionId = deployedCityQuestionAdapter.nearbyQuestion.questionId;
+  const nearbyMode = deployedCityQuestionAdapter.nearbyQuestion.mode;
+  const nearbyCountOptions = useMemo(() => {
+    const { countMin, countMax } = cityNearbyQuestionConfig;
+    const from = Number.isFinite(countMin) ? countMin : 0;
+    const to = Number.isFinite(countMax) ? countMax : 10;
+    const safeFrom = Math.max(0, Math.min(from, to));
+    const safeTo = Math.max(safeFrom, to);
+    return Array.from({ length: safeTo - safeFrom + 1 }, (_, index) => safeFrom + index);
+  }, [cityNearbyQuestionConfig.countMax, cityNearbyQuestionConfig.countMin]);
+  const nearbyAmenityOptions = useMemo(
+    () =>
+      cityPoiTypes.map((poiType) => ({
+        key: poiType.questionId,
+        label: getCityPoiTypeLabel(poiType, t),
+      })),
+    [t],
+  );
 
   const hasNearbyAmenities =
     PROXIMITY_DISABLED_FOR_TESTING ||
@@ -488,9 +501,10 @@ export function GameScreen({
     lastQuestionLocationKey !== null &&
     lastQuestionLocationKey === currentQuestionLocationKey;
 
-  const questions: RuntimeQuestion[] = hasNearbyAmenities
-    ? [...baseQuestions, nearbyAmenityQuestion]
-    : [...baseQuestions];
+  const questions: RuntimeQuestion[] =
+    nearbyMode === "picker" && hasNearbyAmenities
+      ? [...baseQuestions, nearbyAmenityQuestion]
+      : [...baseQuestions];
 
   // Simulate player movement (for demo)
   const simulateMove = useCallback(
@@ -531,7 +545,7 @@ export function GameScreen({
     };
 
     let isCorrect = false;
-    const minCountQuestion = isMinCountQuestion(questionId);
+    const atMostQuestion = isAtMostQuestion(question);
 
     if (question.paramType === "number") {
       const numericGuess = Number(param);
@@ -539,7 +553,7 @@ export function GameScreen({
       isCorrect =
         Number.isFinite(numericGuess) &&
         Number.isFinite(numericExpected) &&
-        (minCountQuestion ? numericGuess <= numericExpected : numericGuess === numericExpected);
+        (atMostQuestion ? numericGuess <= numericExpected : numericGuess === numericExpected);
     } else {
       isCorrect = normalizeVal(param) === normalizeVal(expected);
     }
@@ -810,14 +824,28 @@ export function GameScreen({
       );
       return;
     }
+    const questionMeta = cityQuestionById[amenityKey];
     const expectedNumber = Number(expected);
-    const isCorrect = Number.isFinite(expectedNumber) && expectedNumber === count;
-    const amenityLabel = t(`questions.dynamic.nearbyAmenity.types.${amenityKey}`, {
-      fallback: amenityKey,
-    });
+    const isAtMost = questionMeta?.evaluation === "atMost";
+    const isCorrect = Number.isFinite(expectedNumber)
+      ? (isAtMost ? count <= expectedNumber : expectedNumber === count)
+      : false;
+    const poiType = cityPoiTypes.find((item) => item.questionId === amenityKey);
+    const amenityLabel = poiType
+      ? getCityPoiTypeLabel(poiType, t)
+      : t(`questions.dynamic.nearbyAmenity.types.${amenityKey}`, { fallback: amenityKey });
+    const cityNamespace = deployedCityQuestionAdapter.translationNamespace ?? deployedCity.id;
     const clueText =
+      t(`questions.city.${cityNamespace}.${amenityKey}.clue`, {
+        replacements: { param: count },
+        fallback: "",
+      }) ||
       t(`questions.dynamic.${amenityKey}.clue`, {
         replacements: { param: count },
+        fallback: "",
+      }) ||
+      t(`questions.city.${cityNamespace}.nearbyAmenity.clue`, {
+        replacements: { param: count, amenity: amenityLabel },
         fallback: "",
       }) ||
       t("questions.dynamic.nearbyAmenity.clue", {
@@ -829,8 +857,10 @@ export function GameScreen({
       id: `clue-${Date.now()}`,
       text: clueText,
       answer: isCorrect,
-      category: t("questions.categories.nearby.name", { fallback: "Nearby Amenities" }),
-      categoryId: "nearby",
+      category: t(`questions.categories.${cityNearbyQuestionConfig.categoryId}.name`, {
+        fallback: "Nearby Amenities",
+      }),
+      categoryId: cityNearbyQuestionConfig.categoryId,
       questionId: amenityKey,
       paramValue: count,
       timestamp: Date.now(),
@@ -839,7 +869,7 @@ export function GameScreen({
     setClues((prev) => [...prev, newClue]);
     if (isCorrect) {
       setSolvedQuestions((prev) =>
-        prev.includes("nearbyAmenity") ? prev : [...prev, "nearbyAmenity"],
+        prev.includes(nearbyPickerQuestionId) ? prev : [...prev, nearbyPickerQuestionId],
       );
       setSolvedNearbyAmenityKeys((prev) =>
         prev.includes(amenityKey) ? prev : [...prev, amenityKey],
@@ -852,7 +882,11 @@ export function GameScreen({
         t("questions.incorrect", { fallback: "That clue was incorrect. Try another guess." }),
       );
     }
-    startQuestionCooldown("nearbyAmenity");
+    const cooldownQuestionId =
+      cityNearbyQuestionConfig.cooldownScope === "shared"
+        ? nearbyPickerQuestionId
+        : amenityKey;
+    startQuestionCooldown(cooldownQuestionId);
     if (ONE_QUESTION_PER_LOCATION) {
       setLastQuestionLocationKey(currentQuestionLocationKey);
     }
@@ -1142,6 +1176,10 @@ export function GameScreen({
         nearbyAmenityCounts={nearbyAmenityCounts}
         nearbyAmenityCategories={nearbyAmenityCategories}
         solvedNearbyAmenityKeys={solvedNearbyAmenityKeys}
+        nearbyAmenityOptions={nearbyAmenityOptions}
+        nearbyCountOptions={nearbyCountOptions}
+        nearbyMode={nearbyMode}
+        nearbyPickerQuestionId={nearbyPickerQuestionId}
         proximityEnabled={proximityEnabled}
         questionCooldowns={questionCooldowns}
       />
@@ -1172,9 +1210,9 @@ export function GameScreen({
             return;
           }
 
-          const extractor = attributeValueLookup[id];
-          if (!extractor) {
-            console.warn("[ClueFilter] No extractor for question", { id });
+          const questionMeta = cityQuestionById[id];
+          if (!questionMeta) {
+            console.warn("[ClueFilter] No question metadata for question", { id });
             toast.error(
               t("gameplay.filterUnavailable", {
                 fallback: "Unable to filter map for this clue.",
@@ -1186,10 +1224,8 @@ export function GameScreen({
           const target = normalizeValue(clue.paramValue);
           console.log("[ClueFilter] Target value", { target });
 
-          const designatedShelters = shelters.filter(
-            (shelter) =>
-              typeof shelter.category === "string" &&
-              shelter.category.toLowerCase() === DESIGNATED_CATEGORY,
+          const designatedShelters = shelters.filter((shelter) =>
+            isDesignatedShelterCategory(shelter.category),
           );
 
           const baseShelters =
@@ -1202,7 +1238,7 @@ export function GameScreen({
 
           const matches = baseShelters
             .filter((shelter) => {
-              const value = extractor(shelter as any);
+              const value = getShelterAnswer(shelter, id);
               const match = normalizeValue(value) === target;
               if (match) {
                 console.log("[ClueFilter] Shelter match", {

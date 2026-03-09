@@ -1,23 +1,26 @@
 import type { CityQuestionAdapter } from "@/cityContext/types";
+import { KOTO_GEOJSON_SOURCES } from "@/data/kotoGeojsonSources";
+import kotoCityConfigRaw from "../../../../data/city-config/koto.json";
+
+const kotoCityConfig = kotoCityConfigRaw as {
+  questionCatalog: CityQuestionAdapter["questionCatalog"];
+  poiTypes: CityQuestionAdapter["poiTypes"];
+  nearbyQuestion: CityQuestionAdapter["nearbyQuestion"];
+  designatedShelter: CityQuestionAdapter["designatedShelter"];
+};
 
 export const kotoQuestionAdapter: CityQuestionAdapter = {
   translationNamespace: "koto",
-  attributeCategoryMap: {
-    floodDepth: "location",
-    stormSurgeDepth: "location",
-    floodDuration: "location",
-    inlandWatersDepth: "location",
-    facilityType: "facility",
-    shelterCapacity: "facility",
-    waterStation250m: "nearby",
-    hospital250m: "nearby",
-    aed250m: "nearby",
-    emergencySupplyStorage250m: "nearby",
-    communityCenter250m: "nearby",
-    trainStation250m: "nearby",
-    shrineTemple250m: "nearby",
-    floodgate250m: "nearby",
-    bridge250m: "nearby",
+  questionCatalog: kotoCityConfig.questionCatalog,
+  poiTypes: kotoCityConfig.poiTypes,
+  nearbyQuestion: kotoCityConfig.nearbyQuestion,
+  designatedShelter: kotoCityConfig.designatedShelter,
+  proximity: {
+    geojsonUrls: [
+      KOTO_GEOJSON_SOURCES.shelters,
+      KOTO_GEOJSON_SOURCES.support,
+      KOTO_GEOJSON_SOURCES.landmarks,
+    ],
   },
   buildQuestionFallback: (attribute) => {
     if (attribute.kind === "number" && attribute.id.endsWith("250m")) {

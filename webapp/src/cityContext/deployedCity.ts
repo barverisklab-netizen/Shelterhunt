@@ -86,6 +86,38 @@ if (invalidEnvLocales.length > 0) {
 }
 const citySupportedLocales = resolvedLocales as CityLocale[];
 
+const questionCatalog = resolved.questionAdapter.questionCatalog;
+if (!questionCatalog.length) {
+  throw new Error(`City '${resolved.id}' questionCatalog cannot be empty.`);
+}
+const questionIds = questionCatalog.map((item) => item.id);
+if (new Set(questionIds).size !== questionIds.length) {
+  throw new Error(`City '${resolved.id}' questionCatalog has duplicate question ids.`);
+}
+if (!resolved.questionAdapter.poiTypes.length) {
+  throw new Error(`City '${resolved.id}' must define at least one poiType.`);
+}
+const unknownPoiQuestionIds = resolved.questionAdapter.poiTypes
+  .map((poiType) => poiType.questionId)
+  .filter((questionId) => !questionIds.includes(questionId));
+if (unknownPoiQuestionIds.length > 0) {
+  throw new Error(
+    `City '${resolved.id}' poiTypes reference unknown question ids: ${unknownPoiQuestionIds.join(", ")}`,
+  );
+}
+if (!resolved.questionAdapter.designatedShelter.categoryMatchers.length) {
+  throw new Error(`City '${resolved.id}' must define designatedShelter category matchers.`);
+}
+if (!resolved.questionAdapter.proximity.geojsonUrls.length) {
+  throw new Error(`City '${resolved.id}' must define proximity geojsonUrls.`);
+}
+const nearbyRange = resolved.questionAdapter.nearbyQuestion;
+if (nearbyRange.countMin > nearbyRange.countMax) {
+  throw new Error(
+    `City '${resolved.id}' nearby question countMin cannot be greater than countMax.`,
+  );
+}
+
 export const deployedCity = resolved;
 export const deployedCityContext = resolved.context;
 export const deployedCityLayers = resolved.layers;

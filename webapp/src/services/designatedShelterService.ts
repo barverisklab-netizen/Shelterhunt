@@ -1,6 +1,10 @@
 import type { POI } from "@/types/game";
 import { MAPBOX_CONFIG } from "@/config/mapbox";
 import { deployedCityLayers } from "@/cityContext/deployedCity";
+import {
+  isDesignatedShelterCategory,
+  isDesignatedShelterLayerLabel,
+} from "@/cityContext/gameplayConfig";
 
 interface GeoPoint {
   lat: number;
@@ -37,7 +41,6 @@ export interface ShelterQueryOptions {
   token?: string;
 }
 
-const DESIGNATED_CATEGORY = "Designated EC";
 const DEFAULT_LIMIT = 50;
 
 const deriveShelterName = (props: Record<string, unknown>): string => {
@@ -139,7 +142,7 @@ export class DesignatedShelterService {
             },
           }
         : deployedCityLayers.find((layer) =>
-            /Designated Evacuation Centers/i.test(layer.label),
+            isDesignatedShelterLayerLabel(layer.label),
           );
 
     if (!designatedLayer) {
@@ -192,7 +195,7 @@ export class DesignatedShelterService {
       if (category) {
         categoryHistogram[category] = (categoryHistogram[category] || 0) + 1;
       }
-      if (category !== DESIGNATED_CATEGORY) {
+      if (!isDesignatedShelterCategory(category)) {
         return;
       }
 

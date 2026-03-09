@@ -1,9 +1,5 @@
 export type CityLayerSwatchType = "line" | "fill" | "symbol";
-export type CityLayerGroup =
-  | "Shelters"
-  | "Evacuation Support Facilities"
-  | "City Landmarks"
-  | "Hazard Layers";
+export type CityLayerGroup = string;
 
 export interface CityLayerLegendItem {
   label: string;

@@ -1,19 +1,10 @@
 import type { Question, QuestionAttribute, ShelterAnswerValue } from "@/types/game";
 import type { CityQuestionAdapter } from "@/cityContext/types";
 
-export type RuntimeQuestion = Question & { clueTemplate?: string };
-
-export const NEARBY_AMENITY_IDS = new Set([
-  "waterStation250m",
-  "hospital250m",
-  "aed250m",
-  "emergencySupplyStorage250m",
-  "communityCenter250m",
-  "trainStation250m",
-  "shrineTemple250m",
-  "floodgate250m",
-  "bridge250m",
-]);
+export type RuntimeQuestion = Question & {
+  clueTemplate?: string;
+  source?: "shelter" | "nearby";
+};
 
 interface TranslateFn {
   (key: string, options?: { fallback?: string; replacements?: Record<string, string | number> }): string;
@@ -42,14 +33,36 @@ const resolveTranslation = (
 };
 
 const assertAdapterCoverage = (attributes: QuestionAttribute[], adapter: CityQuestionAdapter) => {
-  const missingCategoryIds = attributes
-    .filter((attribute) => !NEARBY_AMENITY_IDS.has(attribute.id))
-    .map((attribute) => attribute.id)
-    .filter((id) => !adapter.attributeCategoryMap[id]);
+  const catalogById = new Map(adapter.questionCatalog.map((item) => [item.id, item]));
+  const attributeIds = new Set(attributes.map((attribute) => attribute.id));
 
-  if (missingCategoryIds.length > 0) {
+  const missingFromCatalog = attributes
+    .map((attribute) => attribute.id)
+    .filter((id) => !catalogById.has(id));
+
+  if (missingFromCatalog.length > 0) {
     throw new Error(
-      `Missing city question category mappings for: ${missingCategoryIds.join(", ")}`,
+      `Question attributes missing from city question catalog: ${missingFromCatalog.join(", ")}`,
+    );
+  }
+
+  const missingAttributeSeeds = adapter.questionCatalog
+    .map((item) => item.id)
+    .filter((id) => !attributeIds.has(id));
+
+  if (missingAttributeSeeds.length > 0) {
+    throw new Error(
+      `City question catalog ids not seeded in question_attributes: ${missingAttributeSeeds.join(", ")}`,
+    );
+  }
+
+  const catalogIds = new Set(adapter.questionCatalog.map((item) => item.id));
+  const invalidPoiQuestionLinks = adapter.poiTypes
+    .map((poiType) => poiType.questionId)
+    .filter((questionId) => !catalogIds.has(questionId));
+  if (invalidPoiQuestionLinks.length > 0) {
+    throw new Error(
+      `City poiTypes reference unknown question ids: ${invalidPoiQuestionLinks.join(", ")}`,
     );
   }
 };
@@ -90,7 +103,17 @@ export function buildBaseQuestions({
   t,
   getSecretAnswer,
 }: BuildQuestionsParams): RuntimeQuestion[] {
+  if (!attributes.length) {
+    return [];
+  }
   assertAdapterCoverage(attributes, adapter);
+  const catalogById = new Map(adapter.questionCatalog.map((item) => [item.id, item]));
+  const nearbyQuestionIds = new Set(
+    adapter.questionCatalog
+      .filter((item) => item.source === "nearby")
+      .map((item) => item.id),
+  );
+  const shouldUsePicker = adapter.nearbyQuestion.mode === "picker";
 
   return attributes
     .filter((attribute) => !solvedQuestions.includes(attribute.id))
@@ -98,14 +121,23 @@ export function buildBaseQuestions({
       const value = getSecretAnswer(attribute.id);
       return value !== null && value !== undefined;
     })
-    .filter((attribute) => !NEARBY_AMENITY_IDS.has(attribute.id))
+    .filter((attribute) => {
+      if (!shouldUsePicker) return true;
+      return !nearbyQuestionIds.has(attribute.id);
+    })
     .map((attribute) => {
+      const catalogItem = catalogById.get(attribute.id);
+      if (!catalogItem) {
+        throw new Error(`Missing city question catalog entry for attribute '${attribute.id}'`);
+      }
       const { questionText, clueTemplate } = buildQuestionTemplates(attribute, t, adapter);
       return {
         id: attribute.id,
         text: questionText,
         clueTemplate,
-        category: adapter.attributeCategoryMap[attribute.id] ?? "location",
+        source: catalogItem.source,
+        category: catalogItem.category,
+        evaluationMode: catalogItem.evaluation,
         paramType: attribute.kind === "number" ? "number" : "select",
         options: attribute.kind === "select" ? attribute.options : undefined,
       } satisfies RuntimeQuestion;
@@ -115,17 +147,18 @@ export function buildBaseQuestions({
 export function buildNearbyAmenityQuestion(t: TranslateFn, adapter: CityQuestionAdapter): Question {
   const namespace = adapter.translationNamespace?.trim();
   return {
-    id: "nearbyAmenity",
+    id: adapter.nearbyQuestion.questionId,
     text: resolveTranslation(
       t,
       [
-        ...(namespace ? [`questions.city.${namespace}.nearbyAmenity.question`] : []),
+        ...(namespace ? [`questions.city.${namespace}.${adapter.nearbyQuestion.questionId}.question`] : []),
         "questions.dynamic.nearbyAmenity.question",
       ],
       adapter.nearbyAmenityQuestionFallback,
     ),
-    category: "nearby",
+    category: adapter.nearbyQuestion.categoryId,
     paramType: "select",
     options: [],
+    evaluationMode: "equals",
   };
 }

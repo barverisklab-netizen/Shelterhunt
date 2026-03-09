@@ -30,6 +30,7 @@ export interface ShelterRecord {
   shrine_temple_250m: number | null;
   floodgate_250m: number | null;
   bridge_250m: number | null;
+  question_answers: Record<string, string | number | boolean | null>;
   latitude: number;
   longitude: number;
   created_at: string;
