@@ -264,43 +264,91 @@ If you want a non-PostgreSQL engine (MySQL, SQLite, MongoDB), code changes are r
 | `npm run build:api` | Build API |
 | `npm run start:api` | Run built API |
 
-## Minimum Requirements to Add a City
+## City Onboarding Checklist
 
-1. Scaffold city boilerplate.
+Use this sequence for a new city deployment.
+
+1. Pick identifiers.
+   - `CITY_ID`: kebab-case (example `osaka-bay`)
+   - `DB_SCHEMA`: postgres-safe identifier (example `osaka_bay`)
+2. Scaffold city boilerplate.
    ```bash
-   npm run scaffold:city -- --city=<id> --name="City Name" --lat=<centerLat> --lng=<centerLng>
+   npm run scaffold:city -- --city=<city-id> --name="City Name" --lat=<center-lat> --lng=<center-lng>
    ```
-2. Add city datasets in `data/geojson/<id>/`:
-   - `shelters.geojson`
-   - `support.geojson`
-   - `landmark.geojson`
-3. Fill city modules:
-   - `webapp/src/cityContext/<id>/context.ts`
-   - `webapp/src/cityContext/<id>/layers.ts`
-   - `webapp/src/cityContext/<id>/questionAdapter.ts`
-   - `data/city-config/<id>.json` (questionCatalog + poiTypes + nearby mode/matchers)
-   - include applicable locales in `layers.ts` via `<city>SupportedLocales`
-4. Create/upgrade target schema.
+3. Add city datasets under `data/geojson/<city-id>/`:
+   - `shelters.geojson`: all shelter point features with stable identifiers, shelter category/type fields, and question source properties used by city `questionCatalog`.
+   - `support.geojson`: nearby support-service POIs (for example medical, supply, transit, utilities) with point geometry and a usable `Category`-style field for POI matching.
+   - `landmark.geojson`: nearby landmark/infrastructure POIs used by map layers and nearby-question logic, with point geometry and category labels that match `poiTypes.rawCategoryMatchers`.
+4. Fill city map/runtime modules:
+   - `webapp/src/cityContext/<city-id>/context.ts`
+   - `webapp/src/cityContext/<city-id>/layers.ts`
+   - `webapp/src/cityContext/<city-id>/questionAdapter.ts`
+   - ensure `<city>SupportedLocales` is set in `layers.ts` (for example `["en", "ja"]`)
+5. Fill city gameplay contract: `data/city-config/<city-id>.json`
+   - required top-level keys:
+     - `cityId`
+     - `questionCatalog`
+     - `poiTypes`
+     - `nearbyQuestion`
+     - `designatedShelter`
+   - minimal template:
+   ```json
+   {
+     "cityId": "<city-id>",
+     "nearbyQuestion": {
+       "mode": "picker",
+       "questionId": "nearbyAmenity",
+       "categoryId": "nearby",
+       "radiusKm": 0.25,
+       "countMin": 0,
+       "countMax": 10,
+       "cooldownScope": "shared"
+     },
+     "designatedShelter": {
+       "categoryMatchers": ["designated evacuation center", "evacuation center"],
+       "layerLabelMatchers": ["Designated Evacuation Centers"]
+     },
+     "poiTypes": [],
+     "questionCatalog": []
+   }
+   ```
+6. Add locale entries for the city in both files:
+   - `webapp/src/assets/locales/en.json`
+   - `webapp/src/assets/locales/ja.json`
+   - add keys under:
+     - `questions.city.<city-id>.<questionId>.question`
+     - `questions.city.<city-id>.<questionId>.clue`
+     - `questions.city.<city-id>.poiTypes.<poiTypeId>.label`
+7. Create or upgrade schema for the city.
    ```bash
    npm run migrate:api-schema -- --schema=<schema>
    ```
-5. Seed shelters + question attributes for that city/schema.
+8. Seed city data into schema.
    ```bash
-   npm run seed:api-shelters -- --city=<id> --schema=<schema>
+   npm run seed:api-shelters -- --city=<city-id> --schema=<schema>
    ```
-6. Verify seed integrity.
+9. Verify seed integrity.
    ```bash
-   npm --prefix data run verify:seed -- --city=<id> --schema=<schema>
+   npm --prefix data run verify:seed -- --city=<city-id> --schema=<schema>
    ```
-7. Set deployment env:
-   - Webapp: `VITE_DEPLOYED_CITY_ID=<id>`, `VITE_MAPBOX_TOKEN`, `VITE_MAPBOX_USERNAME` (if vector layers)
-   - API: `DEPLOYED_CITY_ID=<id>`, `DB_SCHEMA=<schema>`, `DATABASE_URL`, `JWT_SECRET`, `TASKS_CRON_SECRET`
-8. Run smoke checks:
-   - `GET /health` is `200`
-   - `/shelters` is non-empty
-   - `/question-attributes` is non-empty
-   - map loads and layer toggle works
-   - session stream connects (`/sessions/:id/stream`)
+10. Set env and smoke test.
+   - webapp env:
+     - `VITE_DEPLOYED_CITY_ID=<city-id>`
+     - `VITE_MAPBOX_TOKEN`
+     - `VITE_MAPBOX_USERNAME` (required when vector layers are present)
+   - api env:
+     - `DEPLOYED_CITY_ID=<city-id>`
+     - `DB_SCHEMA=<schema>`
+     - `DATABASE_URL`
+     - `JWT_SECRET`
+     - `TASKS_CRON_SECRET`
+   - smoke checks:
+     - `GET /health` returns `200`
+     - `GET /shelters` returns non-empty dataset
+     - `GET /question-attributes` returns non-empty attributes
+     - map loads and city layer toggles work
+     - lightning mode starts
+     - websocket session stream connects (`/sessions/:id/stream`)
 
 ### API scripts (`api/package.json`)
 | Command | Purpose |

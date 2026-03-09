@@ -1,252 +1,250 @@
-# Per-City Deployment Refactor Plan
+# Refactor Plan (Remaining Work Only)
 
-## Objective
-Support new cities by deploying one city per stack (frontend + API), with city identity fixed at deploy time and data isolated by schema.
+## Scope of This Document
+This file tracks only open items after the city-orchestrated + per-schema refactor baseline.
+Completed work has been intentionally removed.
 
-## Execution Status (Coordinator)
-- [x] Lane A baseline implemented: deployed-city bootstrap + city layers contract + map lifecycle guards.
-- [x] Lane B baseline implemented: modular question runtime + city question adapter + stale-response guards.
-- [x] Lane C implemented: API fail-fast env + schema-bound DB behavior + stream ordering/idempotency safeguards.
-- [x] Lane D implemented: data scripts support city/schema inputs + seed verification script.
-- [x] Lane E baseline implemented: env templates and release workflow aligned to API/webapp build outputs.
-- [ ] Full gate validation pending in CI/local Node environment (`npm`/`node` unavailable in current execution environment).
+## 1. Remaining Workstreams
 
-## Operating Model (New Baseline)
-- Each city has its own domain (or subdomain) and API deployment.
-- Cities share one PostgreSQL instance, with one schema per city.
-- App runtime does not switch cities.
-- City is selected once via environment/config at build/deploy time.
-- UI visuals remain unchanged unless city-owned map/layer style config requires differences.
+### 1.1 Runtime Stability and Regression Hardening
+- Add integration tests that cover full app boot with API + DB under both conditions:
+  - schema includes `shelters.question_answers`
+  - schema missing `shelters.question_answers` (compat fallback path)
+- Add a runtime switch for API behavior when `question_answers` is missing:
+  - `strict` mode: fail startup
+  - `compat` mode: allow fallback with warning
+- Add explicit telemetry/log counters for fallback usage to avoid silent long-term drift.
 
----
+### 1.2 Async and Race Condition Hardening (Frontend)
+- Audit and unify request-cancellation behavior across:
+  - shelters fetch
+  - question attributes fetch
+  - session snapshot refresh
+  - map-driven async lookups
+- Add stale-response guards for all multi-request flows where latest response should win.
+- Add mount/unmount safety checks in long-lived map/gameplay effects to prevent setState-after-unmount.
 
-## Phase 1: Deployment Contract and City Binding
+### 1.3 Session Stream Determinism
+- Add cross-client ordering tests for websocket event streams:
+  - duplicate terminal events
+  - reconnect + replay
+  - out-of-order location updates
+- Validate that client-side dedupe and ordering logic remains deterministic under latency spikes.
+- Add explicit stream contract docs for idempotency and sequence handling.
 
-### [x] RF-DC-01: Deploy-time city contract
-- Define required env variables:
-  - `DEPLOYED_CITY_ID` (required)
-  - `DB_SCHEMA` (required, e.g. `public`, `osaka`, `nagoya`)
-  - `VITE_MAPBOX_TOKEN` (required)
-  - `VITE_MAPBOX_USERNAME` (required when vector tiles are used)
-  - `VITE_MAPBOX_STYLE_URL` (optional override)
-- Fail fast at startup if `DEPLOYED_CITY_ID` is missing/unknown.
-- Ensure frontend and API both bind to the same city id and schema.
+### 1.4 Data Pipeline and Seed Guarantees
+- Add CI job that runs full seed verification for target city/schema:
+  - migrations
+  - seed
+  - verify
+- Add data quality checks for city config and datasets:
+  - every `questionCatalog` id maps to seed output
+  - every `poiType` matcher maps to at least one observed category in fixtures (or explicit allow-empty)
+- Add rollback-safe seed strategy documentation for partially failed seeds.
 
-### [x] RF-DC-02: City module contract
-- Standardize city module shape under `webapp/src/cityContext/<city>/`.
-- Keep one file for map setup per city:
-  - `layers.ts` exports both:
-    - `mapStyle` (style URL + fallback)
-    - `layers` (sources + paint/layout/filter/label/popup)
-- Keep question behavior city-owned via `questionAdapter.ts`.
+### 1.5 Deployment and Release Safety
+- Enforce frontend/API release coupling by version manifest.
+- Add per-city staged rollout procedure with concrete cutover and rollback commands.
+- Add automated smoke gates per deployment:
+  - `/health`
+  - `/shelters`
+  - `/question-attributes`
+  - websocket connect
+  - map layer toggle and nearby question flow
 
----
+## 2. High-Risk Bug and Edge-Case Register
 
-## Phase 2: Frontend Refactor (Single-City Runtime)
+### 2.1 DB / Schema Edge Cases
+- Missing `question_answers` column can silently degrade gameplay if compat fallback remains on.
+- `question_attributes` may be present while `question_answers` values are empty/incomplete.
+- Schema drift between `public` and non-public city schemas can pass health checks but break gameplay logic.
 
-### [x] RF-DC-03: Frontend bootstrap by `DEPLOYED_CITY_ID`
-- Replace `defaultCityContext` assumptions with resolved city config from env.
-- Wire `MapView`, `GameScreen`, Help modal, and map hooks to the deployed city module.
+### 2.2 City Config Contract Edge Cases
+- `poiTypes.rawCategoryMatchers` may fail due to whitespace/case/locale variants not covered by matcher normalization.
+- `nearbyQuestion.countMin/countMax` can be valid syntactically but semantically wrong for city data distribution.
+- `questionCatalog.sourceProperty` mismatches can produce empty answers without immediate UI failure.
 
-### [x] RF-DC-04: Remove runtime city-switch logic
-- Remove/avoid URL/query/lobby city switching paths.
-- Remove multi-city state branching in app shell and gameplay flow.
+### 2.3 Frontend Gameplay Edge Cases
+- In `picker` mode, nearby category options can be visible while counts are stale after location changes.
+- Cooldown behavior can diverge between `shared` and `per-poi` when quick repeated interactions occur.
+- Dynamic categories not present in icon map can cause weak UX if default icon fallback is not consistently applied.
 
-### [x] RF-DC-05: Keep map style + layer lifecycle deterministic
-- Load map style from city `layers.ts -> mapStyle`.
-- Ensure style reload and layer re-attach remain idempotent.
-- Keep source/layer registry checks to avoid duplicate add/remove errors.
-- Add map liveness guards before source/layer operations (`map exists`, `style loaded`, `source not already attached`).
+### 2.4 Map / Layer Edge Cases
+- Rapid style reload + layer toggles can still produce intermittent source/layer timing races.
+- Mixed geojson + vector layer setups can have inconsistent feature availability for measurement/filter flows.
+- Locale-dependent labels in layer metadata can desync from popup content after language changes.
 
-### [x] RF-DC-06: Question runtime modularization (city-owned)
-- Extract question assembly out of `GameScreen` into `features/gameplay/questions/`.
-- Use city `questionAdapter.ts` for:
-  - attribute-to-category mapping
-  - question/clue templates
-  - nearby amenity behavior
-- Keep fallback order explicit:
-  1) city i18n key
-  2) shared i18n key
-  3) generated fallback from `question_attributes.label`
-- Add adapter validation to fail fast when required question ids/templates are missing.
+### 2.5 Session / Multiplayer Edge Cases
+- Reconnect storms can duplicate client-side transition handling (win/lose/finish overlays).
+- Host leave/promote transitions can race with ready/start events under network jitter.
+- Rounded location updates may cause user-visible “stuck” movement and false assumptions in proximity checks.
 
----
+## 3. Test and Validation Matrix (Open)
 
-## Phase 3: API and Data (Per-City Stack)
+### 3.1 Contract Tests
+- City config schema validation per city.
+- Locale key coverage for all city question and POI label keys.
+- Seed output coverage for required question ids.
 
-### [x] RF-DC-07: API city binding (not query filtering)
-- API reads one configured city at startup (`DEPLOYED_CITY_ID`).
-- API rejects requests if deployment city is misconfigured.
-- Do not add/require `city_id` query parameters for normal gameplay routes.
+### 3.2 API/Data Tests
+- Migration compatibility tests across new and existing schemas.
+- Seed idempotency tests with repeated runs.
+- Strict verification that no orphan `question_attributes` exist outside city catalog.
 
-### [x] RF-DC-08: Data pipeline per city
-- Keep city-specific datasets in `data/geojson/<city>/`.
-- Parameterize scripts with `--city` to produce city-owned seed artifacts.
-- Ensure `question_attributes` are generated for that city dataset.
+### 3.3 Frontend Behavior Tests
+- Nearby flow parity for both modes:
+  - `picker`
+  - `per-poi`
+- Question assembly for non-Koto-style POI taxonomies.
+- Clue filtering parity with JSONB answer source.
 
-### [x] RF-DC-09: DB strategy per city
-- One PostgreSQL instance with one schema per city; no `city_id` filtering in gameplay queries.
-- Keep current city in `public` for now (no forced rename); new cities use dedicated schemas.
-- API must use schema-qualified queries or enforced per-connection `search_path` to `DB_SCHEMA`.
-- Maintain schema parity across city schemas via the same migration chain.
-- Clarify seed expectations:
-  - shelter seed only is incomplete
-  - full gameplay requires `question_attributes` seed too.
-- Make seeding idempotent and atomic (transactional upserts + deterministic ordering).
+### 3.4 End-to-End Smoke
+- App boot, layer toggle, ask question, clue filter, guess flow.
+- Multiplayer create/join/ready/start/finish/leave.
+- Recovery after API restart during active client session.
 
----
+## 4. Release Gates (Must Pass)
+- No city config validation warnings in startup logs.
+- No schema fallback warnings in strict deployments.
+- Seed verify passes for deployment city/schema.
+- All smoke checks pass before cutover.
+- Rollback drill executed at least once in staging for current release line.
 
-## Phase 4: Hardening and Failure-Mode Controls
+## 5. Suggested Execution Order
+1. Runtime strict-vs-compat policy for `question_answers` + telemetry.
+2. Async/race hardening in frontend and stream determinism tests.
+3. Data/seed CI enforcement and schema drift checks.
+4. Release coupling, rollout automation, and rollback runbook finalization.
 
-### [ ] RF-DC-14: Frontend async race and stale-state guards
-- Add `AbortController` to cancellable fetches (shelters, attributes, snapshot refresh, designated shelter queries).
-- Ignore stale responses using request ids/version checks before state commits.
-- Prevent setState-after-unmount and stale closure updates in long-running map/gameplay effects.
+## 6. Lane-Based Agent Task Packs
 
-### [ ] RF-DC-15: Websocket/session event ordering hardening
-- Define event ordering/idempotency rules for multiplayer stream events.
-- Ignore duplicate or out-of-order terminal events (`race_finished`, player leave/join bursts).
-- Add heartbeat/backoff policy and deterministic reconnect behavior.
-- Add monotonic server sequence numbers (or timestamps) in stream payloads for client-side ordering guards.
+### Lane A: Frontend Runtime and UX Determinism
+Owner: Frontend engineer(s)
+Primary folders:
+- `webapp/src/components/**`
+- `webapp/src/features/**`
+- `webapp/src/services/**` (frontend-only)
+- `webapp/src/cityContext/**`
 
-### [x] RF-DC-16: Config/schema validation gates
-- Validate city `layers.ts`, `questionAdapter.ts`, and env contract at startup/build.
-- Block deploy when required config is missing (style URL, source ids, mandatory question ids).
-- Add contract tests per city module.
+Scope:
+- Async cancellation and stale-response hardening.
+- Nearby flow parity (`picker`, `per-poi`) and cooldown correctness.
+- Map/layer timing race hardening.
+- Category/icon fallback consistency for dynamic city categories.
 
-### [ ] RF-DC-17: Migration and seed safety
-- Enforce pre-deploy checks:
-  - DB reachable
-  - target schema exists (`DB_SCHEMA`)
-  - migration drift check
-  - seed artifact presence and checksum
-- Run migrations in CI/CD per target schema with rollback playbook per release.
-- Add post-seed verification queries (row counts + required attributes present).
+Tasks:
+- Standardize `AbortController` and request-version guards on all gameplay-critical fetches.
+- Add protection against setState-after-unmount in map/gameplay effects.
+- Add regression tests for:
+  - nearby option availability after rapid location updates
+  - cooldown behavior for `shared` vs `per-poi`
+  - locale switch behavior for layer/popup labels
+- Add a stress test scenario for rapid layer toggle + style reload cycles.
 
-### [ ] RF-DC-18: Deployment safety and rollback
-- Use staged rollout (canary/blue-green) per city deployment.
-- Add smoke gates before traffic cutover:
-  - map loads
-  - shelters endpoint healthy
-  - question attributes endpoint healthy
-  - websocket connects and receives heartbeat
-- Enforce release coupling so frontend and API for a city deploy from the same release manifest/version.
-- Document one-command rollback path and DB restore point strategy.
+Definition of done checklist:
+- [ ] No stale-response state overwrite in tested fetch flows.
+- [ ] No runtime errors during rapid layer toggling/style reload.
+- [ ] Nearby question flows pass for both modes.
+- [ ] Dynamic category rendering works even when icon map lacks explicit category key.
+- [ ] Test coverage added for all modified logic.
 
----
-
-## Phase 5: Delivery and Operations
-
-### [x] RF-DC-10: Environment and secrets templates
-- Create per-city env templates for frontend/API.
-- Include `DEPLOYED_CITY_ID` + `DB_SCHEMA` in API env templates.
-- Keep Mapbox and DB credentials environment-only.
-- No tokens/usernames hardcoded in source.
-
-### [ ] RF-DC-11: Deployment templates per city
-- Add deployment matrix (one job per city) or one pipeline with city parameter.
-- Standardize naming:
-  - frontend app name
-  - API app name
-  - database schema name
-  - domain/subdomain
-
-### [ ] RF-DC-12: CORS/domain/session hardening
-- Configure API CORS per city domain.
-- Ensure websocket/session endpoints use the city deployment domain only.
-
-### [ ] RF-DC-13: Monitoring and runbooks per city
-- Track logs/metrics per city deployment.
-- Add city-specific rollback steps and smoke-check checklist.
-- Add alert thresholds for:
-  - API 5xx rate
-  - websocket disconnect spikes
-  - map/style load failures
-  - seed/migration failures during release.
+Risk checklist:
+- [ ] Verify no accidental visual styling changes.
+- [ ] Verify no Koto-specific constants reintroduced in gameplay logic.
 
 ---
 
-## Parallel Execution Lanes
+### Lane B: API, Schema, and Session Stream Guarantees
+Owner: Backend engineer(s)
+Primary folders:
+- `api/src/**`
+- `api/scripts/**`
+- `api/sql/**`
 
-### Lane A: Frontend Architecture
-- RF-DC-02
-- RF-DC-03
-- RF-DC-04
-- RF-DC-05
-- RF-DC-06
-- RF-DC-14
-- RF-DC-16
+Scope:
+- `question_answers` strict vs compat behavior.
+- Schema drift detection and explicit runtime policy.
+- Session stream ordering/idempotency behavior and tests.
 
-### Lane B: API + Data
-- RF-DC-07
-- RF-DC-08
-- RF-DC-09
-- RF-DC-15
-- RF-DC-17
+Tasks:
+- Add env-driven mode for `question_answers` handling:
+  - strict: fail fast when missing
+  - compat: fallback with warning
+- Add startup/schema checks to report migration drift early.
+- Add stream determinism tests:
+  - duplicate terminal events
+  - reconnect/replay ordering
+  - out-of-order location updates
+- Add structured logs/counters for compat fallback usage.
 
-### Lane C: Platform/DevOps
-- RF-DC-01
-- RF-DC-10
-- RF-DC-11
-- RF-DC-12
-- RF-DC-13
-- RF-DC-18
+Definition of done checklist:
+- [ ] Strict mode blocks startup on missing required schema contract.
+- [ ] Compat mode produces explicit warning/log metric.
+- [ ] Stream determinism tests pass for duplicate/out-of-order/reconnect cases.
+- [ ] `/shelters` and `/question-attributes` stay stable across both modes.
 
-### Lane D: Validation
-- Integration and parity checks after A+B+C complete.
-
----
-
-## Dependency Graph
-
-### Must complete first
-- RF-DC-01 blocks RF-DC-03, RF-DC-07, RF-DC-10.
-- RF-DC-02 blocks RF-DC-03 and RF-DC-05.
-
-### Frontend chain
-- RF-DC-03 blocks RF-DC-04 and RF-DC-06.
-- RF-DC-05 runs with RF-DC-06, then both gate validation.
-- RF-DC-03 and RF-DC-06 block RF-DC-14.
-- RF-DC-02 and RF-DC-06 block RF-DC-16.
-
-### API/Data chain
-- RF-DC-07 and RF-DC-08 block RF-DC-09 completion.
-- RF-DC-07 blocks RF-DC-15.
-- RF-DC-08 and RF-DC-09 block RF-DC-17.
-
-### Platform chain
-- RF-DC-10 blocks RF-DC-11 and RF-DC-12.
-- RF-DC-11 and RF-DC-12 block RF-DC-13 readiness checks.
-- RF-DC-11, RF-DC-12, RF-DC-13, and RF-DC-17 block RF-DC-18.
-
-### Final validation
-- Lane D depends on RF-DC-04, RF-DC-05, RF-DC-06, RF-DC-09, RF-DC-11, RF-DC-12, RF-DC-14, RF-DC-15, RF-DC-16, RF-DC-17, RF-DC-18.
+Risk checklist:
+- [ ] Ensure no cross-schema query leakage.
+- [ ] Ensure fallback path cannot silently persist as default in production.
 
 ---
 
-## QA and Acceptance
+### Lane C: Data Pipeline, CI Gates, and Release Safety
+Owner: Data/DevOps engineer(s)
+Primary folders:
+- `data/**`
+- `.github/workflows/**`
+- root docs/runbooks
 
-### Required checks per city deployment
-- Map loads with city `mapStyle`.
-- Layer toggles render correctly (geojson/vector as configured).
-- Repeated style reload/toggle cycles do not throw map source/layer errors.
-- Questions work for both families:
-  - facility/location attributes from shelters
-  - nearby 250m POI logic
-- Lightning mode selects valid shelters for the city dataset.
-- Multiplayer flows work on that city domain (session + websocket).
-- Session stream tolerates reconnect and ignores duplicate terminal events.
-- Build/startup fails when city config/env contract is incomplete.
-- API cannot read/write outside configured schema.
-- Seed verification passes (`question_attributes` presence + expected row thresholds).
-- No Mapbox token or username hardcoded in source.
+Scope:
+- Seed/migration CI enforcement.
+- Data quality checks for city config and datasets.
+- Per-city deployment smoke/rollback gates.
 
-### Definition of Done
-- New city onboarding requires:
-  - city dataset prep
-  - city config module
-  - schema creation + env + deployment setup
-- No shared-runtime city switching complexity remains in app code.
-- Each city deployment is independently testable, deployable, and rollbackable.
-- Async race/stale response protections are covered by automated tests.
-- Deployment includes canary/smoke gates and documented rollback path.
+Tasks:
+- Add CI job for per-city schema pipeline:
+  - migrate
+  - seed
+  - verify
+- Add quality validation for city-config coverage:
+  - `questionCatalog` completeness
+  - `poiTypes` matcher coverage (with explicit allow-empty rules)
+- Add release gate automation for:
+  - `/health`, `/shelters`, `/question-attributes`, websocket connect
+  - map layer toggle + nearby question smoke
+- Add rollback runbook with exact commands and expected verification outputs.
+
+Definition of done checklist:
+- [ ] CI fails on seed/migration drift and missing city-config coverage.
+- [ ] Release pipeline enforces smoke gate pass before cutover.
+- [ ] Rollback procedure is tested in staging at least once.
+- [ ] Docs updated to match actual command and env behavior.
+
+Risk checklist:
+- [ ] Avoid city fallback defaults in scripts.
+- [ ] Ensure CI matrix uses correct `DEPLOYED_CITY_ID` + `DB_SCHEMA` pairing.
+
+## 7. Cross-Lane Merge Protocol
+
+Branch model:
+- `integration/city-runtime-hardening` as coordinator branch.
+- Lane branches:
+  - `lane/frontend-determinism`
+  - `lane/api-schema-stream-hardening`
+  - `lane/data-ci-release-gates`
+
+Merge order:
+1. Lane B (API strict/compat + stream tests)
+2. Lane C (CI and release gates bound to API behavior)
+3. Lane A (frontend hardening against finalized backend contract)
+
+PR gate checklist (required for every lane):
+- [ ] Scope limited to owned modules.
+- [ ] Tests included and passing for changed behavior.
+- [ ] Risk note and rollback note included in PR description.
+- [ ] No unrelated refactors.
+
+Coordinator integration checklist:
+- [ ] Full smoke pass on integration branch.
+- [ ] No schema fallback warnings in strict test environment.
+- [ ] No unresolved cross-lane contract assumptions.
