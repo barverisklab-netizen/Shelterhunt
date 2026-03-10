@@ -76,6 +76,12 @@ const GAME_SNAPSHOT_VERSION = 1;
 const RESUME_GRACE_MS = 10 * 60 * 1000;
 const MULTIPLAYER_LOCATION_UPDATE_MS = 5_000;
 const MULTIPLAYER_LOCATION_ROUNDING_METERS = 50;
+const PWA_INSTALL_DISMISSED_KEY = "shelterhunt.pwaInstallDismissed.v1";
+
+type DeferredInstallPromptEvent = Event & {
+  prompt: () => Promise<void>;
+  userChoice: Promise<{ outcome: "accepted" | "dismissed"; platform: string }>;
+};
 
 interface GameSnapshot {
   version: number;
@@ -230,6 +236,12 @@ export default function App() {
   const [joinCodeScreenOpen, setJoinCodeScreenOpen] = useState(false);
   const [joinSubmitting, setJoinSubmitting] = useState(false);
   const [joinError, setJoinError] = useState<string | null>(null);
+  const [installPromptOpen, setInstallPromptOpen] = useState(false);
+  const [installPromptPending, setInstallPromptPending] = useState(false);
+  const [installPromptDismissed, setInstallPromptDismissed] = useState(() => {
+    if (typeof window === "undefined") return false;
+    return window.localStorage.getItem(PWA_INSTALL_DISMISSED_KEY) === "1";
+  });
   const defaultNavigatorName = t("app.defaults.navigator", { fallback: "Navigator" });
   const defaultSoloName = t("app.defaults.soloPlayer", { fallback: "Solo Player" });
   const currentPlayerDisplayName = sessionContext
@@ -248,6 +260,7 @@ export default function App() {
   const socketSessionClosedHandlerRef = useRef<() => void>(() => {});
   const socketRaceStartedHandlerRef = useRef<() => void>(() => {});
   const socketRaceFinishedHandlerRef = useRef<(payload: any) => void>(() => {});
+  const deferredInstallPromptRef = useRef<DeferredInstallPromptEvent | null>(null);
   const handleSocketPlayersChanged = useCallback(
     () => socketPlayersChangedHandlerRef.current(),
     [],
@@ -535,6 +548,39 @@ export default function App() {
       document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
   }, []);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const handleBeforeInstallPrompt = (event: Event) => {
+      event.preventDefault();
+      if (installPromptDismissed) {
+        deferredInstallPromptRef.current = null;
+        setInstallPromptOpen(false);
+        return;
+      }
+      deferredInstallPromptRef.current = event as DeferredInstallPromptEvent;
+      setInstallPromptOpen(true);
+    };
+
+    const handleAppInstalled = () => {
+      deferredInstallPromptRef.current = null;
+      setInstallPromptDismissed(false);
+      window.localStorage.removeItem(PWA_INSTALL_DISMISSED_KEY);
+      setInstallPromptOpen(false);
+      setInstallPromptPending(false);
+      toast.success(
+        t("pwaInstall.success", { fallback: "App installed successfully." }),
+      );
+    };
+
+    window.addEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
+    window.addEventListener("appinstalled", handleAppInstalled);
+    return () => {
+      window.removeEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
+      window.removeEventListener("appinstalled", handleAppInstalled);
+    };
+  }, [installPromptDismissed, t]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -1404,6 +1450,39 @@ export default function App() {
     setGameState("onboarding");
   };
 
+  const handleInstallPromptSkip = useCallback(() => {
+    if (typeof window !== "undefined") {
+      window.localStorage.setItem(PWA_INSTALL_DISMISSED_KEY, "1");
+    }
+    setInstallPromptDismissed(true);
+    deferredInstallPromptRef.current = null;
+    setInstallPromptOpen(false);
+  }, []);
+
+  const handleInstallPromptTimeout = useCallback(() => {
+    setInstallPromptOpen(false);
+  }, []);
+
+  const handleInstallPromptConfirm = useCallback(async () => {
+    const deferredEvent = deferredInstallPromptRef.current;
+    if (!deferredEvent) {
+      setInstallPromptOpen(false);
+      return;
+    }
+
+    setInstallPromptPending(true);
+    try {
+      await deferredEvent.prompt();
+      await deferredEvent.userChoice;
+    } catch (error) {
+      console.warn("[PWA] Install prompt failed", error);
+    } finally {
+      deferredInstallPromptRef.current = null;
+      setInstallPromptPending(false);
+      setInstallPromptOpen(false);
+    }
+  }, []);
+
   const handleSelectLightning = async () => {
     if (modeProcessing) return;
     setModeProcessing(true);
@@ -1537,6 +1616,10 @@ export default function App() {
     (joinNameModalOpen || hostSetupModalOpen || joinCodeScreenOpen);
 
   const showLoadingOverlay = modeProcessing || sessionBootstrapLoading;
+  const shouldShowInstallPrompt =
+    installPromptOpen &&
+    !showLoadingOverlay &&
+    gameState !== "playing";
   return (
     <AppShell
       gameState={gameState}
@@ -1575,6 +1658,8 @@ export default function App() {
       joinError={joinError}
       hostShareModalOpen={hostShareModalOpen}
       hostShareCode={hostShareCode}
+      installPromptOpen={shouldShowInstallPrompt}
+      installPromptPending={installPromptPending}
       multiplayerActive={Boolean(sessionContext)}
       onSkipIntro={handleSkipIntro}
       onJoinGameRequest={handleJoinGameRequest}
@@ -1605,6 +1690,9 @@ export default function App() {
         setJoinError(null);
       }}
       onCloseHostShareModal={() => setHostShareModalOpen(false)}
+      onInstallPromptSkip={handleInstallPromptSkip}
+      onInstallPromptTimeout={handleInstallPromptTimeout}
+      onInstallPromptConfirm={handleInstallPromptConfirm}
     />
   );
 }
