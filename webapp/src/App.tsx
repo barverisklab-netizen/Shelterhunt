@@ -40,6 +40,7 @@ import {
   type Shelter,
 } from "./services/shelterDataService";
 import { getQuestionAttributes } from "./services/questionAttributeService";
+import { triggerApiWarmup } from "./services/apiWarmupService";
 import { useI18n } from "./i18n";
 import { AppShell } from "./app/AppShell";
 import {
@@ -497,6 +498,7 @@ export default function App() {
   );
 
   useEffect(() => {
+    triggerApiWarmup();
     getShelters()
       .then(setShelters)
       .catch((error) => console.warn("[Shelters] Failed to load shelter dataset:", error));
@@ -507,6 +509,31 @@ export default function App() {
         ),
       )
       .catch((error) => console.warn("[Questions] Failed to load question attributes:", error));
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === "undefined" || typeof document === "undefined") return;
+
+    const handlePointerDown = () => triggerApiWarmup();
+    const handleKeyDown = () => triggerApiWarmup();
+    const handleFocus = () => triggerApiWarmup();
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        triggerApiWarmup();
+      }
+    };
+
+    window.addEventListener("pointerdown", handlePointerDown, { passive: true });
+    window.addEventListener("keydown", handleKeyDown);
+    window.addEventListener("focus", handleFocus);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    return () => {
+      window.removeEventListener("pointerdown", handlePointerDown);
+      window.removeEventListener("keydown", handleKeyDown);
+      window.removeEventListener("focus", handleFocus);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
   }, []);
 
   useEffect(() => {
