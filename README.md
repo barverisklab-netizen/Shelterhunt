@@ -472,7 +472,6 @@ Checklist:
 Action:
 - Run targeted checks around `GameScreen.tsx`, `MapView.tsx`, and feature hooks in `webapp/src/features/*`.
 
-## CI Note
+## Release Note
 
-`release.yml` currently runs `npm run build` at repo root, but root `package.json` exposes `build:webapp` and `build:api` (not `build`).  
-Align workflow and scripts before relying on release automation.
+Release/deploy is currently handled outside GitHub Actions (for example via Render deploys from branch or manual deploys).
