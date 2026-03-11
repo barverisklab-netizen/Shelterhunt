@@ -17,6 +17,7 @@ This repository contains the full stack:
 8. Data Workflows (`data/` and seed scripts)
 9. Runtime Flows
 10. Troubleshooting
+11. Release & Deployment
 
 ## Repository Overview
 
@@ -25,7 +26,6 @@ This repository contains the full stack:
 | `webapp/` | Browser game runtime, map UI, gameplay/session hooks, API client services |
 | `api/` | Multiplayer/session backend, shelters/question-attributes API, WebSocket stream |
 | `data/` | Source GeoJSON + scripts for export/import and 250m amenity recomputation |
-| `.github/workflows/` | Release workflow |
 
 ## Architecture at a Glance
 
@@ -472,6 +472,58 @@ Checklist:
 Action:
 - Run targeted checks around `GameScreen.tsx`, `MapView.tsx`, and feature hooks in `webapp/src/features/*`.
 
-## Release Note
+## Release & Deployment
 
-Release/deploy is currently handled outside GitHub Actions (for example via Render deploys from branch or manual deploys).
+This project uses semantic versioning (`MAJOR.MINOR.PATCH`) and deploys outside GitHub Actions (for example via Render branch/manual deploys).
+
+### Prerequisites
+- Node.js 20+
+- Clean git working tree (or commit/stash unrelated changes first)
+
+### 1. Decide version type
+- `patch`: bug fixes / small changes (for example `1.0.1` -> `1.0.2`)
+- `minor`: backward-compatible feature release
+- `major`: breaking changes
+
+### 2. Bump package versions (monorepo)
+This repo tracks versions in:
+- root: `package.json` + `package-lock.json`
+- webapp: `webapp/package.json` + `webapp/package-lock.json`
+- api: `api/package.json` + `api/package-lock.json`
+
+Update all three packages consistently for every release.
+
+### 3. Build + smoke test
+```bash
+npm install
+npm run build:webapp
+npm run build:api
+npm run start:api
+```
+
+Then run a quick app smoke test:
+- webapp loads
+- `GET /health` returns `200`
+- `GET /shelters` and `GET /question-attributes` return expected payloads
+- onboarding screen shows the expected version badge
+
+### 4. Commit and tag
+```bash
+git add package.json package-lock.json webapp/package.json webapp/package-lock.json api/package.json api/package-lock.json
+git commit -m "chore: bump patch version"
+git push origin <branch-name>
+git push origin --tags
+```
+
+### 5. Deploy (Render)
+1. If Render auto-deploys from branch: merge/push to the configured branch and wait for deploy completion.
+2. If manual deploy: trigger both frontend and API services in Render dashboard.
+3. Verify runtime:
+- webapp points to the intended API base URL
+- cold-start behavior is acceptable (`/health` wake-up path)
+- multiplayer create/join/start works
+
+### Rollback
+1. Roll back the release in Render (or redeploy previous good commit).
+2. Revert/fix forward in git.
+3. Bump patch version and redeploy.
