@@ -51,6 +51,21 @@
       }
     }
   },
+  "pwaInstall": {
+    "title": "Install Shelterhunt",
+    "subtitle": "Save this app to your home screen for faster access.",
+    "installNow": "Install App",
+    "installing": "Opening...",
+    "success": "App installed successfully."
+  },
+  "pwaInstallIos": {
+    "title": "Install on iPhone",
+    "subtitle": "Add this app to your home screen from Safari.",
+    "step1": "Tap the Share button in Safari.",
+    "step2": "Scroll and choose Add to Home Screen.",
+    "step3": "Tap Add to finish installation.",
+    "gotIt": "Got It"
+  },
   "footer": {
     "madeBy": "Made by",
     "support": "Support from IHI Corporation"

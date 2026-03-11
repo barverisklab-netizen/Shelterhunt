@@ -6,6 +6,7 @@ import { HostShareModal } from "@/components/overlays/HostShareModal";
 import { IntroScreen } from "@/components/IntroScreen";
 import { LanguageToggle } from "@/components/controls/LanguageToggle";
 import { OnboardingScreen } from "@/components/OnboardingScreen";
+import { PwaIosInstallModal } from "@/components/overlays/PwaIosInstallModal";
 import { ProfileNameModal } from "@/components/overlays/ProfileNameModal";
 import { PwaInstallModal } from "@/components/overlays/PwaInstallModal";
 import { SoloModeScreen } from "@/components/SoloModeScreen";
@@ -75,6 +76,7 @@ interface AppShellProps {
   hostShareCode: string | null;
   installPromptOpen: boolean;
   installPromptPending: boolean;
+  iosInstallPromptOpen: boolean;
   multiplayerActive: boolean;
   onSkipIntro: () => void;
   onJoinGameRequest: () => void;
@@ -104,6 +106,9 @@ interface AppShellProps {
   onInstallPromptSkip: () => void;
   onInstallPromptTimeout: () => void;
   onInstallPromptConfirm: () => void;
+  onIosInstallPromptSkip: () => void;
+  onIosInstallPromptTimeout: () => void;
+  onIosInstallPromptAcknowledge: () => void;
 }
 
 export function AppShell({
@@ -145,6 +150,7 @@ export function AppShell({
   hostShareCode,
   installPromptOpen,
   installPromptPending,
+  iosInstallPromptOpen,
   multiplayerActive,
   onSkipIntro,
   onJoinGameRequest,
@@ -174,6 +180,9 @@ export function AppShell({
   onInstallPromptSkip,
   onInstallPromptTimeout,
   onInstallPromptConfirm,
+  onIosInstallPromptSkip,
+  onIosInstallPromptTimeout,
+  onIosInstallPromptAcknowledge,
 }: AppShellProps) {
   const { t } = useI18n();
 
@@ -326,6 +335,13 @@ export function AppShell({
         onSkip={onInstallPromptSkip}
         onTimeoutClose={onInstallPromptTimeout}
         onInstall={onInstallPromptConfirm}
+      />
+
+      <PwaIosInstallModal
+        open={iosInstallPromptOpen}
+        onSkip={onIosInstallPromptSkip}
+        onTimeoutClose={onIosInstallPromptTimeout}
+        onAcknowledge={onIosInstallPromptAcknowledge}
       />
 
       {showLoadingOverlay && (

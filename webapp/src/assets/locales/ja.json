@@ -51,6 +51,21 @@
       }
     }
   },
+  "pwaInstall": {
+    "title": "Shelterhunt をインストール",
+    "subtitle": "ホーム画面に追加して、すぐに開けるようにしましょう。",
+    "installNow": "アプリを追加",
+    "installing": "起動中...",
+    "success": "アプリをインストールしました。"
+  },
+  "pwaInstallIos": {
+    "title": "iPhone に追加",
+    "subtitle": "Safari からホーム画面に追加してください。",
+    "step1": "Safari の共有ボタンをタップします。",
+    "step2": "「ホーム画面に追加」を選択します。",
+    "step3": "「追加」をタップして完了です。",
+    "gotIt": "わかりました"
+  },
   "footer": {
     "madeBy": "制作",
     "support": "協力 株式会社ＩＨＩ"

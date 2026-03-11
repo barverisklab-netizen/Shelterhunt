@@ -77,6 +77,7 @@ const RESUME_GRACE_MS = 10 * 60 * 1000;
 const MULTIPLAYER_LOCATION_UPDATE_MS = 5_000;
 const MULTIPLAYER_LOCATION_ROUNDING_METERS = 50;
 const PWA_INSTALL_DISMISSED_KEY = "shelterhunt.pwaInstallDismissed.v1";
+const PWA_IOS_INSTALL_DISMISSED_KEY = "shelterhunt.pwaIosInstallDismissed.v1";
 
 type DeferredInstallPromptEvent = Event & {
   prompt: () => Promise<void>;
@@ -143,6 +144,21 @@ const roundLocationToGrid = (location: LatLng, meters = MULTIPLAYER_LOCATION_ROU
     lat: Number(lat.toFixed(6)),
     lng: Number(lng.toFixed(6)),
   };
+};
+
+const shouldShowIosInstallHint = (): boolean => {
+  if (typeof window === "undefined") return false;
+  const { userAgent, platform, maxTouchPoints } = window.navigator;
+  const isIosDevice =
+    /iPad|iPhone|iPod/i.test(userAgent) ||
+    (platform === "MacIntel" && maxTouchPoints > 1);
+  const isSafari =
+    /Safari/i.test(userAgent) &&
+    !/CriOS|FxiOS|OPiOS|EdgiOS|YaBrowser|DuckDuckGo/i.test(userAgent);
+  const isStandalone =
+    window.matchMedia?.("(display-mode: standalone)")?.matches === true ||
+    (window.navigator as Navigator & { standalone?: boolean }).standalone === true;
+  return isIosDevice && isSafari && !isStandalone;
 };
 
 const buildLocalDesignatedShelters = async (
@@ -238,9 +254,14 @@ export default function App() {
   const [joinError, setJoinError] = useState<string | null>(null);
   const [installPromptOpen, setInstallPromptOpen] = useState(false);
   const [installPromptPending, setInstallPromptPending] = useState(false);
+  const [iosInstallPromptOpen, setIosInstallPromptOpen] = useState(false);
   const [installPromptDismissed, setInstallPromptDismissed] = useState(() => {
     if (typeof window === "undefined") return false;
     return window.localStorage.getItem(PWA_INSTALL_DISMISSED_KEY) === "1";
+  });
+  const [iosInstallPromptDismissed, setIosInstallPromptDismissed] = useState(() => {
+    if (typeof window === "undefined") return false;
+    return window.localStorage.getItem(PWA_IOS_INSTALL_DISMISSED_KEY) === "1";
   });
   const defaultNavigatorName = t("app.defaults.navigator", { fallback: "Navigator" });
   const defaultSoloName = t("app.defaults.soloPlayer", { fallback: "Solo Player" });
@@ -581,6 +602,18 @@ export default function App() {
       window.removeEventListener("appinstalled", handleAppInstalled);
     };
   }, [installPromptDismissed, t]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (iosInstallPromptDismissed) return;
+    if (!shouldShowIosInstallHint()) return;
+    const timeoutId = window.setTimeout(() => {
+      setIosInstallPromptOpen(true);
+    }, 1500);
+    return () => {
+      window.clearTimeout(timeoutId);
+    };
+  }, [iosInstallPromptDismissed]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -1483,6 +1516,22 @@ export default function App() {
     }
   }, []);
 
+  const handleIosInstallPromptSkip = useCallback(() => {
+    if (typeof window !== "undefined") {
+      window.localStorage.setItem(PWA_IOS_INSTALL_DISMISSED_KEY, "1");
+    }
+    setIosInstallPromptDismissed(true);
+    setIosInstallPromptOpen(false);
+  }, []);
+
+  const handleIosInstallPromptTimeout = useCallback(() => {
+    setIosInstallPromptOpen(false);
+  }, []);
+
+  const handleIosInstallPromptAcknowledge = useCallback(() => {
+    setIosInstallPromptOpen(false);
+  }, []);
+
   const handleSelectLightning = async () => {
     if (modeProcessing) return;
     setModeProcessing(true);
@@ -1620,6 +1669,11 @@ export default function App() {
     installPromptOpen &&
     !showLoadingOverlay &&
     gameState !== "playing";
+  const shouldShowIosInstallPrompt =
+    iosInstallPromptOpen &&
+    !showLoadingOverlay &&
+    gameState !== "playing" &&
+    !shouldShowInstallPrompt;
   return (
     <AppShell
       gameState={gameState}
@@ -1660,6 +1714,7 @@ export default function App() {
       hostShareCode={hostShareCode}
       installPromptOpen={shouldShowInstallPrompt}
       installPromptPending={installPromptPending}
+      iosInstallPromptOpen={shouldShowIosInstallPrompt}
       multiplayerActive={Boolean(sessionContext)}
       onSkipIntro={handleSkipIntro}
       onJoinGameRequest={handleJoinGameRequest}
@@ -1693,6 +1748,9 @@ export default function App() {
       onInstallPromptSkip={handleInstallPromptSkip}
       onInstallPromptTimeout={handleInstallPromptTimeout}
       onInstallPromptConfirm={handleInstallPromptConfirm}
+      onIosInstallPromptSkip={handleIosInstallPromptSkip}
+      onIosInstallPromptTimeout={handleIosInstallPromptTimeout}
+      onIosInstallPromptAcknowledge={handleIosInstallPromptAcknowledge}
     />
   );
 }
