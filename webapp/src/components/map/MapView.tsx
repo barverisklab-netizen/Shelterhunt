@@ -216,6 +216,7 @@ export function MapView({
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
   const geolocateControl = useRef<mapboxgl.GeolocateControl | null>(null);
+  const playerLocationMarkerRef = useRef<mapboxgl.Marker | null>(null);
   const infoPopup = useRef<mapboxgl.Popup | null>(null);
   const otherPlayerMarkersRef = useRef<Record<string, mapboxgl.Marker>>({});
   const hasSelectedShelter = useRef(false);
@@ -290,6 +291,18 @@ export function MapView({
     },
     [],
   );
+
+  const createPlayerLocationMarkerElement = useCallback(() => {
+    const marker = document.createElement("div");
+    marker.style.width = "14px";
+    marker.style.height = "14px";
+    marker.style.borderRadius = "999px";
+    marker.style.border = "2px solid #ffffff";
+    marker.style.background = "#3b82f6";
+    marker.style.boxShadow = "0 0 0 2px rgba(59, 130, 246, 0.35)";
+    marker.style.pointerEvents = "none";
+    return marker;
+  }, []);
 
   useEffect(() => {
     translateRef.current = t;
@@ -713,6 +726,7 @@ export function MapView({
             trackUserLocation: false,
             showUserHeading: true,
             showAccuracyCircle: false,
+            showUserLocation: false,
       });
       geolocateControl.current = control;
       map.current?.addControl(control, "bottom-right");
@@ -804,6 +818,10 @@ export function MapView({
           map.current.removeControl(geolocateControl.current);
           geolocateControl.current = null;
         }
+        if (playerLocationMarkerRef.current) {
+          playerLocationMarkerRef.current.remove();
+          playerLocationMarkerRef.current = null;
+        }
         if (filteredPoiPopupHandlerRef.current) {
           map.current?.off("click", FILTER_POIS_LAYER_ID, filteredPoiPopupHandlerRef.current);
           filteredPoiPopupHandlerRef.current = null;
@@ -850,6 +868,37 @@ export function MapView({
     }
     sampleTerrainElevation();
   }, [playerLocation.lng, playerLocation.lat, hasUserLocationFix, sampleTerrainElevation]);
+
+  useEffect(() => {
+    const m = map.current;
+    if (!m) return;
+
+    const isDefaultStart =
+      Math.abs(playerLocation.lat - DEFAULT_START_LOCATION.lat) < 1e-6 &&
+      Math.abs(playerLocation.lng - DEFAULT_START_LOCATION.lng) < 1e-6;
+    const shouldShowMarker = hasUserLocationFix || !isDefaultStart;
+
+    if (!shouldShowMarker) {
+      if (playerLocationMarkerRef.current) {
+        playerLocationMarkerRef.current.remove();
+        playerLocationMarkerRef.current = null;
+      }
+      return;
+    }
+
+    const nextLngLat: [number, number] = [playerLocation.lng, playerLocation.lat];
+    if (!playerLocationMarkerRef.current) {
+      playerLocationMarkerRef.current = new mapboxgl.Marker({
+        element: createPlayerLocationMarkerElement(),
+        anchor: "center",
+      })
+        .setLngLat(nextLngLat)
+        .addTo(m);
+      return;
+    }
+
+    playerLocationMarkerRef.current.setLngLat(nextLngLat);
+  }, [createPlayerLocationMarkerElement, hasUserLocationFix, playerLocation.lat, playerLocation.lng]);
 
   useEffect(() => {
     if (!mapLoaded) return;
