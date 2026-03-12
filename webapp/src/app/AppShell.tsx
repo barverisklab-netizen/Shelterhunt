@@ -6,7 +6,9 @@ import { HostShareModal } from "@/components/overlays/HostShareModal";
 import { IntroScreen } from "@/components/IntroScreen";
 import { LanguageToggle } from "@/components/controls/LanguageToggle";
 import { OnboardingScreen } from "@/components/OnboardingScreen";
+import { PwaIosInstallModal } from "@/components/overlays/PwaIosInstallModal";
 import { ProfileNameModal } from "@/components/overlays/ProfileNameModal";
+import { PwaInstallModal } from "@/components/overlays/PwaInstallModal";
 import { SoloModeScreen } from "@/components/SoloModeScreen";
 import { TerminalScreen } from "@/components/TerminalScreen";
 import { Toaster } from "@/components/ui/sonner";
@@ -72,6 +74,9 @@ interface AppShellProps {
   joinError: string | null;
   hostShareModalOpen: boolean;
   hostShareCode: string | null;
+  installPromptOpen: boolean;
+  installPromptPending: boolean;
+  iosInstallPromptOpen: boolean;
   multiplayerActive: boolean;
   onSkipIntro: () => void;
   onJoinGameRequest: () => void;
@@ -98,6 +103,12 @@ interface AppShellProps {
   onJoinSessionSubmit: (code: string) => void;
   onCloseJoinCodeModal: () => void;
   onCloseHostShareModal: () => void;
+  onInstallPromptSkip: () => void;
+  onInstallPromptTimeout: () => void;
+  onInstallPromptConfirm: () => void;
+  onIosInstallPromptSkip: () => void;
+  onIosInstallPromptTimeout: () => void;
+  onIosInstallPromptAcknowledge: () => void;
 }
 
 export function AppShell({
@@ -137,6 +148,9 @@ export function AppShell({
   joinError,
   hostShareModalOpen,
   hostShareCode,
+  installPromptOpen,
+  installPromptPending,
+  iosInstallPromptOpen,
   multiplayerActive,
   onSkipIntro,
   onJoinGameRequest,
@@ -163,6 +177,12 @@ export function AppShell({
   onJoinSessionSubmit,
   onCloseJoinCodeModal,
   onCloseHostShareModal,
+  onInstallPromptSkip,
+  onInstallPromptTimeout,
+  onInstallPromptConfirm,
+  onIosInstallPromptSkip,
+  onIosInstallPromptTimeout,
+  onIosInstallPromptAcknowledge,
 }: AppShellProps) {
   const { t } = useI18n();
 
@@ -307,6 +327,21 @@ export function AppShell({
         open={hostShareModalOpen && Boolean(hostShareCode)}
         code={hostShareCode}
         onClose={onCloseHostShareModal}
+      />
+
+      <PwaInstallModal
+        open={installPromptOpen}
+        installing={installPromptPending}
+        onSkip={onInstallPromptSkip}
+        onTimeoutClose={onInstallPromptTimeout}
+        onInstall={onInstallPromptConfirm}
+      />
+
+      <PwaIosInstallModal
+        open={iosInstallPromptOpen}
+        onSkip={onIosInstallPromptSkip}
+        onTimeoutClose={onIosInstallPromptTimeout}
+        onAcknowledge={onIosInstallPromptAcknowledge}
       />
 
       {showLoadingOverlay && (
