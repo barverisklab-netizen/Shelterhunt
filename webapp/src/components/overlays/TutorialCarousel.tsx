@@ -2,9 +2,11 @@ import { useMemo, useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useI18n } from "@/i18n";
-import guideIllustration from "@/assets/graphics/character-guide.svg";
-import mascotWaving from "@/assets/graphics/character-mascot-waving.svg";
-import mascotRunning from "@/assets/graphics/character-mascot-running.svg";
+import onboarding1 from "@/assets/graphics/onboarding_1.svg";
+import onboarding2 from "@/assets/graphics/onboarding_2.svg";
+import onboarding3 from "@/assets/graphics/onboarding_3.svg";
+import onboarding4 from "@/assets/graphics/onboarding_4.svg";
+import onboarding5 from "@/assets/graphics/onboarding_5.svg";
 
 interface TutorialCarouselProps {
   onComplete: () => void;
@@ -24,36 +26,66 @@ export function TutorialCarousel({ onComplete }: TutorialCarouselProps) {
   const slides = useMemo<TutorialSlide[]>(
     () => [
       {
-        image: guideIllustration,
-        title: t("tutorial.slides.one.title", { fallback: "Move and explore" }),
+        image: onboarding1,
+        title: t("tutorial.slides.one.title", { fallback: "Find Mobi" }),
         body: t("tutorial.slides.one.body", {
           fallback:
-            "Walk around to update your position. You unlock better clues when you move.",
+            'Walk through the city and find the evacuation shelter where "Mobi" is hiding.',
         }),
         imageAlt: t("tutorial.slides.one.imageAlt", {
-          fallback: "Guide mascot introducing map exploration",
+          fallback: "Onboarding illustration showing Mobi hiding in a shelter",
         }),
       },
       {
-        image: mascotWaving,
-        title: t("tutorial.slides.two.title", { fallback: "Ask questions nearby" }),
+        image: onboarding2,
+        title: t("tutorial.slides.two.title", {
+          fallback: "Ask location-based questions",
+        }),
         body: t("tutorial.slides.two.body", {
           fallback:
-            "Get close to shelters and nearby facilities to unlock location-based questions.",
+            "Visit disaster-related points around the city, such as schools, stations, or bridges, to ask a question related to that specific location.",
         }),
         imageAlt: t("tutorial.slides.two.imageAlt", {
-          fallback: "Mascot showing nearby question prompts",
+          fallback: "Onboarding illustration showing city points with question prompts",
         }),
       },
       {
-        image: mascotRunning,
-        title: t("tutorial.slides.three.title", { fallback: "Use clues to win" }),
+        image: onboarding3,
+        title: t("tutorial.slides.three.title", {
+          fallback: "Narrow the candidates",
+        }),
         body: t("tutorial.slides.three.body", {
           fallback:
-            "Combine correct and wrong clues, then make your best shelter guess before time runs out.",
+            "You may ask only one question per location. Use each answer, correct or incorrect, as a clue to narrow down the possible shelters where Mobi could be hiding.",
         }),
         imageAlt: t("tutorial.slides.three.imageAlt", {
-          fallback: "Mascot racing toward the final shelter",
+          fallback: "Onboarding illustration showing clue-based shelter filtering",
+        }),
+      },
+      {
+        image: onboarding4,
+        title: t("tutorial.slides.four.title", {
+          fallback: "Submit your final answer",
+        }),
+        body: t("tutorial.slides.four.body", {
+          fallback:
+            'Once you think you have identified the shelter where "Mobi" is located, submit your final answer.',
+        }),
+        imageAlt: t("tutorial.slides.four.imageAlt", {
+          fallback: "Onboarding illustration prompting the final answer",
+        }),
+      },
+      {
+        image: onboarding5,
+        title: t("tutorial.slides.five.title", {
+          fallback: "Start with the nearest shelter",
+        }),
+        body: t("tutorial.slides.five.body", {
+          fallback:
+            'First, try going to the nearest "Evacuation Shelter." Ask a hazard layer question to significantly narrow the search area and progress through the game efficiently.',
+        }),
+        imageAlt: t("tutorial.slides.five.imageAlt", {
+          fallback: "Onboarding illustration guiding the player to the nearest shelter",
         }),
       },
     ],
@@ -104,18 +136,18 @@ export function TutorialCarousel({ onComplete }: TutorialCarouselProps) {
             exit={{ opacity: 0, x: -10 }}
             transition={{ duration: 0.2, ease: "easeOut" }}
           >
-            <div className="mb-4 overflow-hidden rounded border-2 border-black bg-white p-2">
+            <div className="mb-4 flex justify-center overflow-hidden rounded border-2 border-black bg-white p-3">
               <img
                 src={slides[activeSlide].image}
                 alt={slides[activeSlide].imageAlt}
-                className="h-44 w-full object-contain"
+                className="h-20 w-auto max-w-full object-contain"
               />
             </div>
 
             <h3 className="text-base font-bold uppercase">
               {slides[activeSlide].title}
             </h3>
-            <p className="mt-2 text-sm text-black/80">
+            <p className="mt-2 whitespace-pre-line text-sm leading-6 text-black/80">
               {slides[activeSlide].body}
             </p>
           </motion.div>

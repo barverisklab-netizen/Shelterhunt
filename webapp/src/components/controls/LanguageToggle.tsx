@@ -53,7 +53,9 @@ export function LanguageToggle({ inline = false, className }: LanguageToggleProp
       <motion.div
         layout
         initial={false}
-        className="bg-background backdrop-blur border-2 border-black shadow-lg overflow-hidden pointer-events-auto"
+        className={`bg-background backdrop-blur border-2 border-black shadow-lg overflow-hidden pointer-events-auto transition-colors ${
+          open ? "" : "hover:bg-neutral-100"
+        }`}
         style={{ borderRadius: 20 }}
         transition={{ type: "spring", stiffness: 260, damping: 18, mass: 0.9 }}
       >
@@ -70,7 +72,7 @@ export function LanguageToggle({ inline = false, className }: LanguageToggleProp
               mass: 0.7,
             }}
             onClick={() => setOpen((prev) => !prev)}
-            className="p-3 flex items-center justify-center hover:bg-neutral-100 transition-colors cursor-pointer"
+            className="flex items-center justify-center p-3 cursor-pointer"
           >
             <Languages className="h-5 w-5 text-black pointer-events-none" />
           </motion.button>

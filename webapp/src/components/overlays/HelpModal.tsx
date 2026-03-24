@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from "motion/react";
-import { X, MapPin, Brain, Lightbulb, Trophy, Play } from "lucide-react";
+import { X, Layers3, CircleHelp, Lightbulb, Ruler, Play } from "lucide-react";
 import { Button } from "../ui/button";
 import { useI18n } from "@/i18n";
 import { defaultCityContext } from "@/data/cityContext";
@@ -44,31 +44,34 @@ export function HelpModal({ isOpen, onClose }: HelpModalProps) {
   const { t } = useI18n();
   const helpVideoUrl = defaultCityContext.helpVideoUrl;
   const helpVideoLink = getVimeoVideoLink(helpVideoUrl);
-  const steps = [
+  const toolCards = [
     {
-      icon: MapPin,
-      title: t("help.steps.visit"),
-      description: t("help.steps.visitDesc"),
-      color: "text-black",
+      icon: Layers3,
+      title: t("help.toolGuide.mapLayers.title"),
+      description: t("help.toolGuide.mapLayers.body"),
     },
     {
-      icon: Brain,
-      title: t("help.steps.answer"),
-      description: t("help.steps.answerDesc"),
-      color: "text-black",
+      icon: CircleHelp,
+      title: t("help.toolGuide.askQuestion.title"),
+      description: t("help.toolGuide.askQuestion.body"),
     },
     {
       icon: Lightbulb,
-      title: t("help.steps.collect"),
-      description: t("help.steps.collectDesc"),
-      color: "text-black",
+      title: t("help.toolGuide.clues.title"),
+      description: t("help.toolGuide.clues.body"),
     },
     {
-      icon: Trophy,
-      title: t("help.steps.find"),
-      description: t("help.steps.findDesc"),
-      color: "text-black",
+      icon: Ruler,
+      title: t("help.toolGuide.measurement.title"),
+      description: t("help.toolGuide.measurement.body"),
     },
+  ];
+  const playTips = [
+    t("help.playTips.one"),
+    t("help.playTips.two"),
+    t("help.playTips.three"),
+    t("help.playTips.four"),
+    t("help.playTips.five"),
   ];
 
   return (
@@ -115,7 +118,7 @@ export function HelpModal({ isOpen, onClose }: HelpModalProps) {
                   </Button>
                 </div>
 
-                {/* Game Overview */}
+                {/* Video */}
                 <motion.div
                   className="mb-6 rounded bg-white p-6"
                   initial={{ opacity: 0, y: 10 }}
@@ -143,18 +146,23 @@ export function HelpModal({ isOpen, onClose }: HelpModalProps) {
                       </Button>
                     ) : null}
                   </div>
-                  <h3 className="text-xl text-black mb-3 font-bold uppercase">
-                    {t("help.overviewTitle")}
-                  </h3>
-                  <p className="text-black/70 leading-relaxed">
-                    {t("help.overviewBody")}
-                  </p>
                 </motion.div>
 
-                {/* Steps */}
+                {/* Tool Guide */}
+                <motion.div
+                  className="mb-2"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.15 }}
+                >
+                  <h3 className="text-xl text-black font-bold uppercase">
+                    {t("help.toolGuide.title")}
+                  </h3>
+                </motion.div>
+
                 <div className="space-y-4 mb-6">
-                  {steps.map((step, index) => {
-                    const Icon = step.icon;
+                  {toolCards.map((card, index) => {
+                    const Icon = card.icon;
                     return (
                       <motion.div
                         key={index}
@@ -168,13 +176,13 @@ export function HelpModal({ isOpen, onClose }: HelpModalProps) {
                             <Icon className="w-6 h-6 text-black" />
                           </div>
                           <div>
-                        <div className="flex items-center gap-3 mb-2">
+                            <div className="mb-2 flex items-center gap-3">
                               <h4 className="text-lg text-black font-bold uppercase">
-                                {step.title}
+                                {card.title}
                               </h4>
                             </div>
-                            <p className="text-black/70 text-sm">
-                              {step.description}
+                            <p className="whitespace-pre-line text-sm leading-6 text-black/70">
+                              {card.description}
                             </p>
                           </div>
                         </div>
@@ -192,40 +200,15 @@ export function HelpModal({ isOpen, onClose }: HelpModalProps) {
                 >
                   <h3 className="text-xl text-black mb-4 flex items-center gap-2 font-bold uppercase">
                     <Lightbulb className="w-5 h-5 text-black" />
-                    {t("help.proTips")}
+                    {t("help.playTipsTitle")}
                   </h3>
-                  <ul className="space-y-2 text-black/70 text-sm">
-                    <li className="flex items-start gap-2">
-                      <span className="text-black mt-1 font-bold">•</span>
-                      <span>
-                        {t("help.tips.greenRed")}
-                      </span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <span className="text-black mt-1 font-bold">•</span>
-                      <span>
-                        {t("help.tips.cooldown")}
-                      </span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <span className="text-black mt-1 font-bold">•</span>
-                      <span>
-                        {t("help.tips.visitPoi")}
-                      </span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <span className="text-black mt-1 font-bold">•</span>
-                      <span>
-                        {t("help.tips.oneGuess")}
-                      </span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <span className="text-black mt-1 font-bold">•</span>
-                      <span>
-                        {t("help.tips.teamwork")}
-                      </span>
-                    </li>
-                  </ul>
+                  <ol className="space-y-3 pl-5 text-sm leading-6 text-black/70 list-decimal">
+                    {playTips.map((tip, index) => (
+                      <li key={index} className="whitespace-pre-line">
+                        {tip}
+                      </li>
+                    ))}
+                  </ol>
                 </motion.div>
 
                 {/* Close Button */}
