@@ -3,7 +3,7 @@ import { motion } from "motion/react";
 import { Button } from "./ui/button";
 import { useI18n } from "@/i18n";
 import introIllustration from "../assets/graphics/character-guide.svg";
-import appLogo from "@/assets/graphics/AppLogo.png";
+import appLogo from "@/assets/graphics/AppLogo.svg";
 
 interface IntroScreenProps {
   onContinue: () => void;
@@ -55,7 +55,7 @@ export function IntroScreen({ onContinue }: IntroScreenProps) {
               <motion.img
                 src={appLogo}
                 alt={t("intro.title")}
-                className="h-auto w-64 sm:w-72 md:w-80"
+                className="h-auto w-120 sm:w-72 md:w-80"
                 initial={{ opacity: 0, y: 12, scale: 0.96 }}
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 transition={{ duration: 0.5, ease: "easeOut" }}

@@ -4,7 +4,7 @@ import packageInfo from '../../package.json';
 import { MenuHeader } from './layout/MenuHeader';
 import { AcknowledgementFooter } from './layout/AcknowledgementFooter';
 import { useI18n } from "@/i18n";
-import appLogo from "@/assets/graphics/AppLogo.png";
+import appLogo from "@/assets/graphics/AppLogo.svg";
 
 interface OnboardingScreenProps {
   onJoinGame: () => void;
@@ -50,7 +50,7 @@ export function OnboardingScreen({
           versionLabel={`v${packageInfo.version}`}
           logoSrc={appLogo}
           logoAlt={t("onboarding.title")}
-          logoClassName="w-72"
+          logoClassName="w-120"
         />
 
         {/* Action Buttons - Bauhaus Style */}
