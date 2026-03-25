@@ -227,19 +227,33 @@ export function GameplayPanel({
                             <span>{t("gameplay.correctClues", { fallback: "Correct clues" })}</span>
                             <span>{correctClues.length}</span>
                           </div>
-                          {onFilterCorrectClues && (
-                            <Button
-                              type="button"
-                              variant="outline"
-                              className="w-full border border-black bg-white text-xs font-semibold uppercase tracking-wide text-black transition-colors hover:bg-sky-150 disabled:cursor-not-allowed disabled:border-neutral-300 disabled:text-black/50"
-                              onClick={() => {
-                                onFilterCorrectClues();
-                                onClose();
-                              }}
-                              disabled={correctClues.length === 0}
-                            >
-                              {t("gameplay.showInMap", { fallback: "Show in map" })}
-                            </Button>
+                          {(onFilterCorrectClues || (isMapFilterActive && onClearMapFilter)) && (
+                            <div className="flex gap-2">
+                              {onFilterCorrectClues && (
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  className="flex-1 border border-black bg-white text-xs font-semibold uppercase tracking-wide text-black transition-colors hover:bg-sky-150 disabled:cursor-not-allowed disabled:border-neutral-300 disabled:text-black/50"
+                                  onClick={() => {
+                                    onFilterCorrectClues();
+                                    onClose();
+                                  }}
+                                  disabled={correctClues.length === 0}
+                                >
+                                  {t("gameplay.showInMap", { fallback: "Show in map" })}
+                                </Button>
+                              )}
+                              {isMapFilterActive && onClearMapFilter && (
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  className="flex-1 border border-black bg-white text-xs font-semibold uppercase tracking-wide text-black transition-colors hover:bg-sky-150"
+                                  onClick={onClearMapFilter}
+                                >
+                                  {t("gameplay.clearMapFilter", { fallback: "Show all shelters" })}
+                                </Button>
+                              )}
+                            </div>
                           )}
                           {correctClues.map((clue, index) => (
                             <motion.div
@@ -353,16 +367,6 @@ export function GameplayPanel({
                     >
                       <Info className="h-4 w-4" />
                       {t("help.title", { fallback: "How to Play" })}
-                    </Button>
-                  )}
-                  {isMapFilterActive && onClearMapFilter && (
-                    <Button
-                      type="button"
-                      variant="outline"
-                      className="border border-black text-black text-xs font-semibold uppercase tracking-wide hover:bg-sky-150"
-                      onClick={onClearMapFilter}
-                    >
-                      {t("gameplay.clearMapFilter", { fallback: "Show all shelters" })}
                     </Button>
                   )}
                 </div>
