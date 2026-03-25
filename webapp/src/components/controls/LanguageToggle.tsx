@@ -54,7 +54,7 @@ export function LanguageToggle({ inline = false, className }: LanguageToggleProp
         layout
         initial={false}
         className={`bg-background backdrop-blur border-2 border-black shadow-lg overflow-hidden pointer-events-auto transition-colors ${
-          open ? "" : "hover:bg-neutral-100"
+          open ? "" : "hover:bg-sky-150"
         }`}
         style={{ borderRadius: 20 }}
         transition={{ type: "spring", stiffness: 260, damping: 18, mass: 0.9 }}
@@ -98,7 +98,7 @@ export function LanguageToggle({ inline = false, className }: LanguageToggleProp
                   className={`w-full text-left px-3 py-2 text-xs font-bold uppercase rounded-lg transition-colors cursor-pointer ${
                     option.value === locale
                       ? "bg-black text-black-40"
-                      : "hover:bg-neutral-100 text-black"
+                      : "hover:bg-sky-150 text-black"
                   }`}
                   style={{ transitionDuration: "120ms" }}
                 >

@@ -111,7 +111,7 @@ export function HelpModal({ isOpen, onClose }: HelpModalProps) {
                     onClick={onClose}
                     variant="outline"
                     size="icon"
-                    className="hover:bg-neutral-100 transition-colors"
+                    className="hover:bg-sky-150 transition-colors"
                     aria-label="Close help"
                   >
                     <X className="w-5 h-5 text-black" />
@@ -137,7 +137,7 @@ export function HelpModal({ isOpen, onClose }: HelpModalProps) {
                         asChild
                         variant="outline"
                         size="sm"
-                        className="uppercase border-black bg-white text-black shadow-[2px_2px_0_rgba(0,0,0,0.6)] hover:bg-neutral-100 hover:shadow-[3px_3px_0_rgba(0,0,0,0.8)]"
+                        className="uppercase border-black bg-white text-black shadow-[2px_2px_0_rgba(0,0,0,0.6)] hover:bg-sky-150 hover:shadow-[3px_3px_0_rgba(0,0,0,0.8)]"
                       >
                         <a href={helpVideoLink} target="_blank" rel="noreferrer noopener">
                           <Play className="h-4 w-4" />

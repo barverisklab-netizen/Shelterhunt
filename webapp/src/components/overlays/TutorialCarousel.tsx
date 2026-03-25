@@ -114,7 +114,7 @@ export function TutorialCarousel({ onComplete }: TutorialCarouselProps) {
         <button
           type="button"
           onClick={onComplete}
-          className="absolute right-4 top-4 px-2 py-1 text-[11px] font-bold uppercase tracking-wide hover:bg-neutral-100"
+          className="absolute right-4 top-4 px-2 py-1 text-[11px] font-bold uppercase tracking-wide hover:bg-sky-150"
         >
           {t("tutorial.skip", { fallback: "Skip" })}
         </button>
@@ -167,7 +167,7 @@ export function TutorialCarousel({ onComplete }: TutorialCarouselProps) {
 
         <div className="mt-5 flex justify-center gap-3">
           <button
-            className="rounded border border-black px-4 py-2 text-sm font-semibold uppercase tracking-wide hover:bg-neutral-100 disabled:opacity-40 disabled:cursor-not-allowed"
+            className="rounded border border-black px-4 py-2 text-sm font-semibold uppercase tracking-wide hover:bg-sky-150 disabled:opacity-40 disabled:cursor-not-allowed"
             type="button"
             onClick={() => setActiveSlide((prev) => Math.max(0, prev - 1))}
             disabled={activeSlide === 0}

@@ -21,7 +21,7 @@ interface GameplayPanelProps {
   onShelterSelect: (id: string | null) => void;
   onGuessRequest: () => void;
   isGuessDisabled?: boolean;
-  onFilterByClue?: (clue: Clue) => void;
+  onFilterCorrectClues?: () => void;
   onClearMapFilter?: () => void;
   isMapFilterActive?: boolean;
   onApplyWrongClueFilter?: () => void;
@@ -39,7 +39,7 @@ export function GameplayPanel({
   onShelterSelect,
   onGuessRequest,
   isGuessDisabled = false,
-  onFilterByClue,
+  onFilterCorrectClues,
   onClearMapFilter,
   isMapFilterActive = false,
   onApplyWrongClueFilter,
@@ -227,6 +227,20 @@ export function GameplayPanel({
                             <span>{t("gameplay.correctClues", { fallback: "Correct clues" })}</span>
                             <span>{correctClues.length}</span>
                           </div>
+                          {onFilterCorrectClues && (
+                            <Button
+                              type="button"
+                              variant="outline"
+                              className="w-full border border-black bg-white text-xs font-semibold uppercase tracking-wide text-black transition-colors hover:bg-sky-150 disabled:cursor-not-allowed disabled:border-neutral-300 disabled:text-black/50"
+                              onClick={() => {
+                                onFilterCorrectClues();
+                                onClose();
+                              }}
+                              disabled={correctClues.length === 0}
+                            >
+                              {t("gameplay.showInMap", { fallback: "Show in map" })}
+                            </Button>
+                          )}
                           {correctClues.map((clue, index) => (
                             <motion.div
                               key={clue.id}
@@ -260,31 +274,6 @@ export function GameplayPanel({
                                               }).replace("{param}", `${clue.paramValue ?? ""}`)
                                             : clue.text}
                                       </div>
-                                  {onFilterByClue && (
-                                    <div className="mt-2 flex gap-2">
-                                      <Button
-                                        type="button"
-                                        variant="outline"
-                                        className="text-xs font-semibold uppercase tracking-wide border border-black text-black hover:bg-neutral-200"
-                                        onClick={() => {
-                                          onFilterByClue(clue);
-                                          onClose();
-                                        }}
-                                      >
-                                        {t("gameplay.showInMap", { fallback: "Show in map" })}
-                                      </Button>
-                                      {isMapFilterActive && onClearMapFilter && (
-                                        <Button
-                                          type="button"
-                                          variant="outline"
-                                          className="text-xs font-semibold uppercase tracking-wide border border-black text-black hover:bg-neutral-200"
-                                          onClick={onClearMapFilter}
-                                        >
-                                          {t("common.clear", { fallback: "Clear" })}
-                                        </Button>
-                                      )}
-                                    </div>
-                                  )}
                                 </div>
                               </div>
                             </motion.div>
@@ -300,7 +289,7 @@ export function GameplayPanel({
                             <Button
                               type="button"
                               variant="outline"
-                              className="w-full border border-black bg-white text-xs font-semibold uppercase tracking-wide text-black transition-colors hover:bg-neutral-200 disabled:cursor-not-allowed disabled:border-neutral-300 disabled:text-black/50"
+                              className="w-full border border-black bg-white text-xs font-semibold uppercase tracking-wide text-black transition-colors hover:bg-sky-150 disabled:cursor-not-allowed disabled:border-neutral-300 disabled:text-black/50"
                               onClick={onApplyWrongClueFilter}
                               disabled={!canApplyWrongClueFilter || incorrectClues.length === 0}
                             >
@@ -359,7 +348,7 @@ export function GameplayPanel({
                     <Button
                       type="button"
                       variant="outline"
-                      className="border border-black text-black text-xs font-semibold uppercase tracking-wide hover:bg-neutral-200"
+                      className="border border-black text-black text-xs font-semibold uppercase tracking-wide hover:bg-sky-150"
                       onClick={onShowHelp}
                     >
                       <Info className="h-4 w-4" />
@@ -370,7 +359,7 @@ export function GameplayPanel({
                     <Button
                       type="button"
                       variant="outline"
-                      className="border border-black text-black text-xs font-semibold uppercase tracking-wide hover:bg-neutral-200"
+                      className="border border-black text-black text-xs font-semibold uppercase tracking-wide hover:bg-sky-150"
                       onClick={onClearMapFilter}
                     >
                       {t("gameplay.clearMapFilter", { fallback: "Show all shelters" })}
@@ -381,7 +370,7 @@ export function GameplayPanel({
                   onClick={onClose}
                   variant="outline"
                   size="default"
-                  className="border border-black text-black transition-colors hover:bg-neutral-200 hover:text-black hover:border-black active:bg-neutral-800 active:text-black active:border-black disabled:bg-neutral-200 disabled:text-black-40 disabled:border-neutral-400 disabled:opacity-100"
+                  className="border border-black text-black transition-colors hover:bg-sky-150 hover:text-black hover:border-black active:bg-neutral-800 active:text-black active:border-black disabled:bg-neutral-200 disabled:text-black-40 disabled:border-neutral-400 disabled:opacity-100"
                 >
                   {t("gameplay.returnToMap")}
                 </Button>

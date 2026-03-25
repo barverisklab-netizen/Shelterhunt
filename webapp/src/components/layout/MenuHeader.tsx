@@ -38,7 +38,10 @@ export function MenuHeader({
             <motion.img
               src={logoSrc}
               alt={logoAlt ?? title}
-              className={cn("h-auto w-72 object-contain", logoClassName)}
+              className={cn(
+                "h-auto w-full max-w-[15rem] object-contain sm:max-w-[18rem]",
+                logoClassName,
+              )}
               initial={{ scale: 0.92, opacity: 0, y: -24 }}
               animate={{ scale: 1, opacity: 1, y: 0 }}
               transition={{

@@ -27,7 +27,7 @@ export function GuessConfirmScreen({
       <div className="flex items-center justify-between border-b border-neutral-900 bg-background px-4 py-3">
         <button
           onClick={onCancel}
-          className="rounded border border-neutral-900 bg-background px-4 py-3 text-xs font-semibold uppercase text-black hover:bg-neutral-100"
+          className="rounded border border-neutral-900 bg-background px-4 py-3 text-xs font-semibold uppercase text-black hover:bg-sky-150"
         >
           {t("common.back")}
         </button>
@@ -73,7 +73,7 @@ export function GuessConfirmScreen({
           </Button>
           <Button
             variant="outline"
-            className="w-full rounded border border-black bg-background py-4 text-sm font-bold uppercase text-black transition-colors hover:bg-neutral-100"
+            className="w-full rounded border border-black bg-background py-4 text-sm font-bold uppercase text-black transition-colors hover:bg-sky-150"
             onClick={onCancel}
           >
             {t("guess.backToClues")}

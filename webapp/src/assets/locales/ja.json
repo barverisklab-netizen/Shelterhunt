@@ -21,7 +21,7 @@
   },
   "onboarding": {
     "title": "マップれんぼ",
-    "tagline": "洪水が発生する前に避難所を見つけましょう！",
+    "tagline": "歩いて、知って、備えて。",
     "playSolo": "ひとりで遊ぶ",
     "joinGame": "マルチプレイに参加する",
     "hostGame": "マルチプレイを開催する",
@@ -313,8 +313,8 @@
         "clue": "施設の種類は{param}です"
       },
       "shelterCapacity": {
-        "question": "収容人数が＿人ですか？",
-        "clue": "収容人数が少なくとも{param}です"
+        "question": "収容人数が{param}人ですか？",
+        "clue": "収容人数が{param}人です"
       },
       "waterStation250m": {
         "question": "250m以内に給水所がちょうど{param}か所ありますか？",

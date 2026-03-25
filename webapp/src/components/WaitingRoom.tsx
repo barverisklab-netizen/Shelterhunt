@@ -85,7 +85,7 @@ export function WaitingRoom({
             <button
               type="button"
               onClick={copyGameCode}
-              className={`rounded-full border-2 border-black p-2 transition hover:bg-neutral-100 ${
+              className={`rounded-full border-2 border-black p-2 transition hover:bg-sky-150 ${
                 copied ? "bg-black text-white" : "bg-white text-black"
               }`}
             >

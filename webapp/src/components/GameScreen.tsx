@@ -60,8 +60,6 @@ interface GameScreenProps {
   onApplyPenalty: () => WrongGuessStage;
   onEndGame: () => void;
   onLocationChange?: (location: LatLng) => void;
-  onSecretShelterChange?: (info: SecretShelterInfo) => void;
-  onShelterOptionsChange?: (options: ShelterOption[]) => void;
   currentPlayerName?: string;
   currentPlayerId?: string;
   onMultiplayerWin?: (info: MultiplayerWinInfo) => void;
@@ -87,8 +85,6 @@ export function GameScreen({
   onApplyPenalty,
   onEndGame,
   onLocationChange,
-  onSecretShelterChange,
-  onShelterOptionsChange,
   currentPlayerName,
   currentPlayerId,
   onMultiplayerWin,
@@ -362,6 +358,27 @@ export function GameScreen({
         nameJp: secretShelterRecord?.nameJp ?? null,
       })
     : null;
+  const candidateShelters = useMemo(() => {
+    const designatedShelters = shelters.filter(
+      (shelter) =>
+        typeof shelter.category === "string" &&
+        shelter.category.toLowerCase() === DESIGNATED_CATEGORY,
+    );
+
+    if (shelterOptions.length) {
+      return designatedShelters.filter((shelter) =>
+        shelterOptions.some((option) => optionMatchesShelter(option, shelter)),
+      );
+    }
+
+    if (pois.length) {
+      return designatedShelters.filter((shelter) =>
+        pois.some((poi) => optionMatchesShelter(poi, shelter)),
+      );
+    }
+
+    return designatedShelters;
+  }, [optionMatchesShelter, pois, shelterOptions, shelters]);
   const {
     elevationDeltaAbsDisplay,
     elevationDeltaMeters,
@@ -431,11 +448,77 @@ export function GameScreen({
     [],
   );
 
-  const handleApplyWrongClueFilter = () => {
-    if (filterSource !== "correct" || !filteredPois) {
+  const getLatestValidCorrectClues = useCallback(() => {
+    const latestCorrectCluesByQuestion = new Map<string, Clue>();
+    clues
+      .filter(
+        (clue) =>
+          clue.answer &&
+          clue.questionId &&
+          clue.paramValue != null &&
+          Boolean(attributeValueLookup[clue.questionId]),
+      )
+      .sort((a, b) => (b.timestamp ?? 0) - (a.timestamp ?? 0))
+      .forEach((clue) => {
+        if (!clue.questionId || latestCorrectCluesByQuestion.has(clue.questionId)) {
+          return;
+        }
+        latestCorrectCluesByQuestion.set(clue.questionId, clue);
+      });
+
+    return Array.from(latestCorrectCluesByQuestion.values());
+  }, [attributeValueLookup, clues]);
+
+  const getSheltersMatchingCorrectClues = useCallback(() => {
+    const validCorrectClues = getLatestValidCorrectClues();
+    const matches = candidateShelters.filter((shelter) =>
+      validCorrectClues.every((clue) => {
+        const extractor = attributeValueLookup[clue.questionId as string];
+        const value = extractor?.(shelter);
+        return normalizeValue(value) === normalizeValue(clue.paramValue);
+      }),
+    );
+
+    return { validCorrectClues, matches };
+  }, [attributeValueLookup, candidateShelters, getLatestValidCorrectClues]);
+
+  const handleApplyCorrectClueFilter = useCallback(() => {
+    const { validCorrectClues, matches: matchingShelters } = getSheltersMatchingCorrectClues();
+
+    if (!validCorrectClues.length) {
       toast.info(
         t("gameplay.filterUnavailable", {
-          fallback: "Filter a correct clue first to remove wrong clues.",
+          fallback: "No correct clues available to filter.",
+        }),
+      );
+      return;
+    }
+
+    const matches = matchingShelters
+      .map((shelter) => buildPoiFromShelter(shelter))
+      .filter((poi): poi is POI => Boolean(poi));
+
+    if (!matches.length) {
+      toast.error(
+        t("gameplay.filterNoMatches", {
+          fallback: "No shelters match this clue.",
+        }),
+      );
+      return;
+    }
+
+    setFilteredPois(matches);
+    setFilterSource("correct");
+  }, [buildPoiFromShelter, getSheltersMatchingCorrectClues, t]);
+
+  const handleApplyWrongClueFilter = () => {
+    const { validCorrectClues, matches: matchingCorrectShelters } =
+      getSheltersMatchingCorrectClues();
+
+    if (!validCorrectClues.length) {
+      toast.info(
+        t("gameplay.filterUnavailable", {
+          fallback: "Unlock a correct clue first to remove wrong clues.",
         }),
       );
       return;
@@ -453,18 +536,7 @@ export function GameScreen({
       return;
     }
 
-    const designatedShelters = shelters.filter(
-      (shelter) =>
-        typeof shelter.category === "string" &&
-        shelter.category.toLowerCase() === DESIGNATED_CATEGORY,
-    );
-
-    const baseShelters = designatedShelters.filter((shelter) => {
-      const sid = shelter.shareCode || shelter.code || shelter.id;
-      return filteredPois.some((poi) => poi.id === sid);
-    });
-
-    const refinedShelters = baseShelters.filter((shelter) => {
+    const refinedShelters = matchingCorrectShelters.filter((shelter) => {
       for (const clue of wrongClues) {
         const extractor = attributeValueLookup[clue.questionId as string];
         if (!extractor) continue;
@@ -490,6 +562,7 @@ export function GameScreen({
       .filter((poi): poi is POI => Boolean(poi));
 
     setFilteredPois(refinedPois);
+    setFilterSource("wrong");
     toast.success(
       t("gameplay.filteredWrongClues", {
         fallback: "Removed shelters matching wrong clues.",
@@ -609,7 +682,6 @@ export function GameScreen({
       "shrineTemple250m",
       "floodgate250m",
       "bridge250m",
-      "shelterCapacity",
     ]);
     const isMinCountQuestion = minCountIds.has(questionId);
 
@@ -1093,8 +1165,6 @@ export function GameScreen({
           visitedPOIs={visitedPOIs}
           gameEnded={outcome === 'win' || outcome === 'lose'}
           onPOIClick={simulateMove}
-        onSecretShelterChange={onSecretShelterChange}
-        onShelterOptionsChange={onShelterOptionsChange}
         measureTrigger={measureTrigger}
         onMeasurementActiveChange={setIsMeasureActive}
         isFiltered={Boolean(filteredPois)}
@@ -1245,80 +1315,7 @@ export function GameScreen({
         onGuessRequest={handleGuessRequest}
         isGuessDisabled={isGuessDisabled}
         onPollProximity={pollNearbyShelter}
-        onFilterByClue={(clue) => {
-          console.log("[ClueFilter] show in map clicked", clue);
-          const id = clue.questionId;
-          if (!id || clue.paramValue == null) {
-            console.warn("[ClueFilter] Missing questionId or paramValue", { id, clue });
-            toast.error(
-              t("gameplay.filterUnavailable", {
-                fallback: "Unable to filter map for this clue.",
-              }),
-            );
-            return;
-          }
-
-          const extractor = attributeValueLookup[id];
-          if (!extractor) {
-            console.warn("[ClueFilter] No extractor for question", { id });
-            toast.error(
-              t("gameplay.filterUnavailable", {
-                fallback: "Unable to filter map for this clue.",
-              }),
-            );
-            return;
-          }
-
-          const target = normalizeValue(clue.paramValue);
-          console.log("[ClueFilter] Target value", { target });
-
-          const designatedShelters = shelters.filter(
-            (shelter) =>
-              typeof shelter.category === "string" &&
-              shelter.category.toLowerCase() === DESIGNATED_CATEGORY,
-          );
-
-          const baseShelters =
-            filteredPois && filteredPois.length
-              ? designatedShelters.filter((shelter) => {
-                  const sid = shelter.shareCode || shelter.code || shelter.id;
-                  return filteredPois.some((poi) => poi.id === sid);
-                })
-              : designatedShelters;
-
-          const matches = baseShelters
-            .filter((shelter) => {
-              const value = extractor(shelter as any);
-              const match = normalizeValue(value) === target;
-              if (match) {
-                console.log("[ClueFilter] Shelter match", {
-                  id: shelter.id,
-                  code: shelter.code,
-                  shareCode: shelter.shareCode,
-                  name: shelter.nameEn || shelter.nameJp,
-                  value,
-                });
-              }
-              return match;
-            })
-            .map((shelter) => buildPoiFromShelter(shelter))
-            .filter((poi): poi is POI => Boolean(poi));
-
-          if (!matches.length) {
-            console.warn("[ClueFilter] No matches for clue", { clue, target });
-            toast.error(
-              t("gameplay.filterNoMatches", {
-                fallback: "No shelters match this clue.",
-              }),
-            );
-            return;
-          }
-
-          console.log("[ClueFilter] Applying map filter", { matches: matches.length });
-          setFilteredPois(matches);
-          setFilterSource(clue.answer ? "correct" : "wrong");
-          activatePanel(null);
-        }}
+        onFilterCorrectClues={handleApplyCorrectClueFilter}
         onClearMapFilter={() => {
           setFilteredPois(null);
           setFilterSource(null);
@@ -1397,7 +1394,7 @@ export function GameScreen({
               </p>
               <div className="flex justify-center gap-3">
                 <button
-                  className="rounded border border-black px-4 py-2 text-sm font-semibold uppercase tracking-wide hover:bg-neutral-100"
+                  className="rounded border border-black px-4 py-2 text-sm font-semibold uppercase tracking-wide hover:bg-sky-150"
                   onClick={() => setShowExitConfirm(false)}
                 >
                   {t("common.cancel", { fallback: "Cancel" })}

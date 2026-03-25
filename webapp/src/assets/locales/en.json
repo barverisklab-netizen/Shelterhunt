@@ -21,7 +21,7 @@
   },
   "onboarding": {
     "title": "Map n' Seek",
-    "tagline": "Find the shelter before the storm!",
+    "tagline": "Walk, Learn, Prepare.",
     "playSolo": "Play Solo",
     "joinGame": "Join Game",
     "hostGame": "Host Multiplayer",
@@ -309,7 +309,7 @@
         "clue": "Facility type is {param}"
       },
       "shelterCapacity": {
-        "question": "Capacity of the shelter is {param}?",
+        "question": "Is the shelter capacity {param}?",
         "clue": "Shelter capacity is {param}"
       },
       "waterStation250m": {

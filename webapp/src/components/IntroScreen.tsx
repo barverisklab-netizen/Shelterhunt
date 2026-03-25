@@ -55,7 +55,7 @@ export function IntroScreen({ onContinue }: IntroScreenProps) {
               <motion.img
                 src={appLogo}
                 alt={t("intro.title")}
-                className="h-auto w-120 sm:w-72 md:w-80"
+                className="h-auto w-full max-w-[15rem] object-contain sm:max-w-[18rem] md:max-w-[20rem]"
                 initial={{ opacity: 0, y: 12, scale: 0.96 }}
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 transition={{ duration: 0.5, ease: "easeOut" }}
@@ -79,7 +79,7 @@ export function IntroScreen({ onContinue }: IntroScreenProps) {
             >
               <Button
                 onClick={onContinue}
-                className="w-full max-w-xs border border-black bg-white text-black transition-colors hover:bg-neutral-100 hover:text-black hover:border-black active:hover:bg-neutral-100 active:text-black active:border-black disabled:bg-neutral-200 disabled:text-black-40 disabled:border-neutral-400 disabled:opacity-100"
+                className="w-full max-w-xs border border-black bg-white text-black transition-colors hover:bg-sky-150 hover:text-black hover:border-black active:hover:bg-sky-150 active:text-black active:border-black disabled:bg-neutral-200 disabled:text-black-40 disabled:border-neutral-400 disabled:opacity-100"
               >
                 {t("intro.play")}
               </Button>
