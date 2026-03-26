@@ -72,7 +72,7 @@ export function MapLayerPanel({
                   type="button"
                   onClick={onClearAll}
                   disabled={clearAllDisabled}
-                  className="rounded border border-black bg-background px-3 py-1 text-xs font-semibold uppercase text-black transition-colors hover:bg-neutral-100 disabled:cursor-not-allowed disabled:border-neutral-400 disabled:bg-neutral-200 disabled:text-neutral-500"
+                  className="rounded border border-black bg-background px-3 py-1 text-xs font-semibold uppercase text-black transition-colors hover:bg-sky-150 disabled:cursor-not-allowed disabled:border-neutral-400 disabled:bg-neutral-200 disabled:text-neutral-500"
                 >
                   {clearAllLabel}
                 </button>
@@ -139,7 +139,7 @@ function LayerToggle({
   onChange: () => void;
 }) {
   return (
-    <label className="flex items-center gap-3 cursor-pointer rounded px-2 py-1 transition-colors hover:bg-neutral-100">
+    <label className="flex items-center gap-3 cursor-pointer rounded px-2 py-1 transition-colors hover:bg-sky-150">
       <input
         type="checkbox"
         checked={checked}

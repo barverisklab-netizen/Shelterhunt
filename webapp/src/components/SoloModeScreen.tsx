@@ -49,7 +49,7 @@ export function SoloModeScreen({
           <button
             type="button"
             onClick={onBack}
-            className="inline-flex items-center gap-2 rounded-full border-4 border-black bg-white px-4 py-2 text-xs font-bold uppercase tracking-wide transition-all hover:-translate-x-1 hover:bg-neutral-200 hover:text-black"
+            className="inline-flex items-center gap-2 rounded-full border-4 border-black bg-white px-4 py-2 text-xs font-bold uppercase tracking-wide transition-all hover:-translate-x-1 hover:bg-sky-150 hover:text-black"
           >
             <ArrowLeft className="h-4 w-4" />
             {t("common.back")}
@@ -71,7 +71,7 @@ export function SoloModeScreen({
                 type="button"
                 disabled={isProcessing}
                 onClick={() => setSelection("lightning")}
-                className="w-full bg-background text-black border-4 border-black hover:bg-neutral-100 hover:shadow-[4px_4px_0_black] transition-all py-6 px-5 flex flex-col items-center gap-2 cursor-pointer text-center"
+                className="w-full bg-background text-black border-4 border-black hover:bg-sky-150 hover:shadow-[4px_4px_0_black] transition-all py-6 px-5 flex flex-col items-center gap-2 cursor-pointer text-center"
               >
                 <span className="flex items-center gap-3 text-lg font-bold uppercase tracking-wide">
                   <Zap className="h-5 w-5" /> {t("solo.lightningHunt")}
@@ -85,7 +85,7 @@ export function SoloModeScreen({
                 type="button"
                 disabled={isProcessing}
                 onClick={onSelectCitywide}
-                className="w-full bg-background text-black border-4 border-black hover:bg-neutral-100 hover:shadow-[4px_4px_0_black] transition-all py-6 px-5 flex flex-col items-center gap-2 cursor-pointer text-center"
+                className="w-full bg-background text-black border-4 border-black hover:bg-sky-150 hover:shadow-[4px_4px_0_black] transition-all py-6 px-5 flex flex-col items-center gap-2 cursor-pointer text-center"
               >
                 <span className="flex items-center gap-3 text-md font-bold uppercase tracking-wide">
                   <Map className="h-5 w-5" /> {t("solo.citywideSearch")}
@@ -129,7 +129,7 @@ export function SoloModeScreen({
                   type="button"
                   disabled={isProcessing}
                   onClick={onSelectLightning}
-                  className="w-full max-w-xs border border-black bg-white text-black transition-colors hover:bg-neutral-100 hover:text-black hover:border-black active:bg-neutral-800 active:text-black active:border-black disabled:bg-neutral-200 disabled:text-black-40 disabled:border-neutral-400 disabled:opacity-100">
+                  className="w-full max-w-xs border border-black bg-white text-black transition-colors hover:bg-sky-150 hover:text-black hover:border-black active:bg-neutral-800 active:text-black active:border-black disabled:bg-neutral-200 disabled:text-black-40 disabled:border-neutral-400 disabled:opacity-100">
                   {t("solo.startLightning")}
                 </button>
               </div>

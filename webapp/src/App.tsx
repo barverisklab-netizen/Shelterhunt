@@ -72,6 +72,7 @@ const MULTIPLAYER_LOCATION_UPDATE_MS = 5_000;
 const MULTIPLAYER_LOCATION_ROUNDING_METERS = 50;
 const PWA_INSTALL_DISMISSED_KEY = "shelterhunt.pwaInstallDismissed.v1";
 const PWA_IOS_INSTALL_DISMISSED_KEY = "shelterhunt.pwaIosInstallDismissed.v1";
+const SNAPSHOT_RESUMABLE_STATES: readonly GameState[] = ["waiting", "playing", "ended"];
 
 type DeferredInstallPromptEvent = Event & {
   prompt: () => Promise<void>;
@@ -485,7 +486,10 @@ export default function App() {
         : snapshot.timeRemaining;
       const shouldEnd =
         snapshot.timerEnabled && snapshot.gameState === "playing" && nextTimeRemaining <= 0;
-      const nextGameState = shouldEnd ? "ended" : snapshot.gameState;
+      const snapshotGameState = shouldEnd ? "ended" : snapshot.gameState;
+      const nextGameState = SNAPSHOT_RESUMABLE_STATES.includes(snapshotGameState)
+        ? snapshotGameState
+        : "intro";
 
       setResumeId(snapshot.resumeId || crypto.randomUUID());
       setGameState(nextGameState);
@@ -616,22 +620,6 @@ export default function App() {
     restoredFromSnapshotRef.current = true;
   }, [applyGameSnapshot, loadGameSnapshot]);
 
-
-  const updateSecretShelter = useCallback(
-    (info: SecretShelterInfo) => {
-      if (lockSecretShelter) return;
-      setSecretShelter(info);
-    },
-    [lockSecretShelter],
-  );
-
-  const updateShelterOptions = useCallback(
-    (options: ShelterOption[]) => {
-      if (lockShelterOptions) return;
-      setShelterOptions(options);
-    },
-    [lockShelterOptions],
-  );
 
   const loadDesignatedShelters = useCallback(
     async (center: LatLng, radiusKm: number) => {
@@ -1632,24 +1620,51 @@ export default function App() {
     setModeProcessing(true);
     setShelterOptions([]);
     setSecretShelter(null);
-    setLockSecretShelter(false);
-    setLockShelterOptions(false);
+    setLockSecretShelter(true);
+    setLockShelterOptions(true);
     let playerCoords: LatLng | undefined;
     try {
       playerCoords = await requestUserLocation();
     } catch (error) {
       console.warn("[Citywide] Unable to fetch player location", error);
     }
-    startSoloMatch({
-      mode: "citywide",
-      timerSeconds: null,
-      secret: null,
-      options: [],
-      lockSecret: false,
-      lockOptions: false,
-      playerCoords,
-    });
-    setModeProcessing(false);
+    try {
+      const cityCenter = defaultCityContext.mapConfig.startLocation;
+      const shelterPool = await buildLocalDesignatedShelters(cityCenter);
+
+      const { eligibleShelters, secretShelter } = selectLightningShelter(
+        shelterPool,
+        cityCenter,
+        Number.POSITIVE_INFINITY,
+      );
+
+      const options = eligibleShelters.map((shelter) => ({
+        id: shelter.id,
+        name: shelter.name,
+      }));
+
+      startSoloMatch({
+        mode: "citywide",
+        timerSeconds: null,
+        secret: {
+          id: secretShelter.id,
+          name: secretShelter.name,
+        },
+        options,
+        lockSecret: true,
+        lockOptions: true,
+        playerCoords,
+      });
+    } catch (error) {
+      console.warn("[Citywide] Unable to load designated shelters", error);
+      toast.error(
+        t("app.errors.loadShelters", {
+          fallback: "Unable to load designated shelters right now. Please try again.",
+        }),
+      );
+    } finally {
+      setModeProcessing(false);
+    }
   };
 
   const profilePromptActive =
@@ -1722,8 +1737,6 @@ export default function App() {
       onApplyPenalty={handleWrongGuessPenalty}
       onEndGame={handleEndGame}
       onPlayerLocationChange={setPlayerLocation}
-      onSecretShelterChange={updateSecretShelter}
-      onShelterOptionsChange={updateShelterOptions}
       onMultiplayerWin={handleMultiplayerWin}
       onCloseHelp={() => setShowHelp(false)}
       onJoinNameSubmit={handleJoinNameSubmit}

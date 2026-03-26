@@ -1,9 +1,9 @@
 import { useMemo } from "react";
 import { motion } from "motion/react";
-import { MapPin } from "lucide-react";
 import { Button } from "./ui/button";
 import { useI18n } from "@/i18n";
 import introIllustration from "../assets/graphics/character-guide.svg";
+import appLogo from "@/assets/graphics/AppLogo.svg";
 
 interface IntroScreenProps {
   onContinue: () => void;
@@ -16,6 +16,7 @@ export function IntroScreen({ onContinue }: IntroScreenProps) {
       t("intro.paragraph1"),
       t("intro.paragraph2"),
       t("intro.paragraph3"),
+      t("intro.paragraph4"),
     ],
     [t],
   );
@@ -51,21 +52,14 @@ export function IntroScreen({ onContinue }: IntroScreenProps) {
 
           <div className="flex flex-col space-y-6 md:space-y-8 items-center md:items-start">
             <div className="flex flex-col items-center md:items-start gap-3">
-              <motion.div
-                initial={{ opacity: 0, y: 10, scale: 0.9 }}
+              <motion.img
+                src={appLogo}
+                alt={t("intro.title")}
+                className="h-auto w-full max-w-[15rem] object-contain sm:max-w-[18rem] md:max-w-[20rem]"
+                initial={{ opacity: 0, y: 12, scale: 0.96 }}
                 animate={{ opacity: 1, y: 0, scale: 1 }}
-                transition={{ duration: 0.45, ease: "easeOut", delay: 0.05 }}
-              >
-                <MapPin className="w-10 h-10 text-black" />
-              </motion.div>
-              <motion.h1
-                className="text-center md:text-left text-3xl font-black tracking-[0.28em] sm:text-4xl"
-                initial={{ opacity: 0, y: 12 }}
-                animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, ease: "easeOut" }}
-              >
-                {t("intro.title")}
-              </motion.h1>
+              />
             </div>
 
             <motion.div
@@ -85,7 +79,7 @@ export function IntroScreen({ onContinue }: IntroScreenProps) {
             >
               <Button
                 onClick={onContinue}
-                className="w-full max-w-xs border border-black bg-white text-black transition-colors hover:bg-neutral-100 hover:text-black hover:border-black active:hover:bg-neutral-100 active:text-black active:border-black disabled:bg-neutral-200 disabled:text-black-40 disabled:border-neutral-400 disabled:opacity-100"
+                className="w-full max-w-xs border border-black bg-white text-black transition-colors hover:bg-sky-150 hover:text-black hover:border-black active:hover:bg-sky-150 active:text-black active:border-black disabled:bg-neutral-200 disabled:text-black-40 disabled:border-neutral-400 disabled:opacity-100"
               >
                 {t("intro.play")}
               </Button>

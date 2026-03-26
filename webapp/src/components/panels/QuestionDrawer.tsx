@@ -468,7 +468,7 @@ export function QuestionDrawer({
                                 </div>
                               )}
                             <Button
-                              className={"w-full border border-black bg-background text-black hover:bg-neutral-100 active:bg-neutral-200"}
+                              className={"w-full border border-black bg-background text-black hover:bg-sky-150 active:bg-neutral-200"}
                               onClick={() => {
                                 if (
                                   onAskNearbyAmenity &&
@@ -561,7 +561,7 @@ export function QuestionDrawer({
                           selectedParam !== "" &&
                           !isLocked && (
                             <Button
-                              className={"w-full border border-black bg-background text-black hover:bg-neutral-100 active:bg-neutral-200"}
+                              className={"w-full border border-black bg-background text-black hover:bg-sky-150 active:bg-neutral-200"}
                               onClick={() => onAskQuestion(question.id, selectedParam)}
                               variant="destructive"
                             >

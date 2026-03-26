@@ -18,14 +18,12 @@ import {
   cityAmenityCategoryMap,
   cityPoiTypeByQuestionId,
   getCityPoiTypeLabel,
-  isDesignatedShelterCategory,
   resolveCityAmenityQuestionId,
 } from "@/cityContext/gameplayConfig";
 import { MAPBOX_CONFIG } from "@/config/mapbox";
 import { MAPBOX_STYLE_URL, PROXIMITY_RADIUS_KM } from "@/config/runtime";
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
-import { getLocalShelters } from "@/services/mapLayerQueryService";
 import { countAmenitiesWithinRadius } from "@/services/proximityIndex";
 import { useTerrainElevation } from "@/features/elevation/hooks/useTerrainElevation";
 import { useMeasurementTool } from "@/features/measurement/hooks/useMeasurementTool";
@@ -144,10 +142,8 @@ interface MapViewProps {
   gameEnded?: boolean;
   onPOIClick?: (poi: POI) => void;
 
-  // Basemap and shelter callbacks.
+  // Basemap callbacks.
   basemapUrl?: string;
-  onSecretShelterChange?: (info: { id: string; name: string }) => void;
-  onShelterOptionsChange?: (options: { id: string; name: string; lat?: number; lng?: number }[]) => void;
 
   // Measurement + layer panel coordination.
   measureTrigger?: number;
@@ -188,8 +184,6 @@ export function MapView({
   gameEnded,
   onPOIClick,
   basemapUrl = deployedCity.mapStyle.styleUrl || deployedCityContext.mapConfig.basemapUrl,
-  onSecretShelterChange,
-  onShelterOptionsChange,
   measureTrigger,
   onMeasurementActiveChange,
   isFiltered = false,
@@ -215,8 +209,6 @@ export function MapView({
   const playerLocationMarkerRef = useRef<mapboxgl.Marker | null>(null);
   const infoPopup = useRef<mapboxgl.Popup | null>(null);
   const otherPlayerMarkersRef = useRef<Record<string, mapboxgl.Marker>>({});
-  const hasSelectedShelter = useRef(false);
-  const hasEmittedShelterOptions = useRef(false);
   const pendingPoiRefreshRef = useRef<POI[] | null>(null);
   const pendingPoiRefreshHandlerRef = useRef<(() => void) | null>(null);
   const filteredPoiPopupHandlerRef = useRef<
@@ -624,80 +616,10 @@ export function MapView({
     }
   }, []);
 
-  const selectShelterFromLocalData = useCallback(() => {
-    // Select once per map lifecycle; emit all options + chosen shelter for game state.
-    if (hasSelectedShelter.current) {
-      return;
-    }
-
-    (async () => {
-      try {
-        const allShelters = await getLocalShelters();
-        const designated = allShelters.filter(
-          (poi) => isDesignatedShelterCategory(poi.category),
-        );
-
-        const options: { id: string; name: string; lat?: number; lng?: number }[] = [];
-        const seenNames = new Set<string>();
-        const seenIds = new Set<string>();
-
-        designated.forEach((poi) => {
-          const name = poi.name?.trim();
-          if (!name) return;
-          const key = name.toLowerCase();
-          if (seenNames.has(key)) return;
-          seenNames.add(key);
-
-          let resolvedId = poi.id ?? key;
-          if (seenIds.has(resolvedId)) {
-            let suffix = 1;
-            while (seenIds.has(`${resolvedId}-${suffix}`)) {
-              suffix += 1;
-            }
-            resolvedId = `${resolvedId}-${suffix}`;
-          }
-          seenIds.add(resolvedId);
-
-          const hasCoords =
-            Number.isFinite(poi.lat) && Number.isFinite(poi.lng);
-
-          options.push({
-            id: resolvedId,
-            name,
-            lat: hasCoords ? (poi.lat as number) : undefined,
-            lng: hasCoords ? (poi.lng as number) : undefined,
-          });
-        });
-
-        if (
-          onShelterOptionsChange &&
-          (options.length || !hasEmittedShelterOptions.current)
-        ) {
-          const sorted = [...options].sort((a, b) => a.name.localeCompare(b.name));
-          onShelterOptionsChange(sorted);
-          hasEmittedShelterOptions.current = true;
-        }
-
-        if (!options.length || !onSecretShelterChange) {
-          return;
-        }
-
-        const chosen = options[Math.floor(Math.random() * options.length)];
-
-        hasSelectedShelter.current = true;
-        onSecretShelterChange({ id: chosen.id, name: chosen.name });
-        map.current?.off("idle", selectShelterFromLocalData);
-      } catch (error) {
-        console.warn("[mapbox] Unable to select shelter from local data:", error);
-      }
-    })();
-  }, [onSecretShelterChange, onShelterOptionsChange]);
-
   // Initialize/destroy the Mapbox instance once per basemap style.
   useEffect(() => {
     if (!mapContainer.current || map.current) return;
 
-    hasEmittedShelterOptions.current = false;
     let handleStyleData: (() => void) | null = null;
 
     try {
@@ -716,11 +638,6 @@ export function MapView({
         syncCityLayers();
         if (reapplyPlayerRangeRef.current) {
           reapplyPlayerRangeRef.current();
-        }
-
-        if (onSecretShelterChange) {
-          hasSelectedShelter.current = false;
-          map.current?.on("idle", selectShelterFromLocalData);
         }
 
         console.log("[POI] Initial marker render", { total: visiblePois.length });
@@ -815,9 +732,6 @@ export function MapView({
           infoPopup.current.remove();
           infoPopup.current = null;
         }
-        if (onSecretShelterChange) {
-          map.current.off("idle", selectShelterFromLocalData);
-        }
         if (geolocateControl.current) {
           if (geolocateHandlerRef.current) {
             geolocateControl.current.off("geolocate", geolocateHandlerRef.current);
@@ -846,8 +760,6 @@ export function MapView({
         map.current?.off("styledata", moveAttributionToBottomLeft);
         map.current.remove();
         map.current = null;
-        hasSelectedShelter.current = false;
-        hasEmittedShelterOptions.current = false;
         setMapLoaded(false);
       }
     };

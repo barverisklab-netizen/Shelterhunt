@@ -92,8 +92,6 @@ interface AppShellProps {
   onApplyPenalty: () => WrongGuessStage;
   onEndGame: () => void;
   onPlayerLocationChange: (location: LatLng) => void;
-  onSecretShelterChange: (info: SecretShelterInfo) => void;
-  onShelterOptionsChange: (options: ShelterOption[]) => void;
   onMultiplayerWin: (info: MultiplayerWinInfo) => void;
   onCloseHelp: () => void;
   onJoinNameSubmit: (value: string) => void;
@@ -166,8 +164,6 @@ export function AppShell({
   onApplyPenalty,
   onEndGame,
   onPlayerLocationChange,
-  onSecretShelterChange,
-  onShelterOptionsChange,
   onMultiplayerWin,
   onCloseHelp,
   onJoinNameSubmit,
@@ -252,8 +248,6 @@ export function AppShell({
             onApplyPenalty={onApplyPenalty}
             onEndGame={onEndGame}
             onLocationChange={onPlayerLocationChange}
-            onSecretShelterChange={onSecretShelterChange}
-            onShelterOptionsChange={onShelterOptionsChange}
             currentPlayerName={currentPlayerDisplayName}
             currentPlayerId={currentSessionUserId}
             onMultiplayerWin={multiplayerActive ? onMultiplayerWin : undefined}

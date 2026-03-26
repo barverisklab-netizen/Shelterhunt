@@ -12,15 +12,16 @@
   },
   "intro": {
     "title": "Map n' Seek",
-    "paragraph1": "Welcome, heroes. I’m Bosai-Sensei, your guide through Koto City as a major hurricane closes in. Our mascot, Koto-chan, is sheltering somewhere safe; but we’ve lost contact.",
-    "paragraph2": "Your task: explore the city, understand the disaster-preparedness information, and gather clues to pinpoint Koto-chan’s location before the storm hits.",
-    "paragraph3": "Each correct move brings you closer and strengthens the skills you’ll need in real emergencies. Stay alert, and remember: preparedness is power.",
+    "paragraph1": "Koto City has many evacuation shelters, but do you know where they are, what makes each one different, and whether they are truly safe in an emergency?",
+    "paragraph2": "I’m going to hide at one of the evacuation shelters somewhere in Koto City. As you walk through the city, collect clues related to flood risk and try to find the shelter where I’m hiding.",
+    "paragraph3": "Even in a familiar neighborhood, you may notice places you’ve never paid attention to before - streets you’ve never walked, subtle changes in elevation, or hidden details in the landscape.",
+    "paragraph4": "As you explore, think about the connections between the city, evacuation shelters, and flood risk. Let’s walk through our community and learn about the risks together.",
     "play": "Play",
     "imageAlt": "Koto-chan and Bosai-Sensei illustration"
   },
   "onboarding": {
     "title": "Map n' Seek",
-    "tagline": "Find the shelter before the storm!",
+    "tagline": "Walk, Learn, Prepare.",
     "playSolo": "Play Solo",
     "joinGame": "Join Game",
     "hostGame": "Host Multiplayer",
@@ -35,19 +36,29 @@
     "start": "Start Game",
     "slides": {
       "one": {
-        "title": "Move and explore",
-        "body": "Walk around to update your position. You unlock better clues when you move.",
-        "imageAlt": "Guide mascot introducing map exploration"
+        "title": "Find Mobi",
+        "body": "Walk through the city and find the evacuation shelter where \"Mobi\" is hiding.",
+        "imageAlt": "Onboarding illustration showing Mobi hiding in a shelter"
       },
       "two": {
-        "title": "Ask questions nearby",
-        "body": "Get close to shelters and nearby facilities to unlock location-based questions.",
-        "imageAlt": "Mascot showing nearby question prompts"
+        "title": "Ask location-based questions",
+        "body": "When you visit disaster-related points around the city, such as schools, stations, or bridges, you can ask a question related to that specific location.\n\nFor example:\nHazard Area Questions: At a shelter -> \"Is the flood depth at X 5-10 meters?\"\nShelter Questions: At a shelter -> \"Is X an elementary school?\"\nNearby Amenities Questions: At a bridge -> \"Are there Y bridges nearby?\"",
+        "imageAlt": "Onboarding illustration showing city points with question prompts"
       },
       "three": {
-        "title": "Use clues to win",
-        "body": "Combine correct and wrong clues, then make your best shelter guess before time runs out.",
-        "imageAlt": "Mascot racing toward the final shelter"
+        "title": "Narrow the candidates",
+        "body": "You may ask only one question per location. Use each answer, correct or incorrect, as a clue to narrow down the possible shelters where \"Mobi\" could be hiding.",
+        "imageAlt": "Onboarding illustration showing clue-based shelter filtering"
+      },
+      "four": {
+        "title": "Submit your final answer",
+        "body": "Once you think you have identified the shelter where \"Mobi\" is located, final answer. Submit your response.",
+        "imageAlt": "Onboarding illustration prompting the final answer"
+      },
+      "five": {
+        "title": "Start with the nearest shelter",
+        "body": "First, try going to the nearest \"Evacuation Shelter.\" Ask a hazard layer question to significantly narrow the search area and progress through the game efficiently.",
+        "imageAlt": "Onboarding illustration guiding the player to the nearest shelter"
       }
     }
   },
@@ -128,30 +139,35 @@
   },
   "help": {
     "title": "How to Play",
-    "subtitle": "Master the art of urban deduction",
+    "subtitle": "Learn the tools and strategy to find the secret shelter",
     "mascotImageAlt": "Mascot playing illustration",
     "videoCta": "Play video",
-    "videoTitle": "How to play video",
-    "overviewTitle": "Game Overview",
-    "overviewBody": "A hurricane is approaching! Your team must find the secret emergency shelter hidden in the city. Visit various locations, answer trivia questions about disaster preparedness, and collect clues to deduce which shelter is the secret one. The first team to find it wins!",
-    "stepLabel": "Step {number}",
-    "steps": {
-      "visit": "Visit Locations",
-      "visitDesc": "Move around the city to visit Points of Interest (POIs) marked on the map.",
-      "answer": "Answer Trivia",
-      "answerDesc": "When near a POI, ask questions and answer trivia challenges to unlock clues.",
-      "collect": "Collect Clues",
-      "collectDesc": "Use correct answers to gather clues about the secret shelter's location and characteristics.",
-      "find": "Find the Shelter",
-      "findDesc": "Use your clues to deduce which shelter is the secret one, then visit it to win!"
+    "toolGuide": {
+      "title": "Tool Guide",
+      "mapLayers": {
+        "title": "Map Layers",
+        "body": "Tap the icon in the upper left to open the layer control and choose what information to display on the map. Layers are divided into four categories: Evacuation Shelters, Evacuation Support Facilities, Other Facilities, and Hazard Layers. You can select and view the information needed for the game."
+      },
+      "askQuestion": {
+        "title": "Ask a Question",
+        "body": "Tap \"Ask a Question\" at the bottom of the screen to open the question window. The questions you can ask depend on your current location. You can ask only one question from a single location, and you cannot ask multiple questions consecutively from the same place. After you ask a question, that question is locked for two minutes."
+      },
+      "clues": {
+        "title": "Clues and Final Answer",
+        "body": "Tap the light bulb icon in the upper right to open Clues and Final Answer. The clues you obtain from questions are displayed here. By tapping \"Show on Map\", you can display the designated evacuation shelters on the map that match the clue.\n\nOnce you know the correct answer, submit it from \"Identify Shelter\" in the red box."
+      },
+      "measurement": {
+        "title": "Measurement Mode",
+        "body": "Tap the ruler icon in the upper right to open Measurement Radius. When you tap a point on the map, you can count how many facilities are within a 250 m radius from that point. To count them, the facility layer must be checked in the layer control and make them visible on the map."
+      }
     },
-    "proTips": "Pro Tips",
-    "tips": {
-      "greenRed": "Green clues tell you what the shelter HAS, red clues tell you what it DOESN'T have",
-      "cooldown": "Wrong trivia answers lock that question for 2 minutes - answer carefully!",
-      "visitPoi": "Visit different types of POIs to unlock more question categories",
-      "oneGuess": "You only get THREE guesses - make sure you're confident before submitting!",
-      "teamwork": "Work with different layers to cover more ground and gather clues"
+    "playTipsTitle": "Tips for Playing",
+    "playTips": {
+      "one": "First, try going to the nearest Evacuation Shelter. When you approach one of the green icons on the map, you can ask a hazard layer question. Using hazard layer questions to narrow down the search area significantly will help you progress through the game more efficiently.",
+      "two": "Once you have narrowed the search to a smaller area, refine it further by asking about the facility type. You can also ask these questions when you are near an Evacuation Shelter. Is the secret shelter an elementary school? A middle school? A high school? Or another type of facility? This step helps reduce the number of possible options.",
+      "three": "Finally, narrow down the options using the number of nearby facilities. When you are near an Evacuation Support Facility or Other Facility, you can ask how many of that facility exist within a 250m radius of the secret shelter. For example, if you are near an AED, you can guess and ask how many AEDs are located within 250m of the secret shelter. Tap the ruler icon in the upper right to use the measurement tool, and count how many facilities are within 250m of each candidate shelter. Use this information to ask questions strategically.",
+      "four": "When you ask a question and obtain a correct clue, it is saved under the light bulb icon in the upper right. Tap \"Show on Map\" to display the shelters that match the clue on the map.",
+      "five": "Once you determine the secret shelter, submit your Final Answer from the same light bulb menu. You can submit up to three answers. Walk around the city strategically and find the secret shelter where \"Mobi\" is hiding."
     }
   },
   "app": {
@@ -372,7 +388,7 @@
         "clue": "Facility type is {param}"
       },
       "shelterCapacity": {
-        "question": "Capacity of the shelter is {param}?",
+        "question": "Is the shelter capacity {param}?",
         "clue": "Shelter capacity is {param}"
       },
       "waterStation250m": {
