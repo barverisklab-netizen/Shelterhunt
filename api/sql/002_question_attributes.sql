@@ -11,3 +11,5 @@ comment on column public.question_attributes.id is 'Stable attribute identifier 
 comment on column public.question_attributes.label is 'Human-readable label used in prompts';
 comment on column public.question_attributes.kind is 'number or select, determines UI control';
 comment on column public.question_attributes.options is 'Unique categorical values for select-kind attributes';
+
+alter table if exists public.question_attributes enable row level security;

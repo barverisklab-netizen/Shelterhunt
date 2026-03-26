@@ -94,7 +94,7 @@ export function MeasurePanel({
                 <button
                   type="button"
                   onClick={onCancelPlacement}
-                  className="w-full sm:w-auto rounded border border-black px-3 py-2 text-xs font-semibold uppercase tracking-wide hover:bg-neutral-100"
+                  className="w-full sm:w-auto rounded border border-black px-3 py-2 text-xs font-semibold uppercase tracking-wide hover:bg-sky-150"
                 >
                   {t("common.cancel", { fallback: "Cancel" })}
                 </button>
@@ -140,14 +140,14 @@ export function MeasurePanel({
                   <button
                     type="button"
                     onClick={onMovePoint}
-                    className="w-fit max-w-[200px] rounded border border-black px-3 py-2 text-xs font-semibold uppercase tracking-wide hover:bg-neutral-100"
+                    className="w-fit max-w-[200px] rounded border border-black px-3 py-2 text-xs font-semibold uppercase tracking-wide hover:bg-sky-150"
                   >
                     {t("map.measure.popup.move", { fallback: "Move center" })}
                   </button>
                   <button
                     type="button"
                     onClick={onDeleteMeasurement}
-                    className="w-fit max-w-[200px] rounded border border-black bg-red-500/20 px-3 py-2 text-xs font-bold uppercase tracking-wide text-black hover:bg-neutral-100 active:bg-neutral-200"
+                    className="w-fit max-w-[200px] rounded border border-black bg-red-500/20 px-3 py-2 text-xs font-bold uppercase tracking-wide text-black hover:bg-sky-150 active:bg-neutral-200"
                   >
                     {t("map.measure.popup.delete", { fallback: "Delete" })}
                   </button>

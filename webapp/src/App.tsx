@@ -77,6 +77,8 @@ const RESUME_GRACE_MS = 10 * 60 * 1000;
 const MULTIPLAYER_LOCATION_UPDATE_MS = 5_000;
 const MULTIPLAYER_LOCATION_ROUNDING_METERS = 50;
 const PWA_INSTALL_DISMISSED_KEY = "shelterhunt.pwaInstallDismissed.v1";
+const PWA_IOS_INSTALL_DISMISSED_KEY = "shelterhunt.pwaIosInstallDismissed.v1";
+const SNAPSHOT_RESUMABLE_STATES: readonly GameState[] = ["waiting", "playing", "ended"];
 
 type DeferredInstallPromptEvent = Event & {
   prompt: () => Promise<void>;
@@ -143,6 +145,21 @@ const roundLocationToGrid = (location: LatLng, meters = MULTIPLAYER_LOCATION_ROU
     lat: Number(lat.toFixed(6)),
     lng: Number(lng.toFixed(6)),
   };
+};
+
+const shouldShowIosInstallHint = (): boolean => {
+  if (typeof window === "undefined") return false;
+  const { userAgent, platform, maxTouchPoints } = window.navigator;
+  const isIosDevice =
+    /iPad|iPhone|iPod/i.test(userAgent) ||
+    (platform === "MacIntel" && maxTouchPoints > 1);
+  const isSafari =
+    /Safari/i.test(userAgent) &&
+    !/CriOS|FxiOS|OPiOS|EdgiOS|YaBrowser|DuckDuckGo/i.test(userAgent);
+  const isStandalone =
+    window.matchMedia?.("(display-mode: standalone)")?.matches === true ||
+    (window.navigator as Navigator & { standalone?: boolean }).standalone === true;
+  return isIosDevice && isSafari && !isStandalone;
 };
 
 const buildLocalDesignatedShelters = async (
@@ -238,9 +255,14 @@ export default function App() {
   const [joinError, setJoinError] = useState<string | null>(null);
   const [installPromptOpen, setInstallPromptOpen] = useState(false);
   const [installPromptPending, setInstallPromptPending] = useState(false);
+  const [iosInstallPromptOpen, setIosInstallPromptOpen] = useState(false);
   const [installPromptDismissed, setInstallPromptDismissed] = useState(() => {
     if (typeof window === "undefined") return false;
     return window.localStorage.getItem(PWA_INSTALL_DISMISSED_KEY) === "1";
+  });
+  const [iosInstallPromptDismissed, setIosInstallPromptDismissed] = useState(() => {
+    if (typeof window === "undefined") return false;
+    return window.localStorage.getItem(PWA_IOS_INSTALL_DISMISSED_KEY) === "1";
   });
   const defaultNavigatorName = t("app.defaults.navigator", { fallback: "Navigator" });
   const defaultSoloName = t("app.defaults.soloPlayer", { fallback: "Solo Player" });
@@ -470,7 +492,10 @@ export default function App() {
         : snapshot.timeRemaining;
       const shouldEnd =
         snapshot.timerEnabled && snapshot.gameState === "playing" && nextTimeRemaining <= 0;
-      const nextGameState = shouldEnd ? "ended" : snapshot.gameState;
+      const snapshotGameState = shouldEnd ? "ended" : snapshot.gameState;
+      const nextGameState = SNAPSHOT_RESUMABLE_STATES.includes(snapshotGameState)
+        ? snapshotGameState
+        : "intro";
 
       setResumeId(snapshot.resumeId || crypto.randomUUID());
       setGameState(nextGameState);
@@ -584,6 +609,18 @@ export default function App() {
 
   useEffect(() => {
     if (typeof window === "undefined") return;
+    if (iosInstallPromptDismissed) return;
+    if (!shouldShowIosInstallHint()) return;
+    const timeoutId = window.setTimeout(() => {
+      setIosInstallPromptOpen(true);
+    }, 1500);
+    return () => {
+      window.clearTimeout(timeoutId);
+    };
+  }, [iosInstallPromptDismissed]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
     if (restoredFromSnapshotRef.current) return;
     const snapshot = loadGameSnapshot();
     if (!snapshot) return;
@@ -591,22 +628,6 @@ export default function App() {
     restoredFromSnapshotRef.current = true;
   }, [applyGameSnapshot, loadGameSnapshot]);
 
-
-  const updateSecretShelter = useCallback(
-    (info: SecretShelterInfo) => {
-      if (lockSecretShelter) return;
-      setSecretShelter(info);
-    },
-    [lockSecretShelter],
-  );
-
-  const updateShelterOptions = useCallback(
-    (options: ShelterOption[]) => {
-      if (lockShelterOptions) return;
-      setShelterOptions(options);
-    },
-    [lockShelterOptions],
-  );
 
   const loadDesignatedShelters = useCallback(
     async (center: LatLng, radiusKm: number) => {
@@ -1483,6 +1504,22 @@ export default function App() {
     }
   }, []);
 
+  const handleIosInstallPromptSkip = useCallback(() => {
+    if (typeof window !== "undefined") {
+      window.localStorage.setItem(PWA_IOS_INSTALL_DISMISSED_KEY, "1");
+    }
+    setIosInstallPromptDismissed(true);
+    setIosInstallPromptOpen(false);
+  }, []);
+
+  const handleIosInstallPromptTimeout = useCallback(() => {
+    setIosInstallPromptOpen(false);
+  }, []);
+
+  const handleIosInstallPromptAcknowledge = useCallback(() => {
+    setIosInstallPromptOpen(false);
+  }, []);
+
   const handleSelectLightning = async () => {
     if (modeProcessing) return;
     setModeProcessing(true);
@@ -1591,24 +1628,51 @@ export default function App() {
     setModeProcessing(true);
     setShelterOptions([]);
     setSecretShelter(null);
-    setLockSecretShelter(false);
-    setLockShelterOptions(false);
+    setLockSecretShelter(true);
+    setLockShelterOptions(true);
     let playerCoords: LatLng | undefined;
     try {
       playerCoords = await requestUserLocation();
     } catch (error) {
       console.warn("[Citywide] Unable to fetch player location", error);
     }
-    startSoloMatch({
-      mode: "citywide",
-      timerSeconds: null,
-      secret: null,
-      options: [],
-      lockSecret: false,
-      lockOptions: false,
-      playerCoords,
-    });
-    setModeProcessing(false);
+    try {
+      const cityCenter = defaultCityContext.mapConfig.startLocation;
+      const shelterPool = await buildLocalDesignatedShelters(cityCenter);
+
+      const { eligibleShelters, secretShelter } = selectLightningShelter(
+        shelterPool,
+        cityCenter,
+        Number.POSITIVE_INFINITY,
+      );
+
+      const options = eligibleShelters.map((shelter) => ({
+        id: shelter.id,
+        name: shelter.name,
+      }));
+
+      startSoloMatch({
+        mode: "citywide",
+        timerSeconds: null,
+        secret: {
+          id: secretShelter.id,
+          name: secretShelter.name,
+        },
+        options,
+        lockSecret: true,
+        lockOptions: true,
+        playerCoords,
+      });
+    } catch (error) {
+      console.warn("[Citywide] Unable to load designated shelters", error);
+      toast.error(
+        t("app.errors.loadShelters", {
+          fallback: "Unable to load designated shelters right now. Please try again.",
+        }),
+      );
+    } finally {
+      setModeProcessing(false);
+    }
   };
 
   const profilePromptActive =
@@ -1620,6 +1684,11 @@ export default function App() {
     installPromptOpen &&
     !showLoadingOverlay &&
     gameState !== "playing";
+  const shouldShowIosInstallPrompt =
+    iosInstallPromptOpen &&
+    !showLoadingOverlay &&
+    gameState !== "playing" &&
+    !shouldShowInstallPrompt;
   return (
     <AppShell
       gameState={gameState}
@@ -1660,6 +1729,7 @@ export default function App() {
       hostShareCode={hostShareCode}
       installPromptOpen={shouldShowInstallPrompt}
       installPromptPending={installPromptPending}
+      iosInstallPromptOpen={shouldShowIosInstallPrompt}
       multiplayerActive={Boolean(sessionContext)}
       onSkipIntro={handleSkipIntro}
       onJoinGameRequest={handleJoinGameRequest}
@@ -1675,8 +1745,6 @@ export default function App() {
       onApplyPenalty={handleWrongGuessPenalty}
       onEndGame={handleEndGame}
       onPlayerLocationChange={setPlayerLocation}
-      onSecretShelterChange={updateSecretShelter}
-      onShelterOptionsChange={updateShelterOptions}
       onMultiplayerWin={handleMultiplayerWin}
       onCloseHelp={() => setShowHelp(false)}
       onJoinNameSubmit={handleJoinNameSubmit}
@@ -1693,6 +1761,9 @@ export default function App() {
       onInstallPromptSkip={handleInstallPromptSkip}
       onInstallPromptTimeout={handleInstallPromptTimeout}
       onInstallPromptConfirm={handleInstallPromptConfirm}
+      onIosInstallPromptSkip={handleIosInstallPromptSkip}
+      onIosInstallPromptTimeout={handleIosInstallPromptTimeout}
+      onIosInstallPromptAcknowledge={handleIosInstallPromptAcknowledge}
     />
   );
 }

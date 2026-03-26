@@ -4,6 +4,7 @@ import packageInfo from '../../package.json';
 import { MenuHeader } from './layout/MenuHeader';
 import { AcknowledgementFooter } from './layout/AcknowledgementFooter';
 import { useI18n } from "@/i18n";
+import appLogo from "@/assets/graphics/AppLogo.svg";
 
 interface OnboardingScreenProps {
   onJoinGame: () => void;
@@ -47,6 +48,9 @@ export function OnboardingScreen({
           title={t("onboarding.title")}
           subtitle={t("onboarding.tagline")}
           versionLabel={`v${packageInfo.version}`}
+          logoSrc={appLogo}
+          logoAlt={t("onboarding.title")}
+          logoClassName="w-full max-w-[15rem] sm:max-w-[18rem]"
         />
 
         {/* Action Buttons - Bauhaus Style */}
@@ -54,7 +58,7 @@ export function OnboardingScreen({
           <motion.button
             type="button"
             onClick={onPlaySolo}
-            className="w-full bg-red-600 text-black border-4 border-black hover:bg-neutral-100 hover:shadow-[8px_8px_0_black] transition-all py-6 flex items-center justify-center gap-2 cursor-pointer"
+            className="w-full bg-red-600 text-black border-4 border-black hover:bg-sky-150 hover:shadow-[8px_8px_0_black] transition-all py-6 flex items-center justify-center gap-2 cursor-pointer"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: buttonBaseDelay, duration: 0.45, ease: 'easeOut' }}
@@ -66,7 +70,7 @@ export function OnboardingScreen({
           <motion.button
             type="button"
             onClick={onJoinGame}
-            className="w-full bg-background border-4 border-black hover:bg-neutral-100 hover:shadow-[8px_8px_0_black] transition-all py-6 flex items-center justify-center gap-2 cursor-pointer"
+            className="w-full bg-background border-4 border-black hover:bg-sky-150 hover:shadow-[8px_8px_0_black] transition-all py-6 flex items-center justify-center gap-2 cursor-pointer"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: buttonBaseDelay + 0.12, duration: 0.45, ease: 'easeOut' }}
@@ -78,7 +82,7 @@ export function OnboardingScreen({
           <motion.button
             type="button"
             onClick={onHostGame}
-            className="w-full bg-background border-4 border-black hover:bg-neutral-100 hover:shadow-[8px_8px_0_black] transition-all py-6 flex items-center justify-center gap-2 cursor-pointer"
+            className="w-full bg-background border-4 border-black hover:bg-sky-150 hover:shadow-[8px_8px_0_black] transition-all py-6 flex items-center justify-center gap-2 cursor-pointer"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: buttonBaseDelay + 0.24, duration: 0.45, ease: 'easeOut' }}
@@ -90,7 +94,7 @@ export function OnboardingScreen({
           <motion.button
             type="button"
             onClick={onShowHelp}
-            className="w-full bg-background text-black border-4 border-black hover:bg-neutral-100 hover:shadow-[4px_4px_0_black] transition-all py-4 flex items-center justify-center gap-2 cursor-pointer"
+            className="w-full bg-background text-black border-4 border-black hover:bg-sky-150 hover:shadow-[4px_4px_0_black] transition-all py-4 flex items-center justify-center gap-2 cursor-pointer"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: buttonBaseDelay + 0.36, duration: 0.45, ease: 'easeOut' }}

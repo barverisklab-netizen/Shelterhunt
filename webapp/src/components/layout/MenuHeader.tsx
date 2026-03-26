@@ -7,6 +7,9 @@ interface MenuHeaderProps {
   subtitle: string;
   versionLabel?: string;
   className?: string;
+  logoSrc?: string;
+  logoAlt?: string;
+  logoClassName?: string;
 }
 
 /**
@@ -18,6 +21,9 @@ export function MenuHeader({
   subtitle,
   versionLabel,
   className,
+  logoSrc,
+  logoAlt,
+  logoClassName,
 }: MenuHeaderProps) {
   return (
     <div className={cn("w-full max-w-md space-y-10 relative z-10", className)}>
@@ -28,42 +34,67 @@ export function MenuHeader({
           animate={{ opacity: 1 }}
           transition={{ delay: 0.35, duration: 0.3, ease: "easeOut" }}
         >
-          <motion.div
-            className="relative w-32 h-32"
-            initial={{ scale: 0, opacity: 0, y: -60, rotate: -8 }}
-            animate={{ scale: 1, opacity: 1, y: 0, rotate: 0 }}
-            transition={{
-              delay: 0.35,
-              type: "spring",
-              stiffness: 280,
-              damping: 22,
-            }}
-          >
-            <motion.div
-              className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"
-              initial={{ scale: 0, opacity: 0, rotate: -20 }}
-              animate={{ scale: 1, opacity: 1, rotate: 0 }}
+          {logoSrc ? (
+            <motion.img
+              src={logoSrc}
+              alt={logoAlt ?? title}
+              className={cn(
+                "h-auto w-full max-w-[15rem] object-contain sm:max-w-[18rem]",
+                logoClassName,
+              )}
+              initial={{ scale: 0.92, opacity: 0, y: -24 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
               transition={{
-                delay: 0.45,
+                delay: 0.35,
                 type: "spring",
-                stiffness: 340,
-                damping: 18,
+                stiffness: 240,
+                damping: 20,
+              }}
+            />
+          ) : (
+            <motion.div
+              className="relative w-32 h-32"
+              initial={{ scale: 0, opacity: 0, y: -60, rotate: -8 }}
+              animate={{ scale: 1, opacity: 1, y: 0, rotate: 0 }}
+              transition={{
+                delay: 0.35,
+                type: "spring",
+                stiffness: 280,
+                damping: 22,
               }}
             >
-              <MapPin className="w-12 h-12 text-black" />
+              <motion.div
+                className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"
+                initial={{ scale: 0, opacity: 0, rotate: -20 }}
+                animate={{ scale: 1, opacity: 1, rotate: 0 }}
+                transition={{
+                  delay: 0.45,
+                  type: "spring",
+                  stiffness: 340,
+                  damping: 18,
+                }}
+              >
+                <MapPin className="w-12 h-12 text-black" />
+              </motion.div>
             </motion.div>
-          </motion.div>
+          )}
         </motion.div>
 
         <div className="space-y-4">
-          <motion.h1
-            className="text-4xl font-black tracking-tight leading-none"
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.75, duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-          >
-            {title}
-          </motion.h1>
+          {!logoSrc ? (
+            <motion.h1
+              className="text-4xl font-black tracking-tight leading-none"
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{
+                delay: 0.75,
+                duration: 0.6,
+                ease: [0.22, 1, 0.36, 1],
+              }}
+            >
+              {title}
+            </motion.h1>
+          ) : null}
           <motion.p
             className="text-base font-medium titlecase tracking-wider text-black"
             initial={{ opacity: 0, y: 12 }}

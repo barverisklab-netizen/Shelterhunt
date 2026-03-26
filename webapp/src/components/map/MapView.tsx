@@ -18,7 +18,6 @@ import { MAPBOX_STYLE_URL, PROXIMITY_RADIUS_KM } from "@/config/runtime";
 import { defaultCityContext } from "@/data/cityContext";
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
-import { getLocalShelters } from "@/services/mapLayerQueryService";
 import { countAmenitiesWithinRadius } from "@/services/proximityIndex";
 import { useTerrainElevation } from "@/features/elevation/hooks/useTerrainElevation";
 import { useMeasurementTool } from "@/features/measurement/hooks/useMeasurementTool";
@@ -148,10 +147,8 @@ interface MapViewProps {
   gameEnded?: boolean;
   onPOIClick?: (poi: POI) => void;
 
-  // Basemap and shelter callbacks.
+  // Basemap callbacks.
   basemapUrl?: string;
-  onSecretShelterChange?: (info: { id: string; name: string }) => void;
-  onShelterOptionsChange?: (options: { id: string; name: string; lat?: number; lng?: number }[]) => void;
 
   // Measurement + layer panel coordination.
   measureTrigger?: number;
@@ -192,8 +189,6 @@ export function MapView({
   gameEnded,
   onPOIClick,
   basemapUrl = defaultCityContext.mapConfig.basemapUrl,
-  onSecretShelterChange,
-  onShelterOptionsChange,
   measureTrigger,
   onMeasurementActiveChange,
   isFiltered = false,
@@ -216,10 +211,9 @@ export function MapView({
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
   const geolocateControl = useRef<mapboxgl.GeolocateControl | null>(null);
+  const playerLocationMarkerRef = useRef<mapboxgl.Marker | null>(null);
   const infoPopup = useRef<mapboxgl.Popup | null>(null);
   const otherPlayerMarkersRef = useRef<Record<string, mapboxgl.Marker>>({});
-  const hasSelectedShelter = useRef(false);
-  const hasEmittedShelterOptions = useRef(false);
   const pendingPoiRefreshRef = useRef<POI[] | null>(null);
   const pendingPoiRefreshHandlerRef = useRef<(() => void) | null>(null);
   const filteredPoiPopupHandlerRef = useRef<
@@ -290,6 +284,18 @@ export function MapView({
     },
     [],
   );
+
+  const createPlayerLocationMarkerElement = useCallback(() => {
+    const marker = document.createElement("div");
+    marker.style.width = "14px";
+    marker.style.height = "14px";
+    marker.style.borderRadius = "999px";
+    marker.style.border = "2px solid #ffffff";
+    marker.style.background = "#3b82f6";
+    marker.style.boxShadow = "0 0 0 2px rgba(59, 130, 246, 0.35)";
+    marker.style.pointerEvents = "none";
+    return marker;
+  }, []);
 
   useEffect(() => {
     translateRef.current = t;
@@ -603,80 +609,10 @@ export function MapView({
     }
   }, []);
 
-  const selectShelterFromLocalData = useCallback(() => {
-    // Select once per map lifecycle; emit all options + chosen shelter for game state.
-    if (hasSelectedShelter.current) {
-      return;
-    }
-
-    (async () => {
-      try {
-        const allShelters = await getLocalShelters();
-        const designated = allShelters.filter(
-          (poi) => poi.category?.toLowerCase() === "designated ec",
-        );
-
-        const options: { id: string; name: string; lat?: number; lng?: number }[] = [];
-        const seenNames = new Set<string>();
-        const seenIds = new Set<string>();
-
-        designated.forEach((poi) => {
-          const name = poi.name?.trim();
-          if (!name) return;
-          const key = name.toLowerCase();
-          if (seenNames.has(key)) return;
-          seenNames.add(key);
-
-          let resolvedId = poi.id ?? key;
-          if (seenIds.has(resolvedId)) {
-            let suffix = 1;
-            while (seenIds.has(`${resolvedId}-${suffix}`)) {
-              suffix += 1;
-            }
-            resolvedId = `${resolvedId}-${suffix}`;
-          }
-          seenIds.add(resolvedId);
-
-          const hasCoords =
-            Number.isFinite(poi.lat) && Number.isFinite(poi.lng);
-
-          options.push({
-            id: resolvedId,
-            name,
-            lat: hasCoords ? (poi.lat as number) : undefined,
-            lng: hasCoords ? (poi.lng as number) : undefined,
-          });
-        });
-
-        if (
-          onShelterOptionsChange &&
-          (options.length || !hasEmittedShelterOptions.current)
-        ) {
-          const sorted = [...options].sort((a, b) => a.name.localeCompare(b.name));
-          onShelterOptionsChange(sorted);
-          hasEmittedShelterOptions.current = true;
-        }
-
-        if (!options.length || !onSecretShelterChange) {
-          return;
-        }
-
-        const chosen = options[Math.floor(Math.random() * options.length)];
-
-        hasSelectedShelter.current = true;
-        onSecretShelterChange({ id: chosen.id, name: chosen.name });
-        map.current?.off("idle", selectShelterFromLocalData);
-      } catch (error) {
-        console.warn("[mapbox] Unable to select shelter from local data:", error);
-      }
-    })();
-  }, [onSecretShelterChange, onShelterOptionsChange]);
-
   // Initialize/destroy the Mapbox instance once per basemap style.
   useEffect(() => {
     if (!mapContainer.current || map.current) return;
 
-    hasEmittedShelterOptions.current = false;
     let handleStyleData: (() => void) | null = null;
 
     try {
@@ -697,11 +633,6 @@ export function MapView({
           reapplyPlayerRangeRef.current();
         }
 
-        if (onSecretShelterChange) {
-          hasSelectedShelter.current = false;
-          map.current?.on("idle", selectShelterFromLocalData);
-        }
-
         console.log("[POI] Initial marker render", { total: visiblePois.length });
         refreshFilteredPoiLayers(visiblePois);
 
@@ -713,6 +644,7 @@ export function MapView({
             trackUserLocation: false,
             showUserHeading: true,
             showAccuracyCircle: false,
+            showUserLocation: false,
       });
       geolocateControl.current = control;
       map.current?.addControl(control, "bottom-right");
@@ -793,9 +725,6 @@ export function MapView({
           infoPopup.current.remove();
           infoPopup.current = null;
         }
-        if (onSecretShelterChange) {
-          map.current.off("idle", selectShelterFromLocalData);
-        }
         if (geolocateControl.current) {
           if (geolocateHandlerRef.current) {
             geolocateControl.current.off("geolocate", geolocateHandlerRef.current);
@@ -803,6 +732,10 @@ export function MapView({
           }
           map.current.removeControl(geolocateControl.current);
           geolocateControl.current = null;
+        }
+        if (playerLocationMarkerRef.current) {
+          playerLocationMarkerRef.current.remove();
+          playerLocationMarkerRef.current = null;
         }
         if (filteredPoiPopupHandlerRef.current) {
           map.current?.off("click", FILTER_POIS_LAYER_ID, filteredPoiPopupHandlerRef.current);
@@ -820,8 +753,6 @@ export function MapView({
         map.current?.off("styledata", moveAttributionToBottomLeft);
         map.current.remove();
         map.current = null;
-        hasSelectedShelter.current = false;
-        hasEmittedShelterOptions.current = false;
         setMapLoaded(false);
       }
     };
@@ -850,6 +781,37 @@ export function MapView({
     }
     sampleTerrainElevation();
   }, [playerLocation.lng, playerLocation.lat, hasUserLocationFix, sampleTerrainElevation]);
+
+  useEffect(() => {
+    const m = map.current;
+    if (!m) return;
+
+    const isDefaultStart =
+      Math.abs(playerLocation.lat - DEFAULT_START_LOCATION.lat) < 1e-6 &&
+      Math.abs(playerLocation.lng - DEFAULT_START_LOCATION.lng) < 1e-6;
+    const shouldShowMarker = hasUserLocationFix || !isDefaultStart;
+
+    if (!shouldShowMarker) {
+      if (playerLocationMarkerRef.current) {
+        playerLocationMarkerRef.current.remove();
+        playerLocationMarkerRef.current = null;
+      }
+      return;
+    }
+
+    const nextLngLat: [number, number] = [playerLocation.lng, playerLocation.lat];
+    if (!playerLocationMarkerRef.current) {
+      playerLocationMarkerRef.current = new mapboxgl.Marker({
+        element: createPlayerLocationMarkerElement(),
+        anchor: "center",
+      })
+        .setLngLat(nextLngLat)
+        .addTo(m);
+      return;
+    }
+
+    playerLocationMarkerRef.current.setLngLat(nextLngLat);
+  }, [createPlayerLocationMarkerElement, hasUserLocationFix, playerLocation.lat, playerLocation.lng]);
 
   useEffect(() => {
     if (!mapLoaded) return;

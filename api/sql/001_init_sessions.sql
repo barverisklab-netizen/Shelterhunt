@@ -89,6 +89,8 @@ alter table if exists public.shelters
 
 create index if not exists shelters_share_code_idx on public.shelters (share_code);
 
+alter table if exists public.shelters enable row level security;
+
 create table if not exists public.sessions (
   id uuid primary key default gen_random_uuid(),
   shelter_id uuid not null references public.shelters(id) on delete restrict,
@@ -136,6 +138,8 @@ create unique index if not exists sessions_active_unique
   on public.sessions (shelter_id)
   where state in ('lobby', 'racing');
 
+alter table if exists public.sessions enable row level security;
+
 create table if not exists public.players (
   id uuid primary key default gen_random_uuid(),
   session_id uuid not null references public.sessions(id) on delete cascade,
@@ -148,3 +152,5 @@ create table if not exists public.players (
 );
 
 create index if not exists players_session_idx on public.players (session_id);
+
+alter table if exists public.players enable row level security;

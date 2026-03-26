@@ -43,7 +43,6 @@ export function useProximityAndAmenities({
   const lastWatchLocationRef = useRef<(LatLng & { sampledAt: number }) | null>(null);
 
   const requestLatestLocation = useCallback(() => {
-    if (proximityDisabledForTesting) return;
     if (typeof navigator === "undefined" || !navigator.geolocation || !onLocationChange) return;
 
     const now = Date.now();
@@ -64,15 +63,11 @@ export function useProximityAndAmenities({
       },
       { enableHighAccuracy: true, maximumAge: 2000, timeout: 10000 },
     );
-  }, [onLocationChange, proximityDisabledForTesting]);
+  }, [onLocationChange]);
 
   const requestHighAccuracyLocation = useCallback(
     () =>
       new Promise<LatLng | null>((resolve) => {
-        if (proximityDisabledForTesting) {
-          resolve(null);
-          return;
-        }
         if (typeof navigator === "undefined" || !navigator.geolocation) {
           resolve(null);
           return;
@@ -101,11 +96,10 @@ export function useProximityAndAmenities({
           { enableHighAccuracy: true, maximumAge: 0, timeout: 8000 },
         );
       }),
-    [onLocationChange, proximityDisabledForTesting],
+    [onLocationChange],
   );
 
   useEffect(() => {
-    if (proximityDisabledForTesting) return;
     if (typeof navigator === "undefined" || !navigator.geolocation || !onLocationChange) return;
 
     const watchId = navigator.geolocation.watchPosition(
@@ -147,7 +141,7 @@ export function useProximityAndAmenities({
     return () => {
       navigator.geolocation.clearWatch(watchId);
     };
-  }, [onLocationChange, proximityDisabledForTesting]);
+  }, [onLocationChange]);
 
   const checkNearbyPOI = useCallback(
     async ({ forceLog = false }: { forceLog?: boolean } = {}) => {
